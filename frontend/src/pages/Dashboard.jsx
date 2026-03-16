@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { api, useAuthStore, cachedGet } from '../store/authStore';
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 import { useNavigate } from 'react-router-dom';
 import {
   Download, CheckCircle, Award, Share2, BookOpen,
@@ -254,7 +256,7 @@ const Dashboard = () => {
     })();
   }, [isAuthenticated, authLoading, navigate]);
 
-  const dl = id => window.open(`http://localhost:5000/api/certificates/download/${id}`, '_blank');
+  const dl = id => window.open(`${API_BASE}/certificates/download/${id}`, '_blank');
   const copy = id => {
     navigator.clipboard.writeText(`${window.location.origin}/verify/${id}`);
     setCopyMsg(id);

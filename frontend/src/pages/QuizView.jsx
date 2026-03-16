@@ -4,6 +4,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { api, useAuthStore, clearCache } from '../store/authStore';
 import { Award, Loader2, AlertCircle, Download } from 'lucide-react';
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 const QuizView = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -127,7 +129,7 @@ const QuizView = () => {
           <div className="flex justify-center gap-4 flex-wrap">
             {result.passed && generatedCertId && (
               <button 
-                onClick={() => window.open(`http://localhost:5000/api/certificates/download/${generatedCertId}`, '_blank')}
+                onClick={() => window.open(`${API_BASE}/certificates/download/${generatedCertId}`, '_blank')}
                 className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition-colors shadow-md shadow-emerald-500/20 flex items-center gap-2"
               >
                 <Download className="w-5 h-5" /> Download Certificate
@@ -175,7 +177,7 @@ const QuizView = () => {
           <div className="flex justify-center gap-4 flex-wrap">
             {existingCert && (
               <button 
-                onClick={() => window.open(`http://localhost:5000/api/certificates/download/${existingCert.certificateId}`, '_blank')}
+                onClick={() => window.open(`${API_BASE}/certificates/download/${existingCert.certificateId}`, '_blank')}
                 className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition-colors shadow-md shadow-blue-500/20 flex items-center gap-2"
               >
                 <Download className="w-5 h-5" /> Download Certificate
