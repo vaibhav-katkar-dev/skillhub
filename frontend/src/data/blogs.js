@@ -27,7 +27,7 @@ export const blogPosts = [
     imageUrl: 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&q=80&w=1200',
     relatedCourse: {
       title: 'The Ultimate HTML Masterclass for Beginners',
-      slug: 'the-ultimate-html',
+      slug: 'ultimate-html-masterclass',
       description: 'Master semantic HTML5, multimedia, and form validations.'
     }
   },
@@ -56,8 +56,8 @@ export const blogPosts = [
     category: 'CSS & Design',
     imageUrl: 'https://images.unsplash.com/photo-1507721999472-8ed4421c4af2?auto=format&fit=crop&q=80&w=1200',
     relatedCourse: {
-      title: 'CSS for Beginners: Learn Web Styling',
-      slug: 'css-for-beginners',
+      title: 'CSS for Beginners: Learn Web Styling from Zero to Pro',
+      slug: 'css-for-beginners-learn-web-styling-zero-to-pro',
       description: 'Learn Flexbox, Grid, animations and responsive design.'
     }
   },

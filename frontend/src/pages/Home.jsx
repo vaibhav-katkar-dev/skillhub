@@ -28,7 +28,7 @@ const HOW_IT_WORKS = [
 
 const COURSES = [
   {
-    slug: 'html-masterclass',
+    slug: 'ultimate-html-masterclass',
     title: 'HTML Masterclass',
     level: 'Beginner',
     duration: '4 hrs',
@@ -44,7 +44,7 @@ const COURSES = [
     accentBorder: '#c7d2fe',
   },
   {
-    slug: 'css-fundamentals',
+    slug: 'css-for-beginners-learn-web-styling-zero-to-pro',
     title: 'CSS Fundamentals',
     level: 'Beginner',
     duration: '5 hrs',
@@ -473,19 +473,33 @@ export default function Home() {
                 <span style={{ color:'#cbd5e1' }}>zero cost.</span>
               </h2>
             </div>
-            <Link to="/courses" id="courses-view-all" style={{
-              display:'inline-flex', alignItems:'center', gap:8,
-              fontSize:14, fontWeight:700, color:'#4f46e5',
-              background:'#fff', border:'1.5px solid #c7d2fe',
-              padding:'12px 24px', borderRadius:12, textDecoration:'none',
-              boxShadow:'0 2px 8px rgba(99,102,241,0.08)',
-              transition:'all .2s', whiteSpace:'nowrap',
-            }}
-            onMouseEnter={e=>{e.currentTarget.style.background='#eef2ff';e.currentTarget.style.borderColor='#6366f1';e.currentTarget.style.transform='translateY(-2px)';}}
-            onMouseLeave={e=>{e.currentTarget.style.background='#fff';e.currentTarget.style.borderColor='#c7d2fe';e.currentTarget.style.transform='';}}
-            >
-              Explore All Courses <ArrowRight size={15} />
-            </Link>
+            <div style={{ display:'flex', gap: 12 }}>
+              <Link to="/blog" id="home-view-blog" style={{
+                display:'inline-flex', alignItems:'center', gap:8,
+                fontSize:14, fontWeight:700, color:'#475569',
+                background:'#f8fafc', border:'1.5px solid #e2e8f0',
+                padding:'12px 24px', borderRadius:12, textDecoration:'none',
+                transition:'all .2s', whiteSpace:'nowrap',
+              }}
+              onMouseEnter={e=>{e.currentTarget.style.background='#f1f5f9';e.currentTarget.style.borderColor='#cbd5e1';e.currentTarget.style.transform='translateY(-2px)';}}
+              onMouseLeave={e=>{e.currentTarget.style.background='#f8fafc';e.currentTarget.style.borderColor='#e2e8f0';e.currentTarget.style.transform='';}}
+              >
+                Read our Blog
+              </Link>
+              <Link to="/courses" id="courses-view-all" style={{
+                display:'inline-flex', alignItems:'center', gap:8,
+                fontSize:14, fontWeight:700, color:'#4f46e5',
+                background:'#fff', border:'1.5px solid #c7d2fe',
+                padding:'12px 24px', borderRadius:12, textDecoration:'none',
+                boxShadow:'0 2px 8px rgba(99,102,241,0.08)',
+                transition:'all .2s', whiteSpace:'nowrap',
+              }}
+              onMouseEnter={e=>{e.currentTarget.style.background='#eef2ff';e.currentTarget.style.borderColor='#6366f1';e.currentTarget.style.transform='translateY(-2px)';}}
+              onMouseLeave={e=>{e.currentTarget.style.background='#fff';e.currentTarget.style.borderColor='#c7d2fe';e.currentTarget.style.transform='';}}
+              >
+                Explore All Courses <ArrowRight size={15} />
+              </Link>
+            </div>
           </div>
 
           {/* Course grid */}

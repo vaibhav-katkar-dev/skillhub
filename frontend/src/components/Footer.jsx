@@ -19,10 +19,10 @@ const NAV_COLUMNS = [
     heading: 'Learn',
     icon: GraduationCap,
     links: [
-      { to: '/courses',                         label: 'All Courses' },
-      { to: '/courses/the-ultimate-html',       label: 'HTML Masterclass' },
-      { to: '/courses/css-for-beginners',       label: 'CSS Fundamentals' },
-      { to: '/courses/javascript-basics',       label: 'JavaScript Basics' },
+      { to: '/courses',                                               label: 'All Courses' },
+      { to: '/courses/ultimate-html-masterclass',                     label: 'HTML Masterclass' },
+      { to: '/courses/css-for-beginners-learn-web-styling-zero-to-pro', label: 'CSS Fundamentals' },
+      { to: '/courses/javascript-basics',                             label: 'JavaScript Basics' },
     ],
   },
   {
