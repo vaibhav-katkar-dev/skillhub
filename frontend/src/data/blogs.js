@@ -85,7 +85,7 @@ const activeBtn = document.querySelector('nav button.active');</code></pre>
     date: 'March 08, 2026',
     readTime: '7 min read',
     category: 'JavaScript',
-    imageUrl: 'https://images.unsplash.com/photo-1627398240449-01153124411e?auto=format&fit=crop&q=80&w=1200',
+    imageUrl: 'https://images.unsplash.com/photo-1555099962-4199c345e5dd?auto=format&fit=crop&w=1200&q=80',
     relatedCourse: {
       title: 'JavaScript Basics',
       slug: 'ultimate-javascript-masterclass',
