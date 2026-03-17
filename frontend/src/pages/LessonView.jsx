@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { api } from '../store/authStore';
+import { getCourseBySlug } from '../data/courseLoader';
 import {
   ChevronLeft, CheckCircle, BookOpen, Check,
   ArrowRight, Trophy, ListOrdered, GraduationCap,
@@ -34,12 +34,9 @@ const LessonView = () => {
   /* ── Fetch Course Data (Once per course) ── */
   useEffect(() => {
     setLoading(true);
-    fetch(`/data/${slug}.json`)
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to load course');
-        return res.json();
-      })
+    getCourseBySlug(slug)
       .then(data => {
+        if (!data) throw new Error('Course not found');
         const lessons = data.lessons || [];
         setCourse(data.course);
         setAllLessons(lessons);

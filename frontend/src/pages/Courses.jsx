@@ -5,6 +5,7 @@ import {
   BookOpen, Clock, Loader2,
   ArrowRight, Sparkles, GraduationCap, Star
 } from 'lucide-react';
+import { getCourseList, preloadCourses } from '../data/courseLoader';
 
 // Deeper, more saturated colour themes for better contrast
 const THEMES = {
@@ -44,9 +45,7 @@ const Courses = () => {
   useEffect(() => {
     (async () => {
       try {
-        const response = await fetch('/data/courses.json');
-        if (!response.ok) throw new Error('Failed to load courses');
-        const data = await response.json();
+        const data = await getCourseList();
         setCourses(data);
       } catch (err) {
         console.error(err);

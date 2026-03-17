@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useParams, Link } from 'react-router-dom';
-import { api, useAuthStore } from '../store/authStore';
+import { getCourseBySlug } from '../data/courseLoader';
 import { PlayCircle, ShieldCheck, ListTodo, Loader2, BookOpen, Clock } from 'lucide-react';
 
 const THEMES = {
@@ -21,9 +21,8 @@ const CourseDetail = () => {
   useEffect(() => {
     const fetchCourse = async () => {
       try {
-        const res = await fetch(`/data/${slug}.json`);
-        if (!res.ok) throw new Error('Not found');
-        const data = await res.json();
+        const data = await getCourseBySlug(slug);
+        if (!data) throw new Error('Not found');
         setCourseData(data);
       } catch (err) {
         setError(true);

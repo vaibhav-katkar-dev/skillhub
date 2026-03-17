@@ -1,424 +1,452 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../store/authStore';
+import { Navigate } from 'react-router-dom';
+import { useAuthStore, api } from '../store/authStore';
+import { getCourseList } from '../data/courseLoader';
 import {
-  FolderOpen, FileJson, BookOpen, AlertCircle,
-  Copy, CheckCircle, Download, GraduationCap,
-  Shield, ChevronRight, Info, Sparkles, Code2
+  ShieldCheck, BookOpen, FileJson, Upload, CheckCircle,
+  AlertCircle, ChevronDown, Loader2, Plus, Trash2, Save,
+  ClipboardList, Edit3, RefreshCw
 } from 'lucide-react';
 
-/* ── Course JSON Template ── */
-const TEMPLATE = {
-  course: {
-    _id: "UNIQUE_ID_HERE",
-    title: "Your Course Title",
-    slug: "your-course-slug",
-    description: "A comprehensive description of what this course covers.",
-    image: "https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=800&q=80",
-    theme: "blue",
-    published: true,
-    instructor: "INSTRUCTOR_ID",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    __v: 0
-  },
-  lessons: [
+// ─── Quiz Template for reference ─────────────────────────────────────────────
+const QUIZ_TEMPLATE = {
+  passingScore: 60,
+  questions: [
     {
-      _id: "LESSON_ID_1",
-      title: "1. Introduction",
-      content: "<h2>Welcome!</h2><p>This is the first lesson. Write HTML content here.</p><pre><code>// Example code block</code></pre>",
-      videoUrl: "https://www.youtube.com/embed/VIDEO_ID",
-      duration: 15,
-      order: 1
-    },
-    {
-      _id: "LESSON_ID_2",
-      title: "2. Core Concepts",
-      content: "<h2>Core Concepts</h2><p>Lesson content goes here...</p>",
-      videoUrl: "",
-      duration: 20,
-      order: 2
+      questionText: "Your question here?",
+      options: ["Option A", "Option B", "Option C", "Option D"],
+      correctOptionIndex: 0
     }
   ]
 };
 
-/* Courses index entry */
-const INDEX_ENTRY = {
-  _id: "UNIQUE_ID_HERE",
-  title: "Your Course Title",
-  slug: "your-course-slug",
-  description: "A comprehensive description of what this course covers.",
-  image: "https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=800&q=80",
-  theme: "blue",
-  instructor: "INSTRUCTOR_ID",
-  published: true,
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-  __v: 0
-};
-
-/* ── Step Card ── */
-const Step = ({ num, title, children, color = 'indigo' }) => {
-  const colors = {
-    indigo: { bg: 'bg-indigo-600', ring: 'ring-indigo-100', border: 'border-indigo-100' },
-    emerald: { bg: 'bg-emerald-600', ring: 'ring-emerald-100', border: 'border-emerald-100' },
-    amber: { bg: 'bg-amber-500', ring: 'ring-amber-100', border: 'border-amber-100' },
-    blue: { bg: 'bg-blue-600', ring: 'ring-blue-100', border: 'border-blue-100' },
-  };
-  const c = colors[color];
-  return (
-    <div className={`bg-white border ${c.border} rounded-2xl p-6 shadow-sm`}>
-      <div className="flex items-center gap-3 mb-4">
-        <div className={`w-8 h-8 ${c.bg} text-white rounded-xl flex items-center justify-center text-sm font-black flex-shrink-0`}>
-          {num}
-        </div>
-        <h3 className="font-bold text-slate-800 text-base">{title}</h3>
-      </div>
-      <div className="text-slate-600 text-sm leading-relaxed space-y-2">
-        {children}
-      </div>
-    </div>
-  );
-};
-
-/* ── Code Block with Copy ── */
-const CopyBlock = ({ code, label }) => {
-  const [copied, setCopied] = useState(false);
-  const handleCopy = () => {
-    navigator.clipboard.writeText(typeof code === 'string' ? code : JSON.stringify(code, null, 2));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-  return (
-    <div className="rounded-xl overflow-hidden border border-slate-700 shadow-lg">
-      <div className="bg-slate-800 px-4 py-2.5 flex items-center justify-between">
-        <span className="text-slate-400 text-xs font-mono font-semibold">{label}</span>
-        <button
-          onClick={handleCopy}
-          className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${
-            copied
-              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-              : 'bg-white/10 text-slate-300 hover:bg-white/20 border border-white/10'
-          }`}
-        >
-          {copied ? <CheckCircle className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-          {copied ? 'Copied!' : 'Copy'}
-        </button>
-      </div>
-      <pre className="bg-slate-900 text-slate-200 p-5 text-xs overflow-x-auto leading-relaxed max-h-64 overflow-y-auto">
-        <code>{typeof code === 'string' ? code : JSON.stringify(code, null, 2)}</code>
-      </pre>
-    </div>
-  );
-};
-
-/* ── Download Button ── */
-const DownloadBtn = ({ data, filename, label }) => {
-  const handle = () => {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-  return (
-    <button
-      onClick={handle}
-      className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-all shadow-md shadow-indigo-500/20 active:scale-95"
-    >
-      <Download className="w-4 h-4" />
-      {label}
-    </button>
-  );
-};
-
-/* ═══════════════════════════════════════
-   MAIN COMPONENT
-═══════════════════════════════════════ */
+// ─── AdminPanel ───────────────────────────────────────────────────────────────
 const AdminPanel = () => {
   const { user, isAuthenticated } = useAuthStore();
-  const navigate = useNavigate();
 
+  // Course list (from static file)
+  const [courses, setCourses] = useState([]);
+
+  // Quiz Manager state
+  const [selectedCourseId, setSelectedCourseId] = useState('');
+  const [selectedCourseTitle, setSelectedCourseTitle] = useState('');
+  const [quizJson, setQuizJson] = useState('');
+  const [jsonError, setJsonError] = useState('');
+  const [uploadStatus, setUploadStatus] = useState(null); // null | 'loading' | 'success' | 'error'
+  const [uploadMessage, setUploadMessage] = useState('');
+  const [loadingExisting, setLoadingExisting] = useState(false);
+
+  // Active tab
+  const [tab, setTab] = useState('quiz'); // 'quiz' | 'guide'
+
+  // Load courses for dropdown
+  useEffect(() => {
+    getCourseList().then(setCourses).catch(console.error);
+  }, []);
+
+  // Auth guard
   if (!isAuthenticated || user?.role !== 'admin') {
-    return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center p-4">
-        <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
-        <h1 className="text-2xl font-bold text-slate-900">Access Denied</h1>
-        <p className="text-slate-600 mt-2">You must be an administrator to view this page.</p>
-        <button onClick={() => navigate('/')} className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-lg font-bold">
-          Return Home
-        </button>
-      </div>
-    );
+    return <Navigate to="/" replace />;
   }
 
+  // ── Validate JSON input ────────────────────────────────────────────────────
+  const validateJson = (raw) => {
+    try {
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed.questions)) return 'Missing "questions" array';
+      for (let i = 0; i < parsed.questions.length; i++) {
+        const q = parsed.questions[i];
+        if (!q.questionText) return `Question ${i + 1}: missing "questionText"`;
+        if (!Array.isArray(q.options) || q.options.length < 2) return `Question ${i + 1}: needs at least 2 options`;
+        if (typeof q.correctOptionIndex !== 'number') return `Question ${i + 1}: missing "correctOptionIndex"`;
+        if (q.correctOptionIndex >= q.options.length) return `Question ${i + 1}: correctOptionIndex out of range`;
+      }
+      return null; // valid
+    } catch (e) {
+      return 'Invalid JSON: ' + e.message;
+    }
+  };
+
+  // ── Load existing quiz from DB ─────────────────────────────────────────────
+  const handleLoadExisting = async () => {
+    if (!selectedCourseId) return;
+    setLoadingExisting(true);
+    try {
+      const res = await api.get(`/quizzes/${selectedCourseId}`);
+      const { passingScore, questions } = res.data;
+      // Re-add correctOptionIndex (admin gets it per backend route)
+      setQuizJson(JSON.stringify({ passingScore, questions }, null, 2));
+      setJsonError('');
+    } catch (err) {
+      setJsonError(err.response?.status === 404 ? 'No quiz found for this course yet.' : 'Failed to load quiz.');
+    } finally {
+      setLoadingExisting(false);
+    }
+  };
+
+  // ── Handle JSON textarea change ────────────────────────────────────────────
+  const handleJsonChange = (val) => {
+    setQuizJson(val);
+    setUploadStatus(null);
+    if (val.trim()) {
+      const err = validateJson(val);
+      setJsonError(err || '');
+    } else {
+      setJsonError('');
+    }
+  };
+
+  // ── Submit quiz to MongoDB via backend ─────────────────────────────────────
+  const handleUpload = async () => {
+    if (!selectedCourseId) { setJsonError('Please select a course first.'); return; }
+    const err = validateJson(quizJson);
+    if (err) { setJsonError(err); return; }
+
+    setUploadStatus('loading');
+    setUploadMessage('');
+    try {
+      const parsed = JSON.parse(quizJson);
+      await api.post(`/quizzes/${selectedCourseId}`, parsed);
+      setUploadStatus('success');
+      setUploadMessage(`Quiz saved to MongoDB for "${selectedCourseTitle}" ✅`);
+    } catch (err) {
+      setUploadStatus('error');
+      setUploadMessage(err.response?.data?.message || 'Upload failed. Is the backend running?');
+    }
+  };
+
+  // ── Load template into editor ──────────────────────────────────────────────
+  const handleLoadTemplate = () => {
+    setQuizJson(JSON.stringify(QUIZ_TEMPLATE, null, 2));
+    setJsonError('');
+    setUploadStatus(null);
+  };
+
+  const questionCount = (() => {
+    try { return JSON.parse(quizJson).questions?.length || 0; } catch { return 0; }
+  })();
+
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-slate-100">
       <Helmet>
         <title>Admin Panel | SkillHub</title>
       </Helmet>
 
-      {/* ── Hero ── */}
-      <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 relative overflow-hidden">
-        <div
-          className="absolute inset-0 opacity-[0.06]"
-          style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '28px 28px' }}
-        />
-        <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-indigo-500/15 blur-3xl" />
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 relative z-10">
-          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 mb-6">
-            <Shield className="w-4 h-4 text-indigo-300" />
-            <span className="text-white/80 text-xs font-bold uppercase tracking-widest">Admin Panel</span>
+      {/* ── Header ── */}
+      <div className="bg-gradient-to-r from-indigo-700 via-violet-700 to-purple-700 shadow-xl">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center border border-white/25 shadow-lg">
+              <ShieldCheck className="w-7 h-7 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-extrabold text-white">Admin Panel</h1>
+              <p className="text-indigo-200 text-sm mt-0.5">Manage quizzes and course content · SkillHub</p>
+            </div>
           </div>
-          <h1 className="text-4xl font-black text-white mb-3">
-            SkillHub <span className="text-indigo-400">Admin</span>
-          </h1>
-          <p className="text-slate-400 text-base max-w-xl leading-relaxed">
-            Courses &amp; lessons are managed via <span className="text-indigo-300 font-bold">static JSON files</span>.
-            Quiz and certificate features remain dynamic via the backend API.
-          </p>
 
-          {/* Status Pills */}
-          <div className="flex flex-wrap gap-3 mt-6">
-            <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-4 py-2">
-              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-emerald-300 text-xs font-bold">Courses — Static Files</span>
-            </div>
-            <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-4 py-2">
-              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-emerald-300 text-xs font-bold">Quiz — Dynamic API</span>
-            </div>
-            <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-4 py-2">
-              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-emerald-300 text-xs font-bold">Certificates — Dynamic API</span>
-            </div>
+          {/* Tabs */}
+          <div className="flex gap-2 mt-8">
+            {[
+              { key: 'quiz', label: 'Quiz Manager', icon: ClipboardList },
+              { key: 'guide', label: 'Course Guide', icon: BookOpen },
+            ].map(({ key, label, icon: Icon }) => (
+              <button
+                key={key}
+                onClick={() => setTab(key)}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                  tab === key
+                    ? 'bg-white text-indigo-700 shadow-lg'
+                    : 'bg-white/15 text-white hover:bg-white/25 border border-white/20'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                {label}
+              </button>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* ── Main Content ── */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 space-y-12">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
 
-        {/* ── Info Banner ── */}
-        <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-5 flex items-start gap-4">
-          <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0">
-            <Info className="w-5 h-5 text-indigo-600" />
-          </div>
-          <div>
-            <p className="font-bold text-indigo-900 mb-1">How Course Content Works</p>
-            <p className="text-indigo-700 text-sm leading-relaxed">
-              All course and lesson data is stored in <code className="bg-indigo-100 px-1.5 py-0.5 rounded font-mono text-xs">frontend/public/data/</code>.
-              Editing a JSON file and redeploying is all you need — <strong>no database, no admin UI upload.</strong>
-              Only quiz questions and certificate records use the backend API.
-            </p>
-          </div>
-        </div>
-
-        {/* ── File Structure ── */}
-        <section>
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center">
-              <FolderOpen className="w-5 h-5 text-slate-600" />
-            </div>
-            <h2 className="text-xl font-extrabold text-slate-800">File Structure</h2>
-          </div>
-
-          <div className="bg-slate-900 rounded-2xl p-6 font-mono text-sm leading-8 shadow-xl overflow-x-auto">
-            <div className="text-slate-400 mb-1">frontend/public/data/</div>
-            <div className="ml-4">
-              <div className="text-yellow-300">
-                <FileJson className="w-4 h-4 inline mr-2 text-yellow-400" />
-                courses.json
-                <span className="text-slate-500 text-xs ml-3 font-sans">← Course listing (index)</span>
-              </div>
-              <div className="text-blue-300 mt-1">
-                <FileJson className="w-4 h-4 inline mr-2 text-blue-400" />
-                ultimate-html-masterclass.json
-                <span className="text-slate-500 text-xs ml-3 font-sans">← Course detail + lessons</span>
-              </div>
-              <div className="text-blue-300 mt-1">
-                <FileJson className="w-4 h-4 inline mr-2 text-blue-400" />
-                css-for-beginners-learn-web-styling-zero-to-pro.json
-                <span className="text-slate-500 text-xs ml-3 font-sans">← Course detail + lessons</span>
-              </div>
-              <div className="text-slate-500 mt-1 italic">
-                <FileJson className="w-4 h-4 inline mr-2" />
-                your-new-course-slug.json
-                <span className="text-slate-600 text-xs ml-3 font-sans">← Add new courses here</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ── Step-by-Step Guide ── */}
-        <section>
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-9 h-9 bg-indigo-100 rounded-xl flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-indigo-600" />
-            </div>
-            <h2 className="text-xl font-extrabold text-slate-800">How to Add / Edit a Course</h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <Step num="1" title="Create the course detail file" color="indigo">
-              <p>Create a new file in <code className="bg-slate-100 px-1.5 py-0.5 rounded font-mono text-xs">public/data/</code> named after the course slug.</p>
-              <p className="mt-2 font-semibold text-slate-700">Example: <code className="bg-slate-100 px-1.5 py-0.5 rounded font-mono text-xs">my-new-course.json</code></p>
-              <p className="mt-2">Use the template below. It contains <code className="bg-slate-100 px-1 rounded font-mono text-xs">course</code> + <code className="bg-slate-100 px-1 rounded font-mono text-xs">lessons</code> arrays. No quiz data needed here.</p>
-            </Step>
-
-            <Step num="2" title="Add the course to the index" color="blue">
-              <p>Open <code className="bg-slate-100 px-1.5 py-0.5 rounded font-mono text-xs">public/data/courses.json</code> and add a new entry to the array.</p>
-              <p className="mt-2">Copy the <code className="bg-slate-100 px-1 rounded font-mono text-xs">course</code> object (without lessons). The <code className="bg-slate-100 px-1 rounded font-mono text-xs">_id</code> must match the one in your detail file — it's used for certificate matching.</p>
-            </Step>
-
-            <Step num="3" title="Use unique, stable IDs" color="amber">
-              <p>The <code className="bg-slate-100 px-1.5 py-0.5 rounded font-mono text-xs">_id</code> field (course and lesson) must be a unique 24-char hex string.</p>
-              <p className="mt-2">Generate them free at <a href="https://www.mongodb.com/docs/manual/reference/method/ObjectId/" target="_blank" rel="noreferrer" className="text-amber-600 font-semibold underline">objectid.io</a> or by running <code className="bg-slate-100 px-1 rounded font-mono text-xs">new ObjectId()</code> in Node.</p>
-              <p className="mt-2 text-amber-700 font-semibold">⚠️ Never change an ID after publishing — it will break quiz/cert links!</p>
-            </Step>
-
-            <Step num="4" title="Redeploy / restart dev server" color="emerald">
-              <p>Static files are served directly — no rebuild needed in development. Just save the file and refresh.</p>
-              <p className="mt-2">For production: commit the new JSON files and redeploy. Vercel/Netlify will serve them instantly as static assets.</p>
-            </Step>
-          </div>
-        </section>
-
-        {/* ── Templates ── */}
-        <section>
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-9 h-9 bg-blue-100 rounded-xl flex items-center justify-center">
-              <Code2 className="w-5 h-5 text-blue-600" />
-            </div>
-            <h2 className="text-xl font-extrabold text-slate-800">JSON Templates</h2>
-          </div>
-
+        {/* ═══════ QUIZ MANAGER TAB ═══════ */}
+        {tab === 'quiz' && (
           <div className="space-y-6">
-            {/* Course detail template */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <p className="font-bold text-slate-800">Course Detail File</p>
-                  <p className="text-slate-500 text-xs mt-0.5">Save as <code className="font-mono">public/data/your-course-slug.json</code></p>
+
+            {/* Step 1 — Select Course */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="bg-gradient-to-r from-indigo-50 to-violet-50 px-6 py-4 border-b border-slate-100">
+                <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs flex items-center justify-center font-bold">1</span>
+                  Select Course
+                </h2>
+              </div>
+              <div className="p-6">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="relative flex-1">
+                    <select
+                      id="course-select"
+                      value={selectedCourseId}
+                      onChange={(e) => {
+                        const opt = e.target.options[e.target.selectedIndex];
+                        setSelectedCourseId(e.target.value);
+                        setSelectedCourseTitle(opt.text);
+                        setUploadStatus(null);
+                        setJsonError('');
+                      }}
+                      className="w-full appearance-none bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 pr-10 text-slate-800 font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                    >
+                      <option value="">— Choose a course —</option>
+                      {courses.map(c => (
+                        <option key={c._id} value={c._id}>{c.title}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                  </div>
+
+                  <button
+                    onClick={handleLoadExisting}
+                    disabled={!selectedCourseId || loadingExisting}
+                    className="flex items-center gap-2 px-5 py-3 bg-slate-700 hover:bg-slate-800 disabled:opacity-40 text-white rounded-xl font-semibold text-sm transition-all active:scale-95"
+                  >
+                    {loadingExisting ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                    Load Existing Quiz
+                  </button>
                 </div>
-                <DownloadBtn data={TEMPLATE} filename="your-course-slug.json" label="Download Template" />
+
+                {selectedCourseId && (
+                  <p className="mt-3 text-xs text-slate-500 flex items-center gap-1.5">
+                    <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
+                    Selected: <span className="font-semibold text-slate-700">{selectedCourseTitle}</span>
+                    <span className="ml-1 text-slate-400">· Course ID: <code className="font-mono bg-slate-100 px-1 rounded">{selectedCourseId}</code></span>
+                  </p>
+                )}
               </div>
-              <CopyBlock code={TEMPLATE} label="your-course-slug.json" />
             </div>
 
-            {/* Index entry template */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <p className="font-bold text-slate-800">courses.json  —  Index Entry</p>
-                  <p className="text-slate-500 text-xs mt-0.5">Add this object to the array in <code className="font-mono">public/data/courses.json</code></p>
+            {/* Step 2 — Edit Quiz JSON */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="bg-gradient-to-r from-indigo-50 to-violet-50 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs flex items-center justify-center font-bold">2</span>
+                  Write / Paste Quiz JSON
+                  {questionCount > 0 && (
+                    <span className="ml-2 text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-bold">
+                      {questionCount} question{questionCount !== 1 ? 's' : ''}
+                    </span>
+                  )}
+                </h2>
+                <button
+                  onClick={handleLoadTemplate}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Load Template
+                </button>
+              </div>
+
+              <div className="p-6 space-y-4">
+                {/* Format reference box */}
+                <div className="bg-slate-900 rounded-xl p-4 text-xs font-mono text-slate-300 overflow-x-auto">
+                  <div className="text-slate-500 mb-2 text-xs uppercase tracking-wider font-sans font-bold">Expected JSON Format</div>
+                  <pre className="whitespace-pre">{`{
+  "passingScore": 60,
+  "questions": [
+    {
+      "questionText": "What does JS stand for?",
+      "options": ["Java Standard", "JavaScript", "Just Script", "None"],
+      "correctOptionIndex": 1
+    }
+  ]
+}`}</pre>
                 </div>
-                <DownloadBtn data={[INDEX_ENTRY]} filename="courses_entry.json" label="Download Entry" />
-              </div>
-              <CopyBlock code={INDEX_ENTRY} label="courses.json → new entry" />
-            </div>
-          </div>
-        </section>
 
-        {/* ── Themes Reference ── */}
-        <section>
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-9 h-9 bg-rose-100 rounded-xl flex items-center justify-center">
-              <BookOpen className="w-5 h-5 text-rose-600" />
-            </div>
-            <h2 className="text-xl font-extrabold text-slate-800">Available Themes</h2>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {[
-              { name: 'blue', from: '#4f46e5', to: '#1d4ed8' },
-              { name: 'green', from: '#059669', to: '#0d9488' },
-              { name: 'pink', from: '#e11d48', to: '#be185d' },
-              { name: 'orange', from: '#f59e0b', to: '#ea580c' },
-            ].map(t => (
-              <div key={t.name} className="rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
-                <div className="h-12" style={{ background: `linear-gradient(135deg, ${t.from}, ${t.to})` }} />
-                <div className="p-3 bg-white">
-                  <p className="font-mono font-bold text-slate-700 text-sm">"{t.name}"</p>
-                  <p className="text-slate-400 text-xs mt-0.5">Set in course.theme</p>
+                {/* JSON Editor */}
+                <div className="relative">
+                  <textarea
+                    id="quiz-json-editor"
+                    rows={18}
+                    value={quizJson}
+                    onChange={(e) => handleJsonChange(e.target.value)}
+                    placeholder={'{\n  "passingScore": 60,\n  "questions": [...]\n}'}
+                    spellCheck={false}
+                    className={`w-full font-mono text-sm bg-slate-50 border rounded-xl px-4 py-4 focus:ring-2 outline-none transition resize-y leading-relaxed ${
+                      jsonError
+                        ? 'border-red-300 focus:ring-red-300 bg-red-50/30'
+                        : quizJson && !jsonError
+                        ? 'border-emerald-300 focus:ring-emerald-300'
+                        : 'border-slate-200 focus:ring-indigo-400'
+                    }`}
+                  />
+                  {quizJson && !jsonError && (
+                    <div className="absolute top-3 right-3 flex items-center gap-1 text-xs text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-full">
+                      <CheckCircle className="w-3 h-3" /> Valid JSON
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
-          </div>
-        </section>
 
-        {/* ── Dynamic Features (Quiz + Certs) ── */}
-        <section>
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center">
-              <GraduationCap className="w-5 h-5 text-emerald-600" />
-            </div>
-            <h2 className="text-xl font-extrabold text-slate-800">Dynamic Features (Remain On Backend)</h2>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-9 h-9 bg-indigo-100 rounded-xl flex items-center justify-center">
-                  <BookOpen className="w-5 h-5 text-indigo-600" />
-                </div>
-                <h3 className="font-bold text-slate-800">Quiz Management</h3>
-              </div>
-              <p className="text-slate-500 text-sm leading-relaxed mb-4">
-                Quiz questions are stored in MongoDB and managed via backend API.
-                To edit quizzes, update the backend route or use the database directly.
-              </p>
-              <div className="bg-slate-50 rounded-xl p-3 font-mono text-xs text-slate-600 border border-slate-100">
-                POST /api/courses/upload
-                <br />
-                <span className="text-slate-400"># Only quiz field is used from this</span>
+                {/* JSON Error */}
+                {jsonError && (
+                  <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                    <span>{jsonError}</span>
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-9 h-9 bg-amber-100 rounded-xl flex items-center justify-center">
-                  <GraduationCap className="w-5 h-5 text-amber-600" />
-                </div>
-                <h3 className="font-bold text-slate-800">Certificate Verification</h3>
+            {/* Step 3 — Upload */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="bg-gradient-to-r from-indigo-50 to-violet-50 px-6 py-4 border-b border-slate-100">
+                <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs flex items-center justify-center font-bold">3</span>
+                  Save to MongoDB
+                </h2>
               </div>
-              <p className="text-slate-500 text-sm leading-relaxed mb-4">
-                Certificates are auto-generated after a quiz pass and stored in the database.
-                They are linked by <code className="bg-slate-100 px-1.5 rounded font-mono">course._id</code> from the static JSON.
-              </p>
-              <a
-                href="/verify"
-                className="inline-flex items-center gap-2 text-amber-600 font-bold text-sm hover:gap-3 transition-all"
-              >
-                Go to Certificate Verifier <ChevronRight className="w-4 h-4" />
-              </a>
+              <div className="p-6">
+                <p className="text-slate-500 text-sm mb-5">
+                  Clicking <strong>Upload Quiz</strong> will POST your JSON to the backend. If a quiz already exists for this course, it will be <strong>overwritten</strong>.
+                </p>
+
+                <button
+                  id="upload-quiz-btn"
+                  onClick={handleUpload}
+                  disabled={!selectedCourseId || !quizJson || !!jsonError || uploadStatus === 'loading'}
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl font-bold text-sm transition-all duration-200 shadow-lg shadow-indigo-500/25 active:scale-95"
+                >
+                  {uploadStatus === 'loading'
+                    ? <><Loader2 className="w-4 h-4 animate-spin" /> Uploading...</>
+                    : <><Upload className="w-4 h-4" /> Upload Quiz to MongoDB</>
+                  }
+                </button>
+
+                {/* Upload result */}
+                {uploadStatus === 'success' && (
+                  <div className="mt-4 flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-sm font-medium">
+                    <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
+                    {uploadMessage}
+                  </div>
+                )}
+                {uploadStatus === 'error' && (
+                  <div className="mt-4 flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+                    <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold">Upload failed</p>
+                      <p className="opacity-80 mt-0.5">{uploadMessage}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </section>
+        )}
 
-        {/* ── Quick Links ── */}
-        <div className="bg-slate-900 rounded-2xl p-6 flex flex-wrap gap-4 items-center justify-between">
-          <div>
-            <p className="text-white font-bold">Need to add a quiz to a new course?</p>
-            <p className="text-slate-400 text-sm mt-0.5">
-              Use the backend <code className="text-indigo-300 font-mono text-xs">POST /api/courses/upload</code> route with only the <code className="text-indigo-300 font-mono text-xs">quiz</code> field populated.
-              The course <code className="text-indigo-300 font-mono text-xs">slug</code> must match your JSON filename.
-            </p>
+        {/* ═══════ COURSE GUIDE TAB ═══════ */}
+        {tab === 'guide' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+              <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <FileJson className="w-5 h-5 text-indigo-600" />
+                How to Add / Edit Courses
+              </h2>
+
+              <ol className="space-y-5 text-slate-700">
+                {[
+                  {
+                    step: '1',
+                    title: 'Open all-courses.json',
+                    desc: 'Located at frontend/public/data/all-courses.json. This is the single source of truth for all course content.',
+                  },
+                  {
+                    step: '2',
+                    title: 'Add a new entry at the bottom of the array',
+                    desc: 'Each course entry has two keys: "course" (metadata) and "lessons" (array of lesson objects). Copy an existing entry and update the fields.',
+                  },
+                  {
+                    step: '3',
+                    title: 'Required fields for a course',
+                    desc: '_id (unique hex), title, slug (kebab-case, used in URL), description, image (URL), theme (blue/green/orange/pink), published (true/false)',
+                  },
+                  {
+                    step: '4',
+                    title: 'Required fields for each lesson',
+                    desc: '_id (unique hex), course (same as course._id), title, content (HTML string), order (1, 2, 3…)',
+                  },
+                  {
+                    step: '5',
+                    title: 'Save the file',
+                    desc: 'Vite dev server hot-reloads instantly. In production, redeploy the frontend build. No backend changes needed.',
+                  },
+                ].map(({ step, title, desc }) => (
+                  <li key={step} className="flex gap-4 items-start">
+                    <span className="w-7 h-7 rounded-full bg-indigo-100 border border-indigo-200 text-indigo-700 text-xs font-extrabold flex items-center justify-center shrink-0 mt-0.5">{step}</span>
+                    <div>
+                      <p className="font-semibold text-slate-900">{title}</p>
+                      <p className="text-sm text-slate-500 mt-0.5">{desc}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+              <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <Edit3 className="w-5 h-5 text-violet-600" />
+                Course Entry Template
+              </h2>
+              <div className="bg-slate-900 rounded-xl overflow-hidden">
+                <div className="bg-slate-800 px-4 py-2 text-xs text-slate-400 font-mono">all-courses.json — new course entry</div>
+                <pre className="p-5 text-xs font-mono text-slate-300 overflow-x-auto whitespace-pre">{`{
+  "course": {
+    "_id": "UNIQUE_HEX_24_CHARS",
+    "title": "My New Course",
+    "slug": "my-new-course",
+    "description": "Short description here.",
+    "image": "https://link-to-image.jpg",
+    "instructor": "69b7983467bb2f063cefab80",
+    "published": true,
+    "theme": "orange",
+    "createdAt": "2026-03-17T00:00:00.000Z",
+    "updatedAt": "2026-03-17T00:00:00.000Z",
+    "__v": 0
+  },
+  "lessons": [
+    {
+      "_id": "UNIQUE_HEX_24_CHARS",
+      "course": "SAME_AS_COURSE_ID",
+      "title": "1. Introduction",
+      "content": "<h2>Welcome!</h2><p>Your lesson HTML here.</p>",
+      "videoUrl": "",
+      "order": 1,
+      "__v": 0,
+      "createdAt": "2026-03-17T00:00:00.000Z",
+      "updatedAt": "2026-03-17T00:00:00.000Z"
+    }
+  ]
+}`}</pre>
+              </div>
+            </div>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5">
+              <h3 className="font-bold text-amber-800 mb-2 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4" />
+                Themes Available
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { name: 'blue', cls: 'bg-indigo-600' },
+                  { name: 'green', cls: 'bg-emerald-600' },
+                  { name: 'orange', cls: 'bg-amber-500' },
+                  { name: 'pink', cls: 'bg-rose-600' },
+                ].map(({ name, cls }) => (
+                  <span key={name} className={`${cls} text-white px-3 py-1 rounded-full text-xs font-bold`}>{name}</span>
+                ))}
+              </div>
+            </div>
           </div>
-          <a
-            href="http://localhost:5000/api"
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold px-5 py-3 rounded-xl transition-all whitespace-nowrap"
-          >
-            Open API <ChevronRight className="w-4 h-4" />
-          </a>
-        </div>
-
+        )}
       </div>
     </div>
   );

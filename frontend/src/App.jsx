@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { useAuthStore } from './store/authStore';
+import { preloadCourses } from './data/courseLoader';
 
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -32,6 +33,7 @@ function App() {
 
   useEffect(() => {
     loadUser();
+    preloadCourses(); // fire-and-forget: warms the cache immediately
   }, [loadUser]);
 
   return (
