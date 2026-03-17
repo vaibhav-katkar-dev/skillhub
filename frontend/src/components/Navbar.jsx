@@ -56,12 +56,12 @@ const Navbar = () => {
               <>
                 {user?.role === 'admin' && (
                   <NavLink
-                    to="/admin/upload"
+                    to="/admin"
                     className={({ isActive }) =>
                       `px-4 py-2 rounded-lg text-sm whitespace-nowrap ${isActive ? 'text-indigo-600 font-bold bg-indigo-50' : 'text-slate-600 hover:text-indigo-600 font-medium transition-colors'}`
                     }
                   >
-                    Upload Course
+                    Admin Panel
                   </NavLink>
                 )}
                 <NavLink
@@ -133,6 +133,15 @@ const Navbar = () => {
           <div className="pt-3 border-t border-slate-100 space-y-2">
             {isAuthenticated ? (
               <>
+                {user?.role === 'admin' && (
+                  <Link
+                    to="/admin"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center justify-between px-4 py-3 rounded-xl text-sm text-indigo-600 hover:bg-indigo-50 font-bold"
+                  >
+                    Admin Panel <ChevronRight className="w-4 h-4 opacity-40" />
+                  </Link>
+                )}
                 <Link
                   to="/dashboard"
                   onClick={() => setIsMenuOpen(false)}

@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
-import { api, useAuthStore, cachedGet, clearCache } from '../store/authStore';
 import {
-  BookOpen, Clock, Loader2, Trash2, Edit,
+  BookOpen, Clock, Loader2,
   ArrowRight, Sparkles, GraduationCap, Star
 } from 'lucide-react';
 
@@ -40,22 +39,7 @@ const Skeleton = () => (
 const Courses = () => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuthStore();
   const navigate = useNavigate();
-
-  const handleDelete = async (e, id) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (window.confirm('Are you sure you want to completely remove this course?')) {
-      try {
-        await api.delete(`/courses/${id}`);
-        setCourses(prev => prev.filter(c => c._id !== id));
-        clearCache('courses_all');
-      } catch (err) {
-        alert('Failed to delete: ' + (err.response?.data?.message || err.message));
-      }
-    }
-  };
 
   useEffect(() => {
     (async () => {
@@ -163,57 +147,16 @@ const Courses = () => {
                       />
                       {/* dark gradient overlay so text is always readable */}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
-
                       {/* Title overlaid on image */}
                       <div className="absolute bottom-0 left-0 right-0 p-4">
                         <h2 className="text-white text-lg font-extrabold leading-snug line-clamp-2 drop-shadow-sm">
                           {course.title}
                         </h2>
                       </div>
-
-                      {/* Admin buttons */}
-                      {user?.role === 'admin' && (
-                        <div className="absolute top-3 right-3 flex gap-1.5 opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-200 z-20">
-                          <button
-                            onClick={e => { e.preventDefault(); e.stopPropagation(); navigate('/admin/upload', { state: { editSlug: course.slug } }); }}
-                            className="w-8 h-8 bg-white/90 backdrop-blur-sm border border-blue-100 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all shadow-md flex items-center justify-center"
-                            title="Edit"
-                          >
-                            <Edit className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={e => handleDelete(e, course._id)}
-                            className="w-8 h-8 bg-white/90 backdrop-blur-sm border border-red-100 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all shadow-md flex items-center justify-center"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      )}
                     </div>
                   ) : (
                     /* ── No image: coloured strip + icon layout ── */
-                    <>
-                      <div className={`h-1.5 bg-gradient-to-r ${t.bar} flex-shrink-0`} />
-                      {user?.role === 'admin' && (
-                        <div className="absolute top-5 right-4 flex gap-2 opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-200 z-20">
-                          <button
-                            onClick={e => { e.preventDefault(); e.stopPropagation(); navigate('/admin/upload', { state: { editSlug: course.slug } }); }}
-                            className="w-8 h-8 bg-white border border-blue-100 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all shadow-md flex items-center justify-center"
-                            title="Edit"
-                          >
-                            <Edit className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={e => handleDelete(e, course._id)}
-                            className="w-8 h-8 bg-white border border-red-100 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all shadow-md flex items-center justify-center"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      )}
-                    </>
+                    <div className={`h-1.5 bg-gradient-to-r ${t.bar} flex-shrink-0`} />
                   )}
 
                   {/* ── Card body ── */}

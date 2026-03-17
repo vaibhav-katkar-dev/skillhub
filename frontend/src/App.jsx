@@ -17,7 +17,7 @@ import VerifyCert from './pages/VerifyCert';
 import Blog from './pages/Blog';
 import BlogPost from './pages/BlogPost';
 
-import AdminCourseUpload from './pages/AdminCourseUpload';
+import AdminPanel from './pages/AdminPanel';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -50,7 +50,8 @@ function App() {
               <Route path="/courses/:slug/lesson/:lessonId" element={<LessonView />} />
               <Route path="/courses/:slug/quiz" element={<QuizView />} />
               <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/admin/upload" element={<AdminCourseUpload />} />
+              <Route path="/admin" element={<AdminPanel />} />
+              <Route path="/admin/upload" element={<AdminPanel />} />
               <Route path="/verify" element={<VerifyCert />} />
               <Route path="/verify/:certId" element={<VerifyCert />} />
               <Route path="/blog" element={<Blog />} />
