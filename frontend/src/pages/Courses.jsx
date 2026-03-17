@@ -60,7 +60,9 @@ const Courses = () => {
   useEffect(() => {
     (async () => {
       try {
-        const data = await cachedGet('courses_all', '/courses');
+        const response = await fetch('/data/courses.json');
+        if (!response.ok) throw new Error('Failed to load courses');
+        const data = await response.json();
         setCourses(data);
       } catch (err) {
         console.error(err);

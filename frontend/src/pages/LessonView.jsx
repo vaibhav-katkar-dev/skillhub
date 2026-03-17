@@ -34,10 +34,14 @@ const LessonView = () => {
   /* ── Fetch Course Data (Once per course) ── */
   useEffect(() => {
     setLoading(true);
-    api.get(`/courses/${slug}`)
+    fetch(`/data/${slug}.json`)
       .then(res => {
-        const lessons = res.data.lessons || [];
-        setCourse(res.data.course);
+        if (!res.ok) throw new Error('Failed to load course');
+        return res.json();
+      })
+      .then(data => {
+        const lessons = data.lessons || [];
+        setCourse(data.course);
         setAllLessons(lessons);
       })
       .catch(console.error)

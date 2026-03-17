@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { useAuthStore } from './store/authStore';
 
@@ -19,6 +19,14 @@ import BlogPost from './pages/BlogPost';
 
 import AdminCourseUpload from './pages/AdminCourseUpload';
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
+
 function App() {
   const { loadUser } = useAuthStore();
 
@@ -29,6 +37,7 @@ function App() {
   return (
     <HelmetProvider>
       <Router>
+        <ScrollToTop />
         <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-blue-500/30">
           <Navbar />
           <main className="flex-grow">

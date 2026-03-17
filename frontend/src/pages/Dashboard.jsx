@@ -242,10 +242,12 @@ const Dashboard = () => {
     (async () => {
       try {
         // Use cachedGet — won't hit the network again within 5 minutes
-        const [cR, coR] = await Promise.all([
+        const [cR, response] = await Promise.all([
           cachedGet('certs_mine', '/certificates/mine'),
-          cachedGet('courses_all', '/courses'),
+          fetch('/data/courses.json')
         ]);
+        if (!response.ok) throw new Error('Failed to load courses');
+        const coR = await response.json();
         setCerts(cR);
         setCourses(coR);
       } catch (e) {

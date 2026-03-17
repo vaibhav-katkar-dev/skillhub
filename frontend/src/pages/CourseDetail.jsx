@@ -21,8 +21,10 @@ const CourseDetail = () => {
   useEffect(() => {
     const fetchCourse = async () => {
       try {
-        const res = await api.get(`/courses/${slug}`);
-        setCourseData(res.data);
+        const res = await fetch(`/data/${slug}.json`);
+        if (!res.ok) throw new Error('Not found');
+        const data = await res.json();
+        setCourseData(data);
       } catch (err) {
         setError(true);
       } finally {
