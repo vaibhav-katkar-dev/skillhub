@@ -60,7 +60,7 @@ const COURSES = [
     accentBorder: '#bae6fd',
   },
   {
-    slug: 'javascript-basics',
+    slug: 'ultimate-javascript-masterclass',
     title: 'JavaScript Basics',
     level: 'Beginner',
     duration: '6 hrs',

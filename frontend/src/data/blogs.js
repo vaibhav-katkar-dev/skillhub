@@ -88,7 +88,7 @@ const activeBtn = document.querySelector('nav button.active');</code></pre>
     imageUrl: 'https://images.unsplash.com/photo-1627398240449-01153124411e?auto=format&fit=crop&q=80&w=1200',
     relatedCourse: {
       title: 'JavaScript Basics',
-      slug: 'javascript-basics',
+      slug: 'ultimate-javascript-masterclass',
       description: 'Master Vanilla JS, DOM, functions, and async code.'
     }
   }

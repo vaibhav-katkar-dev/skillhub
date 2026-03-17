@@ -22,7 +22,7 @@ const NAV_COLUMNS = [
       { to: '/courses',                                               label: 'All Courses' },
       { to: '/courses/ultimate-html-masterclass',                     label: 'HTML Masterclass' },
       { to: '/courses/css-for-beginners-learn-web-styling-zero-to-pro', label: 'CSS Fundamentals' },
-      { to: '/courses/javascript-basics',                             label: 'JavaScript Basics' },
+      { to: '/courses/ultimate-javascript-masterclass',                 label: 'JavaScript Basics' },
     ],
   },
   {
