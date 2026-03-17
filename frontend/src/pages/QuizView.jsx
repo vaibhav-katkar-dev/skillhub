@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api, useAuthStore, clearCache } from '../store/authStore';
+import { getCourseBySlug } from '../data/courseLoader';
 import { Award, Loader2, AlertCircle, Download } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -27,16 +28,22 @@ const QuizView = () => {
     
     const fetchQuiz = async () => {
       try {
-        const courseRes = await api.get(`/courses/${slug}`);
-        setCourse(courseRes.data.course);
-        const quizRes = await api.get(`/quizzes/${courseRes.data.course._id}`);
+        const localCourseData = await getCourseBySlug(slug);
+        if (!localCourseData?.course?._id) {
+          throw new Error('Course not found in static data');
+        }
+
+        const courseId = localCourseData.course._id;
+        setCourse(localCourseData.course);
+
+        const quizRes = await api.get(`/quizzes/${courseId}`);
         setQuiz(quizRes.data);
 
         try {
           // Always fetch fresh — don't use cache here to get accurate completion status
           const certRes = await api.get('/certificates/mine');
           const pastCert = certRes.data.find(c => 
-            (c.course?._id || c.course)?.toString() === courseRes.data.course._id?.toString()
+            (c.course?._id || c.course)?.toString() === courseId?.toString()
           );
           if (pastCert) {
             setAlreadyPassed(true);
@@ -45,7 +52,7 @@ const QuizView = () => {
         } catch (certErr) {
           console.error("Could not fetch user certificates", certErr);
         }
-      } catch (err) {
+      } catch {
         setError('Quiz not found or you do not have permission.');
       } finally {
         setLoading(false);
@@ -82,7 +89,7 @@ const QuizView = () => {
           console.error("Certificate generation error", err);
         }
       }
-    } catch (err) {
+    } catch {
       setError('Error submitting quiz.');
     } finally {
       setSubmitting(false);
