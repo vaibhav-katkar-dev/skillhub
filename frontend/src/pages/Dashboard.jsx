@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { api, useAuthStore, cachedGet } from '../store/authStore';
+import { useNavigate } from 'react-router-dom';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-import { useNavigate } from 'react-router-dom';
 import {
   Download, CheckCircle, Award, Share2, BookOpen,
   ArrowRight, Loader2, Trophy, GraduationCap, Medal,
@@ -244,10 +244,12 @@ const Dashboard = () => {
         // Use cachedGet — won't hit the network again within 5 minutes
         const [cR, response] = await Promise.all([
           cachedGet('certs_mine', '/certificates/mine'),
-          fetch('/data/courses.json')
+          fetch('/data/all-courses.json')
         ]);
         if (!response.ok) throw new Error('Failed to load courses');
-        const coR = await response.json();
+        const raw = await response.json();
+        // all-courses.json is [{course:{...}, lessons:[...]}, ...]
+        const coR = raw.map(item => item.course);
         setCerts(cR);
         setCourses(coR);
       } catch (e) {

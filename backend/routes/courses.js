@@ -18,13 +18,16 @@ async function regenerateStaticData() {
       fs.mkdirSync(PUBLIC_DATA_DIR, { recursive: true });
     }
     const courses = await Course.find({ published: true }).lean();
-    fs.writeFileSync(path.join(PUBLIC_DATA_DIR, 'courses.json'), JSON.stringify(courses, null, 2));
 
-    for (const course of courses) {
-      const lessons = await Lesson.find({ course: course._id }).sort({ order: 1 }).lean();
-      fs.writeFileSync(path.join(PUBLIC_DATA_DIR, `${course.slug}.json`), JSON.stringify({ course, lessons }, null, 2));
-    }
-    console.log('✅ Static JSON files regenerated automatically');
+    // Build unified all-courses.json — [{course, lessons}, ...]
+    const unified = await Promise.all(
+      courses.map(async (course) => {
+        const lessons = await Lesson.find({ course: course._id }).sort({ order: 1 }).lean();
+        return { course, lessons };
+      })
+    );
+    fs.writeFileSync(path.join(PUBLIC_DATA_DIR, 'all-courses.json'), JSON.stringify(unified, null, 2));
+    console.log('✅ Static all-courses.json regenerated automatically');
   } catch (err) {
     console.error('❌ Failed to regenerate static JSON:', err);
   }

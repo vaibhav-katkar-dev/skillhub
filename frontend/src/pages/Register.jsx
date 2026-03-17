@@ -74,17 +74,6 @@ const Register = () => {
               placeholder="••••••••"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
-            <select
-              className="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all appearance-none"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-            >
-              <option value="student">Student</option>
-              <option value="admin">Administrator (Demo)</option>
-            </select>
-          </div>
           <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg shadow-md shadow-emerald-500/20 transition-all active:scale-[0.98]">
             Sign Up
           </button>
