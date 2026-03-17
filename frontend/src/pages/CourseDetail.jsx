@@ -4,6 +4,13 @@ import { useParams, Link } from 'react-router-dom';
 import { api, useAuthStore } from '../store/authStore';
 import { PlayCircle, ShieldCheck, ListTodo, Loader2, BookOpen, Clock } from 'lucide-react';
 
+const THEMES = {
+  blue: 'from-blue-600 to-indigo-700',
+  green: 'from-emerald-600 to-teal-700',
+  pink: 'from-rose-600 to-pink-700',
+  orange: 'from-amber-600 to-orange-600',
+};
+
 const CourseDetail = () => {
   const { slug } = useParams();
   const [courseData, setCourseData] = useState(null);
@@ -48,6 +55,7 @@ const CourseDetail = () => {
   }
 
   const { course, lessons } = courseData;
+  const themeClass = THEMES[course.theme] || THEMES.blue;
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -57,7 +65,7 @@ const CourseDetail = () => {
       </Helmet>
 
       {/* Hero */}
-      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-8 sm:p-12 mb-12 shadow-xl relative overflow-hidden">
+      <div className={`bg-gradient-to-br ${themeClass} rounded-3xl p-8 sm:p-12 mb-12 shadow-xl relative overflow-hidden`}>
         <div className="absolute top-0 right-0 p-12 opacity-10 pointer-events-none text-white">
           <BookOpen className="w-64 h-64" />
         </div>
