@@ -3,38 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { Calendar, User, Clock, ArrowRight } from 'lucide-react';
 
-const blogPosts = [
-  {
-    id: 1,
-    title: "10 Essential HTML5 Tags Every Developer Should Know",
-    excerpt: "HTML5 introduced a slew of new semantic tags. Discover how to use <article>, <section>, <nav>, and more to improve your SEO and accessibility.",
-    author: "Jane Doe",
-    date: "March 15, 2026",
-    readTime: "5 min read",
-    category: "Development",
-    imageUrl: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=80&w=800"
-  },
-  {
-    id: 2,
-    title: "Why Responsive Design is Non-Negotiable in 2026",
-    excerpt: "With mobile traffic dominating the web, building responsive applications is more critical than ever. Learn the core principles of fluid grids and media queries.",
-    author: "John Smith",
-    date: "March 10, 2026",
-    readTime: "7 min read",
-    category: "Design",
-    imageUrl: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&q=80&w=800"
-  },
-  {
-    id: 3,
-    title: "Understanding CSS Flexbox vs Grid",
-    excerpt: "Confused about when to use Flexbox and when to use CSS Grid? We break down the differences and show you real-world examples of both.",
-    author: "Alice Johnson",
-    date: "March 5, 2026",
-    readTime: "8 min read",
-    category: "CSS",
-    imageUrl: "https://images.unsplash.com/photo-1507721999472-8ed4421c4af2?auto=format&fit=crop&q=80&w=800"
-  }
-];
+import { blogPosts } from '../data/blogs';
 
 const Blog = () => {
   return (
@@ -77,7 +46,7 @@ const Blog = () => {
                 </div>
                 
                 <h3 className="text-xl font-bold text-slate-900 mb-3 leading-tight group-hover:text-blue-600 transition-colors">
-                  <Link to="#">{post.title}</Link>
+                  <Link to={`/blog/${post.id}`}>{post.title}</Link>
                 </h3>
                 
                 <p className="text-slate-600 text-sm mb-6 flex-grow leading-relaxed">
@@ -89,7 +58,7 @@ const Blog = () => {
                     <div className="bg-slate-200 p-1.5 rounded-full text-slate-500"><User className="w-4 h-4" /></div>
                     <span className="text-sm font-semibold text-slate-700">{post.author}</span>
                   </div>
-                  <Link to="#" className="text-blue-600 hover:text-blue-700 font-semibold text-sm flex items-center gap-1 transition-colors group/link">
+                  <Link to={`/blog/${post.id}`} className="text-blue-600 hover:text-blue-700 font-semibold text-sm flex items-center gap-1 transition-colors group/link">
                     Read more <ArrowRight className="w-4 h-4 group-hover/link:translate-x-1 transition-transform" />
                   </Link>
                 </div>

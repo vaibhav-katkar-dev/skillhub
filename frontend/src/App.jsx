@@ -15,6 +15,7 @@ import QuizView from './pages/QuizView';
 import Dashboard from './pages/Dashboard';
 import VerifyCert from './pages/VerifyCert';
 import Blog from './pages/Blog';
+import BlogPost from './pages/BlogPost';
 
 import AdminCourseUpload from './pages/AdminCourseUpload';
 
@@ -44,6 +45,7 @@ function App() {
               <Route path="/verify" element={<VerifyCert />} />
               <Route path="/verify/:certId" element={<VerifyCert />} />
               <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:slug" element={<BlogPost />} />
             </Routes>
           </main>
           <Footer />
