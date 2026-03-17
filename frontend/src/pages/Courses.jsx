@@ -8,12 +8,12 @@ import {
 } from 'lucide-react';
 
 // Deeper, more saturated colour themes for better contrast
-const THEMES = [
-  { bar: 'from-indigo-600 to-blue-700',   iconBg: 'bg-indigo-100',  iconText: 'text-indigo-700',  link: 'text-indigo-700' }, // Theme 1: Blue
-  { bar: 'from-emerald-600 to-teal-700',  iconBg: 'bg-emerald-100', iconText: 'text-emerald-700', link: 'text-emerald-700' }, // Theme 2: Green
-  { bar: 'from-rose-600 to-pink-700',     iconBg: 'bg-rose-100',    iconText: 'text-rose-700',    link: 'text-rose-700' },    // Theme 3: Pink/Red
-  { bar: 'from-amber-500 to-orange-600',  iconBg: 'bg-amber-100',   iconText: 'text-amber-700',   link: 'text-amber-700' },   // Theme 4: Orange
-];
+const THEMES = {
+  blue: { bar: 'from-indigo-600 to-blue-700',   iconBg: 'bg-indigo-100',  iconText: 'text-indigo-700',  link: 'text-indigo-700' },
+  green: { bar: 'from-emerald-600 to-teal-700',  iconBg: 'bg-emerald-100', iconText: 'text-emerald-700', link: 'text-emerald-700' },
+  pink: { bar: 'from-rose-600 to-pink-700',     iconBg: 'bg-rose-100',    iconText: 'text-rose-700',    link: 'text-rose-700' },
+  orange: { bar: 'from-amber-500 to-orange-600',  iconBg: 'bg-amber-100',   iconText: 'text-amber-700',   link: 'text-amber-700' },
+};
 
 // Skeleton card
 const Skeleton = () => (
@@ -142,8 +142,8 @@ const Courses = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {courses.map((course, idx) => {
-              const t = THEMES[idx % THEMES.length];
+            {courses.map((course) => {
+              const t = THEMES[course.theme] || THEMES.blue;
               return (
                 <div
                   key={course._id}

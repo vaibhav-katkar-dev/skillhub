@@ -26,6 +26,7 @@ const AdminCourseUpload = () => {
               slug: course.slug,
               description: course.description,
               image: course.image || '',
+              theme: course.theme || 'blue',
               published: course.published
             },
             lessons: lessons.map(l => ({
@@ -105,6 +106,7 @@ const AdminCourseUpload = () => {
         slug: "sample-course-title",
         description: "A comprehensive description of what this course covers.",
         image: "https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=800&q=80",
+        theme: "blue",
         published: true
       },
       lessons: [
@@ -177,7 +179,7 @@ const AdminCourseUpload = () => {
         <div className="p-1">
           <textarea
             className="w-full h-[500px] p-5 font-mono text-sm bg-slate-900 text-slate-200 resize-y focus:outline-none rounded-b-xl"
-            placeholder='{ "course": { "title": "New Course", "slug": "new-course", "description": "...", "published": true }, "lessons": [], "quiz": {} }'
+            placeholder='{ "course": { "title": "New Course", "slug": "new-course", "description": "...", "theme": "blue", "published": true }, "lessons": [], "quiz": {} }'
             value={jsonText}
             onChange={(e) => setJsonText(e.target.value)}
             spellCheck="false"
