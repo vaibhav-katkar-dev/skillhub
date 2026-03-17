@@ -18,7 +18,7 @@ router.post('/generate', authOptions, async (req, res) => {
     if (!course) return res.status(404).json({ message: 'Course not found' });
 
     // Assuming we verified passing in the quiz route, or we check a ledger here
-    const certId = `CERT-${uuidv4().substring(0,8).toUpperCase()}`;
+    const certId = `CERT-${uuidv4().substring(0, 8).toUpperCase()}`;
 
     // Ensure we don't duplicate certificates for the same course and student
     let cert = await Certificate.findOne({ student: user._id, course: course._id });
@@ -47,7 +47,7 @@ router.get('/mine', authOptions, async (req, res) => {
       .populate('course', 'title')
       .sort({ issueDate: -1 })
       .lean();
-    
+
     // Deduplicate by course (keep first/latest per course)
     const uniqueMap = new Map();
     certs.forEach(cert => {
@@ -74,7 +74,7 @@ router.get('/download/:certId', async (req, res) => {
 
     // Generate PDF on the fly
     const doc = new PDFDocument({ layout: 'landscape', size: 'A4' });
-    
+
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `inline; filename=Certificate-${cert.certificateId}.pdf`);
 
@@ -111,7 +111,7 @@ router.get('/download/:certId', async (req, res) => {
     doc.moveDown(2);
     doc.fontSize(15).fillColor('#6b7280').text(`Certificate ID: ${cert.certificateId}`, { align: 'center' });
     doc.text(`Date of Issue: ${cert.issueDate.toDateString()}`, { align: 'center' });
-    doc.text(`Verify at: http://localhost:5173/verify/${cert.certificateId}`, { align: 'center' });
+    doc.text(`Verify at: https://skillhubpro.vercel.app/verify/${cert.certificateId}`, { align: 'center' });
 
     doc.end();
 

@@ -1,8 +1,34 @@
 import express from 'express';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import Course from '../models/Course.js';
 import Lesson from '../models/Lesson.js';
 import Quiz from '../models/Quiz.js';
 import { authOptions, adminCheck } from '../middleware/auth.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const PUBLIC_DATA_DIR = path.join(__dirname, '../../frontend/public/data');
+
+// Helper to regenerate static JSON
+async function regenerateStaticData() {
+  try {
+    if (!fs.existsSync(PUBLIC_DATA_DIR)) {
+      fs.mkdirSync(PUBLIC_DATA_DIR, { recursive: true });
+    }
+    const courses = await Course.find({ published: true }).lean();
+    fs.writeFileSync(path.join(PUBLIC_DATA_DIR, 'courses.json'), JSON.stringify(courses, null, 2));
+
+    for (const course of courses) {
+      const lessons = await Lesson.find({ course: course._id }).sort({ order: 1 }).lean();
+      fs.writeFileSync(path.join(PUBLIC_DATA_DIR, `${course.slug}.json`), JSON.stringify({ course, lessons }, null, 2));
+    }
+    console.log('✅ Static JSON files regenerated automatically');
+  } catch (err) {
+    console.error('❌ Failed to regenerate static JSON:', err);
+  }
+}
 
 const router = express.Router();
 
@@ -82,6 +108,9 @@ router.post('/upload', authOptions, adminCheck, async (req, res) => {
     }
 
     res.json({ message: 'Course uploaded successfully!', slug: savedCourse.slug });
+    
+    // Asynchronously regenerate the static files
+    regenerateStaticData();
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server Error. Are you sure slug is unique?', error: err.message });
@@ -118,6 +147,9 @@ router.delete('/:id', authOptions, adminCheck, async (req, res) => {
     await Quiz.deleteMany({ course: courseId });
     await Course.findByIdAndDelete(courseId);
     res.json({ message: 'Course deleted successfully' });
+    
+    // Regnerate static files after deletion
+    regenerateStaticData();
   } catch (err) {
     res.status(500).json({ message: 'Server Error', error: err.message });
   }
