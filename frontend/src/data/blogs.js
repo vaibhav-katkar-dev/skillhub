@@ -91,5 +91,98 @@ const activeBtn = document.querySelector('nav button.active');</code></pre>
       slug: 'ultimate-javascript-masterclass',
       description: 'Master Vanilla JS, DOM, functions, and async code.'
     }
+  },
+  {
+    id: 'python-beginner-mistakes-to-avoid',
+    title: '10 Python Mistakes Every Beginner Makes (And How to Fix Them)',
+    excerpt: 'Writing Python code is easy — writing it correctly is another story. Avoid these common beginner pitfalls and instantly level up your Python skills with clean, professional habits.',
+    content: `
+      <h2>Python Looks Easy — Until It Isn't</h2>
+      <p>Python is famous for its beginner-friendly syntax. But that simplicity can be deceiving. Many beginners pick up bad habits early that cause hard-to-debug bugs later. Let's fix them right now.</p>
+
+      <h3>1. Using == to Compare Instead of is</h3>
+      <p>Beginners often use <code>==</code> to check if a variable is <code>None</code>, <code>True</code>, or <code>False</code>. The correct and Pythonic way is to use <code>is</code> for identity checks.</p>
+      <pre><code># ❌ Wrong
+if result == None:
+    print("No result")
+
+# ✅ Correct
+if result is None:
+    print("No result")</code></pre>
+
+      <h3>2. Mutable Default Arguments in Functions</h3>
+      <p>This is one of Python's most notorious traps. Never use a mutable object like a list or dictionary as a default parameter value. It is created once and shared across all calls to the function.</p>
+      <pre><code># ❌ Wrong — the same list persists across calls!
+def add_item(item, cart=[]):
+    cart.append(item)
+    return cart
+
+# ✅ Correct — use None as default, create inside
+def add_item(item, cart=None):
+    if cart is None:
+        cart = []
+    cart.append(item)
+    return cart</code></pre>
+
+      <h3>3. Not Using List Comprehensions</h3>
+      <p>A traditional loop to build a list is verbose and slow. Python's list comprehensions are not just shorter — they are also faster under the hood because they are optimised at the interpreter level.</p>
+      <pre><code># ❌ Verbose way
+squares = []
+for i in range(1, 11):
+    squares.append(i ** 2)
+
+# ✅ Pythonic way — list comprehension
+squares = [i ** 2 for i in range(1, 11)]
+print(squares)  # [1, 4, 9, 16, 25, 36, 49, 64, 81, 100]</code></pre>
+
+      <h3>4. Catching Bare Exceptions</h3>
+      <p>Writing <code>except:</code> with no exception type silently swallows every error — including keyboard interrupts and system exits. Always specify which exception you expect.</p>
+      <pre><code># ❌ Wrong — catches literally everything
+try:
+    result = 10 / 0
+except:
+    print("Something went wrong")
+
+# ✅ Correct — specific and informative
+try:
+    result = 10 / 0
+except ZeroDivisionError as e:
+    print(f"Math error: {e}")</code></pre>
+
+      <h3>5. Opening Files Without a Context Manager</h3>
+      <p>Forgetting to close a file leads to memory leaks and data corruption. Always use <code>with open()</code> — it guarantees the file is closed automatically, even if an error occurs inside the block.</p>
+      <pre><code># ❌ Wrong — what if an error occurs before file.close()?
+file = open("data.txt", "r")
+content = file.read()
+file.close()
+
+# ✅ Correct — auto-closes no matter what
+with open("data.txt", "r") as file:
+    content = file.read()</code></pre>
+
+      <h3>Bonus: Use enumerate() Instead of range(len())</h3>
+      <p>When you need both the index and the value while looping over a list, avoid the clunky <code>range(len(...))</code> pattern. Python's built-in <code>enumerate()</code> is cleaner and more readable.</p>
+      <pre><code># ❌ Ugly way
+fruits = ["Apple", "Banana", "Mango"]
+for i in range(len(fruits)):
+    print(i, fruits[i])
+
+# ✅ Pythonic way
+for i, fruit in enumerate(fruits):
+    print(i, fruit)</code></pre>
+
+      <h2>Write Python the Way Python Was Meant to Be Written</h2>
+      <p>These fixes are not just cosmetic. They improve performance, prevent bugs, and make your code far easier for other developers (and your future self) to read and maintain. The Python community calls this writing <strong>Pythonic</strong> code — clean, expressive, and idiomatic.</p>
+    `,
+    author: 'Riya Desai',
+    date: 'March 17, 2026',
+    readTime: '8 min read',
+    category: 'Python',
+    imageUrl: 'https://images.unsplash.com/photo-1526379095098-d400fd0bf935?auto=format&fit=crop&w=1200&q=80',
+    relatedCourse: {
+      title: 'Python Basics',
+      slug: 'ultimate-python-masterclass',
+      description: 'Master Python from scratch — variables, loops, functions, OOP and more.'
+    }
   }
 ];
