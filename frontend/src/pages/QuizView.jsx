@@ -97,7 +97,7 @@ const QuizView = () => {
   return (
     <div className="max-w-3xl mx-auto px-4 py-12">
       <Helmet>
-        <title>Quiz | {course?.title} | SkillHub</title>
+        <title>Certification Exam | {course?.title} | SkillHub</title>
       </Helmet>
 
       {result ? (
@@ -117,7 +117,7 @@ const QuizView = () => {
             {result.passed ? 'Congratulations!' : 'Almost There!'}
           </h2>
           <p className="text-xl text-slate-700 mb-6 font-medium">
-            You scored <span className="font-bold text-slate-900">{result.score}%</span> on the quiz.
+            You scored <span className="font-bold text-slate-900">{result.score}%</span> on the Certification Exam.
           </p>
           
           {result.passed ? (
@@ -126,7 +126,7 @@ const QuizView = () => {
             </p>
           ) : (
             <p className="text-slate-600 mb-8 max-w-md mx-auto">
-              You need {quiz.passingScore}% to pass. Don't worry, you can always review the material and try again.
+              A score of {quiz.passingScore}% is required to qualify. Review the course material and reattempt the exam when ready.
             </p>
           )}
 
@@ -156,7 +156,7 @@ const QuizView = () => {
                 onClick={() => { setResult(null); setAnswers({}); }}
                 className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-medium transition-colors shadow-md shadow-blue-500/20"
               >
-                Retake Quiz
+                Retake Exam
               </button>
             )}
           </div>
@@ -169,13 +169,13 @@ const QuizView = () => {
             </div>
           </div>
           <h2 className="text-4xl font-extrabold mb-4 text-blue-700">
-            Already Completed!
+            Exam Passed!
           </h2>
           <p className="text-xl text-slate-700 mb-6 font-medium">
-            You have already cleared this qualification quiz.
+            You have already cleared this Certification Exam.
           </p>
           <p className="text-slate-600 mb-8 max-w-md mx-auto">
-            You can download your certificate here, or you can retake the quiz if you'd like to test your knowledge again.
+            Your certificate is ready to download. You may also retake the exam to strengthen your score.
           </p>
 
           <div className="flex justify-center gap-4 flex-wrap">
@@ -203,15 +203,15 @@ const QuizView = () => {
               onClick={() => setRetakeMode(true)}
               className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-medium transition-colors shadow-md shadow-slate-800/20"
             >
-              Retake Quiz
+              Retake Exam
             </button>
           </div>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="bg-white border border-slate-200 rounded-2xl p-8 sm:p-10 shadow-lg">
           <div className="mb-8 border-b border-slate-200 pb-6">
-            <h1 className="text-3xl font-bold mb-2 text-slate-900">Final Assessment</h1>
-            <p className="text-slate-600 font-medium">{course?.title} • {quiz?.questions?.length} Questions • {quiz?.passingScore}% to pass</p>
+            <h1 className="text-3xl font-bold mb-2 text-slate-900">Certification Exam</h1>
+            <p className="text-slate-600 font-medium">{course?.title} • {quiz?.questions?.length} Questions • {quiz?.passingScore}% required to qualify</p>
           </div>
 
           <div className="space-y-10">
@@ -250,7 +250,7 @@ const QuizView = () => {
               disabled={submitting}
               className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-xl font-bold text-lg shadow-md shadow-blue-500/20 disabled:opacity-50 transition-all active:scale-[0.98]"
             >
-              {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Submit Assessment'}
+              {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Submit Exam'}
             </button>
           </div>
         </form>

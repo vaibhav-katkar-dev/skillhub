@@ -132,14 +132,14 @@ const CourseDetail = () => {
         {/* Final Quiz CTA */}
         <div className="mt-8 p-6 bg-emerald-50 border border-emerald-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
           <div>
-            <h3 className="text-xl font-bold text-emerald-800 mb-1">Final Assessment</h3>
-            <p className="text-emerald-700">Pass the quiz spanning all modules to generate your verified certificate.</p>
+            <h3 className="text-xl font-bold text-emerald-800 mb-1">Certification Exam</h3>
+            <p className="text-emerald-700">Complete all modules, then sit the exam to earn your verified certificate.</p>
           </div>
           <Link 
             to={`/courses/${slug}/quiz`}
             className="flex-shrink-0 whitespace-nowrap bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-3 rounded-lg font-medium shadow-md shadow-emerald-600/20 transition-all active:scale-95 text-center"
           >
-            Take Quiz
+            Take Exam
           </Link>
         </div>
       </div>

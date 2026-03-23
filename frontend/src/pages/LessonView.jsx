@@ -437,7 +437,7 @@ const LessonView = () => {
                   {isLastLesson ? (
                     <button onClick={handleContinue} className="lv-btn-quiz">
                       <Trophy size={15} />
-                      Go to Final Quiz
+                      Take Certification Exam
                     </button>
                   ) : (
                     <button onClick={handleContinue} className="lv-btn-next">
@@ -494,9 +494,9 @@ const LessonView = () => {
             <div className="lv-sb-footer">
               <Link to={`/courses/${slug}/quiz`} className="lv-sb-quiz-btn">
                 <GraduationCap size={15} />
-                Take Final Exam
+                Take Certification Exam
               </Link>
-              <p className="lv-sb-footer-note">Pass the quiz to earn your certificate</p>
+              <p className="lv-sb-footer-note">Pass the exam to earn your certificate</p>
             </div>
           </aside>
 
@@ -573,7 +573,7 @@ const MobileModuleList = ({ allLessons, lessonId, slug, completedLessons, progre
           boxShadow:'0 4px 14px rgba(5,150,105,.3)',
         }}
       >
-        <GraduationCap size={15} /> Take Final Exam
+        <GraduationCap size={15} /> Take Certification Exam
       </Link>
     </div>
   </div>

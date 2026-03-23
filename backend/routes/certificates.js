@@ -1,4 +1,4 @@
-import express from 'express';
+﻿import express from 'express';
 import PDFDocument from 'pdfkit';
 import User from '../models/User.js';
 import Certificate from '../models/Certificate.js';
@@ -8,9 +8,6 @@ import { getCourseFromJSON, getAllCoursesFromJSON } from '../utils/courseData.js
 
 const router = express.Router();
 
-// ─── Internal helper: resolve course title from JSON (primary) ────────────────
-// Courses are stored in all-courses.json, not necessarily in MongoDB.
-// We always look up the title from JSON to avoid populate() returning null.
 async function resolveCourseTitle(courseId) {
   if (!courseId) return null;
   const idStr = courseId.toString();
@@ -18,35 +15,33 @@ async function resolveCourseTitle(courseId) {
   return jsonCourse?.title || null;
 }
 
-// Generate Certificate (Internal, triggered when passing a quiz typically)
+function fitSingleLineText(doc, value, maxWidth) {
+  let text = String(value ?? '');
+  if (!text) return '';
+  if (doc.widthOfString(text) <= maxWidth) return text;
+
+  const suffix = '...';
+  while (text.length > 0 && doc.widthOfString(text + suffix) > maxWidth) {
+    text = text.slice(0, -1);
+  }
+  return text.length ? text + suffix : suffix;
+}
+
 router.post('/generate', authOptions, async (req, res) => {
   try {
     const { courseId } = req.body;
     const user = await User.findById(req.user.id);
-
-    // Verify the course exists in JSON (source of truth)
     const jsonCourse = await getCourseFromJSON(courseId);
     if (!jsonCourse) {
-      console.warn(`[Certificates] Generation failed: Course not found in JSON for ID: ${courseId}`);
-      return res.status(404).json({ message: 'Course not found. Please check if the course exists.' });
+      return res.status(404).json({ message: 'Course not found.' });
     }
-
-    // Ensure we don't duplicate certificates for the same course and student
     let cert = await Certificate.findOne({ student: user._id, course: courseId });
     if (!cert) {
       const certId = `CERT-${uuidv4().substring(0, 8).toUpperCase()}`;
-      cert = new Certificate({
-        student: user._id,
-        course: courseId,
-        certificateId: certId
-      });
+      cert = new Certificate({ student: user._id, course: courseId, certificateId: certId });
       await cert.save();
-      console.info(`[Certificates] New certificate created: ${certId} for user ${user._id}`);
     }
-
-    // Update user completedCourses
     await User.findByIdAndUpdate(user._id, { $addToSet: { completedCourses: courseId } });
-
     res.json({ message: 'Certificate Generated', certificateId: cert.certificateId });
   } catch (err) {
     console.error('[Certificates] Generation error:', err);
@@ -54,37 +49,22 @@ router.post('/generate', authOptions, async (req, res) => {
   }
 });
 
-// Get user's certificates
 router.get('/mine', authOptions, async (req, res) => {
   try {
-    // Fetch raw certs WITHOUT populate — course IDs may not exist in MongoDB
     const certs = await Certificate.find({ student: req.user.id })
-      .populate('student', 'name')   // user always exists
+      .populate('student', 'name')
       .sort({ issueDate: -1 })
       .lean();
-
     const allJSONEntries = await getAllCoursesFromJSON();
-
     const enrichedCerts = certs.map(cert => {
       const courseIdStr = cert.course?.toString();
       const jsonEntry = allJSONEntries.find(e => e.course._id.toString() === courseIdStr);
-      return {
-        ...cert,
-        course: {
-          _id: courseIdStr,
-          title: jsonEntry?.course?.title || 'Unknown Course'
-        }
-      };
+      return { ...cert, course: { _id: courseIdStr, title: jsonEntry?.course?.title || 'Unknown Course' } };
     });
-
-    // Deduplicate by course (keep latest per course)
     const uniqueMap = new Map();
     enrichedCerts.forEach(cert => {
-      if (cert.course?._id) {
-        if (!uniqueMap.has(cert.course._id)) uniqueMap.set(cert.course._id, cert);
-      }
+      if (cert.course?._id && !uniqueMap.has(cert.course._id)) uniqueMap.set(cert.course._id, cert);
     });
-
     res.setHeader('Cache-Control', 'private, max-age=60');
     res.json(Array.from(uniqueMap.values()));
   } catch (err) {
@@ -93,160 +73,313 @@ router.get('/mine', authOptions, async (req, res) => {
   }
 });
 
-// Download/View PDF
 router.get('/download/:certId', async (req, res) => {
   let doc;
   try {
-    // Do NOT populate course — it may not exist in MongoDB
     const cert = await Certificate.findOne({ certificateId: req.params.certId })
       .populate('student', 'name')
       .lean();
+    if (!cert) return res.status(404).json({ message: 'Certificate not found.' });
 
-    if (!cert) return res.status(404).json({ message: 'Certificate not found' });
-
-    // Resolve course title from JSON (the source of truth for course data)
     const courseTitle = await resolveCourseTitle(cert.course);
-
     if (!cert.student || !courseTitle) {
-      console.warn(`[Certificates] Certificate ${req.params.certId} missing data:`, {
-        hasStudent: !!cert.student,
-        hasCourseTitle: !!courseTitle,
-        courseId: cert.course?.toString()
-      });
-      return res.status(404).json({
-        message: 'Certificate invalid: associated student or course not found. Please contact support.'
-      });
+      return res.status(404).json({ message: 'Certificate data incomplete.' });
     }
 
-    // Generate PDF on the fly
-    doc = new PDFDocument({ layout: 'landscape', size: 'A4' });
-
+    doc = new PDFDocument({ layout: 'landscape', size: 'A4', margin: 0 });
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `inline; filename=Certificate-${cert.certificateId}.pdf`);
-
-    // Handle client disconnect or stream errors gracefully
-    res.on('error', (err) => {
-      console.error('Response stream error:', err.message);
-      doc.destroy();
-    });
-
-    req.on('close', () => {
-      doc.destroy();
-    });
-
-    doc.on('error', (err) => {
-      console.error('PDF doc error:', err.message);
-      if (!res.headersSent) {
-        res.status(500).json({ message: 'PDF generation failed' });
-      }
-    });
-
     doc.pipe(res);
+    doc.on('error', (err) => { console.error('PDF stream error:', err.message); doc.destroy(); });
 
-    // ── PDF Content ──────────────────────────────────────────────────────────
-    const pageW = doc.page.width;
-    const pageH = doc.page.height;
+    const W = doc.page.width;   // 841.89
+    const H = doc.page.height;  // 595.28
+    const cx = W / 2;
 
-    // Background
-    doc.rect(0, 0, pageW, pageH).fill('#f8fafc');
+    // ── PALETTE ───────────────────────────────────────────────
+    const NAVY     = '#0f2a4a';
+    const NAVY_MID = '#1a3a6b';
+    const GOLD     = '#b8922a';
+    const GOLD_LT  = '#d4aa50';
+    const GOLD_PAL = '#e8d08a';
+    const CREAM    = '#fdf9f2';
+    const CREAM_DK = '#f5eddc';
+    const SLATE    = '#4a5568';
+    const STEEL    = '#7a9bbf';
 
-    // Decorative border
-    doc.rect(20, 20, pageW - 40, pageH - 40)
-      .lineWidth(3)
-      .stroke('#1d4ed8');
+    // ── HELPERS ───────────────────────────────────────────────
+    // CRITICAL: always pass x=0, width=W for true horizontal centering
+    const centerText = (text, y, size, font, color, opts = {}) => {
+      doc.fontSize(size).font(font).fillColor(color)
+         .text(text, 0, y, { width: W, align: 'center', lineBreak: false, ...opts });
+    };
 
-    // Inner border (double border effect)
-    doc.rect(28, 28, pageW - 56, pageH - 56)
-      .lineWidth(1)
-      .stroke('#93c5fd');
+    const drawDiamond = (x, y, outer, hollow = false) => {
+      doc.save();
+      doc.translate(x, y).rotate(45);
+      doc.rect(-outer / 2, -outer / 2, outer, outer).fill(GOLD);
+      if (hollow) {
+        const inner = outer * 0.55;
+        doc.rect(-inner / 2, -inner / 2, inner, inner).fill(CREAM);
+        const core = outer * 0.22;
+        doc.rect(-core / 2, -core / 2, core, core).fill(GOLD);
+      }
+      doc.restore();
+    };
 
-    // Header accent bar
-    doc.rect(20, 20, pageW - 40, 8).fill('#1d4ed8');
+    const drawDivider = (y, halfW = 200) => {
+      doc.moveTo(cx - halfW, y).lineTo(cx - 20, y).lineWidth(0.8).stroke(GOLD);
+      doc.moveTo(cx + 20, y).lineTo(cx + halfW, y).lineWidth(0.8).stroke(GOLD);
+      drawDiamond(cx, y, 10, true);
+      doc.circle(cx - 35, y, 2).fill(GOLD_PAL);
+      doc.circle(cx + 35, y, 2).fill(GOLD_PAL);
+    };
 
-    // Title
-    doc.fontSize(42)
-      .fillColor('#1d4ed8')
-      .font('Helvetica-Bold')
-      .text('Certificate of Completion', 0, 80, { align: 'center' });
+    // ── BACKGROUND ────────────────────────────────────────────
+    doc.rect(0, 0, W, H).fill(CREAM);
 
-    // Subtitle line
-    doc.moveTo(pageW / 2 - 200, 140)
-      .lineTo(pageW / 2 + 200, 140)
-      .lineWidth(1)
-      .stroke('#cbd5e1');
+    // Subtle diagonal line texture
+    doc.save();
+    doc.opacity(0.028);
+    for (let i = -H; i < W + H; i += 26) {
+      doc.moveTo(i, 0).lineTo(i + H, H).lineWidth(10).stroke(NAVY);
+    }
+    doc.restore();
 
-    doc.fontSize(16)
-      .fillColor('#475569')
-      .font('Helvetica')
-      .text('This is to certify that', 0, 160, { align: 'center' });
+    // ── BORDER SYSTEM ─────────────────────────────────────────
+    // 1) Outer navy frame
+    doc.rect(0, 0, W, H).fill(NAVY);
 
-    // Student name
-    doc.fontSize(34)
-      .fillColor('#059669')
-      .font('Helvetica-Bold')
-      .text(cert.student?.name || 'Student Name Unavailable', 0, 195, { align: 'center' });
+    // 2) Ivory inset with texture
+    doc.rect(14, 14, W - 28, H - 28).fill(CREAM);
+    doc.save();
+    doc.rect(14, 14, W - 28, H - 28).clip();
+    doc.opacity(0.022);
+    for (let i = -H; i < W + H; i += 26) {
+      doc.moveTo(i, 0).lineTo(i + H, H).lineWidth(10).stroke(NAVY);
+    }
+    doc.restore();
 
-    doc.moveTo(pageW / 2 - 160, 245)
-      .lineTo(pageW / 2 + 160, 245)
-      .lineWidth(1)
-      .stroke('#d1d5db');
+    // 3) Gold rule
+    doc.rect(22, 22, W - 44, H - 44).lineWidth(1.5).stroke(GOLD);
 
-    doc.fontSize(16)
-      .fillColor('#475569')
-      .font('Helvetica')
-      .text('has successfully completed the course', 0, 260, { align: 'center' });
+    // 4) Inner navy hairline
+    doc.rect(30, 30, W - 60, H - 60).lineWidth(0.5).stroke(NAVY_MID);
 
-    // Course title
-    doc.fontSize(26)
-      .fillColor('#1d4ed8')
-      .font('Helvetica-Bold')
-      .text(courseTitle, 60, 290, { align: 'center', width: pageW - 120 });
+    // ── CORNER L-BRACKETS ────────────────────────────────────
+    const bracket = (ox, oy, fx, fy) => {
+      doc.save();
+      doc.translate(ox, oy).scale(fx, fy);
+      doc.rect(0, 0, 42, 4).fill(GOLD);
+      doc.rect(0, 0, 4, 42).fill(GOLD);
+      doc.rect(40, 4, 3, 3).fill(GOLD);
+      doc.rect(4, 40, 3, 3).fill(GOLD);
+      doc.restore();
+    };
+    bracket(22, 22,  1,  1);
+    bracket(W - 22, 22, -1,  1);
+    bracket(22, H - 22,  1, -1);
+    bracket(W - 22, H - 22, -1, -1);
 
-    // Footer details
-    const footerY = pageH - 110;
-    doc.fontSize(12)
-      .fillColor('#6b7280')
-      .font('Helvetica')
-      .text(`Certificate ID: ${cert.certificateId}`, 0, footerY, { align: 'center' });
+    // Edge center dots
+    [[cx, 22], [cx, H - 22], [22, H / 2], [W - 22, H / 2]]
+      .forEach(([x, y]) => doc.circle(x, y, 3.5).fill(GOLD));
 
-    doc.text(
-      `Date of Issue: ${cert.issueDate ? new Date(cert.issueDate).toDateString() : new Date().toDateString()}`,
-      0, footerY + 20, { align: 'center' }
+    // ── HEADER BAND ───────────────────────────────────────────
+    doc.rect(30, 30, W - 60, 60).fill(NAVY);
+    doc.rect(30, 90, W - 60, 2).fill(GOLD);
+
+    // Flanking rule lines beside brand
+    const bY = 48;
+    doc.moveTo(cx - 210, bY).lineTo(cx - 108, bY).lineWidth(0.5).stroke(GOLD);
+    doc.moveTo(cx + 108, bY).lineTo(cx + 210, bY).lineWidth(0.5).stroke(GOLD);
+    doc.circle(cx - 108, bY, 2.5).fill(GOLD_PAL);
+    doc.circle(cx + 108, bY, 2.5).fill(GOLD_PAL);
+
+    // Brand & tagline — x=30, width=W-60 to stay inside band bounds
+    doc.fontSize(11).font('Helvetica-Bold').fillColor(GOLD_LT)
+       .text('S  K  I  L  L  H  U  B', 30, 40,
+         { width: W - 60, align: 'center', lineBreak: false, characterSpacing: 6 });
+
+    doc.fontSize(7.5).font('Helvetica-Oblique').fillColor(STEEL)
+       .text('EMPOWERING LEARNERS  ·  BUILDING FUTURES  ·  INSPIRING EXCELLENCE',
+         30, 62, { width: W - 60, align: 'center', lineBreak: false, characterSpacing: 1.5 });
+
+    // ── WATERMARK ─────────────────────────────────────────────
+    doc.save();
+    doc.opacity(0.03);
+    doc.translate(cx, H / 2 + 20).rotate(-28);
+    doc.fontSize(108).fillColor(NAVY).font('Helvetica-Bold')
+       .text('CERTIFIED', -250, -54, { lineBreak: false });
+    doc.restore();
+
+    // ── DIVIDER 1 ─────────────────────────────────────────────
+    drawDivider(105, 250);
+
+    // ── SMALL CAPS LABEL ──────────────────────────────────────
+    centerText('— CERTIFICATE OF ACHIEVEMENT —', 112, 8.5, 'Helvetica-Bold', GOLD);
+
+    // ── MAIN TITLE ────────────────────────────────────────────
+    centerText('Certificate of Achievement', 124, 34, 'Helvetica-Bold', NAVY);
+
+    // ── DIVIDER 2 ─────────────────────────────────────────────
+    drawDivider(168, 170);
+
+    // ── INTRO LINE ────────────────────────────────────────────
+    centerText('This certificate is proudly presented to', 177, 11, 'Helvetica-Oblique', SLATE);
+
+    // ── STUDENT NAME ──────────────────────────────────────────
+    // Auto-size: shrink from 36 until fits inside W - 140 (70px margin each side)
+    const studentName = cert.student?.name || 'Student';
+    let namePt = 36;
+    doc.font('Helvetica-Bold');
+    while (namePt > 16 && doc.fontSize(namePt).widthOfString(studentName) > W - 140) {
+      namePt -= 1;
+    }
+
+    const nameY  = 193;
+    const nameW  = doc.fontSize(namePt).font('Helvetica-Bold').widthOfString(studentName);
+    const nameX0 = cx - nameW / 2;  // left edge of rendered name
+    const nameX1 = cx + nameW / 2;  // right edge
+
+    // Draw name — x=0, width=W for perfect center alignment
+    doc.fontSize(namePt).font('Helvetica-Bold').fillColor(NAVY)
+       .text(studentName, 0, nameY, { width: W, align: 'center', lineBreak: false });
+
+    // Double underline anchored to actual name width
+    const ul1Y = nameY + namePt + 3;
+    const ul2Y = ul1Y + 4;
+    doc.moveTo(nameX0, ul1Y).lineTo(nameX1, ul1Y).lineWidth(2.5).stroke(GOLD);
+    doc.moveTo(nameX0 + 12, ul2Y).lineTo(nameX1 - 12, ul2Y).lineWidth(0.8).stroke(NAVY_MID);
+
+    // Flanking dashes outside the name
+    doc.moveTo(nameX0 - 22, nameY + namePt / 2)
+       .lineTo(nameX0 - 6, nameY + namePt / 2).lineWidth(1.2).stroke(GOLD);
+    doc.moveTo(nameX1 + 6, nameY + namePt / 2)
+       .lineTo(nameX1 + 22, nameY + namePt / 2).lineWidth(1.2).stroke(GOLD);
+
+    // ── COURSE LINE & PILL ────────────────────────────────────
+    const afterUl = ul2Y + 10;
+    centerText('has successfully completed the course', afterUl, 10.5, 'Helvetica', SLATE);
+
+    const courseFitted = fitSingleLineText(doc, courseTitle, W - 120);
+    doc.fontSize(14).font('Helvetica-Bold');
+    const pillW = Math.min(doc.widthOfString(courseFitted) + 90, W - 80);
+    const pillX = cx - pillW / 2;
+    const pillY = afterUl + 17;
+
+    doc.rect(pillX, pillY, pillW, 28).fill(NAVY);
+    doc.rect(pillX, pillY, pillW, 28).lineWidth(1).stroke(GOLD);
+    doc.rect(pillX, pillY, pillW, 3).fill(GOLD);         // gold top strip
+    doc.rect(pillX, pillY + 25, pillW, 3).fill(GOLD);    // gold bottom strip
+
+    doc.fontSize(14).font('Helvetica-Bold').fillColor(GOLD_LT)
+       .text(courseFitted, pillX, pillY + 7,
+         { width: pillW, align: 'center', lineBreak: false });
+
+    // ── BODY PARAGRAPH ────────────────────────────────────────
+    const paraY  = pillY + 36;
+    const paraPad = 70;
+
+    // Thin separator
+    doc.moveTo(cx - 240, paraY).lineTo(cx + 240, paraY)
+       .lineWidth(0.4).stroke(GOLD_PAL);
+
+    const bodyText =
+      'and has demonstrated a clear understanding of the course concepts by successfully passing the final ' +
+      'assessment. The candidate has met the required qualification criteria and has shown competency in ' +
+      "applying the acquired knowledge effectively. This certification acknowledges the individual's " +
+      'dedication, skills, and readiness to apply their learning in real-world scenarios.';
+
+    // Multi-line justified paragraph — PDFKit wraps automatically with lineBreak: true
+    doc.fontSize(8.6).font('Helvetica-Oblique').fillColor(SLATE)
+       .text(bodyText, paraPad, paraY + 8, {
+         width: W - paraPad * 2,
+         align: 'justify',
+         lineBreak: true,
+         lineGap: 4
+       });
+
+    // Compute bottom of paragraph for positioning divider dynamically
+    const paraBottom = doc.y + 4;
+
+    // ── DIVIDER 3 ─────────────────────────────────────────────
+    const div3Y = Math.max(paraBottom + 6, H - 100);
+    drawDivider(div3Y, 230);
+
+    // ── INFO ROW ──────────────────────────────────────────────
+    const rawDate   = cert.issueDate ? new Date(cert.issueDate) : new Date();
+    const issueDate = rawDate.toLocaleDateString('en-IN',
+      { year: 'numeric', month: 'long', day: 'numeric' });
+    const verifyUrl = `https://skillhubpro.vercel.app/verify/${cert.certificateId}`;
+
+    const rowY = div3Y + 10;
+    const colW = (W - 100) / 3;
+
+    // Column dividers
+    [cx - colW / 2, cx + colW / 2].forEach(x =>
+      doc.moveTo(x, rowY + 2).lineTo(x, rowY + 50)
+         .lineWidth(0.5).stroke(GOLD_PAL)
     );
 
-    doc.text(
-      `Verify at: https://skillhubpro.vercel.app/verify/${cert.certificateId}`,
-      0, footerY + 40, { align: 'center' }
-    );
+    const infoCol = (label, value, xc, isLink, linkUrl) => {
+      doc.fontSize(7).font('Helvetica-Bold').fillColor(GOLD)
+         .text(label, xc - colW / 2, rowY + 2,
+           { width: colW, align: 'center', lineBreak: false, characterSpacing: 1.5 });
 
-    // Bottom accent bar
-    doc.rect(20, pageH - 28, pageW - 40, 8).fill('#1d4ed8');
+      doc.moveTo(xc - 30, rowY + 14).lineTo(xc + 30, rowY + 14)
+         .lineWidth(0.4).stroke(GOLD_PAL);
+
+      const tOpts = { width: colW, align: 'center', lineBreak: false };
+      if (isLink) { tOpts.link = linkUrl; tOpts.underline = true; }
+
+      doc.fontSize(9).font(isLink ? 'Helvetica-Oblique' : 'Helvetica-Bold')
+         .fillColor(isLink ? GOLD : NAVY)
+         .text(value, xc - colW / 2, rowY + 20, tOpts);
+    };
+
+    infoCol('DATE OF ISSUE', issueDate, cx - colW,       false, null);
+    infoCol('CERTIFICATE ID', cert.certificateId, cx,    false, null);
+    infoCol('VERIFY ONLINE',
+      fitSingleLineText(doc, verifyUrl, colW - 12),
+      cx + colW, true, verifyUrl);
+
+    // ── BOTTOM BAND ───────────────────────────────────────────
+    doc.rect(30, H - 48, W - 60, 2).fill(GOLD);
+    doc.rect(30, H - 46, W - 60, 16).fill(NAVY);
+
+    doc.fontSize(7).font('Helvetica-Oblique').fillColor(STEEL)
+       .text(
+         `This document certifies the above named individual has met all requirements · ${new Date().getFullYear()} SkillHub · All Rights Reserved`,
+         30, H - 41, { width: W - 60, align: 'center', lineBreak: false }
+       );
+
+    doc.rect(30, H - 30, W - 60, 1.2).fill(GOLD_LT);
+
+    doc.fontSize(8.5).font('Helvetica-Bold').fillColor(GOLD_PAL)
+       .text('S K I L L H U B', 30, H - 26,
+         { width: W - 60, align: 'center', lineBreak: false, characterSpacing: 4 });
+
+    // Flanking lines by bottom brand
+    doc.moveTo(cx - 200, H - 22).lineTo(cx - 86, H - 22).lineWidth(0.4).stroke(GOLD);
+    doc.moveTo(cx + 86,  H - 22).lineTo(cx + 200, H - 22).lineWidth(0.4).stroke(GOLD);
 
     doc.end();
-
   } catch (err) {
     console.error('[Certificates] Download error:', err);
-    if (doc) {
-      try { doc.destroy(); } catch (_) { /* ignore */ }
-    }
-    if (!res.headersSent) {
-      res.status(500).json({ message: 'Server error generating certificate. Please try again later.' });
-    }
+    if (doc) { try { doc.destroy(); } catch (_) {} }
+    if (!res.headersSent) res.status(500).json({ message: 'Server error generating certificate.' });
   }
 });
 
-// Verify Certificate (Public)
 router.get('/verify/:certId', async (req, res) => {
   try {
     const cert = await Certificate.findOne({ certificateId: req.params.certId })
       .populate('student', 'name')
       .lean();
-
     if (!cert) return res.status(404).json({ message: 'Certificate not found or invalid id' });
 
-    // Resolve course title from JSON
     const courseTitle = await resolveCourseTitle(cert.course);
-
     if (!cert.student || !courseTitle) {
       return res.status(404).json({ message: 'Certificate invalid: associated student or course not found' });
     }
