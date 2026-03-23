@@ -1,0 +1,19 @@
+# SkillHub robots.txt
+# Allow all legit crawlers
+
+User-agent: *
+Allow: /
+Allow: /blog/
+Allow: /courses/
+Allow: /verify/
+
+# Block private/authenticated areas from indexing
+Disallow: /admin
+Disallow: /admin/
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /register
+
+# Sitemap
+Sitemap: https://skillhub.in/sitemap.xml

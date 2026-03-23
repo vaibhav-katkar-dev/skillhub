@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+
+  <!-- ── Home ──────────────────────────────────────────────────────────── -->
+  <url>
+    <loc>https://skillhub.in/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- ── Static Pages ──────────────────────────────────────────────────── -->
+  <url>
+    <loc>https://skillhub.in/courses</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://skillhub.in/blog</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://skillhub.in/verify</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <!-- ── Courses ───────────────────────────────────────────────────────── -->
+  <url>
+    <loc>https://skillhub.in/courses/ultimate-html-masterclass</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://www.freecodecamp.org/news/content/images/size/w2000/2024/05/cover-img.jpg</image:loc>
+      <image:title>The Ultimate HTML Masterclass for Beginners</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://skillhub.in/courses/css-for-beginners-learn-web-styling-zero-to-pro</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR-gt-C7cN8cvX4QQuA-fUTyyUe8F2JO0HYbg&amp;s</image:loc>
+      <image:title>CSS for Beginners: Learn Web Styling from Zero to Pro</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://skillhub.in/courses/ultimate-javascript-masterclass</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://www.pragimtech.com/wp-content/uploads/2019/03/java-script.jpg</image:loc>
+      <image:title>The Ultimate JavaScript Masterclass for Beginners</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://skillhub.in/courses/ultimate-python-masterclass</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://quantumzeitgeist.com/wp-content/uploads/python.jpg</image:loc>
+      <image:title>The Ultimate Python Masterclass for Beginners</image:title>
+    </image:image>
+  </url>
+
+  <!-- ── Blog Posts ────────────────────────────────────────────────────── -->
+  <url>
+    <loc>https://skillhub.in/blog/mastering-html5-semantic-tags-seo</loc>
+    <lastmod>2026-03-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <news:news>
+      <news:publication>
+        <news:name>SkillHub Blog</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-03-15</news:publication_date>
+      <news:title>Mastering HTML5 in 2026: Why Semantic Tags Matter for SEO</news:title>
+    </news:news>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>HTML5 code on a computer screen showing semantic tags</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://skillhub.in/blog/css-grid-vs-flexbox-modern-web</loc>
+    <lastmod>2026-03-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <news:news>
+      <news:publication>
+        <news:name>SkillHub Blog</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-03-12</news:publication_date>
+      <news:title>CSS Grid vs Flexbox: The Ultimate Guide for Modern Web Design</news:title>
+    </news:news>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1507721999472-8ed4421c4af2?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>CSS code on screen showing grid and flexbox layout examples</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://skillhub.in/blog/javascript-dom-manipulation-secrets</loc>
+    <lastmod>2026-03-08</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <news:news>
+      <news:publication>
+        <news:name>SkillHub Blog</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-03-08</news:publication_date>
+      <news:title>JavaScript DOM Manipulation Secrets that Pro Developers Use</news:title>
+    </news:news>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1555099962-4199c345e5dd?auto=format&amp;fit=crop&amp;w=1200&amp;q=80</image:loc>
+      <image:title>JavaScript code on a dark editor screen showing DOM manipulation</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://skillhub.in/blog/python-beginner-mistakes-to-avoid</loc>
+    <lastmod>2026-03-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <news:news>
+      <news:publication>
+        <news:name>SkillHub Blog</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-03-17</news:publication_date>
+      <news:title>10 Python Mistakes Every Beginner Makes (And How to Fix Them)</news:title>
+    </news:news>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1526379095098-d400fd0bf935?auto=format&amp;fit=crop&amp;w=1200&amp;q=80</image:loc>
+      <image:title>Python code on a laptop screen with a dark theme</image:title>
+    </image:image>
+  </url>
+
+</urlset>
