@@ -79,15 +79,10 @@ const QuizView = () => {
       const res = await api.post(`/quizzes/${course._id}/submit`, { answers: orderedAnswers });
       setResult(res.data);
       
-      if (res.data.passed) {
-        try {
-          const certRes = await api.post('/certificates/generate', { courseId: course._id });
-          setGeneratedCertId(certRes.data.certificateId);
-          // ✅ Bust the dashboard cache so it reflects immediately on next visit
-          clearCache('certs_mine');
-        } catch (err) {
-          console.error("Certificate generation error", err);
-        }
+      // Certificate is now returned directly from quiz submit endpoint
+      if (res.data.passed && res.data.certificateId) {
+        setGeneratedCertId(res.data.certificateId);
+        clearCache('certs_mine');
       }
     } catch {
       setError('Error submitting quiz.');
