@@ -13,6 +13,13 @@ router.get('/:courseId', authOptions, async (req, res) => {
   try {
     const quiz = await Quiz.findOne({ course: req.params.courseId }).lean();
     if (!quiz) return res.status(404).json({ message: 'Quiz not found' });
+
+    const user = await User.findById(req.user.id);
+    const attemptRecord = user.quizAttempts?.find(a => a.courseId === req.params.courseId);
+    quiz.attemptsUsed = attemptRecord ? attemptRecord.attempts : 0;
+    quiz.unlockedAttempts = attemptRecord ? attemptRecord.unlockedAttempts : 0;
+    quiz.requirePayment = quiz.attemptsUsed >= quiz.unlockedAttempts;
+    
     
     // Remove correct options so students can't cheat
     if (req.user?.role !== 'admin') {
@@ -32,8 +39,36 @@ router.get('/:courseId', authOptions, async (req, res) => {
 router.post('/:courseId/submit', authOptions, async (req, res) => {
   try {
     const { answers } = req.body; // Array of selected option indexes
-    const quiz = await Quiz.findOne({ course: req.params.courseId });
+    const courseIdString = req.params.courseId;
+    const quiz = await Quiz.findOne({ course: courseIdString });
     if (!quiz) return res.status(404).json({ message: 'Quiz not found' });
+
+    // Track Attempts
+    const user = await User.findById(req.user.id);
+    let attemptRecordCount = 0;
+    let unlockedCount = 0;
+    
+    const attemptIndex = user.quizAttempts?.findIndex(a => a.courseId === courseIdString);
+    if (attemptIndex > -1) {
+      attemptRecordCount = user.quizAttempts[attemptIndex].attempts;
+      unlockedCount = user.quizAttempts[attemptIndex].unlockedAttempts;
+    }
+    
+    // Check if limit exceeded
+    if (attemptRecordCount >= unlockedCount) {
+      return res.status(403).json({ 
+        message: 'You need to pay to unlock this exam attempt.',
+        requirePayment: true
+      });
+    }
+
+    // Increment attempts
+    if (attemptIndex > -1) {
+      user.quizAttempts[attemptIndex].attempts += 1;
+    } else {
+      user.quizAttempts.push({ courseId: courseIdString, attempts: 1, unlockedAttempts: unlockedCount });
+    }
+    await user.save();
 
     let correctCount = 0;
     quiz.questions.forEach((q, index) => {
@@ -50,7 +85,6 @@ router.post('/:courseId/submit', authOptions, async (req, res) => {
     // Generate certificate if passed
     if (passed) {
       const user = await User.findById(req.user.id);
-      
       // Ensure we don't duplicate certificates for the same course and student
       let cert = await Certificate.findOne({ student: user._id, course: req.params.courseId });
       if (!cert) {

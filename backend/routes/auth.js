@@ -3,8 +3,23 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import { authOptions } from '../middleware/auth.js';
+import { OAuth2Client } from 'google-auth-library';
+import nodemailer from 'nodemailer';
+import crypto from 'crypto';
 
 const router = express.Router();
+
+// Google OAuth client (Requires process.env.GOOGLE_CLIENT_ID)
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+// Email service configured
+const getTransporter = () => nodemailer.createTransport({
+  service: process.env.EMAIL_SERVICE || 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
 
 // Get current user details
 router.get('/me', authOptions, async (req, res) => {
@@ -48,6 +63,10 @@ router.post('/login', async (req, res) => {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: 'Invalid Credentials' });
+    
+    if (!user.password) {
+       return res.status(400).json({ message: 'Please login using Google' });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: 'Invalid Credentials' });
@@ -59,6 +78,126 @@ router.post('/login', async (req, res) => {
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');
+  }
+});
+
+// ── Google Login ────────────────────────────────────────────────────────────
+router.post('/google', async (req, res) => {
+  try {
+    const { credential } = req.body;
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    
+    const payload = ticket.getPayload();
+    const { email, name, sub: googleId } = payload;
+
+    let user = await User.findOne({ email });
+    
+    if (!user) {
+      // Create a user if they don't exist
+      user = new User({
+        name,
+        email,
+        googleId,
+        role: 'student'
+      });
+      await user.save();
+    } else if (!user.googleId) {
+      // Link Google ID if email exists from standard reg
+      user.googleId = googleId;
+      await user.save();
+    }
+
+    const jwtPayload = { user: { id: user.id, role: user.role } };
+    const token = jwt.sign(jwtPayload, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '7d' });
+
+    res.json({ token });
+  } catch (err) {
+    console.error('Google Auth Error:', err.message);
+    res.status(500).send('Server error during Google Authentication');
+  }
+});
+
+// ── Forgot Password ─────────────────────────────────────────────────────────
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    
+    if (!user) {
+      // We still return 200 for security, so attackers can't guess emails
+      return res.status(200).json({ message: 'If that email is registered, a reset link will be sent.' });
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    user.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    user.resetPasswordExpires = Date.now() + 15 * 60 * 1000; // 15 mins
+
+    await user.save();
+
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
+    
+    const transporter = getTransporter();
+    
+    const mailOptions = {
+      to: user.email,
+      from: process.env.EMAIL_USER || 'no-reply@skillhub.com',
+      subject: 'Password Recovery for SkillHub',
+      html: `
+        <p>You requested a password reset for your SkillHub account.</p>
+        <p>Please click on the following link, or paste it into your browser to complete the process:</p>
+        <a href="${resetUrl}">${resetUrl}</a>
+        <p>If you did not request this, please ignore this email and your password will remain unchanged.</p>
+        <p>This link is valid for 15 minutes.</p>
+      `
+    };
+
+    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      await transporter.sendMail(mailOptions);
+    } else {
+      console.log('Skipped sending email. Configuration missing. Reset URL:', resetUrl);
+    }
+
+    res.status(200).json({ message: 'If that email is registered, a reset link will be sent.' });
+  } catch (err) {
+    console.error('Forgot Pass Error:', err);
+    res.status(500).send('Error processing request.');
+  }
+});
+
+// ── Reset Password ──────────────────────────────────────────────────────────
+router.post('/reset-password/:token', async (req, res) => {
+  try {
+    const { password } = req.body;
+    const { token } = req.params;
+
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: { $gt: Date.now() } // Must not be expired
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Password reset token is invalid or has expired.' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(password, salt);
+    
+    // Clear the reset tokens
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+
+    await user.save();
+
+    res.status(200).json({ message: 'Password has been successfully updated. You can now login.' });
+  } catch (err) {
+    console.error('Reset Pass Error:', err);
+    res.status(500).send('Error processing request.');
   }
 });
 

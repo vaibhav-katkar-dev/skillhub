@@ -3,13 +3,23 @@ import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { LogIn } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login } = useAuthStore();
+  const { login, googleLogin } = useAuthStore();
   const navigate = useNavigate();
   const [error, setError] = useState(null);
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      await googleLogin(credentialResponse.credential);
+      navigate('/dashboard');
+    } catch (err) {
+      setError('Google login failed. Please try again.');
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -61,10 +71,31 @@ const Login = () => {
               placeholder="••••••••"
             />
           </div>
+          <div className="flex justify-end">
+            <Link to="/forgot-password" className="text-sm font-medium text-blue-600 hover:text-blue-500">
+              Forgot your password?
+            </Link>
+          </div>
           <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 rounded-lg shadow-md shadow-blue-500/20 transition-all active:scale-[0.98]">
             Sign In
           </button>
         </form>
+
+        <div className="mt-6 flex items-center">
+          <div className="flex-1 border-t border-slate-200"></div>
+          <span className="px-4 text-sm text-slate-500 bg-white">or</span>
+          <div className="flex-1 border-t border-slate-200"></div>
+        </div>
+
+        <div className="mt-6 flex justify-center">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => setError('Google login failed')}
+            theme="outline"
+            size="large"
+            width="100%"
+          />
+        </div>
         
         <p className="mt-6 text-center text-sm text-slate-500">
           Don't have an account? <Link to="/register" className="text-blue-600 hover:text-blue-500 font-medium">Sign up</Link>

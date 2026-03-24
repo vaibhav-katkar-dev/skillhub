@@ -115,5 +115,17 @@ export const useAuthStore = create((set, get) => ({
     sessionStorage.removeItem('skillhub_user');
     clearCache(); // wipe all cached data on logout
     set({ user: null, isAuthenticated: false });
+  },
+
+  googleLogin: async (credential) => {
+    const res = await api.post('/auth/google', { credential });
+    localStorage.setItem('token', res.data.token);
+
+    const userRes = await api.get('/auth/me', {
+      headers: { Authorization: `Bearer ${res.data.token}` }
+    });
+    sessionStorage.setItem('skillhub_user', JSON.stringify(userRes.data));
+    clearCache();
+    set({ user: userRes.data, isAuthenticated: true });
   }
 }));

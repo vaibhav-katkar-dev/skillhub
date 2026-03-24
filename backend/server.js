@@ -12,6 +12,7 @@ import authRoutes from './routes/auth.js';
 import courseRoutes from './routes/courses.js';
 import quizRoutes from './routes/quizzes.js';
 import certRoutes from './routes/certificates.js';
+import paymentRoutes from './routes/payments.js';
 
 dotenv.config();
 
@@ -67,6 +68,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/quizzes', quizRoutes);
 app.use('/api/certificates', certRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // ── Global Error Handler ───────────────────────────────────
 app.use((err, req, res, next) => {

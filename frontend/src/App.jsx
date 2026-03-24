@@ -17,6 +17,8 @@ import Dashboard from './pages/Dashboard';
 import VerifyCert from './pages/VerifyCert';
 import Blog from './pages/Blog';
 import BlogPost from './pages/BlogPost';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 import AdminPanel from './pages/AdminPanel';
 
@@ -47,6 +49,8 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password/:token" element={<ResetPassword />} />
               <Route path="/courses" element={<Courses />} />
               <Route path="/courses/:slug" element={<CourseDetail />} />
               <Route path="/courses/:slug/lesson/:lessonId" element={<LessonView />} />

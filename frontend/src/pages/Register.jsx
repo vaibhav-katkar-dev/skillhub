@@ -3,15 +3,25 @@ import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { UserPlus } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
 
 const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('student');
-  const { register } = useAuthStore();
+  const { register, googleLogin } = useAuthStore();
   const navigate = useNavigate();
   const [error, setError] = useState(null);
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      await googleLogin(credentialResponse.credential);
+      navigate('/dashboard');
+    } catch (err) {
+      setError('Google signup failed. Please try again.');
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -78,6 +88,23 @@ const Register = () => {
             Sign Up
           </button>
         </form>
+
+        <div className="mt-6 flex items-center">
+          <div className="flex-1 border-t border-slate-200"></div>
+          <span className="px-4 text-sm text-slate-500 bg-white">or</span>
+          <div className="flex-1 border-t border-slate-200"></div>
+        </div>
+
+        <div className="mt-6 flex justify-center">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => setError('Google login failed')}
+            theme="outline"
+            size="large"
+            width="100%"
+            text="signup_with"
+          />
+        </div>
         
         <p className="mt-6 text-center text-sm text-slate-500">
           Already have an account? <Link to="/login" className="text-emerald-600 hover:text-emerald-500 font-medium">Log in</Link>
