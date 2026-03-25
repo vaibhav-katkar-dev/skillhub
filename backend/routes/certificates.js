@@ -241,16 +241,16 @@ router.get('/download/:certId', async (req, res) => {
     //  SIDEBAR: Classic Premium Ribbon Card (Course Name)
     // ─────────────────────────────────────────────────────────────────────────
     // Start with a slightly smaller baseline for a more elegant, less heavy look
-    let coursePt = 24; 
+    let coursePt = 22; 
     doc.font('Helvetica-Bold');
     
     // The main badge width
     const CARD_W = SIDEBAR_W - 32; 
     const CARD_X = SIDEBAR_X + 16;
-    // Tighter line-height (lineGap: 0) for luxury density
-    const textOptions = { width: CARD_W - 24, align: 'center', lineGap: 0 };
+    // Tighter line-height (lineGap: 2) for luxury density
+    const textOptions = { width: CARD_W - 24, align: 'center', lineGap: 2 };
     
-    // Intelligently scale down text so it fits securely
+    // Intelligently scale down text so it fits securely (ensures max 3 lines)
     const words = courseTitle.split(' ');
     while (coursePt > 10) {
       doc.fontSize(coursePt);
@@ -261,8 +261,8 @@ router.get('/download/:certId', async (req, res) => {
           break;
         }
       }
-      // Tighter height check due to tighter lineGap
-      if (!wordOverflow && doc.heightOfString(courseTitle, textOptions) <= 110) {
+      // Tighter height check due to tighter lineGap, roughly 85px max for 3 lines of 22pt
+      if (!wordOverflow && doc.heightOfString(courseTitle, textOptions) <= 85) {
         break;
       }
       coursePt -= 1;
@@ -271,8 +271,8 @@ router.get('/download/:certId', async (req, res) => {
     // Precisely calculate the required dynamic card height
     const textHeight = doc.heightOfString(courseTitle, textOptions);
     const CARD_Y = 36;
-    // Adding more breathing room (60 instead of 52) inside the top of the card
-    const CARD_H = 60 + textHeight; 
+    // Adding +2px extra inside the top padding to push label/title completely independent of border
+    const CARD_H = 62 + textHeight; 
     const TAIL_W = 14;              // How far tails stick out
     const TAIL_OFFSET_Y = 16;       // Drop down for the tail fold look
     const NOTCH = 8;                // V-cut depth
@@ -336,7 +336,7 @@ router.get('/download/:certId', async (req, res) => {
 
     // 4. "COURSE" label
     doc.fontSize(8.5).font('Helvetica-Bold').fillColor(RIB.light)
-      .text('COURSE', CARD_X, CARD_Y + 18, {
+      .text('COURSE', CARD_X, CARD_Y + 20, {
         width: CARD_W,
         align: 'center',
         characterSpacing: 4
@@ -344,10 +344,10 @@ router.get('/download/:certId', async (req, res) => {
 
     // 5. Bold Course Title
     doc.fontSize(coursePt).font('Helvetica-Bold').fillColor(WHITE)
-      .text(courseTitle, CARD_X + 12, CARD_Y + 42, {
+      .text(courseTitle, CARD_X + 12, CARD_Y + 44, {
         width: CARD_W - 24,
         align: 'center',
-        lineGap: 0
+        lineGap: 2
       });
 
     doc.restore();
@@ -441,12 +441,19 @@ router.get('/download/:certId', async (req, res) => {
       });
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Subtle gap decoration between pill and date
+    // Subtle gap decoration between pill and date (✦ ✦ ✦)
     // ─────────────────────────────────────────────────────────────────────────
-    const DOTS_Y = BADGE_CY + 95;
-    [-12, 0, 12].forEach(dx => {
-      doc.circle(BADGE_CX + dx, DOTS_Y, 1.5).fillOpacity(0.3).fill(WHITE);
-    });
+    const DATE_Y = H - 100;
+    const pillBottomY = PILL_Y + PILL_H;
+    const dateLineY = DATE_Y - 12;
+    const gapCenterY = (pillBottomY + dateLineY) / 2;
+
+    doc.fontSize(8.5).font('Helvetica').fillOpacity(0.25).fill(WHITE)
+      .text('✦  ✦  ✦', SIDEBAR_X, gapCenterY - 4, {
+        width: SIDEBAR_W,
+        align: 'center',
+        characterSpacing: 4
+      });
     doc.fillOpacity(1);
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -456,7 +463,6 @@ router.get('/download/:certId', async (req, res) => {
     const issueDate = rawDate.toLocaleDateString('en-IN', {
       year: 'numeric', month: 'long', day: 'numeric'
     });
-    const DATE_Y = H - 100;
 
     doc.moveTo(SIDEBAR_X + 28, DATE_Y - 12).lineTo(W - 28, DATE_Y - 12)
       .lineWidth(0.5).strokeColor('rgba(255,255,255,0.22)').stroke();
@@ -583,8 +589,12 @@ router.get('/download/:certId', async (req, res) => {
     // ═════════════════════════════════════════════════════════════════════════
     //  4. BOTTOM ROW: Cert ID + QR
     // ═════════════════════════════════════════════════════════════════════════
-    const BOTTOM_Y = H - 86;
+    const BOTTOM_Y = H - 72; // Pulled down for tighter balance (<= 60px from bottom edge)
 
+    // Calculate vertical center of the bottom row (approx 36px tall block)
+    const ROW_CY = BOTTOM_Y + 16; 
+
+    // ── Certificate ID ──
     doc.fontSize(8.5).font('Helvetica-Bold').fillColor(GRAY_LT)
       .text('CERTIFICATE ID', LX, BOTTOM_Y, {
         lineBreak: false,
@@ -594,10 +604,19 @@ router.get('/download/:certId', async (req, res) => {
     doc.fontSize(11).font('Helvetica-Bold').fillColor(DARK_MID)
       .text(cert.certificateId, LX, BOTTOM_Y + 16, { lineBreak: false });
 
+    // ── QR Code ──
     const QR_SIZE = 72;
     const QR_X = SIDEBAR_X - QR_SIZE - 32;
-    const QR_Y = H - QR_SIZE - 44;
+    const QR_Y = H - QR_SIZE - 44; 
 
+    // ── 0.5px Vertical Divider ──
+    // Placed horizontally exactly centered between ID block and QR card start
+    const DIVIDER_X = LX + (QR_X - 10 - LX) / 2;
+    doc.moveTo(DIVIDER_X, ROW_CY - 20)
+       .lineTo(DIVIDER_X, ROW_CY + 20)
+       .lineWidth(0.5).strokeColor('#CBD5E1').stroke();
+
+    // White card background behind QR
     doc.rect(QR_X - 10, QR_Y - 10, QR_SIZE + 20, QR_SIZE + 20).fill(WHITE);
     doc.rect(QR_X - 10, QR_Y - 10, QR_SIZE + 20, QR_SIZE + 20)
       .lineWidth(1).strokeColor(BORDER).stroke();
