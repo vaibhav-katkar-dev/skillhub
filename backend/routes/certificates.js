@@ -82,6 +82,7 @@ router.get('/mine', authOptions, async (req, res) => {
 });
 
 // ─── DOWNLOAD ──────────────────────────────────────────────────────────────
+// ─── DOWNLOAD ──────────────────────────────────────────────────────────────
 router.get('/download/:certId', async (req, res) => {
   let doc;
   try {
@@ -94,16 +95,16 @@ router.get('/download/:certId', async (req, res) => {
     if (!cert.student || !courseTitle)
       return res.status(404).json({ message: 'Certificate data incomplete.' });
 
-    // ── QR Code ──────────────────────────────────────────────
+    // ── QR Code ──────────────────────────────────────────────────────────────
     const verifyUrl = `https://www.skillvalix.com/verify/${cert.certificateId}`;
     const qrBuffer = await QRCode.toBuffer(verifyUrl, {
       errorCorrectionLevel: 'H',
-      width: 220,
+      width: 200,
       margin: 1,
-      color: { dark: '#1a1a1a', light: '#FFFFFF' }
+      color: { dark: '#1A6FE8', light: '#FFFFFF' }
     });
 
-    // ── PDF Setup ─────────────────────────────────────────────
+    // ── PDF Setup ─────────────────────────────────────────────────────────────
     doc = new PDFDocument({ layout: 'landscape', size: 'A4', margin: 0 });
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `inline; filename=Certificate-${cert.certificateId}.pdf`);
@@ -113,277 +114,319 @@ router.get('/download/:certId', async (req, res) => {
     const W = doc.page.width;   // 841.89
     const H = doc.page.height;  // 595.28
 
-    // ── PALETTE ───────────────────────────────────────────────
-    const YELLOW    = '#FFB800';
-    const YELLOW_DK = '#D99A00';
-    const YELLOW_LT = '#FFD55A';
-    const WHITE     = '#FFFFFF';
-    const DARK      = '#1A1A2E';
-    const DARK_MID  = '#2D2D50';
-    const GRAY      = '#555570';
-    const GRAY_LT   = '#9090A8';
-    const OFF_WHITE = '#FFFDF5';
+    // ── PALETTE ───────────────────────────────────────────────────────────────
+    const BLUE = '#1A6FE8';
+    const BLUE_DARK = '#0F4BAD';
+    const WHITE = '#FFFFFF';
+    const OFF_WHITE = '#FAFAF8';
+    const DARK = '#0D0D0D';
+    const DARK_MID = '#111111';
+    const GRAY = '#555555';
+    const GRAY_MID = '#777777';
+    const GRAY_LT = '#999999';
+    const GRAY_XLT = '#AAAAAA';
+    const BORDER = '#E8E4DC';
+    const BORDER_LT = '#EBEBEB';
 
-    // ── BANNER DIMENSIONS ─────────────────────────────────────
-    const BANNER_W = 200;
-    const BANNER_X = W - BANNER_W;
+    // ── LAYOUT CONSTANTS ──────────────────────────────────────────────────────
+    const SIDEBAR_W = 200;          // right blue sidebar width
+    const SIDEBAR_X = W - SIDEBAR_W;
+    const LEFT_PAD = 52;
+    const CONTENT_W = SIDEBAR_X - LEFT_PAD - 40; // usable text width in left area
 
-    // ═══════════════════════════════════════════════════════════
-    //  BACKGROUND
-    // ═══════════════════════════════════════════════════════════
+    // ═════════════════════════════════════════════════════════════════════════
+    //  1. BACKGROUND
+    // ═════════════════════════════════════════════════════════════════════════
     doc.rect(0, 0, W, H).fill(OFF_WHITE);
 
-    // ── Multi-layer border (matching reference style) ─────────
-    // Outermost thin line
-    doc.rect(5, 5, W - 10, H - 10).lineWidth(1).stroke(YELLOW_DK);
-    // Bold yellow frame
-    doc.rect(9, 9, W - 18, H - 18).lineWidth(5).stroke(YELLOW);
-    // Inner thin accent
-    doc.rect(16, 16, W - 32, H - 32).lineWidth(0.7).stroke(YELLOW_DK);
+    // ─── Outer border frame ───────────────────────────────────────────────
+    // Thin blue tint outer frame
+    doc.rect(4, 4, W - 8, H - 8)
+      .lineWidth(2).strokeColor(BLUE).stroke();
+    doc.opacity(0.18);
+    doc.rect(4, 4, W - 8, H - 8)
+      .lineWidth(2).strokeColor(BLUE).stroke();
+    doc.opacity(1);
 
-    // ═══════════════════════════════════════════════════════════
-    //  RIGHT YELLOW BANNER
-    // ═══════════════════════════════════════════════════════════
-    doc.rect(BANNER_X, 0, BANNER_W, H).fill(YELLOW);
+    // Inner neutral border
+    doc.rect(8, 8, W - 16, H - 16)
+      .lineWidth(0.5).strokeColor(BORDER).stroke();
 
-    // Subtle dot-grid texture on banner
-    doc.save();
-    doc.rect(BANNER_X, 0, BANNER_W, H).clip();
-    doc.opacity(0.07);
-    for (let row = 14; row < H; row += 20) {
-      for (let col = BANNER_X + 10; col < W; col += 18) {
-        doc.circle(col, row, 1.8).fill(DARK);
-      }
-    }
-    doc.restore();
+    // ═════════════════════════════════════════════════════════════════════════
+    //  2. RIGHT BLUE SIDEBAR
+    // ═════════════════════════════════════════════════════════════════════════
+    doc.rect(SIDEBAR_X, 0, SIDEBAR_W, H).fill(BLUE);
 
-    // Left edge dark accent line
-    doc.rect(BANNER_X, 0, 4, H).fill(YELLOW_DK);
-    doc.rect(BANNER_X + 4, 0, 1.2, H).fill(YELLOW_LT);
+    // Vertical divider between left content and sidebar
+    doc.moveTo(SIDEBAR_X, 0).lineTo(SIDEBAR_X, H)
+      .lineWidth(0.5).strokeColor(BORDER).stroke();
 
-    // ═══════════════════════════════════════════════════════════
-    //  LOGO + BRAND  (top-left)
-    // ═══════════════════════════════════════════════════════════
-    const LX = 44, LY = 32;
+    // ── Sidebar: "COURSE" label ───────────────────────────────────────────
+    doc.fontSize(7).font('Helvetica-Bold').fillColor('rgba(255,255,255,0.6)')
+      .text('COURSE', SIDEBAR_X, 36, {
+        width: SIDEBAR_W,
+        align: 'center',
+        characterSpacing: 2.5
+      });
 
-    // SkillValix new modern logo
-    doc.save();
-    doc.roundedRect(LX, LY, 40, 40, 10).fill('#2563EB');
-    doc.moveTo(LX + 9, LY + 29)
-       .bezierCurveTo(LX + 15, LY + 20, LX + 18, LY + 26, LX + 31, LY + 11)
-       .lineWidth(3.2).lineCap('round').lineJoin('round').stroke('#FFFFFF');
-    // Arrow head
-    doc.moveTo(LX + 24, LY + 11).lineTo(LX + 31, LY + 11).lineTo(LX + 31, LY + 18)
-       .lineWidth(3.2).lineCap('round').lineJoin('round').stroke('#FFFFFF');
-    doc.restore();
-
-    // Brand name
-    const brandX = LX + 52;
-    doc.fontSize(20).font('Helvetica').fillColor(DARK)
-       .text('Skill', brandX, LY + 6, { lineBreak: false, continued: true })
-       .font('Helvetica-Bold').fillColor('#2563EB')
-       .text('Valix', { lineBreak: false });
-       
-    doc.fontSize(7.5).font('Helvetica-Bold').fillColor(GRAY_LT)
-       .text('GROW YOUR CAREER', brandX, LY + 28, {
-         lineBreak: false, characterSpacing: 1.5
-       });
-
-    // Separator under header area
-    doc.moveTo(LX, LY + 46).lineTo(BANNER_X - LX, LY + 46)
-       .lineWidth(0.5).stroke('#DDDDDD');
-
-    // ═══════════════════════════════════════════════════════════
-    //  MAIN CONTENT  (left area)
-    // ═══════════════════════════════════════════════════════════
-    const CONTENT_CUT = BANNER_X - 22;  // right boundary of content
-    const LEFT_PAD    = 44;
-
-    // "Certificate" large title
-    const TITLE_Y = 92;
-    doc.fontSize(50).font('Helvetica-Bold').fillColor(DARK)
-       .text('Certificate', LEFT_PAD, TITLE_Y, { lineBreak: false });
-
-    // Subtitle italic
-    doc.fontSize(12.5).font('Helvetica-Oblique').fillColor(GRAY)
-       .text('of Completion Awarded to', LEFT_PAD, TITLE_Y + 60, { lineBreak: false });
-
-    // ── Student Name ──────────────────────────────────────────
-    const studentName = cert.student?.name || 'Student';
-    let namePt = 26;
+    // ── Sidebar: Course title ─────────────────────────────────────────────
+    // Auto-shrink font if course title is long
+    let coursePt = 13;
     doc.font('Helvetica-Bold');
-    while (namePt > 13 && doc.fontSize(namePt).widthOfString(studentName.toUpperCase()) > CONTENT_CUT - LEFT_PAD - 20) {
-      namePt -= 1;
+    while (coursePt > 9 && doc.fontSize(coursePt).widthOfString(courseTitle) > SIDEBAR_W - 32) {
+      coursePt -= 0.5;
     }
+    doc.fontSize(coursePt).font('Helvetica-Bold').fillColor(WHITE)
+      .text(courseTitle, SIDEBAR_X + 16, 52, {
+        width: SIDEBAR_W - 32,
+        align: 'center',
+        lineGap: 3
+      });
 
-    const NAME_Y = TITLE_Y + 82;
-    doc.fontSize(namePt).font('Helvetica-Bold').fillColor(DARK)
-       .text(studentName.toUpperCase(), LEFT_PAD, NAME_Y, {
-         lineBreak: false, characterSpacing: 2
-       });
+    // ── Sidebar: Verified Badge (centered, middle of page) ────────────────
+    const BADGE_CX = SIDEBAR_X + SIDEBAR_W / 2;
+    const BADGE_CY = H / 2;
+    const OUTER_R = 44;
+    const INNER_R = 36;
 
-    // Underline the name with a yellow stroke
-    const nameStrW = doc.fontSize(namePt).widthOfString(studentName.toUpperCase());
-    const UL_Y     = NAME_Y + namePt + 5;
-    doc.moveTo(LEFT_PAD, UL_Y).lineTo(LEFT_PAD + nameStrW, UL_Y)
-       .lineWidth(2.5).stroke(YELLOW);
-    doc.moveTo(LEFT_PAD + 10, UL_Y + 4).lineTo(LEFT_PAD + nameStrW - 10, UL_Y + 4)
-       .lineWidth(0.6).stroke(YELLOW_DK);
+    // Outer ring
+    doc.circle(BADGE_CX, BADGE_CY, OUTER_R)
+      .lineWidth(1.5).strokeColor('rgba(255,255,255,0.35)').stroke();
 
-    // ── Course completion line ────────────────────────────────
-    const COURSE_Y = UL_Y + 14;
-    const fittedTitle = fitSingleLineText(doc, courseTitle, CONTENT_CUT - LEFT_PAD - 40);
+    // Faint fill inside outer ring
+    doc.circle(BADGE_CX, BADGE_CY, OUTER_R)
+      .fillOpacity(0.08).fill(WHITE);
+    doc.fillOpacity(1);
 
-    doc.fontSize(10).font('Helvetica').fillColor(GRAY)
-       .text('on successful completion of ', LEFT_PAD, COURSE_Y,
-         { lineBreak: false, continued: true })
-       .font('Helvetica-Bold').fillColor(DARK_MID)
-       .text(fittedTitle, { lineBreak: false });
+    // White inner circle
+    doc.circle(BADGE_CX, BADGE_CY, INNER_R).fill(WHITE);
 
-    const COURSE_AFTER_Y = COURSE_Y + 14;
-    doc.fontSize(10).font('Helvetica').fillColor(GRAY)
-       .text('Holder of this certificate can', LEFT_PAD, COURSE_AFTER_Y, { lineBreak: false });
+    // Blue inner circle (checkmark bg)
+    doc.circle(BADGE_CX, BADGE_CY - 6, 16).fill(BLUE);
 
-    // ── Bullet Points ─────────────────────────────────────────
-    const bullets = [
-      'Demonstrate core knowledge and applied skills in the subject area',
-      'Apply learned concepts effectively in real-world professional scenarios',
-      'Automate tasks and build solutions using course-taught strategies'
-    ];
-    const BULLET_Y = COURSE_AFTER_Y + 18;
+    // Checkmark
+    doc.moveTo(BADGE_CX - 7, BADGE_CY - 6)
+      .lineTo(BADGE_CX - 2, BADGE_CY - 1)
+      .lineTo(BADGE_CX + 7, BADGE_CY - 13)
+      .lineWidth(2.5).lineCap('round').lineJoin('round')
+      .strokeColor(WHITE).stroke();
 
-    bullets.forEach((bullet, i) => {
-      const BY = BULLET_Y + i * 16;
-      // Diamond bullet — matching reference style
-      doc.save();
-      doc.translate(LEFT_PAD + 5, BY + 5.5).rotate(45);
-      doc.rect(-3.2, -3.2, 6.4, 6.4).fill(YELLOW);
-      doc.restore();
-      doc.fontSize(9).font('Helvetica').fillColor(GRAY)
-         .text(bullet, LEFT_PAD + 16, BY, {
-           width: CONTENT_CUT - LEFT_PAD - 30,
-           lineBreak: false
-         });
-    });
+    // "VERIFIED" text inside badge
+    doc.fontSize(7.5).font('Helvetica-Bold').fillColor(BLUE)
+      .text('VERIFIED', BADGE_CX - INNER_R, BADGE_CY + 22, {
+        width: INNER_R * 2,
+        align: 'center',
+        characterSpacing: 1.5
+      });
 
-    // No signatures in the new clean layout as per request
-
-    // ── QR Code (bottom-right, just before banner) ────────────
-    const QR_SIZE = 74;
-    const QR_X    = BANNER_X - QR_SIZE - 16;
-    const QR_Y    = H - QR_SIZE - 24;
-
-    // White card behind QR
-    doc.rect(QR_X - 5, QR_Y - 5, QR_SIZE + 10, QR_SIZE + 10).fill(WHITE);
-    doc.rect(QR_X - 5, QR_Y - 5, QR_SIZE + 10, QR_SIZE + 10)
-       .lineWidth(1.2).stroke(YELLOW);
-    // Top accent strip on QR card
-    doc.rect(QR_X - 5, QR_Y - 5, QR_SIZE + 10, 3).fill(YELLOW);
-
-    doc.image(qrBuffer, QR_X, QR_Y, { width: QR_SIZE, height: QR_SIZE });
-
-    doc.fontSize(5.5).font('Helvetica').fillColor(GRAY)
-       .text('Scan to Verify', QR_X - 5, QR_Y + QR_SIZE + 7, {
-         width: QR_SIZE + 10, align: 'center', lineBreak: false
-       });
-
-    // ── Certificate ID at bottom ──────────────────────────────
-    doc.fontSize(7).font('Helvetica').fillColor(GRAY_LT)
-       .text(`Certificate ID: ${cert.certificateId}`, LEFT_PAD, H - 26, { lineBreak: false });
-
-    // ═══════════════════════════════════════════════════════════
-    //  RIGHT BANNER CONTENT
-    // ═══════════════════════════════════════════════════════════
-    const BCX = BANNER_X + BANNER_W / 2;  // banner center X
-
-    // Course title at top of banner
-    doc.fontSize(13.5).font('Helvetica-Bold').fillColor(DARK)
-       .text(courseTitle, BANNER_X + 14, 26, {
-         width: BANNER_W - 28,
-         align: 'center',
-         lineBreak: true,
-         lineGap: 2
-       });
-
-    // Separator
-    const SEP_Y = 90;
-    doc.moveTo(BANNER_X + 20, SEP_Y).lineTo(W - 20, SEP_Y)
-       .lineWidth(0.8).stroke(YELLOW_DK);
-
-    // ── Verified Badge ────────────────────────────────────────
-    const BADGE_CX = BCX;
-    const BADGE_CY = H / 2 - 18;
-    const OUTER_R  = 58;
-
-    // Scalloped / wavy outer ring (dashed-arc effect)
-    const SCALLOP_N = 28;
-    for (let i = 0; i < SCALLOP_N; i++) {
-      const a1 = (i       / SCALLOP_N) * Math.PI * 2;
-      const a2 = ((i + 0.6) / SCALLOP_N) * Math.PI * 2;
-      const R  = OUTER_R + 2;
-      doc.moveTo(BADGE_CX + R * Math.cos(a1), BADGE_CY + R * Math.sin(a1))
-         .lineTo(BADGE_CX + R * Math.cos(a2), BADGE_CY + R * Math.sin(a2))
-         .lineWidth(2.2).stroke(DARK);
-    }
-
-    // Main ring
-    doc.circle(BADGE_CX, BADGE_CY, OUTER_R - 5).lineWidth(1.5).stroke(DARK);
-
-    // White badge fill
-    doc.circle(BADGE_CX, BADGE_CY, OUTER_R - 8).fill(WHITE);
-
-    // Inner yellow circle with mini logo
-    doc.circle(BADGE_CX, BADGE_CY - 9, 24).fill(YELLOW);
-
-    // Mini bulb icon inside badge
-    doc.save();
-    doc.circle(BADGE_CX, BADGE_CY - 14, 9).fill(YELLOW_LT);
-    doc.rect(BADGE_CX - 5.5, BADGE_CY - 3.5, 11, 3.5).fill(YELLOW_DK);
-    doc.rect(BADGE_CX - 4.5, BADGE_CY, 9, 3).fill(YELLOW_DK);
-    // Shine dot
-    doc.save();
-    doc.opacity(0.6);
-    doc.circle(BADGE_CX - 3, BADGE_CY - 18, 2.5).fill(WHITE);
-    doc.restore();
-    doc.restore();
-
-    // "Verified" text inside badge
-    doc.fontSize(9.5).font('Helvetica-Bold').fillColor(GRAY)
-       .text('Verified', BADGE_CX - 30, BADGE_CY + 18, {
-         width: 60, align: 'center', lineBreak: false
-       });
-
-    // Separator below badge
-    const BADGE_SEP = BADGE_CY + OUTER_R + 4;
-    doc.moveTo(BANNER_X + 20, BADGE_SEP).lineTo(W - 20, BADGE_SEP)
-       .lineWidth(0.8).stroke(YELLOW_DK);
-
-    // ── Issue Date inside banner ──────────────────────────────
-    const rawDate  = cert.issueDate ? new Date(cert.issueDate) : new Date();
+    // ── Sidebar: Issued date ──────────────────────────────────────────────
+    const rawDate = cert.issueDate ? new Date(cert.issueDate) : new Date();
     const issueDate = rawDate.toLocaleDateString('en-IN', {
       year: 'numeric', month: 'long', day: 'numeric'
     });
-    const DATE_Y = BADGE_SEP + 8;
 
-    doc.fontSize(7.5).font('Helvetica-Bold').fillColor(DARK_MID)
-       .text('Issued on:', BANNER_X + 8, DATE_Y, {
-         width: BANNER_W - 16, align: 'center', lineBreak: false
-       });
+    const DATE_Y = H - 88;
 
-    doc.fontSize(11.5).font('Helvetica-Bold').fillColor(DARK)
-       .text(issueDate, BANNER_X + 8, DATE_Y + 15, {
-         width: BANNER_W - 16, align: 'center', lineBreak: false
-       });
+    // Thin separator above date
+    doc.moveTo(SIDEBAR_X + 20, DATE_Y - 10).lineTo(W - 20, DATE_Y - 10)
+      .lineWidth(0.5).strokeColor('rgba(255,255,255,0.2)').stroke();
+
+    doc.fontSize(7).font('Helvetica-Bold').fillColor('rgba(255,255,255,0.55)')
+      .text('ISSUED ON', SIDEBAR_X, DATE_Y, {
+        width: SIDEBAR_W,
+        align: 'center',
+        characterSpacing: 2
+      });
+
+    doc.fontSize(11).font('Helvetica-Bold').fillColor(WHITE)
+      .text(issueDate, SIDEBAR_X, DATE_Y + 14, {
+        width: SIDEBAR_W,
+        align: 'center'
+      });
+
+    // skillvalix.com at very bottom of sidebar
+    doc.fontSize(7.5).font('Helvetica').fillColor('rgba(255,255,255,0.45)')
+      .text('skillvalix.com', SIDEBAR_X, H - 26, {
+        width: SIDEBAR_W,
+        align: 'center'
+      });
+
+    // ═════════════════════════════════════════════════════════════════════════
+    //  3. LEFT CONTENT AREA
+    // ═════════════════════════════════════════════════════════════════════════
+
+    // ── Logo icon ─────────────────────────────────────────────────────────
+    const LX = LEFT_PAD;
+    const LY = 32;
+    const ICON_SIZE = 36;
+
+    doc.roundedRect(LX, LY, ICON_SIZE, ICON_SIZE, 9).fill(BLUE);
+
+    // Smooth zigzag growth arrow inside icon
+    doc.moveTo(LX + 7, LY + ICON_SIZE - 9)
+      .bezierCurveTo(
+        LX + 11, LY + 20,
+        LX + 13, LY + 22,
+        LX + 18, LY + 16
+      )
+      .bezierCurveTo(
+        LX + 23, LY + 10,
+        LX + 25, LY + 13,
+        LX + 29, LY + 8
+      )
+      .lineWidth(2.8).lineCap('round').lineJoin('round')
+      .strokeColor(WHITE).stroke();
+
+    // Arrow head
+    doc.moveTo(LX + 24, LY + 8).lineTo(LX + 29, LY + 8).lineTo(LX + 29, LY + 13)
+      .lineWidth(2.5).lineCap('round').lineJoin('round')
+      .strokeColor(WHITE).stroke();
+
+    // ── Brand name ────────────────────────────────────────────────────────
+    const BRAND_X = LX + ICON_SIZE + 11;
+
+    doc.fontSize(17).font('Helvetica').fillColor(DARK_MID)
+      .text('Skill', BRAND_X, LY + 6, { lineBreak: false, continued: true })
+      .font('Helvetica-Bold').fillColor(BLUE)
+      .text('Valix', { lineBreak: false });
+
+    doc.fontSize(7.5).font('Helvetica-Bold').fillColor(GRAY_XLT)
+      .text('GROW YOUR CAREER', BRAND_X, LY + 26, {
+        lineBreak: false,
+        characterSpacing: 2
+      });
+
+    // ── Thin separator under header ───────────────────────────────────────
+    const SEP_Y = LY + ICON_SIZE + 14;
+    doc.moveTo(LX, SEP_Y).lineTo(SIDEBAR_X - 40, SEP_Y)
+      .lineWidth(0.5).strokeColor(BORDER_LT).stroke();
+
+    // ── "CERTIFICATE" label ───────────────────────────────────────────────
+    const CERT_Y = SEP_Y + 18;
+
+    doc.fontSize(8).font('Helvetica-Bold').fillColor(BLUE)
+      .text('CERTIFICATE', LX, CERT_Y, {
+        lineBreak: false,
+        characterSpacing: 3.5
+      });
+
+    // ── "of Completion" heading ───────────────────────────────────────────
+    doc.fontSize(24).font('Helvetica-Bold').fillColor(DARK_MID)
+      .text('of Completion', LX, CERT_Y + 12, { lineBreak: false });
+
+    // ── "Awarded to" subtitle ─────────────────────────────────────────────
+    doc.fontSize(10).font('Helvetica').fillColor(GRAY_LT)
+      .text('Awarded to', LX, CERT_Y + 42, { lineBreak: false });
+
+    // ── Student Name ──────────────────────────────────────────────────────
+    const studentName = cert.student?.name || 'Student';
+    const NAME_Y = CERT_Y + 58;
+
+    let namePt = 28;
+    doc.font('Helvetica-Bold');
+    while (namePt > 14 && doc.fontSize(namePt).widthOfString(studentName) > CONTENT_W) {
+      namePt -= 0.5;
+    }
+
+    doc.fontSize(namePt).font('Helvetica-Bold').fillColor(DARK)
+      .text(studentName, LX, NAME_Y, { lineBreak: false });
+
+    // Blue underline accent
+    const NAME_STR_W = Math.min(doc.fontSize(namePt).widthOfString(studentName), CONTENT_W);
+    const UL_Y = NAME_Y + namePt + 5;
+
+    doc.rect(LX, UL_Y, NAME_STR_W, 2.5)
+      .fill(BLUE);
+
+    // ── Course line ───────────────────────────────────────────────────────
+    const COURSE_Y = UL_Y + 14;
+
+    doc.fontSize(10).font('Helvetica').fillColor(GRAY_MID)
+      .text('on successful completion of ', LX, COURSE_Y,
+        { lineBreak: false, continued: true })
+      .font('Helvetica-Bold').fillColor(DARK_MID)
+      .text(courseTitle, { lineBreak: false });
+
+    // ── Paragraphs ────────────────────────────────────────────────────────
+    const PARA_Y = COURSE_Y + 20;
+
+    doc.fontSize(9.5).font('Helvetica').fillColor(GRAY)
+      .text(
+        'This certificate is proudly awarded in recognition of the dedication, consistent effort, and outstanding performance demonstrated throughout the course.',
+        LX, PARA_Y,
+        { width: CONTENT_W, lineGap: 2, align: 'left' }
+      );
+
+    const PARA2_Y = PARA_Y + 36;
+
+    doc.fontSize(9.5).font('Helvetica').fillColor(GRAY)
+      .text(
+        'The holder has successfully demonstrated core knowledge and the ability to apply practical skills in real-world professional scenarios using course-taught strategies.',
+        LX, PARA2_Y,
+        { width: CONTENT_W, lineGap: 2, align: 'left' }
+      );
+
+    // ═════════════════════════════════════════════════════════════════════════
+    //  4. BOTTOM ROW: Cert ID + QR
+    // ═════════════════════════════════════════════════════════════════════════
+    const BOTTOM_Y = H - 72;
+
+    // ── Certificate ID ────────────────────────────────────────────────────
+    doc.fontSize(7).font('Helvetica-Bold').fillColor(GRAY_XLT)
+      .text('CERTIFICATE ID', LX, BOTTOM_Y, {
+        lineBreak: false,
+        characterSpacing: 1.5
+      });
+
+    doc.fontSize(9).font('Helvetica-Bold').fillColor(GRAY_MID)
+      .text(cert.certificateId, LX, BOTTOM_Y + 12, { lineBreak: false });
+
+    // ── QR Code ───────────────────────────────────────────────────────────
+    const QR_SIZE = 58;
+    const QR_X = SIDEBAR_X - QR_SIZE - 20;
+    const QR_Y = H - QR_SIZE - 16;
+
+    // White card behind QR
+    doc.rect(QR_X - 5, QR_Y - 5, QR_SIZE + 10, QR_SIZE + 10)
+      .fill(WHITE);
+
+    // Blue border around QR card
+    doc.rect(QR_X - 5, QR_Y - 5, QR_SIZE + 10, QR_SIZE + 10)
+      .lineWidth(1.2).strokeColor(BLUE).stroke();
+
+    // Blue top accent strip on QR card
+    doc.rect(QR_X - 5, QR_Y - 5, QR_SIZE + 10, 3).fill(BLUE);
+
+    // QR image
+    doc.image(qrBuffer, QR_X, QR_Y, { width: QR_SIZE, height: QR_SIZE });
+
+    // "Scan to Verify" label below QR
+    doc.fontSize(6).font('Helvetica').fillColor(GRAY_LT)
+      .text('Scan to Verify', QR_X - 5, QR_Y + QR_SIZE + 6, {
+        width: QR_SIZE + 10,
+        align: 'center',
+        lineBreak: false
+      });
 
     doc.end();
+
   } catch (err) {
     console.error('[Certificates] Download error:', err);
-    if (doc) { try { doc.destroy(); } catch (_) {} }
+    if (doc) { try { doc.destroy(); } catch (_) { } }
     if (!res.headersSent)
       res.status(500).json({ message: 'Server error generating certificate.' });
   }
 });
 
+// ─── HELPER ────────────────────────────────────────────────────────────────
+function fitSingleLineText(doc, text, maxWidth) {
+  let pt = 10;
+  while (pt > 7 && doc.fontSize(pt).widthOfString(text) > maxWidth) {
+    pt -= 0.5;
+  }
+  doc.fontSize(pt);
+  return text;
+}
 // ─── VERIFY ────────────────────────────────────────────────────────────────
 router.get('/verify/:certId', async (req, res) => {
   try {
