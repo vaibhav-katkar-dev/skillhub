@@ -204,7 +204,7 @@ const CertCard = ({ cert, onDownload, copyMsg, onCopy }) => (
           </a>
 
           <a
-            href={`https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(`I just earned my certification for ${cert.course?.title || 'a course'} from SkillValix! 🎓🚀\n\nVerify it here: ${window.location.origin}/verify/${cert.certificateId}`)}`}
+            href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`${window.location.origin}/verify/${cert.certificateId}`)}`}
             target="_blank" rel="noopener noreferrer"
             title="Create a post on your LinkedIn Feed"
             className="flex-1 bg-[#0A66C2] hover:bg-[#0A66C2]/90 text-white text-xs font-bold py-2.5 px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-[.98]"
