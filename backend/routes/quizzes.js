@@ -125,6 +125,7 @@ router.post('/:courseId', authOptions, adminCheck, async (req, res) => {
     if (quiz) {
       quiz.questions = req.body.questions;
       quiz.passingScore = req.body.passingScore || 70;
+      if (req.body.ribbonTheme) quiz.ribbonTheme = req.body.ribbonTheme;
       await quiz.save();
     } else {
       quiz = new Quiz({ course: req.params.courseId, ...req.body });

@@ -7,7 +7,8 @@ const quizSchema = new mongoose.Schema({
     options: [{ type: String, required: true }],
     correctOptionIndex: { type: Number, required: true }
   }],
-  passingScore: { type: Number, default: 60 } // Percentage
+  passingScore: { type: Number, default: 60 }, // Percentage
+  ribbonTheme: { type: String, default: 'blue', enum: ['gold', 'purple', 'teal', 'ruby', 'blue', 'emerald'] }
 }, { timestamps: true });
 
 export default mongoose.model('Quiz', quizSchema);

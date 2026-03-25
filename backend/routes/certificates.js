@@ -3,6 +3,7 @@ import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
 import User from '../models/User.js';
 import Certificate from '../models/Certificate.js';
+import Quiz from '../models/Quiz.js';
 import { v4 as uuidv4 } from 'uuid';
 import { authOptions } from '../middleware/auth.js';
 import { getCourseFromJSON, getAllCoursesFromJSON } from '../utils/courseData.js';
@@ -83,6 +84,19 @@ router.get('/mine', authOptions, async (req, res) => {
 
 // ─── DOWNLOAD ──────────────────────────────────────────────────────────────
 // ─── DOWNLOAD ──────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+//  Ribbon color themes — change RIBBON_THEME to switch accent color
+//  Options: 'gold' | 'purple' | 'teal' | 'ruby' | 'blue' | 'emerald'
+// ═══════════════════════════════════════════════════════════════════════════
+const RIBBON_THEMES = {
+  gold: { dark: '#92400E', mid: '#F59E0B', light: '#FDE68A', tab: '#78350F' },
+  purple: { dark: '#4C1D95', mid: '#7C3AED', light: '#C4B5FD', tab: '#4C1D95' },
+  teal: { dark: '#164E63', mid: '#0E7490', light: '#67E8F9', tab: '#164E63' },
+  ruby: { dark: '#7F1D1D', mid: '#B91C1C', light: '#FCA5A5', tab: '#7F1D1D' },
+  blue: { dark: '#1E3A8A', mid: '#2563EB', light: '#93C5FD', tab: '#1E3A8A' },
+  emerald: { dark: '#134E4A', mid: '#0F766E', light: '#5EEAD4', tab: '#134E4A' },
+};
+
 router.get('/download/:certId', async (req, res) => {
   let doc;
   try {
@@ -95,12 +109,15 @@ router.get('/download/:certId', async (req, res) => {
     if (!cert.student || !courseTitle)
       return res.status(404).json({ message: 'Certificate data incomplete.' });
 
+    const quiz = await Quiz.findOne({ course: cert.course }).lean();
+    const dynamicTheme = quiz?.ribbonTheme || 'blue';
+
     // ── QR Code ──────────────────────────────────────────────────────────────
     const verifyUrl = `https://www.skillvalix.com/verify/${cert.certificateId}`;
     const qrBuffer = await QRCode.toBuffer(verifyUrl, {
       errorCorrectionLevel: 'H',
       width: 200,
-      margin: 1, // smaller internal margin
+      margin: 1,
       color: { dark: '#0F172A', light: '#FFFFFF' }
     });
 
@@ -115,133 +132,246 @@ router.get('/download/:certId', async (req, res) => {
     const H = doc.page.height;  // 595.28
 
     // ── PALETTE ───────────────────────────────────────────────────────────────
-    const BLUE = '#2563EB';       // Primary Brand Blue
-    const BLUE_DARK = '#1D4ED8';
+    const BLUE = '#2563EB';
     const WHITE = '#FFFFFF';
-    const OFF_WHITE = '#F8FAFC';  // slate-50
-    const DARK = '#0F172A';       // slate-900
-    const DARK_MID = '#1E293B';   // slate-800
-    const GRAY = '#475569';       // slate-600
-    const GRAY_MID = '#64748B';   // slate-500
-    const GRAY_LT = '#94A3B8';    // slate-400
-    const GRAY_XLT = '#E2E8F0';   // slate-200
-    const BORDER = '#CBD5E1';     // slate-300
-    const BORDER_LT = '#F1F5F9';  // slate-100
+    const OFF_WHITE = '#F8FAFC';
+    const DARK = '#0F172A';
+    const DARK_MID = '#1E293B';
+    const GRAY = '#475569';
+    const GRAY_MID = '#64748B';
+    const GRAY_LT = '#94A3B8';
+    const BORDER = '#CBD5E1';
+    const EMERALD = '#059669';
+    const EMERALD_LT = '#34D399';
+
+    // ── Ribbon theme colors ───────────────────────────────────────────────────
+    const RIB = RIBBON_THEMES[dynamicTheme] || RIBBON_THEMES.blue;
 
     // ── LAYOUT CONSTANTS ──────────────────────────────────────────────────────
-    const SIDEBAR_W = 220;          // right blue sidebar width slightly larger
+    const SIDEBAR_W = 220;
     const SIDEBAR_X = W - SIDEBAR_W;
     const LEFT_PAD = 64;
-    const CONTENT_W = SIDEBAR_X - LEFT_PAD - 40; // usable text width in left area
+    const CONTENT_W = SIDEBAR_X - LEFT_PAD - 40;
 
     // ═════════════════════════════════════════════════════════════════════════
     //  1. BACKGROUND
     // ═════════════════════════════════════════════════════════════════════════
     doc.rect(0, 0, W, H).fill(OFF_WHITE);
 
-    // ─── Outer border frame ───────────────────────────────────────────────
-    // Thin blue/dark tint outer frame
+    // Outer border frame
     doc.rect(6, 6, W - 12, H - 12)
       .lineWidth(2).strokeColor(BLUE).stroke();
-    doc.opacity(0.18);
-    doc.rect(6, 6, W - 12, H - 12)
-      .lineWidth(2).strokeColor(BLUE).stroke();
-    doc.opacity(1);
 
     // Inner subtle border
     doc.rect(12, 12, W - 24, H - 24)
       .lineWidth(0.5).strokeColor(BORDER).stroke();
 
     // ═════════════════════════════════════════════════════════════════════════
-    //  2. RIGHT BLUE SIDEBAR (Premium Ribbon Design)
+    //  2. RIGHT BLUE SIDEBAR
     // ═════════════════════════════════════════════════════════════════════════
-    
-    // Add subtle shadow strip on the left edge of the sidebar for depth
+
+    // Shadow strip
     doc.rect(SIDEBAR_X - 6, 0, 6, H).fillOpacity(0.08).fill(DARK);
     doc.fillOpacity(1);
 
-    // Premium gradient to simulate a ribbon curve
+    // Sidebar gradient
     const ribbonGrad = doc.linearGradient(SIDEBAR_X, 0, W, 0);
-    ribbonGrad.stop(0, '#1E3A8A');     // Darker deep blue shadow
-    ribbonGrad.stop(0.12, '#2563EB');  // Base Brand Blue
-    ribbonGrad.stop(1, '#3B82F6');     // Lighter vibrant blue toward the right
+    ribbonGrad.stop(0, '#0F2C6E');
+    ribbonGrad.stop(0.3, '#1740A8');
+    ribbonGrad.stop(0.6, '#2563EB');
+    ribbonGrad.stop(1, '#3B7FF5');
     doc.rect(SIDEBAR_X, 0, SIDEBAR_W, H).fill(ribbonGrad);
+
+    // Diagonal decorative stripe lines
+    const stripePositions = [0.18, 0.38, 0.58, 0.78];
+    stripePositions.forEach(pos => {
+      const sy = H * pos;
+      doc.save();
+      doc.rect(SIDEBAR_X, 0, SIDEBAR_W, H).clip();
+      doc.moveTo(SIDEBAR_X - 40, sy - 20).lineTo(W + 40, sy + 20)
+        .lineWidth(8).strokeColor('rgba(255,255,255,0.05)').stroke();
+      doc.restore();
+    });
 
     // Vertical divider highlight
     doc.moveTo(SIDEBAR_X, 0).lineTo(SIDEBAR_X, H)
       .lineWidth(0.5).strokeColor('rgba(255,255,255,0.2)').stroke();
 
-    // ── Sidebar: "COURSE" label ───────────────────────────────────────────
-    doc.fontSize(8).font('Helvetica-Bold').fillColor('rgba(255,255,255,0.7)')
-      .text('COURSE', SIDEBAR_X, 50, {
-        width: SIDEBAR_W,
+    // Corner triangle accent (top-right)
+    doc.save();
+    doc.rect(SIDEBAR_X, 0, SIDEBAR_W, H).clip();
+    doc.polygon([W, 0, W - 56, 0, W, 56]).fill(RIB.mid);
+    doc.restore();
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  SIDEBAR: Premium Ribbon Sash (course card)
+    // ─────────────────────────────────────────────────────────────────────────
+    const SASH_MARGIN = 14;          // left/right margin from sidebar edges
+    const SASH_X = SIDEBAR_X + SASH_MARGIN;
+    const SASH_W = SIDEBAR_W - SASH_MARGIN * 2;
+    const SASH_Y = 24;
+    const SASH_PAD_H = 14;         // inner padding inside sash
+    const SASH_LABEL_H = 14;
+    const TAB_W = 10;         // folded tab width
+    const TAB_H = 8;
+
+    // Measure course title to estimate sash height
+    let coursePt = 20;
+    doc.font('Helvetica-Bold');
+    while (coursePt > 10 && doc.fontSize(coursePt).widthOfString(courseTitle) > SASH_W - 24) {
+      coursePt -= 1;
+    }
+    const approxLines = Math.ceil(
+      doc.fontSize(coursePt).widthOfString(courseTitle) / (SASH_W - 24)
+    );
+    const SASH_H = SASH_PAD_H + SASH_LABEL_H + (coursePt + 5) * approxLines + SASH_PAD_H;
+
+    // ── Outer gold/ribbon gradient border (2px padding around inner) ──────
+    const sashGrad = doc.linearGradient(SASH_X, SASH_Y, SASH_X + SASH_W, SASH_Y + SASH_H);
+    sashGrad.stop(0, RIB.dark);
+    sashGrad.stop(0.25, RIB.mid);
+    sashGrad.stop(0.5, RIB.light);
+    sashGrad.stop(0.75, RIB.mid);
+    sashGrad.stop(1, RIB.dark);
+    doc.roundedRect(SASH_X, SASH_Y, SASH_W, SASH_H, 5).fill(sashGrad);
+
+    // ── Inner blue inset (2px inside) ─────────────────────────────────────
+    const INSET = 2;
+    doc.roundedRect(SASH_X + INSET, SASH_Y + INSET, SASH_W - INSET * 2, SASH_H - INSET * 2, 4)
+      .fill('#1a3a8f');
+
+    // ── Folded ribbon tabs (bottom-left and bottom-right) ─────────────────
+    // Left tab triangle
+    doc.polygon([
+      SASH_X - TAB_W, SASH_Y + SASH_H,
+      SASH_X, SASH_Y + SASH_H,
+      SASH_X, SASH_Y + SASH_H + TAB_H
+    ]).fill(RIB.tab);
+
+    // Right tab triangle
+    doc.polygon([
+      SASH_X + SASH_W, SASH_Y + SASH_H,
+      SASH_X + SASH_W + TAB_W, SASH_Y + SASH_H,
+      SASH_X + SASH_W, SASH_Y + SASH_H + TAB_H
+    ]).fill(RIB.tab);
+
+    // ── "COURSE" label in ribbon color ────────────────────────────────────
+    doc.fontSize(7).font('Helvetica-Bold').fillColor(RIB.light)
+      .text('C O U R S E', SASH_X + INSET, SASH_Y + SASH_PAD_H, {
+        width: SASH_W - INSET * 2,
         align: 'center',
         characterSpacing: 3
       });
 
-    // ── Sidebar: Course title ─────────────────────────────────────────────
-    let coursePt = 24; // Increased base size for course name
-    doc.font('Helvetica-Bold');
-    while (coursePt > 12 && doc.fontSize(coursePt).widthOfString(courseTitle) > SIDEBAR_W - 40) {
-      coursePt -= 1;
-    }
+    // ── Course title in white ─────────────────────────────────────────────
     doc.fontSize(coursePt).font('Helvetica-Bold').fillColor(WHITE)
-      .text(courseTitle, SIDEBAR_X + 20, 70, {
-        width: SIDEBAR_W - 40,
+      .text(courseTitle, SASH_X + 12, SASH_Y + SASH_PAD_H + SASH_LABEL_H, {
+        width: SASH_W - 24,
         align: 'center',
         lineGap: 4
       });
 
-    // ── Sidebar: Verified Badge (centered, middle of page) ────────────────
+    // ─────────────────────────────────────────────────────────────────────────
+    //  SIDEBAR: Premium Verified Badge (Medallion)
+    // ─────────────────────────────────────────────────────────────────────────
     const BADGE_CX = SIDEBAR_X + SIDEBAR_W / 2;
-    const BADGE_CY = H / 2;
-    const OUTER_R = 50;
-    const INNER_R = 40;
+    const BADGE_CY = H / 2 + 16;
 
-    // Outer ring
-    doc.circle(BADGE_CX, BADGE_CY, OUTER_R)
-      .lineWidth(1.5).strokeColor('rgba(255,255,255,0.4)').stroke();
-
-    // Faint fill inside outer ring
-    doc.circle(BADGE_CX, BADGE_CY, OUTER_R)
-      .fillOpacity(0.1).fill(WHITE);
+    // ── Ray burst halo ────────────────────────────────────────────────────
+    const RAY_COUNT = 16;
+    const RAY_INNER = 54;
+    const RAY_OUTER = 65;
+    doc.save();
+    for (let i = 0; i < RAY_COUNT; i++) {
+      const a1 = (i * 2 * Math.PI) / RAY_COUNT;
+      const a2 = ((i + 0.5) * 2 * Math.PI) / RAY_COUNT;
+      const a3 = ((i + 1) * 2 * Math.PI) / RAY_COUNT;
+      doc.polygon([
+        BADGE_CX + Math.cos(a1) * RAY_INNER, BADGE_CY + Math.sin(a1) * RAY_INNER,
+        BADGE_CX + Math.cos(a2) * RAY_OUTER, BADGE_CY + Math.sin(a2) * RAY_OUTER,
+        BADGE_CX + Math.cos(a3) * RAY_INNER, BADGE_CY + Math.sin(a3) * RAY_INNER,
+      ]).fillOpacity(0.2).fill(WHITE);
+    }
+    doc.restore();
     doc.fillOpacity(1);
 
-    // White inner circle
-    doc.circle(BADGE_CX, BADGE_CY, INNER_R).fill(WHITE);
+    // Outer aura glow
+    doc.circle(BADGE_CX, BADGE_CY, 58).fillOpacity(0.07).fill(WHITE);
+    doc.fillOpacity(1);
 
-    // Green inner circle for checkmark
-    const GREEN_TICK = '#10B981';
-    doc.circle(BADGE_CX, BADGE_CY - 8, 18).fill(GREEN_TICK);
+    // Dashed outer ring
+    doc.circle(BADGE_CX, BADGE_CY, 52)
+      .lineWidth(1).dash(3, { space: 4 }).strokeColor('rgba(255,255,255,0.45)').stroke();
+    doc.undash();
 
-    // Checkmark
-    doc.moveTo(BADGE_CX - 8, BADGE_CY - 8)
-      .lineTo(BADGE_CX - 3, BADGE_CY - 2)
-      .lineTo(BADGE_CX + 8, BADGE_CY - 15)
-      .lineWidth(3).lineCap('round').lineJoin('round')
+    // Thin solid ring
+    doc.circle(BADGE_CX, BADGE_CY, 47)
+      .lineWidth(0.75).strokeColor('rgba(255,255,255,0.28)').stroke();
+
+    // White outer disc
+    doc.circle(BADGE_CX, BADGE_CY, 42).fill(WHITE);
+
+    // Ribbon-colored gradient ring (3px thick stroke simulated with two circles)
+    doc.circle(BADGE_CX, BADGE_CY, 42)
+      .lineWidth(3.5).strokeColor(RIB.mid).stroke();
+    doc.circle(BADGE_CX, BADGE_CY, 39)
+      .lineWidth(0.75).strokeColor(RIB.light).stroke();
+
+    // Emerald disc
+    doc.circle(BADGE_CX, BADGE_CY, 31).fill(EMERALD);
+    doc.circle(BADGE_CX, BADGE_CY, 31)
+      .lineWidth(1.5).strokeColor(EMERALD_LT).stroke();
+
+    // Star accent at top of emerald disc
+    doc.fontSize(8).font('Helvetica').fillColor('rgba(255,255,255,0.45)')
+      .text('*', BADGE_CX - 4, BADGE_CY - 28, { lineBreak: false });
+
+    // Bold checkmark
+    doc.moveTo(BADGE_CX - 12, BADGE_CY - 1)
+      .lineTo(BADGE_CX - 3, BADGE_CY + 9)
+      .lineTo(BADGE_CX + 13, BADGE_CY - 12)
+      .lineWidth(3.5).lineCap('round').lineJoin('round')
       .strokeColor(WHITE).stroke();
 
-    // "VERIFIED" text inside badge
-    doc.fontSize(8.5).font('Helvetica-Bold').fillColor(GREEN_TICK)
-      .text('VERIFIED', BADGE_CX - INNER_R, BADGE_CY + 22, {
-        width: INNER_R * 2,
+    // ── VERIFIED pill ribbon below badge ──────────────────────────────────
+    const PILL_W = 88;
+    const PILL_H = 20;
+    const PILL_X = BADGE_CX - PILL_W / 2;
+    const PILL_Y = BADGE_CY + 51;
+
+    // Pill outer gradient border
+    const pillGrad = doc.linearGradient(PILL_X, PILL_Y, PILL_X + PILL_W, PILL_Y);
+    pillGrad.stop(0, RIB.dark);
+    pillGrad.stop(0.3, RIB.mid);
+    pillGrad.stop(0.5, RIB.light);
+    pillGrad.stop(0.7, RIB.mid);
+    pillGrad.stop(1, RIB.dark);
+    doc.roundedRect(PILL_X, PILL_Y, PILL_W, PILL_H, 10).fill(pillGrad);
+
+    // Pill inner dark inset
+    doc.roundedRect(PILL_X + 2, PILL_Y + 2, PILL_W - 4, PILL_H - 4, 9).fill('#1a3a8f');
+
+    // Pill text
+    doc.fontSize(7.5).font('Helvetica-Bold').fillColor(RIB.light)
+      .text('* VERIFIED *', PILL_X, PILL_Y + 7, {
+        width: PILL_W,
         align: 'center',
         characterSpacing: 1.5
       });
 
-    // ── Sidebar: Issued date ──────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────────
+    //  SIDEBAR: Issued date
+    // ─────────────────────────────────────────────────────────────────────────
     const rawDate = cert.issueDate ? new Date(cert.issueDate) : new Date();
     const issueDate = rawDate.toLocaleDateString('en-IN', {
       year: 'numeric', month: 'long', day: 'numeric'
     });
-
     const DATE_Y = H - 100;
 
-    // Thin separator above date
-    doc.moveTo(SIDEBAR_X + 30, DATE_Y - 14).lineTo(W - 30, DATE_Y - 14)
-      .lineWidth(0.5).strokeColor('rgba(255,255,255,0.25)').stroke();
+    doc.moveTo(SIDEBAR_X + 28, DATE_Y - 12).lineTo(W - 28, DATE_Y - 12)
+      .lineWidth(0.5).strokeColor('rgba(255,255,255,0.22)').stroke();
 
-    doc.fontSize(8).font('Helvetica-Bold').fillColor('rgba(255,255,255,0.7)')
+    doc.fontSize(8).font('Helvetica-Bold').fillColor('rgba(255,255,255,0.6)')
       .text('ISSUED ON', SIDEBAR_X, DATE_Y, {
         width: SIDEBAR_W,
         align: 'center',
@@ -254,8 +384,7 @@ router.get('/download/:certId', async (req, res) => {
         align: 'center'
       });
 
-    // skillvalix.com at very bottom of sidebar
-    doc.fontSize(8.5).font('Helvetica').fillColor('rgba(255,255,255,0.5)')
+    doc.fontSize(8.5).font('Helvetica').fillColor('rgba(255,255,255,0.4)')
       .text('skillvalix.com', SIDEBAR_X, H - 36, {
         width: SIDEBAR_W,
         align: 'center'
@@ -268,42 +397,28 @@ router.get('/download/:certId', async (req, res) => {
     // ── Logo icon ─────────────────────────────────────────────────────────
     const LX = LEFT_PAD;
     const LY = 50;
-    const ICON_SIZE = 48; // larger logo
+    const ICON_SIZE = 48;
 
     doc.save();
     doc.translate(LX, LY);
-    // Draw the new accurate logo shapes, scaled
     const scale = ICON_SIZE / 40;
     doc.scale(scale);
 
-    // Background gradient - dark blue to blue
-    const grad = doc.linearGradient(0, 0, 40, 40);
-    grad.stop(0, '#1D4ED8').stop(1, '#2563EB');
-    doc.roundedRect(0, 0, 40, 40, 10).fill(grad);
-
-    // Highlight
+    const iconGrad = doc.linearGradient(0, 0, 40, 40);
+    iconGrad.stop(0, '#1D4ED8').stop(1, '#2563EB');
+    doc.roundedRect(0, 0, 40, 40, 10).fill(iconGrad);
     doc.roundedRect(1, 1, 38, 19, 9).fillOpacity(0.06).fill(WHITE);
     doc.fillOpacity(1);
-
-    // Trendline
     doc.moveTo(8, 28).bezierCurveTo(13, 21, 17, 25, 32, 10)
-      .lineWidth(3).lineCap('round').lineJoin('round')
-      .strokeColor(WHITE).stroke();
-
-    // Arrowhead
+      .lineWidth(3).lineCap('round').lineJoin('round').strokeColor(WHITE).stroke();
     doc.moveTo(23.5, 10).lineTo(32, 10).lineTo(32, 18.5)
-      .lineWidth(3).lineCap('round').lineJoin('round')
-      .strokeColor(WHITE).stroke();
-
-    // Dot at start
+      .lineWidth(3).lineCap('round').lineJoin('round').strokeColor(WHITE).stroke();
     doc.circle(8, 28, 2).fillOpacity(0.7).fill(WHITE);
     doc.fillOpacity(1);
-
     doc.restore();
 
     // ── Brand name ────────────────────────────────────────────────────────
     const BRAND_X = LX + ICON_SIZE + 16;
-
     doc.fontSize(22).font('Helvetica').fillColor(DARK_MID)
       .text('Skill', BRAND_X, LY + 8, { lineBreak: false, continued: true })
       .font('Helvetica-Bold').fillColor(BLUE)
@@ -315,14 +430,13 @@ router.get('/download/:certId', async (req, res) => {
         characterSpacing: 2.5
       });
 
-    // ── Thin separator under header ───────────────────────────────────────
+    // ── Separator ─────────────────────────────────────────────────────────
     const SEP_Y = LY + ICON_SIZE + 24;
     doc.moveTo(LX, SEP_Y).lineTo(SIDEBAR_X - 40, SEP_Y)
       .lineWidth(0.5).strokeColor(BORDER).stroke();
 
     // ── "CERTIFICATE" label ───────────────────────────────────────────────
     const CERT_Y = SEP_Y + 40;
-
     doc.fontSize(11).font('Helvetica-Bold').fillColor(BLUE)
       .text('C E R T I F I C A T E', LX, CERT_Y, {
         lineBreak: false,
@@ -333,7 +447,7 @@ router.get('/download/:certId', async (req, res) => {
     doc.fontSize(38).font('Helvetica-Bold').fillColor(DARK)
       .text('OF COMPLETION', LX, CERT_Y + 18, { lineBreak: false });
 
-    // ── "Awarded to" subtitle ─────────────────────────────────────────────
+    // ── "Awarded to" ──────────────────────────────────────────────────────
     doc.fontSize(14).font('Helvetica').fillColor(GRAY_MID)
       .text('Awarded to', LX, CERT_Y + 80, { lineBreak: false });
 
@@ -341,7 +455,7 @@ router.get('/download/:certId', async (req, res) => {
     const studentName = cert.student?.name || 'Student';
     const NAME_Y = CERT_Y + 104;
 
-    let namePt = 32; // Reduced size for a more elegant typography
+    let namePt = 32;
     doc.font('Helvetica-Bold');
     while (namePt > 20 && doc.fontSize(namePt).widthOfString(studentName.toUpperCase()) > CONTENT_W) {
       namePt -= 1;
@@ -350,27 +464,25 @@ router.get('/download/:certId', async (req, res) => {
     doc.fontSize(namePt).font('Helvetica-Bold').fillColor(DARK)
       .text(studentName.toUpperCase(), LX, NAME_Y, { lineBreak: false });
 
-    // Premium accent line
     const NAME_STR_W = Math.min(doc.fontSize(namePt).widthOfString(studentName.toUpperCase()), CONTENT_W);
     const UL_Y = NAME_Y + namePt + 12;
 
     doc.rect(LX, UL_Y, NAME_STR_W, 3).fill(BLUE);
-    doc.rect(LX + NAME_STR_W + 8, UL_Y, CONTENT_W - NAME_STR_W - 8, 1).fillOpacity(0.15).fill(BLUE);
+    doc.rect(LX + NAME_STR_W + 8, UL_Y, CONTENT_W - NAME_STR_W - 8, 1)
+      .fillOpacity(0.15).fill(BLUE);
     doc.fillOpacity(1);
 
     // ── Course line ───────────────────────────────────────────────────────
     const COURSE_Y = UL_Y + 36;
-
     doc.fontSize(13).font('Helvetica').fillColor(GRAY)
       .text('for successfully completing the online learning course:', LX, COURSE_Y,
         { lineBreak: false });
-        
+
     doc.fontSize(18).font('Helvetica-Bold').fillColor(DARK_MID)
       .text(courseTitle, LX, COURSE_Y + 24, { lineBreak: false });
 
     // ── Paragraphs ────────────────────────────────────────────────────────
     const PARA_Y = COURSE_Y + 64;
-
     doc.fontSize(11.5).font('Helvetica').fillColor(GRAY)
       .text(
         'This certificate is proudly awarded in recognition of the dedication, consistent effort, and outstanding performance demonstrated throughout the curriculum.',
@@ -379,7 +491,6 @@ router.get('/download/:certId', async (req, res) => {
       );
 
     const PARA2_Y = PARA_Y + 44;
-
     doc.fontSize(11.5).font('Helvetica').fillColor(GRAY)
       .text(
         'The holder has successfully proven core knowledge and the ability to apply practical skills in real-world professional scenarios using the foundational strategies taught in this program.',
@@ -392,7 +503,6 @@ router.get('/download/:certId', async (req, res) => {
     // ═════════════════════════════════════════════════════════════════════════
     const BOTTOM_Y = H - 86;
 
-    // ── Certificate ID ────────────────────────────────────────────────────
     doc.fontSize(8.5).font('Helvetica-Bold').fillColor(GRAY_LT)
       .text('CERTIFICATE ID', LX, BOTTOM_Y, {
         lineBreak: false,
@@ -402,22 +512,16 @@ router.get('/download/:certId', async (req, res) => {
     doc.fontSize(11).font('Helvetica-Bold').fillColor(DARK_MID)
       .text(cert.certificateId, LX, BOTTOM_Y + 16, { lineBreak: false });
 
-    // ── QR Code ───────────────────────────────────────────────────────────
-    const QR_SIZE = 72; 
+    const QR_SIZE = 72;
     const QR_X = SIDEBAR_X - QR_SIZE - 32;
-    const QR_Y = H - QR_SIZE - 44; // Shifted UP for clear Scan to Verify text
+    const QR_Y = H - QR_SIZE - 44;
 
-    // White card with shadow-like subtle border
     doc.rect(QR_X - 10, QR_Y - 10, QR_SIZE + 20, QR_SIZE + 20).fill(WHITE);
-
-    // Border around QR card
     doc.rect(QR_X - 10, QR_Y - 10, QR_SIZE + 20, QR_SIZE + 20)
       .lineWidth(1).strokeColor(BORDER).stroke();
 
-    // QR image
     doc.image(qrBuffer, QR_X, QR_Y, { width: QR_SIZE, height: QR_SIZE });
 
-    // "Scan to Verify" label below QR
     doc.fontSize(8).font('Helvetica-Bold').fillColor(GRAY_LT)
       .text('SCAN TO VERIFY', QR_X - 10, QR_Y + QR_SIZE + 16, {
         width: QR_SIZE + 20,
@@ -435,7 +539,6 @@ router.get('/download/:certId', async (req, res) => {
       res.status(500).json({ message: 'Server error generating certificate.' });
   }
 });
-
 
 // ─── VERIFY ────────────────────────────────────────────────────────────────
 router.get('/verify/:certId', async (req, res) => {

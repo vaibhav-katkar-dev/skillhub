@@ -12,6 +12,7 @@ import {
 // ─── Quiz Template for reference ─────────────────────────────────────────────
 const QUIZ_TEMPLATE = {
   passingScore: 60,
+  ribbonTheme: 'blue',
   questions: [
     {
       questionText: "Your question here?",
@@ -74,9 +75,9 @@ const AdminPanel = () => {
     setLoadingExisting(true);
     try {
       const res = await api.get(`/quizzes/${selectedCourseId}`);
-      const { passingScore, questions } = res.data;
+      const { passingScore, questions, ribbonTheme } = res.data;
       // Re-add correctOptionIndex (admin gets it per backend route)
-      setQuizJson(JSON.stringify({ passingScore, questions }, null, 2));
+      setQuizJson(JSON.stringify({ passingScore, ribbonTheme: ribbonTheme || 'blue', questions }, null, 2));
       setJsonError('');
     } catch (err) {
       setJsonError(err.response?.status === 404 ? 'No quiz found for this course yet.' : 'Failed to load quiz.');
@@ -253,6 +254,7 @@ const AdminPanel = () => {
                   <div className="text-slate-500 mb-2 text-xs uppercase tracking-wider font-sans font-bold">Expected JSON Format</div>
                   <pre className="whitespace-pre">{`{
   "passingScore": 60,
+  "ribbonTheme": "gold",
   "questions": [
     {
       "questionText": "What does JS stand for?",
