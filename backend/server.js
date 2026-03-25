@@ -41,7 +41,9 @@ app.use(cors({
   },
   credentials: true,
 }));
-app.use(helmet());
+app.use(helmet({
+  crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' }, // Required for Google OAuth popup
+}));
 app.use(morgan('dev'));
 
 // ── Rate Limiting ──────────────────────────────────────────

@@ -54,6 +54,7 @@ const Login = () => {
             <input 
               type="email" 
               required
+              autoComplete="email"
               className="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -65,6 +66,7 @@ const Login = () => {
             <input 
               type="password" 
               required
+              autoComplete="current-password"
               className="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -93,7 +95,7 @@ const Login = () => {
             onError={() => setError('Google login failed')}
             theme="outline"
             size="large"
-            width="100%"
+            width="360"
           />
         </div>
         
