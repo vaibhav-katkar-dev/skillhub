@@ -153,13 +153,23 @@ router.get('/download/:certId', async (req, res) => {
       .lineWidth(0.5).strokeColor(BORDER).stroke();
 
     // ═════════════════════════════════════════════════════════════════════════
-    //  2. RIGHT BLUE SIDEBAR
+    //  2. RIGHT BLUE SIDEBAR (Premium Ribbon Design)
     // ═════════════════════════════════════════════════════════════════════════
-    doc.rect(SIDEBAR_X, 0, SIDEBAR_W, H).fill(BLUE);
+    
+    // Add subtle shadow strip on the left edge of the sidebar for depth
+    doc.rect(SIDEBAR_X - 6, 0, 6, H).fillOpacity(0.08).fill(DARK);
+    doc.fillOpacity(1);
 
-    // Vertical divider between left content and sidebar
+    // Premium gradient to simulate a ribbon curve
+    const ribbonGrad = doc.linearGradient(SIDEBAR_X, 0, W, 0);
+    ribbonGrad.stop(0, '#1E3A8A');     // Darker deep blue shadow
+    ribbonGrad.stop(0.12, '#2563EB');  // Base Brand Blue
+    ribbonGrad.stop(1, '#3B82F6');     // Lighter vibrant blue toward the right
+    doc.rect(SIDEBAR_X, 0, SIDEBAR_W, H).fill(ribbonGrad);
+
+    // Vertical divider highlight
     doc.moveTo(SIDEBAR_X, 0).lineTo(SIDEBAR_X, H)
-      .lineWidth(0.5).strokeColor(GRAY_XLT).stroke();
+      .lineWidth(0.5).strokeColor('rgba(255,255,255,0.2)').stroke();
 
     // ── Sidebar: "COURSE" label ───────────────────────────────────────────
     doc.fontSize(8).font('Helvetica-Bold').fillColor('rgba(255,255,255,0.7)')
@@ -170,10 +180,10 @@ router.get('/download/:certId', async (req, res) => {
       });
 
     // ── Sidebar: Course title ─────────────────────────────────────────────
-    let coursePt = 16;
+    let coursePt = 24; // Increased base size for course name
     doc.font('Helvetica-Bold');
-    while (coursePt > 10 && doc.fontSize(coursePt).widthOfString(courseTitle) > SIDEBAR_W - 40) {
-      coursePt -= 0.5;
+    while (coursePt > 12 && doc.fontSize(coursePt).widthOfString(courseTitle) > SIDEBAR_W - 40) {
+      coursePt -= 1;
     }
     doc.fontSize(coursePt).font('Helvetica-Bold').fillColor(WHITE)
       .text(courseTitle, SIDEBAR_X + 20, 70, {
@@ -200,18 +210,19 @@ router.get('/download/:certId', async (req, res) => {
     // White inner circle
     doc.circle(BADGE_CX, BADGE_CY, INNER_R).fill(WHITE);
 
-    // Dark/Blue inner circle for checkmark
-    doc.circle(BADGE_CX, BADGE_CY - 8, 18).fill(BLUE);
+    // Green inner circle for checkmark
+    const GREEN_TICK = '#10B981';
+    doc.circle(BADGE_CX, BADGE_CY - 8, 18).fill(GREEN_TICK);
 
     // Checkmark
     doc.moveTo(BADGE_CX - 8, BADGE_CY - 8)
-      .lineTo(BADGE_CX - 2, BADGE_CY - 2)
-      .lineTo(BADGE_CX + 8, BADGE_CY - 16)
+      .lineTo(BADGE_CX - 3, BADGE_CY - 2)
+      .lineTo(BADGE_CX + 8, BADGE_CY - 15)
       .lineWidth(3).lineCap('round').lineJoin('round')
       .strokeColor(WHITE).stroke();
 
     // "VERIFIED" text inside badge
-    doc.fontSize(8.5).font('Helvetica-Bold').fillColor(BLUE)
+    doc.fontSize(8.5).font('Helvetica-Bold').fillColor(GREEN_TICK)
       .text('VERIFIED', BADGE_CX - INNER_R, BADGE_CY + 22, {
         width: INNER_R * 2,
         align: 'center',
@@ -330,7 +341,7 @@ router.get('/download/:certId', async (req, res) => {
     const studentName = cert.student?.name || 'Student';
     const NAME_Y = CERT_Y + 104;
 
-    let namePt = 42;
+    let namePt = 32; // Reduced size for a more elegant typography
     doc.font('Helvetica-Bold');
     while (namePt > 20 && doc.fontSize(namePt).widthOfString(studentName.toUpperCase()) > CONTENT_W) {
       namePt -= 1;
@@ -392,9 +403,9 @@ router.get('/download/:certId', async (req, res) => {
       .text(cert.certificateId, LX, BOTTOM_Y + 16, { lineBreak: false });
 
     // ── QR Code ───────────────────────────────────────────────────────────
-    const QR_SIZE = 72; // Increased size
+    const QR_SIZE = 72; 
     const QR_X = SIDEBAR_X - QR_SIZE - 32;
-    const QR_Y = H - QR_SIZE - 28;
+    const QR_Y = H - QR_SIZE - 44; // Shifted UP for clear Scan to Verify text
 
     // White card with shadow-like subtle border
     doc.rect(QR_X - 10, QR_Y - 10, QR_SIZE + 20, QR_SIZE + 20).fill(WHITE);
