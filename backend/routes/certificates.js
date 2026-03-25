@@ -166,6 +166,18 @@ router.get('/download/:certId', async (req, res) => {
     doc.rect(12, 12, W - 24, H - 24)
       .lineWidth(0.5).strokeColor(BORDER).stroke();
 
+    // ── Subtle Premium Watermark (Left Area Only) ──
+    doc.save();
+    doc.rect(12, 12, SIDEBAR_X - 12, H - 24).clip();
+    doc.fontSize(100).font('Helvetica-Bold').fillOpacity(0.015).fill(DARK);
+    doc.rotate(-35, { origin: [W/2 - 100, H/2] });
+    // Draw pattern of watermarks
+    ['SKILLVALIX', 'SKILLVALIX', 'SKILLVALIX'].forEach((txt, i) => {
+      doc.text(txt, W / 2 - 500 + i * 150, H / 2 - 300 + i * 280, { lineBreak: false });
+    });
+    doc.restore();
+    doc.fillOpacity(1);
+
     // ═════════════════════════════════════════════════════════════════════════
     //  2. RIGHT BLUE SIDEBAR
     // ═════════════════════════════════════════════════════════════════════════
@@ -228,18 +240,19 @@ router.get('/download/:certId', async (req, res) => {
     // ─────────────────────────────────────────────────────────────────────────
     //  SIDEBAR: Classic Premium Ribbon Card (Course Name)
     // ─────────────────────────────────────────────────────────────────────────
-    // We want the font as big as possible (starting at 32pt)
-    let coursePt = 32; 
+    // Start with a slightly smaller baseline for a more elegant, less heavy look
+    let coursePt = 24; 
     doc.font('Helvetica-Bold');
     
     // The main badge width
     const CARD_W = SIDEBAR_W - 32; 
     const CARD_X = SIDEBAR_X + 16;
-    const textOptions = { width: CARD_W - 24, align: 'center', lineGap: 4 };
+    // Tighter line-height (lineGap: 0) for luxury density
+    const textOptions = { width: CARD_W - 24, align: 'center', lineGap: 0 };
     
-    // Intelligently scale down text so it fits securely (no long words overflow, no excessive height)
+    // Intelligently scale down text so it fits securely
     const words = courseTitle.split(' ');
-    while (coursePt > 12) {
+    while (coursePt > 10) {
       doc.fontSize(coursePt);
       let wordOverflow = false;
       for (const w of words) {
@@ -248,8 +261,8 @@ router.get('/download/:certId', async (req, res) => {
           break;
         }
       }
-      // If no single word overflows and height is within a safe limit (e.g. 130px MAX), we stop
-      if (!wordOverflow && doc.heightOfString(courseTitle, textOptions) <= 130) {
+      // Tighter height check due to tighter lineGap
+      if (!wordOverflow && doc.heightOfString(courseTitle, textOptions) <= 110) {
         break;
       }
       coursePt -= 1;
@@ -258,7 +271,8 @@ router.get('/download/:certId', async (req, res) => {
     // Precisely calculate the required dynamic card height
     const textHeight = doc.heightOfString(courseTitle, textOptions);
     const CARD_Y = 36;
-    const CARD_H = 52 + textHeight; // 36px top padding + textHeight + 16px bottom padding
+    // Adding more breathing room (60 instead of 52) inside the top of the card
+    const CARD_H = 60 + textHeight; 
     const TAIL_W = 14;              // How far tails stick out
     const TAIL_OFFSET_Y = 16;       // Drop down for the tail fold look
     const NOTCH = 8;                // V-cut depth
@@ -322,18 +336,18 @@ router.get('/download/:certId', async (req, res) => {
 
     // 4. "COURSE" label
     doc.fontSize(8.5).font('Helvetica-Bold').fillColor(RIB.light)
-      .text('COURSE', CARD_X, CARD_Y + 16, {
+      .text('COURSE', CARD_X, CARD_Y + 18, {
         width: CARD_W,
         align: 'center',
-        characterSpacing: 3.5
+        characterSpacing: 4
       });
 
-    // 5. Huge Bold Course Title - guaranteed to fit!
+    // 5. Bold Course Title
     doc.fontSize(coursePt).font('Helvetica-Bold').fillColor(WHITE)
-      .text(courseTitle, CARD_X + 12, CARD_Y + 36, {
+      .text(courseTitle, CARD_X + 12, CARD_Y + 42, {
         width: CARD_W - 24,
         align: 'center',
-        lineGap: 4
+        lineGap: 0
       });
 
     doc.restore();
@@ -425,6 +439,15 @@ router.get('/download/:certId', async (req, res) => {
         align: 'center',
         characterSpacing: 1.5
       });
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Subtle gap decoration between pill and date
+    // ─────────────────────────────────────────────────────────────────────────
+    const DOTS_Y = BADGE_CY + 95;
+    [-12, 0, 12].forEach(dx => {
+      doc.circle(BADGE_CX + dx, DOTS_Y, 1.5).fillOpacity(0.3).fill(WHITE);
+    });
+    doc.fillOpacity(1);
 
     // ─────────────────────────────────────────────────────────────────────────
     //  SIDEBAR: Issued date
@@ -548,20 +571,12 @@ router.get('/download/:certId', async (req, res) => {
     doc.fontSize(18).font('Helvetica-Bold').fillColor(DARK_MID)
       .text(courseTitle, LX, COURSE_Y + 24, { lineBreak: false });
 
-    // ── Paragraphs ────────────────────────────────────────────────────────
+    // ── Single Premium Paragraph ───────────────────────────────────────────
     const PARA_Y = COURSE_Y + 64;
-    doc.fontSize(11.5).font('Helvetica').fillColor(GRAY)
+    doc.fontSize(12).font('Helvetica').fillColor(GRAY)
       .text(
-        'This certificate is proudly awarded in recognition of the dedication, consistent effort, and outstanding performance demonstrated throughout the curriculum.',
+        'This certificate is proudly awarded in recognition of the outstanding performance, dedication, and practical professional skills demonstrated throughout the curriculum.',
         LX, PARA_Y,
-        { width: CONTENT_W, lineGap: 6, align: 'left' }
-      );
-
-    const PARA2_Y = PARA_Y + 44;
-    doc.fontSize(11.5).font('Helvetica').fillColor(GRAY)
-      .text(
-        'The holder has successfully proven core knowledge and the ability to apply practical skills in real-world professional scenarios using the foundational strategies taught in this program.',
-        LX, PARA2_Y,
         { width: CONTENT_W, lineGap: 6, align: 'left' }
       );
 
