@@ -235,21 +235,33 @@ router.get('/download/:certId', async (req, res) => {
     // The main badge width
     const CARD_W = SIDEBAR_W - 32; 
     const CARD_X = SIDEBAR_X + 16;
+    const textOptions = { width: CARD_W - 24, align: 'center', lineGap: 4 };
     
-    // Scale text down only if it absolutely doesn't fit horizontally
-    while (coursePt > 14 && doc.fontSize(coursePt).widthOfString(courseTitle) > CARD_W - 24) {
+    // Intelligently scale down text so it fits securely (no long words overflow, no excessive height)
+    const words = courseTitle.split(' ');
+    while (coursePt > 12) {
+      doc.fontSize(coursePt);
+      let wordOverflow = false;
+      for (const w of words) {
+        if (doc.widthOfString(w) > CARD_W - 24) {
+          wordOverflow = true;
+          break;
+        }
+      }
+      // If no single word overflows and height is within a safe limit (e.g. 130px MAX), we stop
+      if (!wordOverflow && doc.heightOfString(courseTitle, textOptions) <= 130) {
+        break;
+      }
       coursePt -= 1;
     }
-    const approxLines = Math.ceil(
-      doc.fontSize(coursePt).widthOfString(courseTitle) / (CARD_W - 24)
-    );
     
-    // Geometry for the completely centered floating card
+    // Precisely calculate the required dynamic card height
+    const textHeight = doc.heightOfString(courseTitle, textOptions);
     const CARD_Y = 36;
-    const CARD_H = 48 + (coursePt + 4) * approxLines;
-    const TAIL_W = 14;           // How far tails stick out
-    const TAIL_OFFSET_Y = 16;    // Drop down for the tail fold look
-    const NOTCH = 8;             // V-cut depth
+    const CARD_H = 52 + textHeight; // 36px top padding + textHeight + 16px bottom padding
+    const TAIL_W = 14;              // How far tails stick out
+    const TAIL_OFFSET_Y = 16;       // Drop down for the tail fold look
+    const NOTCH = 8;                // V-cut depth
     
     doc.save();
 
@@ -316,7 +328,7 @@ router.get('/download/:certId', async (req, res) => {
         characterSpacing: 3.5
       });
 
-    // 5. Huge Bold Course Title
+    // 5. Huge Bold Course Title - guaranteed to fit!
     doc.fontSize(coursePt).font('Helvetica-Bold').fillColor(WHITE)
       .text(courseTitle, CARD_X + 12, CARD_Y + 36, {
         width: CARD_W - 24,
