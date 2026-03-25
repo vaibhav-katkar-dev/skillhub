@@ -182,94 +182,150 @@ router.get('/download/:certId', async (req, res) => {
     ribbonGrad.stop(1, '#3B7FF5');
     doc.rect(SIDEBAR_X, 0, SIDEBAR_W, H).fill(ribbonGrad);
 
-    // Diagonal decorative stripe lines
-    const stripePositions = [0.18, 0.38, 0.58, 0.78];
-    stripePositions.forEach(pos => {
-      const sy = H * pos;
+    // Premium Sparkle Accents (replacing old diagonal lines)
+    doc.save();
+    doc.rect(SIDEBAR_X, 0, SIDEBAR_W, H).clip();
+    
+    // Tiny floating magic dots
+    const dots = [
+      { x: 30, y: 0.2 }, { x: 80, y: 0.3 }, { x: 140, y: 0.1 },
+      { x: 50, y: 0.5 }, { x: 190, y: 0.45 }, { x: 160, y: 0.7 },
+      { x: 20, y: 0.75 }, { x: 100, y: 0.95 }, { x: 180, y: 0.85 },
+      { x: 140, y: 1.05 } // slightly off bottom
+    ];
+    dots.forEach(d => doc.circle(SIDEBAR_X + d.x, H * d.y, 1.2).fillOpacity(0.25).fill(WHITE));
+
+    // Dynamic concave star sparkles
+    const sparkles = [
+      { x: SIDEBAR_X + 40, y: H * 0.15, size: 8, opacity: 0.4 },
+      { x: SIDEBAR_X + SIDEBAR_W - 30, y: H * 0.30, size: 5, opacity: 0.6 },
+      { x: SIDEBAR_X + 25, y: H * 0.48, size: 5, opacity: 0.35 },
+      { x: SIDEBAR_X + SIDEBAR_W - 55, y: H * 0.65, size: 10, opacity: 0.5 },
+      { x: SIDEBAR_X + 60, y: H * 0.82, size: 7, opacity: 0.4 },
+      { x: SIDEBAR_X + SIDEBAR_W - 25, y: H * 0.94, size: 4, opacity: 0.7 }
+    ];
+
+    sparkles.forEach(sp => {
       doc.save();
-      doc.rect(SIDEBAR_X, 0, SIDEBAR_W, H).clip();
-      doc.moveTo(SIDEBAR_X - 40, sy - 20).lineTo(W + 40, sy + 20)
-        .lineWidth(8).strokeColor('rgba(255,255,255,0.05)').stroke();
+      doc.translate(sp.x, sp.y);
+      doc.moveTo(0, -sp.size);
+      doc.quadraticCurveTo(0, 0, sp.size, 0);
+      doc.quadraticCurveTo(0, 0, 0, sp.size);
+      doc.quadraticCurveTo(0, 0, -sp.size, 0);
+      doc.quadraticCurveTo(0, 0, 0, -sp.size);
+      doc.fillOpacity(sp.opacity).fill(WHITE);
+      // Soft glowing center for the sparkle
+      doc.circle(0, 0, sp.size * 0.18).fillOpacity(Math.min(1, sp.opacity + 0.3)).fill(WHITE);
       doc.restore();
     });
+
+    doc.restore();
 
     // Vertical divider highlight
     doc.moveTo(SIDEBAR_X, 0).lineTo(SIDEBAR_X, H)
       .lineWidth(0.5).strokeColor('rgba(255,255,255,0.2)').stroke();
 
-    // Corner triangle accent (top-right)
-    doc.save();
-    doc.rect(SIDEBAR_X, 0, SIDEBAR_W, H).clip();
-    doc.polygon([W, 0, W - 56, 0, W, 56]).fill(RIB.mid);
-    doc.restore();
-
     // ─────────────────────────────────────────────────────────────────────────
-    //  SIDEBAR: Premium Ribbon Sash (course card)
+    //  SIDEBAR: Broad Premium Pennant Banner (Course Card)
     // ─────────────────────────────────────────────────────────────────────────
-    const SASH_MARGIN = 14;          // left/right margin from sidebar edges
-    const SASH_X = SIDEBAR_X + SASH_MARGIN;
-    const SASH_W = SIDEBAR_W - SASH_MARGIN * 2;
-    const SASH_Y = 24;
-    const SASH_PAD_H = 14;         // inner padding inside sash
-    const SASH_LABEL_H = 14;
-    const TAB_W = 10;         // folded tab width
-    const TAB_H = 8;
-
-    // Measure course title to estimate sash height
-    let coursePt = 20;
+    // Calculate required height based on course name length
+    let coursePt = 22;
     doc.font('Helvetica-Bold');
-    while (coursePt > 10 && doc.fontSize(coursePt).widthOfString(courseTitle) > SASH_W - 24) {
+    while (coursePt > 10 && doc.fontSize(coursePt).widthOfString(courseTitle) > SIDEBAR_W - 48) {
       coursePt -= 1;
     }
     const approxLines = Math.ceil(
-      doc.fontSize(coursePt).widthOfString(courseTitle) / (SASH_W - 24)
+      doc.fontSize(coursePt).widthOfString(courseTitle) / (SIDEBAR_W - 48)
     );
-    const SASH_H = SASH_PAD_H + SASH_LABEL_H + (coursePt + 5) * approxLines + SASH_PAD_H;
+    
+    // Pennant geometry
+    const PENNANT_Y = 0;
+    const PENNANT_W = SIDEBAR_W;
+    const PENNANT_X = SIDEBAR_X;
+    
+    // We base the height dynamically so the text fits comfortably
+    const PENNANT_MAIN_H = 46 + (coursePt + 6) * approxLines;
+    const PENNANT_TIP_H = PENNANT_MAIN_H + 32; // The sharp downward triangle tip
 
-    // ── Outer gold/ribbon gradient border (2px padding around inner) ──────
-    const sashGrad = doc.linearGradient(SASH_X, SASH_Y, SASH_X + SASH_W, SASH_Y + SASH_H);
+    doc.save();
+    
+    // 1. Shadow under the pennant for depth
+    doc.polygon([
+      PENNANT_X - 4, PENNANT_Y,
+      PENNANT_X + PENNANT_W + 4, PENNANT_Y,
+      PENNANT_X + PENNANT_W + 4, PENNANT_MAIN_H + 2,
+      PENNANT_X + PENNANT_W / 2, PENNANT_TIP_H + 5,
+      PENNANT_X - 4, PENNANT_MAIN_H + 2
+    ]).fillOpacity(0.15).fill(DARK);
+    doc.fillOpacity(1);
+
+    // 2. Outer ribbon gradient (broad triangle-bottom pennant)
+    const pennantPath = [
+      PENNANT_X, PENNANT_Y,
+      PENNANT_X + PENNANT_W, PENNANT_Y,
+      PENNANT_X + PENNANT_W, PENNANT_MAIN_H,
+      PENNANT_X + PENNANT_W / 2, PENNANT_TIP_H,
+      PENNANT_X, PENNANT_MAIN_H
+    ];
+
+    const sashGrad = doc.linearGradient(PENNANT_X, 0, PENNANT_X + PENNANT_W, PENNANT_TIP_H);
     sashGrad.stop(0, RIB.dark);
-    sashGrad.stop(0.25, RIB.mid);
-    sashGrad.stop(0.5, RIB.light);
-    sashGrad.stop(0.75, RIB.mid);
+    sashGrad.stop(0.4, RIB.mid);
+    sashGrad.stop(0.7, RIB.light);
     sashGrad.stop(1, RIB.dark);
-    doc.roundedRect(SASH_X, SASH_Y, SASH_W, SASH_H, 5).fill(sashGrad);
 
-    // ── Inner blue inset (2px inside) ─────────────────────────────────────
-    const INSET = 2;
-    doc.roundedRect(SASH_X + INSET, SASH_Y + INSET, SASH_W - INSET * 2, SASH_H - INSET * 2, 4)
-      .fill('#1a3a8f');
+    doc.polygon(pennantPath).fill(sashGrad);
 
-    // ── Folded ribbon tabs (bottom-left and bottom-right) ─────────────────
-    // Left tab triangle
-    doc.polygon([
-      SASH_X - TAB_W, SASH_Y + SASH_H,
-      SASH_X, SASH_Y + SASH_H,
-      SASH_X, SASH_Y + SASH_H + TAB_H
-    ]).fill(RIB.tab);
+    // 3. Inner inset for a premium layered crest look
+    const INSET = 5;
+    const innerPath = [
+      PENNANT_X + INSET, PENNANT_Y,
+      PENNANT_X + PENNANT_W - INSET, PENNANT_Y,
+      PENNANT_X + PENNANT_W - INSET, PENNANT_MAIN_H - INSET * 1.5,
+      PENNANT_X + PENNANT_W / 2, PENNANT_TIP_H - INSET * 2.5,
+      PENNANT_X + INSET, PENNANT_MAIN_H - INSET * 1.5
+    ];
+    
+    // Deep royal blue back-plate for the text
+    doc.polygon(innerPath).fill('#102A75');
 
-    // Right tab triangle
-    doc.polygon([
-      SASH_X + SASH_W, SASH_Y + SASH_H,
-      SASH_X + SASH_W + TAB_W, SASH_Y + SASH_H,
-      SASH_X + SASH_W, SASH_Y + SASH_H + TAB_H
-    ]).fill(RIB.tab);
-
-    // ── "COURSE" label in ribbon color ────────────────────────────────────
-    doc.fontSize(7).font('Helvetica-Bold').fillColor(RIB.light)
-      .text('C O U R S E', SASH_X + INSET, SASH_Y + SASH_PAD_H, {
-        width: SASH_W - INSET * 2,
+    // Subtle inset glow line
+    doc.polygon(innerPath)
+      .lineWidth(1)
+      .strokeColor('rgba(255,255,255,0.25)')
+      .stroke();
+    
+    // 4. "CERTIFIED IN" label
+    doc.fontSize(8.5).font('Helvetica-Bold').fillColor(RIB.light)
+      .text('CERTIFIED IN', PENNANT_X, 24, {
+        width: PENNANT_W,
         align: 'center',
-        characterSpacing: 3
+        characterSpacing: 3.5
       });
 
-    // ── Course title in white ─────────────────────────────────────────────
+    // 5. Dynamic Course title
     doc.fontSize(coursePt).font('Helvetica-Bold').fillColor(WHITE)
-      .text(courseTitle, SASH_X + 12, SASH_Y + SASH_PAD_H + SASH_LABEL_H, {
-        width: SASH_W - 24,
+      .text(courseTitle, PENNANT_X + 24, 44, {
+        width: PENNANT_W - 48,
         align: 'center',
         lineGap: 4
       });
+      
+    // 6. Creativity component: Decorative hanging diamond inside the tip
+    const diamondY = PENNANT_TIP_H - INSET * 2.5 - 14;
+    doc.polygon([
+      PENNANT_X + PENNANT_W / 2, diamondY - 4,
+      PENNANT_X + PENNANT_W / 2 + 4, diamondY,
+      PENNANT_X + PENNANT_W / 2, diamondY + 4,
+      PENNANT_X + PENNANT_W / 2 - 4, diamondY
+    ]).fill(RIB.light);
+
+    // Decorative line above the diamond
+    doc.moveTo(PENNANT_X + PENNANT_W / 2, diamondY - 14)
+       .lineTo(PENNANT_X + PENNANT_W / 2, diamondY - 6)
+       .lineWidth(1).strokeColor(RIB.light).stroke();
+
+    doc.restore();
 
     // ─────────────────────────────────────────────────────────────────────────
     //  SIDEBAR: Premium Verified Badge (Medallion)
