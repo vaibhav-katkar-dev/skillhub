@@ -166,30 +166,26 @@ router.get('/download/:certId', async (req, res) => {
     // ═══════════════════════════════════════════════════════════
     const LX = 44, LY = 32;
 
-    // Lightbulb icon
+    // SkillValix new logo
     doc.save();
-    // Glow halo
-    doc.circle(LX + 14, LY + 12, 17).fill(YELLOW_LT).opacity(0.25);
-    doc.opacity(1);
-    // Bulb
-    doc.circle(LX + 14, LY + 12, 11).fill(YELLOW);
-    // Base blocks
-    doc.rect(LX + 7,  LY + 21, 14, 4).fill(YELLOW_DK);
-    doc.rect(LX + 8,  LY + 25, 12, 3).fill(YELLOW_DK);
-    doc.rect(LX + 9,  LY + 28, 10, 3).fill(YELLOW_DK);
-    // Shine
-    doc.save();
-    doc.opacity(0.5);
-    doc.circle(LX + 10, LY + 8, 3.5).fill(WHITE);
-    doc.restore();
+    doc.roundedRect(LX, LY, 40, 40, 9).fill('#2563EB');
+    doc.moveTo(LX + 7, LY + 28).lineTo(LX + 16, LY + 18).lineTo(LX + 22, LY + 23).lineTo(LX + 33, LY + 11)
+       .lineWidth(3.2).lineCap('round').lineJoin('round').stroke('#FFFFFF');
+    // Arrow head
+    doc.moveTo(LX + 27, LY + 10).lineTo(LX + 33, LY + 11).lineTo(LX + 32, LY + 17)
+       .lineWidth(3.2).lineCap('round').lineJoin('round').stroke('#FFFFFF');
     doc.restore();
 
     // Brand name
-    doc.fontSize(17).font('Helvetica-Bold').fillColor(DARK)
-       .text('SkillHub', LX + 32, LY + 5, { lineBreak: false });
-    doc.fontSize(6.5).font('Helvetica').fillColor(GRAY_LT)
-       .text('LEARN  ·  GROW  ·  ACHIEVE', LX + 32, LY + 26, {
-         lineBreak: false, characterSpacing: 0.8
+    const brandX = LX + 52;
+    doc.fontSize(20).font('Helvetica').fillColor(DARK)
+       .text('Skill', brandX, LY + 6, { lineBreak: false, continued: true })
+       .font('Helvetica-Bold').fillColor('#2563EB')
+       .text('Valix', { lineBreak: false });
+       
+    doc.fontSize(7.5).font('Helvetica-Bold').fillColor(GRAY_LT)
+       .text('GROW YOUR CAREER', brandX, LY + 28, {
+         lineBreak: false, characterSpacing: 1.5
        });
 
     // Separator under header area
@@ -269,33 +265,7 @@ router.get('/download/:certId', async (req, res) => {
          });
     });
 
-    // ── Signatures ────────────────────────────────────────────
-    const SIG_Y = H - 78;
-
-    const drawSig = (sigX, name, role) => {
-      // Decorative pen-stroke signature simulation
-      doc.save();
-      doc.moveTo(sigX + 4, SIG_Y - 18)
-         .bezierCurveTo(sigX + 18, SIG_Y - 30, sigX + 40, SIG_Y - 10, sigX + 65, SIG_Y - 20)
-         .bezierCurveTo(sigX + 85, SIG_Y - 28, sigX + 100, SIG_Y - 12, sigX + 118, SIG_Y - 18)
-         .lineWidth(1.3).stroke(DARK_MID);
-      // Second swash
-      doc.moveTo(sigX + 10, SIG_Y - 8)
-         .bezierCurveTo(sigX + 35, SIG_Y - 14, sigX + 70, SIG_Y - 5, sigX + 110, SIG_Y - 10)
-         .lineWidth(0.7).stroke(GRAY);
-      doc.restore();
-
-      doc.moveTo(sigX, SIG_Y).lineTo(sigX + 125, SIG_Y)
-         .lineWidth(0.7).stroke('#CCCCCC');
-
-      doc.fontSize(8).font('Helvetica-Bold').fillColor(DARK)
-         .text(name, sigX, SIG_Y + 5, { lineBreak: false });
-      doc.fontSize(7).font('Helvetica').fillColor(GRAY)
-         .text(role, sigX, SIG_Y + 18, { lineBreak: false });
-    };
-
-    drawSig(LEFT_PAD, 'PRATIK CHAKRABORTY', 'INSTRUCTOR');
-    drawSig(LEFT_PAD + 190, 'RAHUL CHANDRA', 'INSTRUCTOR');
+    // No signatures in the new clean layout as per request
 
     // ── QR Code (bottom-right, just before banner) ────────────
     const QR_SIZE = 74;

@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import {
-  BookOpen,
   Twitter,
   Github,
   Linkedin,
@@ -12,6 +11,7 @@ import {
   ChevronRight,
   Shield,
 } from 'lucide-react';
+import Logo from './Logo';
 
 /* ─────────────── data ─────────────── */
 const NAV_COLUMNS = [
@@ -41,8 +41,9 @@ const NAV_COLUMNS = [
     links: [
       { to: '/register',       label: 'Create Account' },
       { to: '/login',          label: 'Sign In' },
-      { to: '/',               label: 'Privacy Policy' },
-      { to: '/',               label: 'Terms of Service' },
+      { to: '/privacy-policy', label: 'Privacy Policy' },
+      { to: '/terms',          label: 'Terms of Service' },
+      { to: '/refund-policy',  label: 'Refund Policy' },
     ],
   },
 ];
@@ -62,9 +63,10 @@ const SOCIAL = [
 ];
 
 const LEGAL_LINKS = [
-  { to: '/', label: 'Privacy Policy'  },
-  { to: '/', label: 'Terms of Service' },
-  { to: '/', label: 'Cookie Policy'   },
+  { to: '/privacy-policy', label: 'Privacy Policy'  },
+  { to: '/terms',          label: 'Terms of Service' },
+  { to: '/refund-policy',  label: 'Refund Policy'   },
+  { to: '/cookie-policy',  label: 'Cookie Policy'   },
 ];
 
 /* ─────────────── component ─────────────── */
@@ -83,15 +85,7 @@ const Footer = () => {
           {/* Brand Column */}
           <div className="lg:col-span-4 space-y-6">
             {/* Logo */}
-            <Link to="/" className="inline-flex items-center gap-2.5 group" aria-label="SkillValix home">
-              <div className="bg-blue-600 group-hover:bg-blue-500 p-2 rounded-xl shadow-lg shadow-blue-900/40 transition-colors duration-200">
-                <BookOpen className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-2xl font-black tracking-tight">
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">Skill</span>
-                <span className="text-white">Hub</span>
-              </span>
-            </Link>
+            <Logo size="md" tagline linkTo="/" />
 
             {/* Tagline */}
             <p className="text-sm leading-relaxed text-slate-400 max-w-sm">

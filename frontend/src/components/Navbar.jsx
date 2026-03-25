@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { BookOpen, Menu, X, ChevronRight } from 'lucide-react';
+import { Menu, X, ChevronRight } from 'lucide-react';
+import Logo from './Logo';
 
 const navLinks = [
   { to: '/', label: 'Home' },
@@ -20,15 +21,7 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
 
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 shrink-0">
-            <div className="bg-blue-600 p-1.5 rounded-lg">
-              <BookOpen className="h-5 w-5 text-white" />
-            </div>
-            <span className="text-xl font-black tracking-tight">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Skill</span>
-              <span className="text-slate-800">Hub</span>
-            </span>
-          </Link>
+          <Logo size="md" darkText linkTo="/" />
 
           {/* Desktop Nav — center links, always visible, never wrap */}
           <div className="hidden md:flex items-center gap-1 flex-1 justify-center">
