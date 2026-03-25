@@ -4,9 +4,9 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Calendar, User, Clock, ArrowLeft, BookOpen, ArrowRight, Tag } from 'lucide-react';
 import { blogPosts } from '../data/blogs';
 
-const SITE_URL = 'https://skillhub.in';
-const SITE_NAME = 'SkillHub';
-const LOGO_URL = 'https://skillhub.in/favicon.svg';
+const SITE_URL = 'https://skillvalix.in';
+const SITE_NAME = 'SkillValix';
+const LOGO_URL = 'https://skillvalix.in/favicon.svg';
 
 const BlogPost = () => {
   const { slug } = useParams();
@@ -26,7 +26,7 @@ const BlogPost = () => {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center p-4 text-center">
         <Helmet>
-          <title>Article Not Found | SkillHub Blog</title>
+          <title>Article Not Found | SkillValix Blog</title>
           <meta name="robots" content="noindex, nofollow" />
         </Helmet>
         <h1 className="text-4xl font-bold text-slate-900 mb-4">404 — Article Not Found</h1>
@@ -117,7 +117,7 @@ const BlogPost = () => {
         <meta name="twitter:description" content={post.metaDescription} />
         <meta name="twitter:image" content={post.imageUrl} />
         <meta name="twitter:image:alt" content={post.imageAlt} />
-        <meta name="twitter:site" content="@SkillHubIn" />
+        <meta name="twitter:site" content="@SkillValix" />
 
         {/* JSON-LD Structured Data */}
         <script type="application/ld+json">{JSON.stringify(articleSchema)}</script>

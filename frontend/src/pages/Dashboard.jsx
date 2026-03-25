@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { api, useAuthStore, cachedGet } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://api.skillvalix.com/api';
 import {
   Download, CheckCircle, Award, Share2, BookOpen,
   ArrowRight, Loader2, Trophy, GraduationCap, Medal,
@@ -285,7 +285,7 @@ const Dashboard = () => {
         @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
         .animate-shimmer { animation: shimmer 1.8s infinite linear; }
       `}</style>
-      <Helmet><title>My Dashboard | SkillHub</title></Helmet>
+      <Helmet><title>My Dashboard | SkillValix</title></Helmet>
 
       {/* ── HERO ── */}
       <div className="bg-gradient-to-br from-indigo-700 via-violet-700 to-purple-800 pt-10 pb-28 relative overflow-hidden">
@@ -403,7 +403,7 @@ const Dashboard = () => {
                   <Sk cls="h-24" /><Sk cls="h-24" /><Sk cls="h-24" />
                 </div>
               ) : available.length === 0 ? (
-                <Empty icon={Trophy} title="🎉 All courses completed!" sub="You're a SkillHub champion." />
+                <Empty icon={Trophy} title="🎉 All courses completed!" sub="You're a SkillValix champion." />
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {available.map(c => <AvailableCard key={c._id} course={c} />)}

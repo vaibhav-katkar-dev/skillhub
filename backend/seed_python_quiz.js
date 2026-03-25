@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/skillhub';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/skillvalix';
 
 const quizSchema = new mongoose.Schema({
   course: { type: mongoose.Schema.Types.ObjectId, required: true },

@@ -137,17 +137,17 @@ router.post('/forgot-password', async (req, res) => {
 
     await user.save();
 
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const frontendUrl = process.env.FRONTEND_URL || 'https://skillvalix.com';
     const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
     
     const transporter = getTransporter();
     
     const mailOptions = {
       to: user.email,
-      from: process.env.EMAIL_USER || 'no-reply@skillhub.com',
-      subject: 'Password Recovery for SkillHub',
+      from: process.env.EMAIL_USER || 'no-reply@skillvalix.com',
+      subject: 'Password Recovery for SkillValix',
       html: `
-        <p>You requested a password reset for your SkillHub account.</p>
+        <p>You requested a password reset for your SkillValix account.</p>
         <p>Please click on the following link, or paste it into your browser to complete the process:</p>
         <a href="${resetUrl}">${resetUrl}</a>
         <p>If you did not request this, please ignore this email and your password will remain unchanged.</p>

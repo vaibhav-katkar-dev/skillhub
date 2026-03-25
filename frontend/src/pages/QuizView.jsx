@@ -5,7 +5,7 @@ import { api, useAuthStore, clearCache } from '../store/authStore';
 import { getCourseBySlug } from '../data/courseLoader';
 import { Award, Loader2, AlertCircle, Download, CreditCard, RefreshCcw, CheckCircle } from 'lucide-react';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://api.skillvalix.com/api';
 
 const QuizView = () => {
   const { slug } = useParams();
@@ -116,7 +116,7 @@ const QuizView = () => {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_your_key_id_here',
         amount: order.amount,
         currency: order.currency,
-        name: 'SkillHub Certification',
+        name: 'SkillValix Certification',
         description: `Unlock Lifetime Exam Access & Unlimited Retakes`,
         order_id: order.id,
         handler: async function (response) {
@@ -161,7 +161,7 @@ const QuizView = () => {
   return (
     <div className="max-w-3xl mx-auto px-4 py-12">
       <Helmet>
-        <title>Certification Exam | {course?.title} | SkillHub</title>
+        <title>Certification Exam | {course?.title} | SkillValix</title>
       </Helmet>
 
       {result ? (

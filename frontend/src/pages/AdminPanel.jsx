@@ -130,7 +130,7 @@ const AdminPanel = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-slate-100">
       <Helmet>
-        <title>Admin Panel | SkillHub</title>
+        <title>Admin Panel | SkillValix</title>
       </Helmet>
 
       {/* ── Header ── */}
@@ -142,7 +142,7 @@ const AdminPanel = () => {
             </div>
             <div>
               <h1 className="text-3xl font-extrabold text-white">Admin Panel</h1>
-              <p className="text-indigo-200 text-sm mt-0.5">Manage quizzes and course content · SkillHub</p>
+              <p className="text-indigo-200 text-sm mt-0.5">Manage quizzes and course content · SkillValix</p>
             </div>
           </div>
 

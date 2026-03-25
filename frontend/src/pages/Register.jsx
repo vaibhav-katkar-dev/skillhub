@@ -36,8 +36,8 @@ const Register = () => {
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-140px)] bg-slate-50">
       <Helmet>
-        <title>Register | SkillHub Learning</title>
-        <meta name="description" content="Create a new SkillHub account to start learning and earning certificates today." />
+        <title>Register | SkillValix Learning</title>
+        <meta name="description" content="Create a new SkillValix account to start learning and earning certificates today." />
       </Helmet>
       
       <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border border-slate-200">

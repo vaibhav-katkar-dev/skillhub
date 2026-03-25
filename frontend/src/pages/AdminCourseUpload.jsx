@@ -144,7 +144,7 @@ const AdminCourseUpload = () => {
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
       <Helmet>
-        <title>Admin: Upload Course | SkillHub</title>
+        <title>Admin: Upload Course | SkillValix</title>
       </Helmet>
 
       <div className="mb-8 border-b border-slate-200 pb-6">

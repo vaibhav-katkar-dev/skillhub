@@ -3,7 +3,7 @@ import axios from 'axios';
 
 // ─── Axios instance ────────────────────────────────────────
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  baseURL: import.meta.env.VITE_API_URL || 'https://api.skillvalix.com/api',
 });
 
 // Attach token to every request
@@ -67,7 +67,7 @@ export const useAuthStore = create((set, get) => ({
 
     // Optimisation 2: try sessionStorage cache before hitting backend
     try {
-      const cached = sessionStorage.getItem('skillhub_user');
+      const cached = sessionStorage.getItem('skillvalix_user');
       if (cached) {
         const parsed = JSON.parse(cached);
         set({ user: parsed, isAuthenticated: true, loading: false });
@@ -77,11 +77,11 @@ export const useAuthStore = create((set, get) => ({
 
     try {
       const res = await api.get('/auth/me');
-      sessionStorage.setItem('skillhub_user', JSON.stringify(res.data));
+      sessionStorage.setItem('skillvalix_user', JSON.stringify(res.data));
       set({ user: res.data, isAuthenticated: true, loading: false });
     } catch (err) {
       localStorage.removeItem('token');
-      sessionStorage.removeItem('skillhub_user');
+      sessionStorage.removeItem('skillvalix_user');
       set({ user: null, isAuthenticated: false, loading: false });
     }
   },
@@ -93,7 +93,7 @@ export const useAuthStore = create((set, get) => ({
     const userRes = await api.get('/auth/me', {
       headers: { Authorization: `Bearer ${res.data.token}` }
     });
-    sessionStorage.setItem('skillhub_user', JSON.stringify(userRes.data));
+    sessionStorage.setItem('skillvalix_user', JSON.stringify(userRes.data));
     clearCache(); // clear all stale cache on login
     set({ user: userRes.data, isAuthenticated: true });
   },
@@ -105,14 +105,14 @@ export const useAuthStore = create((set, get) => ({
     const userRes = await api.get('/auth/me', {
       headers: { Authorization: `Bearer ${res.data.token}` }
     });
-    sessionStorage.setItem('skillhub_user', JSON.stringify(userRes.data));
+    sessionStorage.setItem('skillvalix_user', JSON.stringify(userRes.data));
     clearCache();
     set({ user: userRes.data, isAuthenticated: true });
   },
 
   logout: () => {
     localStorage.removeItem('token');
-    sessionStorage.removeItem('skillhub_user');
+    sessionStorage.removeItem('skillvalix_user');
     clearCache(); // wipe all cached data on logout
     set({ user: null, isAuthenticated: false });
   },
@@ -124,7 +124,7 @@ export const useAuthStore = create((set, get) => ({
     const userRes = await api.get('/auth/me', {
       headers: { Authorization: `Bearer ${res.data.token}` }
     });
-    sessionStorage.setItem('skillhub_user', JSON.stringify(userRes.data));
+    sessionStorage.setItem('skillvalix_user', JSON.stringify(userRes.data));
     clearCache();
     set({ user: userRes.data, isAuthenticated: true });
   }

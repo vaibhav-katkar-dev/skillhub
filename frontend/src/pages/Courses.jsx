@@ -58,7 +58,7 @@ const Courses = () => {
   return (
     <div className="min-h-screen bg-slate-50">
       <Helmet>
-        <title>Explore Courses | SkillHub</title>
+        <title>Explore Courses | SkillValix</title>
         <meta name="description" content="Browse courses on HTML, CSS, JavaScript and more. All free." />
       </Helmet>
 
@@ -75,7 +75,7 @@ const Courses = () => {
           {/* label */}
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5 mb-6">
             <GraduationCap className="w-4 h-4 text-cyan-300" />
-            <span className="text-white/80 text-xs font-bold uppercase tracking-widest">SkillHub Library</span>
+            <span className="text-white/80 text-xs font-bold uppercase tracking-widest">SkillValix Library</span>
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-tight mb-4">

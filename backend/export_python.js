@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/skillhub';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/skillvalix';
 const PYTHON_ID = '72c9fd68ed2750d1d53d0e9e';
 
 const lessonSchema = new mongoose.Schema({

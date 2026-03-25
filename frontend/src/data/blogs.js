@@ -4,7 +4,7 @@ export const blogPosts = [
   {
     id: 'mastering-html5-semantic-tags-seo',
     title: 'Mastering HTML5 in 2026: Why Semantic Tags Matter for SEO',
-    metaTitle: 'Mastering HTML5 in 2026: Why Semantic Tags Matter for SEO | SkillHub',
+    metaTitle: 'Mastering HTML5 in 2026: Why Semantic Tags Matter for SEO | SkillValix',
     metaDescription:
       'Learn how HTML5 semantic tags like <article>, <section>, and <nav> boost your search engine rankings and web accessibility in 2026. A must-read for every web developer.',
     keywords: [
@@ -37,7 +37,7 @@ export const blogPosts = [
       <p>If you build sites entirely out of divs, search engines have to guess what your content is about. Stop making them guess.</p>
     `,
     author: 'Vaibhav Katkar',
-    authorUrl: 'https://skillhub.in/blog',
+    authorUrl: 'https://skillvalix.in/blog',
     publishedDate: '2026-03-15T09:00:00+05:30',
     modifiedDate: '2026-03-15T09:00:00+05:30',
     date: 'March 15, 2026',
@@ -47,7 +47,7 @@ export const blogPosts = [
     tags: ['HTML5', 'SEO', 'Semantic HTML', 'Web Development', 'Accessibility'],
     imageUrl: 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&q=80&w=1200',
     imageAlt: 'HTML5 code on a computer screen showing semantic tags',
-    canonicalUrl: 'https://skillhub.in/blog/mastering-html5-semantic-tags-seo',
+    canonicalUrl: 'https://skillvalix.in/blog/mastering-html5-semantic-tags-seo',
     relatedCourse: {
       title: 'The Ultimate HTML Masterclass for Beginners',
       slug: 'ultimate-html-masterclass',
@@ -57,7 +57,7 @@ export const blogPosts = [
   {
     id: 'css-grid-vs-flexbox-modern-web',
     title: 'CSS Grid vs Flexbox: The Ultimate Guide for Modern Web Design',
-    metaTitle: 'CSS Grid vs Flexbox: The Ultimate Guide (2026) | SkillHub',
+    metaTitle: 'CSS Grid vs Flexbox: The Ultimate Guide (2026) | SkillValix',
     metaDescription:
       'CSS Grid or Flexbox — which should you use and when? This 2026 guide breaks down the key differences, use cases, and how to combine both for pixel-perfect responsive web layouts.',
     keywords: [
@@ -88,7 +88,7 @@ export const blogPosts = [
       <p>The secret that senior developers know is that it is not Grid <em>versus</em> Flexbox—it is Grid <em>and</em> Flexbox. Use Grid for the macro-layout (the page structure) and Flexbox for the micro-layout (aligning items inside the grid cells).</p>
     `,
     author: 'Neha Sharma',
-    authorUrl: 'https://skillhub.in/blog',
+    authorUrl: 'https://skillvalix.in/blog',
     publishedDate: '2026-03-12T09:00:00+05:30',
     modifiedDate: '2026-03-12T09:00:00+05:30',
     date: 'March 12, 2026',
@@ -98,7 +98,7 @@ export const blogPosts = [
     tags: ['CSS', 'Flexbox', 'CSS Grid', 'Responsive Design', 'Web Design'],
     imageUrl: 'https://images.unsplash.com/photo-1507721999472-8ed4421c4af2?auto=format&fit=crop&q=80&w=1200',
     imageAlt: 'CSS code on screen showing grid and flexbox layout examples',
-    canonicalUrl: 'https://skillhub.in/blog/css-grid-vs-flexbox-modern-web',
+    canonicalUrl: 'https://skillvalix.in/blog/css-grid-vs-flexbox-modern-web',
     relatedCourse: {
       title: 'CSS for Beginners: Learn Web Styling from Zero to Pro',
       slug: 'css-for-beginners-learn-web-styling-zero-to-pro',
@@ -108,7 +108,7 @@ export const blogPosts = [
   {
     id: 'javascript-dom-manipulation-secrets',
     title: 'JavaScript DOM Manipulation Secrets that Pro Developers Use',
-    metaTitle: 'JavaScript DOM Manipulation Secrets Pro Developers Use (2026) | SkillHub',
+    metaTitle: 'JavaScript DOM Manipulation Secrets Pro Developers Use (2026) | SkillValix',
     metaDescription:
       'Discover the modern, performant techniques to select, traverse, and modify the DOM using vanilla JavaScript. Stop using slow methods — upgrade your JS skills today.',
     keywords: [
@@ -140,7 +140,7 @@ const activeBtn = document.querySelector('nav button.active');</code></pre>
       <p>Instead of attaching 100 event listeners to a list of 100 items, attach a single listener to the parent <code>&lt;ul&gt;</code> and use <code>event.target</code> to figure out which item was clicked. This saves memory and automatically handles dynamically added items.</p>
     `,
     author: 'Amit Patel',
-    authorUrl: 'https://skillhub.in/blog',
+    authorUrl: 'https://skillvalix.in/blog',
     publishedDate: '2026-03-08T09:00:00+05:30',
     modifiedDate: '2026-03-08T09:00:00+05:30',
     date: 'March 08, 2026',
@@ -150,7 +150,7 @@ const activeBtn = document.querySelector('nav button.active');</code></pre>
     tags: ['JavaScript', 'DOM', 'Vanilla JS', 'Web Performance', 'Frontend'],
     imageUrl: 'https://images.unsplash.com/photo-1555099962-4199c345e5dd?auto=format&fit=crop&w=1200&q=80',
     imageAlt: 'JavaScript code on a dark editor screen showing DOM manipulation',
-    canonicalUrl: 'https://skillhub.in/blog/javascript-dom-manipulation-secrets',
+    canonicalUrl: 'https://skillvalix.in/blog/javascript-dom-manipulation-secrets',
     relatedCourse: {
       title: 'JavaScript Basics',
       slug: 'ultimate-javascript-masterclass',
@@ -160,7 +160,7 @@ const activeBtn = document.querySelector('nav button.active');</code></pre>
   {
     id: 'python-beginner-mistakes-to-avoid',
     title: '10 Python Mistakes Every Beginner Makes (And How to Fix Them)',
-    metaTitle: '10 Python Mistakes Every Beginner Makes & How to Fix Them (2026) | SkillHub',
+    metaTitle: '10 Python Mistakes Every Beginner Makes & How to Fix Them (2026) | SkillValix',
     metaDescription:
       'Avoid the most common Python beginner mistakes in 2026. From mutable default arguments to bare exceptions — learn how to write clean, Pythonic code from day one.',
     keywords: [
@@ -254,7 +254,7 @@ for i, fruit in enumerate(fruits):
       <p>These fixes are not just cosmetic. They improve performance, prevent bugs, and make your code far easier for other developers (and your future self) to read and maintain. The Python community calls this writing <strong>Pythonic</strong> code — clean, expressive, and idiomatic.</p>
     `,
     author: 'Riya Desai',
-    authorUrl: 'https://skillhub.in/blog',
+    authorUrl: 'https://skillvalix.in/blog',
     publishedDate: '2026-03-17T09:00:00+05:30',
     modifiedDate: '2026-03-17T09:00:00+05:30',
     date: 'March 17, 2026',
@@ -264,7 +264,7 @@ for i, fruit in enumerate(fruits):
     tags: ['Python', 'Python Tips', 'Beginner Python', 'Clean Code', 'Programming'],
     imageUrl: 'https://images.unsplash.com/photo-1526379095098-d400fd0bf935?auto=format&fit=crop&w=1200&q=80',
     imageAlt: 'Python code on a laptop screen with a dark theme',
-    canonicalUrl: 'https://skillhub.in/blog/python-beginner-mistakes-to-avoid',
+    canonicalUrl: 'https://skillvalix.in/blog/python-beginner-mistakes-to-avoid',
     relatedCourse: {
       title: 'Python Basics',
       slug: 'ultimate-python-masterclass',
@@ -274,7 +274,7 @@ for i, fruit in enumerate(fruits):
   {
     id: 'java-beginner-mistakes-to-avoid',
     title: '10 Java Mistakes Every Beginner Makes (And How to Fix Them)',
-    metaTitle: '10 Java Mistakes Every Beginner Makes & How to Fix Them (2026) | SkillHub',
+    metaTitle: '10 Java Mistakes Every Beginner Makes & How to Fix Them (2026) | SkillValix',
     metaDescription:
       'Avoid the most common Java beginner mistakes in 2026. From NullPointerException to ignoring access modifiers — learn how to write clean, professional Java code from day one.',
     keywords: [
@@ -480,7 +480,7 @@ names.forEach(System.out::println);</code></pre>
       <p>These mistakes are not random — they're the exact patterns that show up in code reviews at every company. Fixing them now means fewer bugs, faster performance, and code that your team will actually respect. Java rewards discipline. Start writing it that way.</p>
     `,
     author: 'Riya Desai',
-    authorUrl: 'https://skillhub.in/blog',
+    authorUrl: 'https://skillvalix.in/blog',
     publishedDate: '2026-03-23T09:00:00+05:30',
     modifiedDate: '2026-03-23T09:00:00+05:30',
     date: 'March 23, 2026',
@@ -490,7 +490,7 @@ names.forEach(System.out::println);</code></pre>
     tags: ['Java', 'Java Tips', 'Beginner Java', 'Clean Code', 'OOP', 'Java Interview', 'Programming'],
     imageUrl: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=1200&q=80',
     imageAlt: 'Java code on a laptop screen with a dark editor theme showing OOP concepts',
-    canonicalUrl: 'https://skillhub.in/blog/java-beginner-mistakes-to-avoid',
+    canonicalUrl: 'https://skillvalix.in/blog/java-beginner-mistakes-to-avoid',
     relatedCourse: {
       title: 'The Ultimate Java Masterclass: From Beginner to Advanced',
       slug: 'ultimate-java-masterclass',

@@ -4,14 +4,14 @@ import { Link } from 'react-router-dom';
 import { Calendar, User, Clock, ArrowRight } from 'lucide-react';
 import { blogPosts } from '../data/blogs';
 
-const SITE_URL = 'https://skillhub.in';
-const SITE_NAME = 'SkillHub';
+const SITE_URL = 'https://skillvalix.in';
+const SITE_NAME = 'SkillValix';
 
 // JSON-LD: Blog listing as ItemList
 const blogListSchema = {
   '@context': 'https://schema.org',
   '@type': 'ItemList',
-  name: 'SkillHub Blog — Web Development Tutorials & Insights',
+  name: 'SkillValix Blog — Web Development Tutorials & Insights',
   url: `${SITE_URL}/blog`,
   numberOfItems: blogPosts.length,
   itemListElement: blogPosts.map((post, index) => ({
@@ -27,24 +27,24 @@ const Blog = () => {
     <div className="min-h-screen bg-slate-50 py-16">
       <Helmet>
         {/* Primary SEO */}
-        <title>Blog — Web Development Tutorials & Tips | SkillHub</title>
+        <title>Blog — Web Development Tutorials & Tips | SkillValix</title>
         <meta
           name="description"
-          content="Read free web development tutorials, Python tips, JavaScript guides, CSS tricks and more on the SkillHub blog. Written by expert developers and educators in India."
+          content="Read free web development tutorials, Python tips, JavaScript guides, CSS tricks and more on the SkillValix blog. Written by expert developers and educators in India."
         />
         <meta
           name="keywords"
-          content="web development blog, JavaScript tutorials, Python tips, CSS guide, HTML5 tutorial, programming blog India, SkillHub blog"
+          content="web development blog, JavaScript tutorials, Python tips, CSS guide, HTML5 tutorial, programming blog India, SkillValix blog"
         />
         <link rel="canonical" href={`${SITE_URL}/blog`} />
         <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
 
         {/* Open Graph */}
         <meta property="og:type" content="website" />
-        <meta property="og:title" content="Blog — Web Development Tutorials & Tips | SkillHub" />
+        <meta property="og:title" content="Blog — Web Development Tutorials & Tips | SkillValix" />
         <meta
           property="og:description"
-          content="Free web development tutorials, Python tips, JavaScript guides, CSS tricks and more on the SkillHub blog."
+          content="Free web development tutorials, Python tips, JavaScript guides, CSS tricks and more on the SkillValix blog."
         />
         <meta property="og:url" content={`${SITE_URL}/blog`} />
         <meta property="og:image" content={`${SITE_URL}/og-blog.png`} />
@@ -53,12 +53,12 @@ const Blog = () => {
 
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Blog — Web Development Tutorials & Tips | SkillHub" />
+        <meta name="twitter:title" content="Blog — Web Development Tutorials & Tips | SkillValix" />
         <meta
           name="twitter:description"
           content="Free web development tutorials, Python tips, JavaScript guides, CSS tricks and more."
         />
-        <meta name="twitter:site" content="@SkillHubIn" />
+        <meta name="twitter:site" content="@SkillValix" />
 
         {/* JSON-LD */}
         <script type="application/ld+json">{JSON.stringify(blogListSchema)}</script>
@@ -68,7 +68,7 @@ const Blog = () => {
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h1 className="text-4xl lg:text-5xl font-extrabold text-slate-900 mb-6 tracking-tight">
-            SkillHub{' '}
+            SkillValix{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
               Blog
             </span>

@@ -1,7 +1,7 @@
 // vite.config.js
-import { defineConfig } from "file:///H:/SkillHub/frontend/node_modules/vite/dist/node/index.js";
-import react from "file:///H:/SkillHub/frontend/node_modules/@vitejs/plugin-react/dist/index.mjs";
-import tailwindcjs from "file:///H:/SkillHub/frontend/node_modules/@tailwindcss/vite/dist/index.mjs";
+import { defineConfig } from "file:///H:/SkillValix/frontend/node_modules/vite/dist/node/index.js";
+import react from "file:///H:/SkillValix/frontend/node_modules/@vitejs/plugin-react/dist/index.mjs";
+import tailwindcjs from "file:///H:/SkillValix/frontend/node_modules/@tailwindcss/vite/dist/index.mjs";
 var vite_config_default = defineConfig({
   plugins: [
     react(),

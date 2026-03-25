@@ -1,4 +1,4 @@
-# SkillHub robots.txt
+# SkillValix robots.txt
 # Allow all legit crawlers
 
 User-agent: *
@@ -16,4 +16,4 @@ Disallow: /login
 Disallow: /register
 
 # Sitemap
-Sitemap: https://skillhub.in/sitemap.xml
+Sitemap: https://skillvalix.in/sitemap.xml

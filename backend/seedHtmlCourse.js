@@ -6,7 +6,7 @@ import Quiz from './models/Quiz.js';
 
 dotenv.config();
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/skillhub';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/skillvalix';
 
 const htmlCourseData = {
   title: "HTML Fundamentals: The Complete Guide",

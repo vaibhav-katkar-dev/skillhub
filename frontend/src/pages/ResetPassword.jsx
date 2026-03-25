@@ -39,7 +39,7 @@ const ResetPassword = () => {
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-140px)] bg-slate-50">
       <Helmet>
-        <title>Set New Password | SkillHub Learning</title>
+        <title>Set New Password | SkillValix Learning</title>
       </Helmet>
       
       <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border border-slate-200">

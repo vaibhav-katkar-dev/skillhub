@@ -21,14 +21,14 @@ const LessonView = () => {
 
   /* ── Progress persistence ── */
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem('skillhub_progress') || '{}');
+    const saved = JSON.parse(localStorage.getItem('skillvalix_progress') || '{}');
     if (saved[slug]) setCompletedLessons(saved[slug]);
   }, [slug]);
 
   const persist = (list) => {
-    const saved = JSON.parse(localStorage.getItem('skillhub_progress') || '{}');
+    const saved = JSON.parse(localStorage.getItem('skillvalix_progress') || '{}');
     saved[slug] = list;
-    localStorage.setItem('skillhub_progress', JSON.stringify(saved));
+    localStorage.setItem('skillvalix_progress', JSON.stringify(saved));
   };
 
   /* ── Fetch Course Data (Once per course) ── */
@@ -103,7 +103,7 @@ const LessonView = () => {
   return (
     <>
       <Helmet>
-        <title>{lesson.title} | {course?.title} | SkillHub</title>
+        <title>{lesson.title} | {course?.title} | SkillValix</title>
       </Helmet>
 
       <style>{`

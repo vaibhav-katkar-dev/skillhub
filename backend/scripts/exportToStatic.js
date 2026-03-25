@@ -10,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/skillhub';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/skillvalix';
 const PUBLIC_DATA_DIR = path.join(__dirname, '../../frontend/public/data');
 
 async function exportToStatic() {

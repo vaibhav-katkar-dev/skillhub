@@ -32,7 +32,7 @@ const CourseDetail = () => {
     };
     fetchCourse();
     
-    const savedProgress = JSON.parse(localStorage.getItem('skillhub_progress')) || {};
+    const savedProgress = JSON.parse(localStorage.getItem('skillvalix_progress')) || {};
     if (savedProgress[slug]) {
       setCompletedLessons(savedProgress[slug]);
     }
@@ -61,7 +61,7 @@ const CourseDetail = () => {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <Helmet>
-        <title>{course.title} | SkillHub</title>
+        <title>{course.title} | SkillValix</title>
         <meta name="description" content={course.description.substring(0, 155)} />
       </Helmet>
 

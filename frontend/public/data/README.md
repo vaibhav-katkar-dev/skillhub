@@ -1,4 +1,4 @@
-# 📁 SkillHub — Static Course Data
+# 📁 SkillValix — Static Course Data
 
 All course and lesson content is managed through the JSON files in this folder.
 **No database upload required.** Just edit the files and redeploy (or refresh in dev).

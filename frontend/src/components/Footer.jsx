@@ -83,7 +83,7 @@ const Footer = () => {
           {/* Brand Column */}
           <div className="lg:col-span-4 space-y-6">
             {/* Logo */}
-            <Link to="/" className="inline-flex items-center gap-2.5 group" aria-label="SkillHub home">
+            <Link to="/" className="inline-flex items-center gap-2.5 group" aria-label="SkillValix home">
               <div className="bg-blue-600 group-hover:bg-blue-500 p-2 rounded-xl shadow-lg shadow-blue-900/40 transition-colors duration-200">
                 <BookOpen className="h-5 w-5 text-white" />
               </div>
@@ -192,7 +192,7 @@ const Footer = () => {
 
           {/* Copyright */}
           <p className="text-xs text-slate-500 order-2 sm:order-1">
-            &copy; {year} SkillHub Learning Platform. All rights reserved.
+            &copy; {year} SkillValix Learning Platform. All rights reserved.
           </p>
 
           {/* Legal Links */}

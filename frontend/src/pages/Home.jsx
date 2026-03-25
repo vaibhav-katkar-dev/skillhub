@@ -87,13 +87,13 @@ const FEATURES = [
 ];
 
 const TESTIMONIALS = [
-  { name: 'Priya Sharma',  role: 'Frontend Developer',      initials: 'PS', grad: 'from-indigo-500 to-violet-600',  body: "SkillHub's HTML course is the clearest resource I've found online. Finished it in a weekend and the certificate added real credibility to my portfolio." },
+  { name: 'Priya Sharma',  role: 'Frontend Developer',      initials: 'PS', grad: 'from-indigo-500 to-violet-600',  body: "SkillValix's HTML course is the clearest resource I've found online. Finished it in a weekend and the certificate added real credibility to my portfolio." },
   { name: 'James Okonkwo', role: 'CS Student',              initials: 'JO', grad: 'from-sky-500 to-blue-600',      body: "The quizzes genuinely test your knowledge, not just memorization. I felt confident in interviews knowing I really understood the material." },
   { name: 'Ayesha Khan',   role: 'Career Switcher',         initials: 'AK', grad: 'from-emerald-500 to-teal-600',  body: "100% free and yet the quality is higher than paid platforms I've tried. The step-by-step structure made switching careers actually feel possible." },
 ];
 
 const FAQS = [
-  { q: 'Is SkillHub really free?',              a: 'Yes — completely. Every course, every quiz, every certificate is free. No hidden fees, no premium tiers. We believe education should be accessible to everyone.' },
+  { q: 'Is SkillValix really free?',              a: 'Yes — completely. Every course, every quiz, every certificate is free. No hidden fees, no premium tiers. We believe education should be accessible to everyone.' },
   { q: 'How are the certificates verified?',    a: 'Each certificate has a unique ID. Anyone can visit our Verify page, enter that ID and see your full result and completion date in seconds.' },
   { q: 'Do I need prior experience to start?',  a: 'Not at all. Every course starts from zero and assumes no prior knowledge. If you can browse the web, you can start learning with us.' },
   { q: 'Can I learn at my own pace?',           a: 'Absolutely. There are no deadlines, cohorts, or time limits. Start a lesson, pause, continue tomorrow — your progress is always saved.' },
@@ -231,7 +231,7 @@ export default function Home() {
   return (
     <div style={{ fontFamily: "'Inter', system-ui, sans-serif", background: '#f8faff', color: '#0f172a', overflowX: 'hidden' }}>
       <Helmet>
-        <title>SkillHub — Master Web Development for Free</title>
+        <title>SkillValix — Master Web Development for Free</title>
         <meta name="description" content="100% free web development courses with interactive quizzes and verifiable PDF certificates. Master HTML, CSS, JavaScript." />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
       </Helmet>
@@ -589,7 +589,7 @@ export default function Home() {
       <section style={{ background:'#fff', padding:'96px 0' }} className="section-divider">
         <div className="section-wrap">
           <SectionHeader
-            pill="Why SkillHub"
+            pill="Why SkillValix"
             pillColor="#7c3aed" pillBg="#f5f3ff" pillBorder="#ddd6fe"
             title={<>Built for <span className="shimmer-text">real learning.</span></>}
             subtitle="Every feature is designed to maximise your growth as a developer."
@@ -630,7 +630,7 @@ export default function Home() {
             pill="Community"
             pillColor="#e11d48" pillBg="#fff1f2" pillBorder="#fecdd3"
             title={<>Loved by <span className="shimmer-text">real learners.</span></>}
-            subtitle="Thousands of students have already levelled up their careers with SkillHub."
+            subtitle="Thousands of students have already levelled up their careers with SkillValix."
           />
 
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))', gap:24 }}>

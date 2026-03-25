@@ -43,8 +43,8 @@ const VerifyCert = () => {
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-140px)] py-12 px-4 bg-slate-50">
       <Helmet>
-        <title>Verify Certificate | SkillHub</title>
-        <meta name="description" content="Verify the authenticity of a SkillHub certificate using its unique ID." />
+        <title>Verify Certificate | SkillValix</title>
+        <meta name="description" content="Verify the authenticity of a SkillValix certificate using its unique ID." />
       </Helmet>
 
       <div className="w-full max-w-2xl bg-white border border-slate-200 p-8 sm:p-12 rounded-3xl shadow-xl">
