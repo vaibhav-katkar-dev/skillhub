@@ -226,104 +226,103 @@ router.get('/download/:certId', async (req, res) => {
       .lineWidth(0.5).strokeColor('rgba(255,255,255,0.2)').stroke();
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  SIDEBAR: Broad Premium Pennant Banner (Course Card)
+    //  SIDEBAR: Classic Premium Ribbon Card (Course Name)
     // ─────────────────────────────────────────────────────────────────────────
-    // Calculate required height based on course name length
-    let coursePt = 22;
+    // We want the font as big as possible (starting at 32pt)
+    let coursePt = 32; 
     doc.font('Helvetica-Bold');
-    while (coursePt > 10 && doc.fontSize(coursePt).widthOfString(courseTitle) > SIDEBAR_W - 48) {
+    
+    // The main badge width
+    const CARD_W = SIDEBAR_W - 32; 
+    const CARD_X = SIDEBAR_X + 16;
+    
+    // Scale text down only if it absolutely doesn't fit horizontally
+    while (coursePt > 14 && doc.fontSize(coursePt).widthOfString(courseTitle) > CARD_W - 24) {
       coursePt -= 1;
     }
     const approxLines = Math.ceil(
-      doc.fontSize(coursePt).widthOfString(courseTitle) / (SIDEBAR_W - 48)
+      doc.fontSize(coursePt).widthOfString(courseTitle) / (CARD_W - 24)
     );
     
-    // Pennant geometry
-    const PENNANT_Y = 0;
-    const PENNANT_W = SIDEBAR_W;
-    const PENNANT_X = SIDEBAR_X;
+    // Geometry for the completely centered floating card
+    const CARD_Y = 36;
+    const CARD_H = 48 + (coursePt + 4) * approxLines;
+    const TAIL_W = 14;           // How far tails stick out
+    const TAIL_OFFSET_Y = 16;    // Drop down for the tail fold look
+    const NOTCH = 8;             // V-cut depth
     
-    // We base the height dynamically so the text fits comfortably
-    const PENNANT_MAIN_H = 46 + (coursePt + 6) * approxLines;
-    const PENNANT_TIP_H = PENNANT_MAIN_H + 32; // The sharp downward triangle tip
-
     doc.save();
-    
-    // 1. Shadow under the pennant for depth
+
+    // 1. Left and Right folded Ribbon Tails (shadow color)
+    // Left tail
     doc.polygon([
-      PENNANT_X - 4, PENNANT_Y,
-      PENNANT_X + PENNANT_W + 4, PENNANT_Y,
-      PENNANT_X + PENNANT_W + 4, PENNANT_MAIN_H + 2,
-      PENNANT_X + PENNANT_W / 2, PENNANT_TIP_H + 5,
-      PENNANT_X - 4, PENNANT_MAIN_H + 2
-    ]).fillOpacity(0.15).fill(DARK);
+      CARD_X + 10, CARD_Y + TAIL_OFFSET_Y,
+      CARD_X - TAIL_W, CARD_Y + TAIL_OFFSET_Y,
+      CARD_X - TAIL_W + NOTCH, CARD_Y + TAIL_OFFSET_Y + (CARD_H / 2),
+      CARD_X - TAIL_W, CARD_Y + CARD_H + TAIL_OFFSET_Y,
+      CARD_X + 10, CARD_Y + CARD_H + TAIL_OFFSET_Y
+    ]).fill(RIB.tab);
+
+    // Right tail
+    doc.polygon([
+      CARD_X + CARD_W - 10, CARD_Y + TAIL_OFFSET_Y,
+      CARD_X + CARD_W + TAIL_W, CARD_Y + TAIL_OFFSET_Y,
+      CARD_X + CARD_W + TAIL_W - NOTCH, CARD_Y + TAIL_OFFSET_Y + (CARD_H / 2),
+      CARD_X + CARD_W + TAIL_W, CARD_Y + CARD_H + TAIL_OFFSET_Y,
+      CARD_X + CARD_W - 10, CARD_Y + CARD_H + TAIL_OFFSET_Y
+    ]).fill(RIB.tab);
+
+    // Dark fold triangle shadows (where tail tucks under the main card)
+    doc.polygon([
+      CARD_X, CARD_Y + CARD_H,
+      CARD_X + 10, CARD_Y + CARD_H,
+      CARD_X + 10, CARD_Y + CARD_H + TAIL_OFFSET_Y
+    ]).fillOpacity(0.4).fill('#000000');
+    
+    doc.polygon([
+      CARD_X + CARD_W, CARD_Y + CARD_H,
+      CARD_X + CARD_W - 10, CARD_Y + CARD_H,
+      CARD_X + CARD_W - 10, CARD_Y + CARD_H + TAIL_OFFSET_Y
+    ]).fillOpacity(0.4).fill('#000000');
     doc.fillOpacity(1);
 
-    // 2. Outer ribbon gradient (broad triangle-bottom pennant)
-    const pennantPath = [
-      PENNANT_X, PENNANT_Y,
-      PENNANT_X + PENNANT_W, PENNANT_Y,
-      PENNANT_X + PENNANT_W, PENNANT_MAIN_H,
-      PENNANT_X + PENNANT_W / 2, PENNANT_TIP_H,
-      PENNANT_X, PENNANT_MAIN_H
-    ];
+    // 2. Drop shadow for the main card
+    doc.roundedRect(CARD_X, CARD_Y + 5, CARD_W, CARD_H, 6)
+      .fillOpacity(0.15).fill(DARK);
+    doc.fillOpacity(1);
 
-    const sashGrad = doc.linearGradient(PENNANT_X, 0, PENNANT_X + PENNANT_W, PENNANT_TIP_H);
-    sashGrad.stop(0, RIB.dark);
-    sashGrad.stop(0.4, RIB.mid);
-    sashGrad.stop(0.7, RIB.light);
-    sashGrad.stop(1, RIB.dark);
+    // 3. Main Premium Card Background
+    const cardGrad = doc.linearGradient(CARD_X, CARD_Y, CARD_X + CARD_W, CARD_Y + CARD_H);
+    cardGrad.stop(0, RIB.dark);
+    cardGrad.stop(0.3, RIB.mid);
+    cardGrad.stop(0.7, RIB.light);
+    cardGrad.stop(1, RIB.dark);
+    doc.roundedRect(CARD_X, CARD_Y, CARD_W, CARD_H, 6).fill(cardGrad);
 
-    doc.polygon(pennantPath).fill(sashGrad);
-
-    // 3. Inner inset for a premium layered crest look
-    const INSET = 5;
-    const innerPath = [
-      PENNANT_X + INSET, PENNANT_Y,
-      PENNANT_X + PENNANT_W - INSET, PENNANT_Y,
-      PENNANT_X + PENNANT_W - INSET, PENNANT_MAIN_H - INSET * 1.5,
-      PENNANT_X + PENNANT_W / 2, PENNANT_TIP_H - INSET * 2.5,
-      PENNANT_X + INSET, PENNANT_MAIN_H - INSET * 1.5
-    ];
+    // Elegant inner deep blue plate for popping text
+    const INSET = 4;
+    doc.roundedRect(CARD_X + INSET, CARD_Y + INSET, CARD_W - INSET * 2, CARD_H - INSET * 2, 4)
+      .fill('#0D225C');
     
-    // Deep royal blue back-plate for the text
-    doc.polygon(innerPath).fill('#102A75');
+    // Shiny gold/theme rim line inside
+    doc.roundedRect(CARD_X + INSET, CARD_Y + INSET, CARD_W - INSET * 2, CARD_H - INSET * 2, 4)
+      .lineWidth(0.75).strokeColor(RIB.light).stroke();
 
-    // Subtle inset glow line
-    doc.polygon(innerPath)
-      .lineWidth(1)
-      .strokeColor('rgba(255,255,255,0.25)')
-      .stroke();
-    
-    // 4. "CERTIFIED IN" label
+    // 4. "COURSE" label
     doc.fontSize(8.5).font('Helvetica-Bold').fillColor(RIB.light)
-      .text('CERTIFIED IN', PENNANT_X, 24, {
-        width: PENNANT_W,
+      .text('COURSE', CARD_X, CARD_Y + 16, {
+        width: CARD_W,
         align: 'center',
         characterSpacing: 3.5
       });
 
-    // 5. Dynamic Course title
+    // 5. Huge Bold Course Title
     doc.fontSize(coursePt).font('Helvetica-Bold').fillColor(WHITE)
-      .text(courseTitle, PENNANT_X + 24, 44, {
-        width: PENNANT_W - 48,
+      .text(courseTitle, CARD_X + 12, CARD_Y + 36, {
+        width: CARD_W - 24,
         align: 'center',
         lineGap: 4
       });
-      
-    // 6. Creativity component: Decorative hanging diamond inside the tip
-    const diamondY = PENNANT_TIP_H - INSET * 2.5 - 14;
-    doc.polygon([
-      PENNANT_X + PENNANT_W / 2, diamondY - 4,
-      PENNANT_X + PENNANT_W / 2 + 4, diamondY,
-      PENNANT_X + PENNANT_W / 2, diamondY + 4,
-      PENNANT_X + PENNANT_W / 2 - 4, diamondY
-    ]).fill(RIB.light);
-
-    // Decorative line above the diamond
-    doc.moveTo(PENNANT_X + PENNANT_W / 2, diamondY - 14)
-       .lineTo(PENNANT_X + PENNANT_W / 2, diamondY - 6)
-       .lineWidth(1).strokeColor(RIB.light).stroke();
 
     doc.restore();
 
