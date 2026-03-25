@@ -5,33 +5,33 @@
 
   <!-- ── Home ──────────────────────────────────────────────────────────── -->
   <url>
-    <loc>https://skillvalix.in/</loc>
+    <loc>https://skillvalix.com/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
 
   <!-- ── Static Pages ──────────────────────────────────────────────────── -->
   <url>
-    <loc>https://skillvalix.in/courses</loc>
+    <loc>https://skillvalix.com/courses</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://skillvalix.in/blog</loc>
+    <loc>https://skillvalix.com/blog</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://skillvalix.in/verify</loc>
+    <loc>https://skillvalix.com/verify</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
 
   <!-- ── Courses ───────────────────────────────────────────────────────── -->
   <url>
-    <loc>https://skillvalix.in/courses/ultimate-html-masterclass</loc>
+    <loc>https://skillvalix.com/courses/ultimate-html-masterclass</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -41,7 +41,7 @@
   </url>
 
   <url>
-    <loc>https://skillvalix.in/courses/css-for-beginners-learn-web-styling-zero-to-pro</loc>
+    <loc>https://skillvalix.com/courses/css-for-beginners-learn-web-styling-zero-to-pro</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -51,7 +51,7 @@
   </url>
 
   <url>
-    <loc>https://skillvalix.in/courses/ultimate-javascript-masterclass</loc>
+    <loc>https://skillvalix.com/courses/ultimate-javascript-masterclass</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -61,7 +61,7 @@
   </url>
 
   <url>
-    <loc>https://skillvalix.in/courses/ultimate-python-masterclass</loc>
+    <loc>https://skillvalix.com/courses/ultimate-python-masterclass</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -72,7 +72,7 @@
 
   <!-- ── Blog Posts ────────────────────────────────────────────────────── -->
   <url>
-    <loc>https://skillvalix.in/blog/mastering-html5-semantic-tags-seo</loc>
+    <loc>https://skillvalix.com/blog/mastering-html5-semantic-tags-seo</loc>
     <lastmod>2026-03-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -91,7 +91,7 @@
   </url>
 
   <url>
-    <loc>https://skillvalix.in/blog/css-grid-vs-flexbox-modern-web</loc>
+    <loc>https://skillvalix.com/blog/css-grid-vs-flexbox-modern-web</loc>
     <lastmod>2026-03-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -110,7 +110,7 @@
   </url>
 
   <url>
-    <loc>https://skillvalix.in/blog/javascript-dom-manipulation-secrets</loc>
+    <loc>https://skillvalix.com/blog/javascript-dom-manipulation-secrets</loc>
     <lastmod>2026-03-08</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -129,7 +129,7 @@
   </url>
 
   <url>
-    <loc>https://skillvalix.in/blog/python-beginner-mistakes-to-avoid</loc>
+    <loc>https://skillvalix.com/blog/python-beginner-mistakes-to-avoid</loc>
     <lastmod>2026-03-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>

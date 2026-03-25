@@ -37,7 +37,7 @@ export const blogPosts = [
       <p>If you build sites entirely out of divs, search engines have to guess what your content is about. Stop making them guess.</p>
     `,
     author: 'Vaibhav Katkar',
-    authorUrl: 'https://skillvalix.in/blog',
+    authorUrl: 'https://skillvalix.com/blog',
     publishedDate: '2026-03-15T09:00:00+05:30',
     modifiedDate: '2026-03-15T09:00:00+05:30',
     date: 'March 15, 2026',
@@ -47,7 +47,7 @@ export const blogPosts = [
     tags: ['HTML5', 'SEO', 'Semantic HTML', 'Web Development', 'Accessibility'],
     imageUrl: 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&q=80&w=1200',
     imageAlt: 'HTML5 code on a computer screen showing semantic tags',
-    canonicalUrl: 'https://skillvalix.in/blog/mastering-html5-semantic-tags-seo',
+    canonicalUrl: 'https://skillvalix.com/blog/mastering-html5-semantic-tags-seo',
     relatedCourse: {
       title: 'The Ultimate HTML Masterclass for Beginners',
       slug: 'ultimate-html-masterclass',
@@ -88,7 +88,7 @@ export const blogPosts = [
       <p>The secret that senior developers know is that it is not Grid <em>versus</em> Flexbox—it is Grid <em>and</em> Flexbox. Use Grid for the macro-layout (the page structure) and Flexbox for the micro-layout (aligning items inside the grid cells).</p>
     `,
     author: 'Neha Sharma',
-    authorUrl: 'https://skillvalix.in/blog',
+    authorUrl: 'https://skillvalix.com/blog',
     publishedDate: '2026-03-12T09:00:00+05:30',
     modifiedDate: '2026-03-12T09:00:00+05:30',
     date: 'March 12, 2026',
@@ -98,7 +98,7 @@ export const blogPosts = [
     tags: ['CSS', 'Flexbox', 'CSS Grid', 'Responsive Design', 'Web Design'],
     imageUrl: 'https://images.unsplash.com/photo-1507721999472-8ed4421c4af2?auto=format&fit=crop&q=80&w=1200',
     imageAlt: 'CSS code on screen showing grid and flexbox layout examples',
-    canonicalUrl: 'https://skillvalix.in/blog/css-grid-vs-flexbox-modern-web',
+    canonicalUrl: 'https://skillvalix.com/blog/css-grid-vs-flexbox-modern-web',
     relatedCourse: {
       title: 'CSS for Beginners: Learn Web Styling from Zero to Pro',
       slug: 'css-for-beginners-learn-web-styling-zero-to-pro',
@@ -140,7 +140,7 @@ const activeBtn = document.querySelector('nav button.active');</code></pre>
       <p>Instead of attaching 100 event listeners to a list of 100 items, attach a single listener to the parent <code>&lt;ul&gt;</code> and use <code>event.target</code> to figure out which item was clicked. This saves memory and automatically handles dynamically added items.</p>
     `,
     author: 'Amit Patel',
-    authorUrl: 'https://skillvalix.in/blog',
+    authorUrl: 'https://skillvalix.com/blog',
     publishedDate: '2026-03-08T09:00:00+05:30',
     modifiedDate: '2026-03-08T09:00:00+05:30',
     date: 'March 08, 2026',
@@ -150,7 +150,7 @@ const activeBtn = document.querySelector('nav button.active');</code></pre>
     tags: ['JavaScript', 'DOM', 'Vanilla JS', 'Web Performance', 'Frontend'],
     imageUrl: 'https://images.unsplash.com/photo-1555099962-4199c345e5dd?auto=format&fit=crop&w=1200&q=80',
     imageAlt: 'JavaScript code on a dark editor screen showing DOM manipulation',
-    canonicalUrl: 'https://skillvalix.in/blog/javascript-dom-manipulation-secrets',
+    canonicalUrl: 'https://skillvalix.com/blog/javascript-dom-manipulation-secrets',
     relatedCourse: {
       title: 'JavaScript Basics',
       slug: 'ultimate-javascript-masterclass',
@@ -254,7 +254,7 @@ for i, fruit in enumerate(fruits):
       <p>These fixes are not just cosmetic. They improve performance, prevent bugs, and make your code far easier for other developers (and your future self) to read and maintain. The Python community calls this writing <strong>Pythonic</strong> code — clean, expressive, and idiomatic.</p>
     `,
     author: 'Riya Desai',
-    authorUrl: 'https://skillvalix.in/blog',
+    authorUrl: 'https://skillvalix.com/blog',
     publishedDate: '2026-03-17T09:00:00+05:30',
     modifiedDate: '2026-03-17T09:00:00+05:30',
     date: 'March 17, 2026',
@@ -264,7 +264,7 @@ for i, fruit in enumerate(fruits):
     tags: ['Python', 'Python Tips', 'Beginner Python', 'Clean Code', 'Programming'],
     imageUrl: 'https://images.unsplash.com/photo-1526379095098-d400fd0bf935?auto=format&fit=crop&w=1200&q=80',
     imageAlt: 'Python code on a laptop screen with a dark theme',
-    canonicalUrl: 'https://skillvalix.in/blog/python-beginner-mistakes-to-avoid',
+    canonicalUrl: 'https://skillvalix.com/blog/python-beginner-mistakes-to-avoid',
     relatedCourse: {
       title: 'Python Basics',
       slug: 'ultimate-python-masterclass',
@@ -480,7 +480,7 @@ names.forEach(System.out::println);</code></pre>
       <p>These mistakes are not random — they're the exact patterns that show up in code reviews at every company. Fixing them now means fewer bugs, faster performance, and code that your team will actually respect. Java rewards discipline. Start writing it that way.</p>
     `,
     author: 'Riya Desai',
-    authorUrl: 'https://skillvalix.in/blog',
+    authorUrl: 'https://skillvalix.com/blog',
     publishedDate: '2026-03-23T09:00:00+05:30',
     modifiedDate: '2026-03-23T09:00:00+05:30',
     date: 'March 23, 2026',
@@ -490,11 +490,62 @@ names.forEach(System.out::println);</code></pre>
     tags: ['Java', 'Java Tips', 'Beginner Java', 'Clean Code', 'OOP', 'Java Interview', 'Programming'],
     imageUrl: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=1200&q=80',
     imageAlt: 'Java code on a laptop screen with a dark editor theme showing OOP concepts',
-    canonicalUrl: 'https://skillvalix.in/blog/java-beginner-mistakes-to-avoid',
+    canonicalUrl: 'https://skillvalix.com/blog/java-beginner-mistakes-to-avoid',
     relatedCourse: {
       title: 'The Ultimate Java Masterclass: From Beginner to Advanced',
       slug: 'ultimate-java-masterclass',
       description: 'Master Java from scratch — variables, OOP, collections, multithreading, JDBC and more. Zero to job-ready.'
+    }
+  },
+  {
+    id: 'why-learn-ai-machine-learning-2026',
+    title: 'Why 2026 is the Best Year to Learn AI & Machine Learning',
+    metaTitle: 'Why Learn AI & Machine Learning in 2026 | SkillValix Blog',
+    metaDescription:
+      'Artificial Intelligence is no longer just a buzzword—it is the driving force behind modern software. Discover why every developer must learn AI and Machine Learning in 2026.',
+    keywords: [
+      'Learn AI',
+      'Machine Learning for Beginners',
+      'Artificial Intelligence 2026',
+      'Python for AI',
+      'AI career',
+      'Machine learning tutorial',
+      'AI course online',
+    ],
+    excerpt:
+      'From ChatGPT to self-driving cars, AI is reshaping the world. Find out why 2026 is the ultimate year to start your Artificial Intelligence and Machine Learning journey.',
+    content: `
+      <h2>The AI Revolution is Here</h2>
+      <p>A few years ago, Artificial Intelligence was a specialized niche. Today, it is an essential skill for tech professionals. Whether you are building web apps, analyzing data, or automating tasks, AI has something to offer.</p>
+      
+      <h3>1. Skyrocketing Demand for AI Skills</h3>
+      <p>Every major tech company is heavily investing in machine learning models and AI-driven features. There is a massive talent shortage for developers who can bridge the gap between traditional software engineering and AI.</p>
+      
+      <h3>2. Generative AI is Changing How We Build</h3>
+      <p>Generative AI tools are becoming commonplace. Learning how these models work under the hood allows you to integrate APIs like OpenAI, build custom language models, and create intelligent applications that understand natural language.</p>
+      
+      <h3>3. Python Makes It Easier Than Ever</h3>
+      <p>Thanks to Python's rich ecosystem (libraries like TensorFlow, PyTorch, and Scikit-Learn), you no longer need a PhD in Mathematics to start building practical machine learning models. You can train your first model in just a few lines of code.</p>
+
+      <h3>Start Building the Future</h3>
+      <p>The best time to start learning AI was five years ago. The second best time is right now. By mastering the fundamentals of Machine Learning, Neural Networks, and Data Science today, you future-proof your career for decades to come.</p>
+    `,
+    author: 'Vaibhav Katkar',
+    authorUrl: 'https://skillvalix.com/blog',
+    publishedDate: '2026-03-26T09:00:00+05:30',
+    modifiedDate: '2026-03-26T09:00:00+05:30',
+    date: 'March 26, 2026',
+    readTime: '6 min read',
+    wordCount: 380,
+    category: 'AI & Data Science',
+    tags: ['Artificial Intelligence', 'Machine Learning', 'Python', 'Data Science', 'Technology'],
+    imageUrl: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=1200&q=80',
+    imageAlt: 'Futuristic AI neural network concept with glowing connections',
+    canonicalUrl: 'https://skillvalix.com/blog/why-learn-ai-machine-learning-2026',
+    relatedCourse: {
+      title: 'Artificial Intelligence & Machine Learning Fundamentals',
+      slug: 'ai-machine-learning-fundamentals',
+      description: 'Master Python, Machine Learning algorithms, and Neural Networks from scratch.'
     }
   }
 ];

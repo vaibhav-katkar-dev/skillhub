@@ -16,4 +16,4 @@ Disallow: /login
 Disallow: /register
 
 # Sitemap
-Sitemap: https://skillvalix.in/sitemap.xml
+Sitemap: https://skillvalix.com/sitemap.xml

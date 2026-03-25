@@ -163,38 +163,56 @@ const CertCard = ({ cert, onDownload, copyMsg, onCopy }) => (
         <p className="text-xs font-mono font-bold text-slate-600 truncate select-all">{cert.certificateId}</p>
       </div>
 
-      <div className="flex gap-2">
-        <button
-          onClick={() => onDownload(cert.certificateId)}
-          className="flex-1 relative overflow-hidden bg-slate-900 hover:bg-slate-700 text-white text-xs font-bold py-2.5 px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-[.98]"
-        >
-          <Download className="w-3.5 h-3.5" />
-          PDF
-        </button>
+      <div className="flex flex-col gap-2">
+        {/* Row 1: Core Actions */}
+        <div className="flex gap-2">
+          <button
+            onClick={() => onDownload(cert.certificateId)}
+            className="flex-1 relative overflow-hidden bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-[.98]"
+          >
+            <Download className="w-3.5 h-3.5" />
+            Download PDF
+          </button>
 
-        <a
-          href={`https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&name=${encodeURIComponent(cert.course?.title || 'Certification')}&organizationName=SkillValix&certId=${cert.certificateId}&certUrl=${encodeURIComponent(`${window.location.origin}/verify/${cert.certificateId}`)}`}
-          target="_blank" rel="noopener noreferrer"
-          className="flex-1 bg-[#0A66C2] hover:bg-[#0A66C2]/90 text-white text-xs font-bold py-2.5 px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-[.98]"
-        >
-          <Linkedin className="w-3.5 h-3.5" />
-          LinkedIn
-        </a>
+          <button
+            onClick={() => onCopy(cert.certificateId)}
+            title="Copy verification link"
+            className={`flex-shrink-0 px-4 border rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold transition-all duration-300 ${
+              copyMsg === cert.certificateId
+                ? 'bg-emerald-50 border-emerald-300 text-emerald-600 scale-[0.98]'
+                : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-600'
+            }`}
+          >
+            {copyMsg === cert.certificateId ? (
+              <><CheckCircle className="w-3.5 h-3.5" /> Copied</>
+            ) : (
+              <><Share2 className="w-3.5 h-3.5" /> Copy</>
+            )}
+          </button>
+        </div>
 
-        <button
-          onClick={() => onCopy(cert.certificateId)}
-          title="Copy verification link"
-          className={`flex-shrink-0 w-10 border rounded-xl flex items-center justify-center transition-all duration-300 ${
-            copyMsg === cert.certificateId
-              ? 'bg-emerald-50 border-emerald-300 text-emerald-600 scale-95'
-              : 'bg-slate-50 border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 text-slate-400'
-          }`}
-        >
-          {copyMsg === cert.certificateId
-            ? <CheckCircle className="w-4 h-4" />
-            : <Share2 className="w-3.5 h-3.5" />
-          }
-        </button>
+        {/* Row 2: LinkedIn Actions */}
+        <div className="flex gap-2">
+          <a
+            href={`https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&name=${encodeURIComponent(cert.course?.title || 'Certification')}&organizationName=SkillValix&certId=${cert.certificateId}&certUrl=${encodeURIComponent(`${window.location.origin}/verify/${cert.certificateId}`)}`}
+            target="_blank" rel="noopener noreferrer"
+            title="Add certification to your LinkedIn Profile"
+            className="flex-1 bg-white border border-[#0A66C2]/30 hover:bg-[#0A66C2]/5 text-[#0A66C2] text-xs font-bold py-2.5 px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-[.98]"
+          >
+            <Linkedin className="w-3.5 h-3.5" />
+            Add to Profile
+          </a>
+
+          <a
+            href={`https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(`I just earned my certification for ${cert.course?.title || 'a course'} from SkillValix! 🎓🚀\n\nVerify it here: ${window.location.origin}/verify/${cert.certificateId}`)}`}
+            target="_blank" rel="noopener noreferrer"
+            title="Create a post on your LinkedIn Feed"
+            className="flex-1 bg-[#0A66C2] hover:bg-[#0A66C2]/90 text-white text-xs font-bold py-2.5 px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-[.98]"
+          >
+            <Linkedin className="w-3.5 h-3.5" />
+            Post to Feed
+          </a>
+        </div>
       </div>
     </div>
   </div>

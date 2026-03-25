@@ -4,9 +4,9 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Calendar, User, Clock, ArrowLeft, BookOpen, ArrowRight, Tag } from 'lucide-react';
 import { blogPosts } from '../data/blogs';
 
-const SITE_URL = 'https://skillvalix.in';
+const SITE_URL = 'https://skillvalix.com';
 const SITE_NAME = 'SkillValix';
-const LOGO_URL = 'https://skillvalix.in/favicon.svg';
+const LOGO_URL = 'https://skillvalix.com/favicon.svg';
 
 const BlogPost = () => {
   const { slug } = useParams();
