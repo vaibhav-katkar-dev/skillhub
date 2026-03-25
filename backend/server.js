@@ -23,8 +23,22 @@ app.use(compression());
 
 // ── Security & Logging ─────────────────────────────────────
 app.use(express.json({ limit: '2mb' }));
+const ALLOWED_ORIGINS = [
+  'https://skillvalix.com',
+  'https://www.skillvalix.com',
+  'https://skillvalix.in',
+  'https://www.skillvalix.in',
+  'http://localhost:5173',  // local dev
+  'http://localhost:3000',
+];
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || '*',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+    callback(new Error(`CORS: origin ${origin} not allowed`));
+  },
   credentials: true,
 }));
 app.use(helmet());

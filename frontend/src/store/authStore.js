@@ -107,7 +107,7 @@ export const useAuthStore = create((set, get) => ({
     });
     sessionStorage.setItem('skillvalix_user', JSON.stringify(userRes.data));
     clearCache();
-    set({ user: userRes.data, isAuthenticated: true });
+    set({ user: userRes.data, isAuthenticated: true, loading: false });
   },
 
   logout: () => {
@@ -126,6 +126,6 @@ export const useAuthStore = create((set, get) => ({
     });
     sessionStorage.setItem('skillvalix_user', JSON.stringify(userRes.data));
     clearCache();
-    set({ user: userRes.data, isAuthenticated: true });
+    set({ user: userRes.data, isAuthenticated: true, loading: false });
   }
 }));
