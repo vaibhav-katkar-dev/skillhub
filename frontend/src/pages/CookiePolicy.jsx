@@ -51,7 +51,7 @@ const CookieTable = ({ rows }) => (
 
 export default function CookiePolicy() {
   return (
-    <>
+    <div className="min-h-screen bg-slate-950">
       <Helmet>
         <title>Cookie Policy – SkillHub</title>
         <meta name="description" content="Learn how SkillHub uses cookies — what they are, which ones we use, and how you can control them." />
@@ -163,6 +163,6 @@ export default function CookiePolicy() {
           <Link to="/refund-policy" className="text-blue-400 hover:underline">Refund Policy →</Link>
         </div>
       </div>
-    </>
+    </div>
   );
 }

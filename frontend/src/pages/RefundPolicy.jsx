@@ -34,7 +34,7 @@ const Badge = ({ color, label }) => {
 
 export default function RefundPolicy() {
   return (
-    <>
+    <div className="min-h-screen bg-slate-950">
       <Helmet>
         <title>Refund Policy – SkillHub</title>
         <meta name="description" content="Understand SkillHub's refund policy for exam access payments — when refunds apply and how to request one." />
@@ -144,6 +144,6 @@ export default function RefundPolicy() {
           <Link to="/cookie-policy" className="text-blue-400 hover:underline">Cookie Policy →</Link>
         </div>
       </div>
-    </>
+    </div>
   );
 }

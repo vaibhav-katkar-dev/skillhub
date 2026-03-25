@@ -22,7 +22,7 @@ const Section = ({ title, children }) => (
 
 export default function TermsOfService() {
   return (
-    <>
+    <div className="min-h-screen bg-slate-950">
       <Helmet>
         <title>Terms of Service – SkillHub</title>
         <meta name="description" content="Read SkillHub's Terms of Service – the rules and guidelines governing your use of our learning platform." />
@@ -125,6 +125,6 @@ export default function TermsOfService() {
           <Link to="/cookie-policy" className="text-blue-400 hover:underline">Cookie Policy →</Link>
         </div>
       </div>
-    </>
+    </div>
   );
 }

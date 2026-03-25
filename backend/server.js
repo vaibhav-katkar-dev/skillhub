@@ -26,8 +26,7 @@ app.use(express.json({ limit: '2mb' }));
 const ALLOWED_ORIGINS = [
   'https://skillvalix.com',
   'https://www.skillvalix.com',
-  'https://skillvalix.in',
-  'https://www.skillvalix.in',
+
   'http://localhost:5173',  // local dev
   'http://localhost:3000',
 ];
