@@ -418,15 +418,7 @@ router.get('/download/:certId', async (req, res) => {
   }
 });
 
-// ─── HELPER ────────────────────────────────────────────────────────────────
-function fitSingleLineText(doc, text, maxWidth) {
-  let pt = 10;
-  while (pt > 7 && doc.fontSize(pt).widthOfString(text) > maxWidth) {
-    pt -= 0.5;
-  }
-  doc.fontSize(pt);
-  return text;
-}
+
 // ─── VERIFY ────────────────────────────────────────────────────────────────
 router.get('/verify/:certId', async (req, res) => {
   try {
