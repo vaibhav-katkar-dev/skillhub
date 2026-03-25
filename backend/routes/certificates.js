@@ -95,7 +95,7 @@ router.get('/download/:certId', async (req, res) => {
       return res.status(404).json({ message: 'Certificate data incomplete.' });
 
     // ── QR Code ──────────────────────────────────────────────
-    const verifyUrl = `https://skillvalixpro.vercel.app/verify/${cert.certificateId}`;
+    const verifyUrl = `https://www.skillvalix.com/verify/${cert.certificateId}`;
     const qrBuffer = await QRCode.toBuffer(verifyUrl, {
       errorCorrectionLevel: 'H',
       width: 220,
@@ -166,13 +166,14 @@ router.get('/download/:certId', async (req, res) => {
     // ═══════════════════════════════════════════════════════════
     const LX = 44, LY = 32;
 
-    // SkillValix new logo
+    // SkillValix new modern logo
     doc.save();
-    doc.roundedRect(LX, LY, 40, 40, 9).fill('#2563EB');
-    doc.moveTo(LX + 7, LY + 28).lineTo(LX + 16, LY + 18).lineTo(LX + 22, LY + 23).lineTo(LX + 33, LY + 11)
+    doc.roundedRect(LX, LY, 40, 40, 10).fill('#2563EB');
+    doc.moveTo(LX + 9, LY + 29)
+       .bezierCurveTo(LX + 15, LY + 20, LX + 18, LY + 26, LX + 31, LY + 11)
        .lineWidth(3.2).lineCap('round').lineJoin('round').stroke('#FFFFFF');
     // Arrow head
-    doc.moveTo(LX + 27, LY + 10).lineTo(LX + 33, LY + 11).lineTo(LX + 32, LY + 17)
+    doc.moveTo(LX + 24, LY + 11).lineTo(LX + 31, LY + 11).lineTo(LX + 31, LY + 18)
        .lineWidth(3.2).lineCap('round').lineJoin('round').stroke('#FFFFFF');
     doc.restore();
 

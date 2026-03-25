@@ -40,10 +40,10 @@ export default function Logo({
       aria-hidden="true"
     >
       {/* Blue rounded square background */}
-      <rect width="40" height="40" rx="9" fill="#2563EB" />
+      <rect width="40" height="40" rx="10" fill="#2563EB" />
       {/* Trend-line / arrow chart icon */}
-      <polyline
-        points="7,28 16,18 22,23 33,11"
+      <path
+        d="M 9 29 C 15 20, 18 26, 31 11"
         stroke="white"
         strokeWidth="3.2"
         strokeLinecap="round"
@@ -51,8 +51,8 @@ export default function Logo({
         fill="none"
       />
       {/* Arrow head at top-right */}
-      <polyline
-        points="27,10 33,11 32,17"
+      <path
+        d="M 24 11 L 31 11 L 31 18"
         stroke="white"
         strokeWidth="3.2"
         strokeLinecap="round"
