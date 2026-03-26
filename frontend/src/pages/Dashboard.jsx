@@ -138,85 +138,119 @@ const AvailableCard = ({ course }) => (
 /* ────────────────────────────────────────────
    Certificate Card
 ──────────────────────────────────────────── */
-const CertCard = ({ cert, onDownload, copyMsg, onCopy }) => (
-  <div className="group bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-    <div className="h-2 bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400" />
-    <div className="p-5">
-      <div className="flex items-start gap-3 mb-4">
-        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center flex-shrink-0 shadow-lg shadow-amber-300/40">
-          <Award className="w-5 h-5 text-white" />
+const CertCard = ({ cert, onDownload, copyMsg, onCopy }) => {
+  const handleFeedPost = async (e) => {
+    e.preventDefault();
+    const certUrl = `${window.location.origin}/verify/${cert.certificateId}`;
+    const courseTitle = cert.course?.title || 'Web Development';
+    
+    // Best approach for mobile: Native web share API
+    // Opens native iOS/Android share sheet which properly hooks into installed social apps like LinkedIn
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    
+    if (isMobile && navigator.share) {
+      try {
+        await navigator.share({
+          title: 'My SkillValix Certificate',
+          text: `I just earned my certificate for ${courseTitle} on SkillValix! 🚀 Check it out: `,
+          url: certUrl
+        });
+        return;
+      } catch (err) {
+        console.log('Share cancelled or failed', err);
+      }
+    }
+    
+    // Fallback for Desktop (or if native share fails): Web LinkedIn share
+    const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(certUrl)}`;
+    
+    // Use popup for better UX on desktop
+    const width = 800;
+    const height = 600;
+    const left = (window.innerWidth / 2) - (width / 2);
+    const top = (window.innerHeight / 2) - (height / 2);
+    window.open(linkedinUrl, 'linkedin-share', `width=${width},height=${height},top=${top},left=${left},noopener,noreferrer`);
+  };
+
+  return (
+    <div className="group bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+      <div className="h-2 bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400" />
+      <div className="p-5">
+        <div className="flex items-start gap-3 mb-4">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center flex-shrink-0 shadow-lg shadow-amber-300/40">
+            <Award className="w-5 h-5 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-extrabold text-slate-900 text-sm leading-tight line-clamp-2">
+              {cert.course?.title || 'Unknown Course'}
+            </h3>
+            <p className="text-[10px] text-slate-400 font-medium mt-0.5 flex items-center gap-1">
+              <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />
+              {new Date(cert.issueDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+            </p>
+          </div>
         </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="font-extrabold text-slate-900 text-sm leading-tight line-clamp-2">
-            {cert.course?.title || 'Unknown Course'}
-          </h3>
-          <p className="text-[10px] text-slate-400 font-medium mt-0.5 flex items-center gap-1">
-            <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />
-            {new Date(cert.issueDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-          </p>
-        </div>
-      </div>
 
-      {/* ID chip */}
-      <div className="bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 mb-4">
-        <p className="text-[10px] text-slate-400 font-medium mb-0.5">Certificate ID</p>
-        <p className="text-xs font-mono font-bold text-slate-600 truncate select-all">{cert.certificateId}</p>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        {/* Row 1: Core Actions */}
-        <div className="flex gap-2">
-          <button
-            onClick={() => onDownload(cert.certificateId)}
-            className="flex-1 relative overflow-hidden bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-[.98]"
-          >
-            <Download className="w-3.5 h-3.5" />
-            Download PDF
-          </button>
-
-          <button
-            onClick={() => onCopy(cert.certificateId)}
-            title="Copy verification link"
-            className={`flex-shrink-0 px-4 border rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold transition-all duration-300 ${
-              copyMsg === cert.certificateId
-                ? 'bg-emerald-50 border-emerald-300 text-emerald-600 scale-[0.98]'
-                : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-600'
-            }`}
-          >
-            {copyMsg === cert.certificateId ? (
-              <><CheckCircle className="w-3.5 h-3.5" /> Copied</>
-            ) : (
-              <><Share2 className="w-3.5 h-3.5" /> Copy</>
-            )}
-          </button>
+        {/* ID chip */}
+        <div className="bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 mb-4">
+          <p className="text-[10px] text-slate-400 font-medium mb-0.5">Certificate ID</p>
+          <p className="text-xs font-mono font-bold text-slate-600 truncate select-all">{cert.certificateId}</p>
         </div>
 
-        {/* Row 2: LinkedIn Actions */}
-        <div className="flex gap-2">
-          <a
-            href={`https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&name=${encodeURIComponent(cert.course?.title || 'Certification')}&organizationName=SkillValix&certId=${cert.certificateId}&certUrl=${encodeURIComponent(`${window.location.origin}/verify/${cert.certificateId}`)}`}
-            target="_blank" rel="noopener noreferrer"
-            title="Add certification to your LinkedIn Profile"
-            className="flex-1 bg-white border border-[#0A66C2]/30 hover:bg-[#0A66C2]/5 text-[#0A66C2] text-xs font-bold py-2.5 px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-[.98]"
-          >
-            <Linkedin className="w-3.5 h-3.5" />
-            Add to Profile
-          </a>
+        <div className="flex flex-col gap-2">
+          {/* Row 1: Core Actions */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => onDownload(cert.certificateId)}
+              className="flex-1 relative overflow-hidden bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-[.98]"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Download PDF
+            </button>
 
-          <a
-            href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`${window.location.origin}/verify/${cert.certificateId}`)}`}
-            target="_blank" rel="noopener noreferrer"
-            title="Create a post on your LinkedIn Feed"
-            className="flex-1 bg-[#0A66C2] hover:bg-[#0A66C2]/90 text-white text-xs font-bold py-2.5 px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-[.98]"
-          >
-            <Linkedin className="w-3.5 h-3.5" />
-            Post to Feed
-          </a>
+            <button
+              onClick={() => onCopy(cert.certificateId)}
+              title="Copy verification link"
+              className={`flex-shrink-0 px-4 border rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold transition-all duration-300 ${
+                copyMsg === cert.certificateId
+                  ? 'bg-emerald-50 border-emerald-300 text-emerald-600 scale-[0.98]'
+                  : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-600'
+              }`}
+            >
+              {copyMsg === cert.certificateId ? (
+                <><CheckCircle className="w-3.5 h-3.5" /> Copied</>
+              ) : (
+                <><Share2 className="w-3.5 h-3.5" /> Copy</>
+              )}
+            </button>
+          </div>
+
+          {/* Row 2: LinkedIn Actions */}
+          <div className="flex gap-2">
+            <a
+              href={`https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&name=${encodeURIComponent(cert.course?.title || 'Certification')}&organizationName=SkillValix&certId=${cert.certificateId}&certUrl=${encodeURIComponent(`${window.location.origin}/verify/${cert.certificateId}`)}`}
+              target="_blank" rel="noopener noreferrer"
+              title="Add certification to your LinkedIn Profile"
+              className="flex-1 bg-white border border-[#0A66C2]/30 hover:bg-[#0A66C2]/5 text-[#0A66C2] text-xs font-bold py-2.5 px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-[.98]"
+            >
+              <Linkedin className="w-3.5 h-3.5" />
+              Add to Profile
+            </a>
+
+            <button
+              onClick={handleFeedPost}
+              title="Create a post on your LinkedIn Feed"
+              className="flex-1 bg-[#0A66C2] hover:bg-[#0A66C2]/90 text-white text-xs font-bold py-2.5 px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-[.98]"
+            >
+              <Linkedin className="w-3.5 h-3.5" />
+              Post to Feed
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 /* ────────────────────────────────────────────
    Section Header

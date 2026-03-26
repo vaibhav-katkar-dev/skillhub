@@ -22,7 +22,7 @@ const STATS = [
 const HOW_IT_WORKS = [
   { step: 1, label: '01', title: 'Pick a Course',         desc: 'Browse our growing library of structured web development courses — all completely free.',    icon: BookOpen,    accent: '#6366f1', light: '#eef2ff' },
   { step: 2, label: '02', title: 'Study the Lessons',     desc: 'Work through interactive, code-rich modules at your own pace. No deadlines, no pressure.',    icon: Play,        accent: '#8b5cf6', light: '#f5f3ff' },
-  { step: 3, label: '03', title: 'Take the Quiz',         desc: "When you're ready, sit the assessment. Questions are server-graded to keep results secure.",   icon: BrainCircuit,accent: '#a855f7', light: '#faf5ff' },
+  { step: 3, label: '03', title: 'Take the Exam',         desc: "When you're ready, sit the assessment. Questions are server-graded to keep results secure.",   icon: BrainCircuit,accent: '#a855f7', light: '#faf5ff' },
   { step: 4, label: '04', title: 'Earn Your Certificate', desc: 'Pass and instantly download your verifiable PDF certificate to share with the world.',         icon: Award,       accent: '#10b981', light: '#ecfdf5' },
 ];
 
@@ -79,8 +79,8 @@ const COURSES = [
 
 const FEATURES = [
   { icon: BookOpen,     bg: '#eff6ff', color: '#3b82f6', title: 'Structured Learning Paths',  desc: 'Content built in clear progression — from fundamentals to advanced mastery.' },
-  { icon: BrainCircuit, bg: '#f5f3ff', color: '#7c3aed', title: 'Interactive Quizzes',        desc: 'Server-graded assessments with instant feedback to solidify your understanding.' },
-  { icon: Award,        bg: '#ecfdf5', color: '#059669', title: 'Verifiable Certificates',    desc: 'Pass the quiz, earn a secure PDF certificate with a unique trackable ID.' },
+  { icon: BrainCircuit, bg: '#f5f3ff', color: '#7c3aed', title: 'Interactive Exams',          desc: 'Server-graded assessments with instant feedback to solidify your understanding.' },
+  { icon: Award,        bg: '#ecfdf5', color: '#059669', title: 'Verifiable Certificates',    desc: 'Pass the exam, earn a secure PDF certificate with a unique trackable ID.' },
   { icon: Code2,        bg: '#fff1f2', color: '#e11d48', title: 'Real-World Code Snippets',   desc: 'Annotated, live code examples you can copy, adapt, and run immediately.' },
   { icon: ShieldCheck,  bg: '#fffbeb', color: '#d97706', title: 'Secure & Private',           desc: 'Your progress and certificates are stored securely. We never sell your data.' },
   { icon: GraduationCap,bg:'#f0f9ff', color: '#0284c7', title: 'Beginner Friendly',          desc: 'Zero prerequisites. Every concept explained from scratch with zero jargon.' },
@@ -88,16 +88,16 @@ const FEATURES = [
 
 const TESTIMONIALS = [
   { name: 'Priya Sharma',  role: 'Frontend Developer',      initials: 'PS', grad: 'from-indigo-500 to-violet-600',  body: "SkillValix's HTML course is the clearest resource I've found online. Finished it in a weekend and the certificate added real credibility to my portfolio." },
-  { name: 'James Okonkwo', role: 'CS Student',              initials: 'JO', grad: 'from-sky-500 to-blue-600',      body: "The quizzes genuinely test your knowledge, not just memorization. I felt confident in interviews knowing I really understood the material." },
+  { name: 'James Okonkwo', role: 'CS Student',              initials: 'JO', grad: 'from-sky-500 to-blue-600',      body: "The exams genuinely test your knowledge, not just memorization. I felt confident in interviews knowing I really understood the material." },
   { name: 'Ayesha Khan',   role: 'Career Switcher',         initials: 'AK', grad: 'from-emerald-500 to-teal-600',  body: "100% free and yet the quality is higher than paid platforms I've tried. The step-by-step structure made switching careers actually feel possible." },
 ];
 
 const FAQS = [
-  { q: 'Is SkillValix really free?',              a: 'Yes — completely. Every course, every quiz, every certificate is free. No hidden fees, no premium tiers. We believe education should be accessible to everyone.' },
+  { q: 'Is SkillValix really free?',              a: 'Yes — completely. Every course, every exam, every certificate is free. No hidden fees, no premium tiers. We believe education should be accessible to everyone.' },
   { q: 'How are the certificates verified?',    a: 'Each certificate has a unique ID. Anyone can visit our Verify page, enter that ID and see your full result and completion date in seconds.' },
   { q: 'Do I need prior experience to start?',  a: 'Not at all. Every course starts from zero and assumes no prior knowledge. If you can browse the web, you can start learning with us.' },
   { q: 'Can I learn at my own pace?',           a: 'Absolutely. There are no deadlines, cohorts, or time limits. Start a lesson, pause, continue tomorrow — your progress is always saved.' },
-  { q: 'How difficult are the quizzes?',        a: "Challenging but fair. Each question links directly to lesson content, so thorough study leads to a confident pass. You can retake them too." },
+  { q: 'How difficult are the exams?',          a: "Challenging but fair. Each question links directly to lesson content, so thorough study leads to a confident pass. You can retake them too." },
 ];
 
 /* ─────────────────────────────────────
@@ -232,7 +232,7 @@ export default function Home() {
     <div style={{ fontFamily: "'Inter', system-ui, sans-serif", background: '#f8faff', color: '#0f172a', overflowX: 'hidden' }}>
       <Helmet>
         <title>SkillValix — Master Web Development for Free</title>
-        <meta name="description" content="100% free web development courses with interactive quizzes and verifiable PDF certificates. Master HTML, CSS, JavaScript." />
+        <meta name="description" content="100% free web development courses with interactive exams and verifiable PDF certificates. Master HTML, CSS, JavaScript." />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
       </Helmet>
 
@@ -318,13 +318,13 @@ export default function Home() {
 
           {/* Headline */}
           <h1 style={{ fontSize:'clamp(2.8rem,8vw,5.5rem)', fontWeight:900, lineHeight:1.0, letterSpacing:'-0.02em', marginBottom:24 }}>
-            <span className="hero-grad" style={{ display:'block', marginBottom:8 }}>Master Code.</span>
-            <span style={{ color:'#cbd5e1' }}>Build the{' '}</span>
-            <span className="shimmer-text">Future.</span>
+            <span className="hero-grad" style={{ display:'block', marginBottom:8 }}>Upskill Today.</span>
+            <span style={{ color:'#cbd5e1' }}>Accelerate Your{' '}</span>
+            <span className="shimmer-text">Career.</span>
           </h1>
 
           <p style={{ fontSize:'clamp(1rem,2.5vw,1.2rem)', color:'#64748b', maxWidth:600, margin:'0 auto 44px', lineHeight:1.75 }}>
-            Structured, beginner-friendly web development courses with interactive quizzes and&nbsp;
+            A comprehensive platform designed for upskilling, professional growth, and achieving job-ready expertise with&nbsp;
             <strong style={{ color:'#334155', fontWeight:700 }}>verifiable PDF certificates</strong>.
             No paywalls, no limits — ever.
           </p>
