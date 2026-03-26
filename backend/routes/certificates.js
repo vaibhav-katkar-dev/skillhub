@@ -624,33 +624,7 @@ router.get('/download/:certId', async (req, res) => {
     const QR_X = SIDEBAR_X - QR_SIZE - 32;
     const QR_Y = H - QR_SIZE - 44;
 
-    // ── 0.5px Vertical Divider ──
-    const DIVIDER_X = LX + (QR_X - 10 - LX) / 2;
-    doc.moveTo(DIVIDER_X, ROW_CY - 20)
-      .lineTo(DIVIDER_X, ROW_CY + 20)
-      .lineWidth(0.5).strokeColor('#CBD5E1').stroke();
-
-    // ── "Issued by Skillvalix • MSME Registered" badge ──
-    const BADGE_Y = BOTTOM_Y + 2;
-    const BADGE_X = DIVIDER_X + 18;
-    const BADGE_W = QR_X - 10 - BADGE_X - 8;
-    // Subtle pill background
-    doc.roundedRect(BADGE_X, BADGE_Y + 4, BADGE_W, 28, 5)
-      .fillOpacity(0.06).fill(BLUE);
-    doc.fillOpacity(1);
-    doc.roundedRect(BADGE_X, BADGE_Y + 4, BADGE_W, 28, 5)
-      .lineWidth(0.5).strokeColor(BLUE).stroke();
-    // Badge text
-    doc.fontSize(7).font('Helvetica-Bold').fillColor(BLUE)
-      .text('Issued by', BADGE_X, BADGE_Y + 9, {
-        width: BADGE_W, align: 'center', lineBreak: false
-      });
-    doc.fontSize(8).font('Helvetica-Bold').fillColor(EMERALD)
-      .text('Skillvalix  •  MSME Registered', BADGE_X, BADGE_Y + 19, {
-        width: BADGE_W, align: 'center', lineBreak: false, characterSpacing: 0.3
-      });
-
-    // White card background behind QR
+    // ── QR: white card + image ──────────────────────────────────────────────
     doc.rect(QR_X - 10, QR_Y - 10, QR_SIZE + 20, QR_SIZE + 20).fill(WHITE);
     doc.rect(QR_X - 10, QR_Y - 10, QR_SIZE + 20, QR_SIZE + 20)
       .lineWidth(1).strokeColor(BORDER).stroke();
@@ -664,6 +638,27 @@ router.get('/download/:certId', async (req, res) => {
         characterSpacing: 1,
         lineBreak: false
       });
+
+    // ── Authority footer — "Issued by Skillvalix · MSME Registered" ─────────
+    // Thin hairline rule above footer (spans full left content area)
+    const FOOTER_Y = H - 24;
+    doc.moveTo(LX, FOOTER_Y - 6)
+      .lineTo(SIDEBAR_X - 40, FOOTER_Y - 6)
+      .lineWidth(0.3).strokeColor(BORDER).stroke();
+
+    // Single-line minimal authority text — centered across content width
+    doc.fontSize(9).font('Helvetica').fillColor(GRAY_MID)
+      .text(
+        'Issued by Skillvalix  ·  MSME Registered',
+        LX,
+        FOOTER_Y,
+        {
+          width: SIDEBAR_X - 40 - LX,
+          align: 'center',
+          lineBreak: false,
+          characterSpacing: 0.6
+        }
+      );
 
     doc.end();
 
