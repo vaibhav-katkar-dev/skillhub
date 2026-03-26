@@ -492,42 +492,52 @@ router.get('/download/:certId', async (req, res) => {
 
     // ── Logo icon ─────────────────────────────────────────────────────────
     const LX = LEFT_PAD;
-    const LY = 50;
-    const ICON_SIZE = 48;
+    const LY = 40;
+    const LOGO_SCALE = 60 / 270;
 
     doc.save();
     doc.translate(LX, LY);
-    const scale = ICON_SIZE / 40;
-    doc.scale(scale);
+    doc.scale(LOGO_SCALE);
 
-    const iconGrad = doc.linearGradient(0, 0, 40, 40);
-    iconGrad.stop(0, '#1D4ED8').stop(1, '#2563EB');
-    doc.roundedRect(0, 0, 40, 40, 10).fill(iconGrad);
-    doc.roundedRect(1, 1, 38, 19, 9).fillOpacity(0.06).fill(WHITE);
-    doc.fillOpacity(1);
-    doc.moveTo(8, 28).bezierCurveTo(13, 21, 17, 25, 32, 10)
-      .lineWidth(3).lineCap('round').lineJoin('round').strokeColor(WHITE).stroke();
-    doc.moveTo(23.5, 10).lineTo(32, 10).lineTo(32, 18.5)
-      .lineWidth(3).lineCap('round').lineJoin('round').strokeColor(WHITE).stroke();
-    doc.circle(8, 28, 2).fillOpacity(0.7).fill(WHITE);
-    doc.fillOpacity(1);
+    // 1. MAIN RING
+    doc.circle(148, 138, 70).lineWidth(11).strokeColor('#5a5a5a').stroke();
+
+    // 2. INNER BARS WITH CLIP
+    doc.save();
+    doc.circle(148, 138, 63).clip();
+    doc.roundedRect(105, 166, 17, 26, 3.5).fill('#1D4ED8');
+    doc.roundedRect(128, 150, 17, 42, 3.5).fill('#2563EB');
+    doc.roundedRect(151, 132, 17, 60, 3.5).fill('#3B82F6');
+    doc.roundedRect(174, 112, 17, 80, 3.5).fill('#16A34A');
     doc.restore();
 
-    // ── Brand name ────────────────────────────────────────────────────────
-    const BRAND_X = LX + ICON_SIZE + 16;
-    doc.fontSize(22).font('Helvetica').fillColor(DARK_MID)
-      .text('Skill', BRAND_X, LY + 8, { lineBreak: false, continued: true })
-      .font('Helvetica-Bold').fillColor(BLUE)
-      .text('Valix', { lineBreak: false });
+    // 3. BASELINE
+    doc.moveTo(98, 193).lineTo(198, 193)
+       .lineWidth(1.5).lineCap('round').strokeColor('#5a5a5a').stroke();
 
-    doc.fontSize(8.5).font('Helvetica-Bold').fillColor(GRAY_LT)
-      .text('GROW YOUR CAREER', BRAND_X, LY + 34, {
-        lineBreak: false,
-        characterSpacing: 2.5
-      });
+    // 4. TICK BADGE
+    doc.circle(197, 80, 26).fill('#16A34A');
+    doc.moveTo(183, 78).lineTo(194, 91).lineTo(213, 63)
+       .lineWidth(5).lineCap('round').lineJoin('round').strokeColor('#FFFFFF').stroke();
+
+    // 5. WORDMARK TEXT
+    doc.font('Helvetica-Bold');
+    doc.fontSize(72); 
+    doc.fillColor('#111827').text('Skill', 245, 75, { lineBreak: false, continued: true, characterSpacing: -2 })
+       .fillColor('#2563EB').text('valix', { lineBreak: false, characterSpacing: -2 });
+
+    // Underline
+    doc.moveTo(245, 155).lineTo(520, 155).lineWidth(0.8).strokeOpacity(0.35).strokeColor('#d1d5db').stroke();
+    doc.strokeOpacity(1);
+
+    // Tagline
+    doc.fontSize(8).font('Helvetica-Bold').fillColor('#9ca3af')
+       .text('LEARN  ·  VALIDATE  ·  GROW', 245, 170, { lineBreak: false, characterSpacing: 3 });
+
+    doc.restore();
 
     // ── Separator ─────────────────────────────────────────────────────────
-    const SEP_Y = LY + ICON_SIZE + 24;
+    const SEP_Y = LY + 60 + 24;
     doc.moveTo(LX, SEP_Y).lineTo(SIDEBAR_X - 40, SEP_Y)
       .lineWidth(0.5).strokeColor(BORDER).stroke();
 
