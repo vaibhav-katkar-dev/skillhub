@@ -403,7 +403,7 @@ const Dashboard = () => {
               </h1>
               {!loading && userData && (
                 <div className="mt-2.5">
-                  <a href={`/u/${userData._id}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs font-bold bg-white/10 hover:bg-white/20 text-indigo-50 px-3 py-1.5 rounded-lg border border-white/20 transition-all shadow-sm">
+                  <a href={`/u/${userData._id || userData.id}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs font-bold bg-white/10 hover:bg-white/20 text-indigo-50 px-3 py-1.5 rounded-lg border border-white/20 transition-all shadow-sm">
                     <Share2 className="w-3.5 h-3.5" />
                     View Public Portfolio
                   </a>

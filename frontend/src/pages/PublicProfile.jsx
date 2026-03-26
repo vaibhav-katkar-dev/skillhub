@@ -20,8 +20,29 @@ export default function PublicProfile() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await api.get(`/auth/public/${id}`);
-        setProfile(res.data);
+        const [res, coursesRes] = await Promise.all([
+          api.get(`/auth/public/${id}`),
+          fetch('/data/all-courses.json')
+        ]);
+        
+        const profileData = res.data;
+        
+        if (coursesRes.ok) {
+          const rawCourses = await coursesRes.json();
+          const allCourses = rawCourses.map(item => item.course);
+          
+          // Map course details onto the certificates
+          profileData.certificates = profileData.certificates.map(cert => {
+            const courseIdStr = cert.course?._id || cert.course;
+            const matchedCourse = allCourses.find(c => c._id.toString() === courseIdStr.toString());
+            return {
+              ...cert,
+              course: matchedCourse || { title: 'Verified Certification' }
+            };
+          });
+        }
+
+        setProfile(profileData);
       } catch (err) {
         console.error(err);
         setError('This user profile could not be found or is set to private.');

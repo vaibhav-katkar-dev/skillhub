@@ -1,4 +1,5 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
@@ -205,11 +206,15 @@ router.post('/reset-password/:token', async (req, res) => {
 // ── Get Public Profile ──────────────────────────────────────────────────────
 router.get('/public/:id', async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
     const user = await User.findById(req.params.id).select('name createdAt github linkedin resume openToWork');
     if (!user) return res.status(404).json({ message: 'User not found' });
     
-    // We populate 'course' with 'title' and 'slug' if those are available on the Course model
-    const certs = await Certificate.find({ student: user._id }).populate('course', 'title slug');
+    // Courses are in JSON, we can't populate them in MongoDB. Return raw certs.
+    const certs = await Certificate.find({ student: user._id });
     
     res.json({
       name: user.name,
