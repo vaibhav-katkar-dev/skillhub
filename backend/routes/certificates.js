@@ -10,19 +10,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { authOptions } from '../middleware/auth.js';
 import { getCourseFromJSON, getAllCoursesFromJSON } from '../utils/courseData.js';
 
-import fs from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// ── MSME logo: read once at startup into memory, reused on every request ──
-const MSME_LOGO_PATH = path.join(__dirname, '../assets/msme-logo.png');
-let _msmeBuf = null;
-function getMsmeBuf() {
-  if (!_msmeBuf && fs.existsSync(MSME_LOGO_PATH)) {
-    _msmeBuf = fs.readFileSync(MSME_LOGO_PATH);
-  }
-  return _msmeBuf;
-}
 
 const router = express.Router();
 
@@ -552,13 +541,6 @@ router.get('/download/:certId', async (req, res) => {
 
     doc.restore();
 
-    // ── MSME Logo (Top Right of Content Area) — cached PNG buffer, one disk read ever ──
-    const msmeBuf = getMsmeBuf();
-    if (msmeBuf) {
-      const MSME_W = 90;
-      doc.image(msmeBuf, SIDEBAR_X - MSME_W - 28, LY + 4, { width: MSME_W });
-    }
-
     // ── Separator ─────────────────────────────────────────────────────────
     const SEP_Y = LY + 90 + 16;
     doc.moveTo(LX, SEP_Y).lineTo(SIDEBAR_X - 40, SEP_Y)
@@ -643,11 +625,30 @@ router.get('/download/:certId', async (req, res) => {
     const QR_Y = H - QR_SIZE - 44;
 
     // ── 0.5px Vertical Divider ──
-    // Placed horizontally exactly centered between ID block and QR card start
     const DIVIDER_X = LX + (QR_X - 10 - LX) / 2;
     doc.moveTo(DIVIDER_X, ROW_CY - 20)
       .lineTo(DIVIDER_X, ROW_CY + 20)
       .lineWidth(0.5).strokeColor('#CBD5E1').stroke();
+
+    // ── "Issued by Skillvalix • MSME Registered" badge ──
+    const BADGE_Y = BOTTOM_Y + 2;
+    const BADGE_X = DIVIDER_X + 18;
+    const BADGE_W = QR_X - 10 - BADGE_X - 8;
+    // Subtle pill background
+    doc.roundedRect(BADGE_X, BADGE_Y + 4, BADGE_W, 28, 5)
+      .fillOpacity(0.06).fill(BLUE);
+    doc.fillOpacity(1);
+    doc.roundedRect(BADGE_X, BADGE_Y + 4, BADGE_W, 28, 5)
+      .lineWidth(0.5).strokeColor(BLUE).stroke();
+    // Badge text
+    doc.fontSize(7).font('Helvetica-Bold').fillColor(BLUE)
+      .text('Issued by', BADGE_X, BADGE_Y + 9, {
+        width: BADGE_W, align: 'center', lineBreak: false
+      });
+    doc.fontSize(8).font('Helvetica-Bold').fillColor(EMERALD)
+      .text('Skillvalix  •  MSME Registered', BADGE_X, BADGE_Y + 19, {
+        width: BADGE_W, align: 'center', lineBreak: false, characterSpacing: 0.3
+      });
 
     // White card background behind QR
     doc.rect(QR_X - 10, QR_Y - 10, QR_SIZE + 20, QR_SIZE + 20).fill(WHITE);
