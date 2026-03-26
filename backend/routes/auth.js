@@ -248,14 +248,19 @@ router.put('/profile', authOptions, async (req, res) => {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    if (username !== undefined && username !== user.username) {
-      // Ensure it's lowercase, alphanumeric and dashes only
+    if (username !== undefined && username !== (user.username || '')) {
       const formattedUsername = username.toLowerCase().replace(/[^a-z0-9-]/g, '');
-      const existingUser = await User.findOne({ username: formattedUsername });
-      if (existingUser) {
-        return res.status(400).json({ message: 'Username is already taken' });
+      
+      if (!formattedUsername) {
+        // If they cleared it, remove the field so it doesn't trigger unique index
+        user.username = undefined;
+      } else {
+        const existingUser = await User.findOne({ username: formattedUsername });
+        if (existingUser && existingUser._id.toString() !== user._id.toString()) {
+          return res.status(400).json({ message: 'Username is already taken' });
+        }
+        user.username = formattedUsername;
       }
-      user.username = formattedUsername;
     }
 
     if (github !== undefined) user.github = github;

@@ -292,7 +292,7 @@ const Dashboard = () => {
   const userData = storeUser;
   const [loading, setLoading] = useState(true);
   const [copyMsg, setCopyMsg] = useState('');
-
+  const [activeTab, setActiveTab] = useState('learning'); // new tab state
   const [editingProfile, setEditingProfile] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileData, setProfileData] = useState({
@@ -461,13 +461,21 @@ const Dashboard = () => {
 
       {/* ── MAIN CONTENT ── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {/* Tab Navigation */}
+        <div className="flex border-b border-slate-200 mb-8 overflow-x-auto select-none no-scrollbar">
+          <button onClick={() => setActiveTab('learning')} className={`px-5 py-3.5 text-sm font-bold border-b-2 whitespace-nowrap transition-colors ${activeTab === 'learning' ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-slate-500 hover:text-slate-800'}`}>My Learning Path</button>
+          <button onClick={() => setActiveTab('certificates')} className={`px-5 py-3.5 text-sm font-bold border-b-2 whitespace-nowrap transition-colors ${activeTab === 'certificates' ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-slate-500 hover:text-slate-800'}`}>Verified Certificates</button>
+          <button onClick={() => setActiveTab('profile')} className={`px-5 py-3.5 text-sm font-bold border-b-2 whitespace-nowrap transition-colors ${activeTab === 'profile' ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-slate-500 hover:text-slate-800'}`}>Public Profile Settings</button>
+        </div>
 
-          {/* LEFT – 2 cols */}
-          <div className="lg:col-span-2 space-y-10">
-
-            {/* Completed Courses */}
-            <section>
+        <div className="space-y-10">
+          
+          {/* TAB: LEARNING PATH */}
+          {activeTab === 'learning' && (
+            <div className="space-y-10 animate-fade-in">
+              {/* Completed Courses */}
+              <section>
               <SectionHead
                 icon={CheckCircle} title="Completed Courses"
                 iconCls="bg-emerald-100 text-emerald-600"
@@ -510,18 +518,20 @@ const Dashboard = () => {
                 </div>
               )}
             </section>
-          </div>
+            </div>
+          )}
 
-          {/* RIGHT – Profile & Certificates */}
-          <div>
-            {!loading && userData && (
-              <div className="mb-10">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold text-slate-900 mb-1 flex items-center justify-between">
-                    <div>
-                      Public Portfolio Settings
-                      <p className="text-sm font-normal text-slate-500 mt-1">Manage your custom portfolio link and social profiles.</p>
-                    </div>
+          {/* TAB: PROFILE SETTINGS */}
+          {activeTab === 'profile' && (
+            <div className="animate-fade-in max-w-2xl mx-auto">
+              {!loading && userData && (
+                <div className="mb-10">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-2xl font-black text-slate-900 mb-1 flex items-center justify-between w-full">
+                      <div>
+                        My Public Portfolio
+                        <p className="text-sm font-medium text-slate-500 mt-1">Manage your custom portfolio link and social profiles.</p>
+                      </div>
                   </h2>
                   {!editingProfile && (
                     <button onClick={() => setEditingProfile(true)} className="text-sm font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-xl transition-colors">
@@ -620,33 +630,38 @@ const Dashboard = () => {
                   )}
                 </div>
               </div>
-            )}
+              )}
+            </div>
+          )}
 
-            <SectionHead
-              icon={Medal} title="My Certificates"
-              iconCls="bg-amber-100 text-amber-600"
-              count={!loading && certs.length > 0 ? `${certs.length}` : undefined}
-              countCls="bg-amber-100 text-amber-700"
-            />
-            {loading ? (
-              <div className="space-y-4"><Sk cls="h-40" /><Sk cls="h-40" /></div>
-            ) : certs.length === 0 ? (
-              <Empty icon={Award} title="No certificates yet" sub="Pass a quiz to earn one!" />
-            ) : (
-              <div className="space-y-4">
-                {certs.map(cert => (
-                  <CertCard
-                    key={cert.certificateId}
-                    cert={cert}
-                    onDownload={dl}
-                    copyMsg={copyMsg}
-                    onCopy={copy}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-
+          {/* TAB: CERTIFICATES */}
+          {activeTab === 'certificates' && (
+            <div className="animate-fade-in">
+              <SectionHead
+                icon={Medal} title="My Certificates"
+                iconCls="bg-amber-100 text-amber-600"
+                count={!loading && certs.length > 0 ? `${certs.length}` : undefined}
+                countCls="bg-amber-100 text-amber-700"
+              />
+              {loading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"><Sk cls="h-40" /><Sk cls="h-40" /></div>
+              ) : certs.length === 0 ? (
+                <Empty icon={Award} title="No certificates yet" sub="Pass a quiz to earn one!" />
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {certs.map(cert => (
+                    <CertCard
+                      key={cert.certificateId}
+                      cert={cert}
+                      onDownload={dl}
+                      copyMsg={copyMsg}
+                      onCopy={copy}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

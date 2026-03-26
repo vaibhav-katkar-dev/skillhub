@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import Navbar from '../components/Navbar';
-import { Award, Briefcase, Calendar, ChevronRight, FileText, Github, Linkedin, MapPin, CheckCircle, GraduationCap, Globe } from 'lucide-react';
+import { Award, Briefcase, Calendar, ChevronRight, FileText, Github, Linkedin, MapPin, CheckCircle, GraduationCap, Globe, Zap, Target } from 'lucide-react';
 import { api } from '../store/authStore';
 
 export default function PublicProfile() {
@@ -49,38 +48,31 @@ export default function PublicProfile() {
   }, [id]);
 
   if (loading) return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      <Navbar />
-      <div className="flex-1 flex items-center justify-center">
-        <div className="animate-spin w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full"></div>
-      </div>
+    <div className="flex-1 flex items-center justify-center min-h-[60vh]">
+      <div className="animate-spin w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full"></div>
     </div>
   );
 
   if (error) return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      <Navbar />
-      <div className="flex-1 flex max-w-3xl mx-auto w-full items-center justify-center p-6">
-        <div className="bg-white p-8 rounded-3xl shadow-xl shadow-indigo-100/50 text-center w-full border border-slate-100">
-          <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Briefcase className="w-10 h-10" />
-          </div>
-          <h2 className="text-2xl font-black text-slate-800 mb-3">{error}</h2>
-          <p className="text-slate-500 mb-8">The link might be broken, or the user hasn't made their profile public yet.</p>
-          <Link to="/" className="inline-flex bg-indigo-600 text-white font-bold py-3 px-8 rounded-xl hover:bg-indigo-700 transition-colors">
-            Return to Homepage
-          </Link>
+    <div className="flex-1 flex max-w-3xl mx-auto w-full items-center justify-center p-6 min-h-[60vh]">
+      <div className="bg-white p-8 rounded-3xl shadow-xl shadow-indigo-100/50 text-center w-full border border-slate-100">
+        <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+          <Briefcase className="w-10 h-10" />
         </div>
+        <h2 className="text-2xl font-black text-slate-800 mb-3">{error}</h2>
+        <p className="text-slate-500 mb-8">The link might be broken, or the user hasn't made their profile public yet.</p>
+        <Link to="/" className="inline-flex bg-indigo-600 text-white font-bold py-3 px-8 rounded-xl hover:bg-indigo-700 transition-colors">
+          Return to Homepage
+        </Link>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col selection:bg-indigo-100 selection:text-indigo-900">
-      <Navbar />
+    <div className="flex-1 flex flex-col selection:bg-indigo-100 selection:text-indigo-900 relative">
       
       {/* Decorative Background */}
-      <div className="absolute top-0 inset-x-0 h-96 bg-gradient-to-b from-indigo-900 via-indigo-800 to-slate-50 pointer-events-none -z-10 overflow-hidden">
+      <div className="absolute top-0 inset-x-0 h-96 bg-gradient-to-b from-indigo-900 via-indigo-800 to-transparent pointer-events-none -z-10 overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-indigo-500 blur-3xl opacity-20 rounded-full"></div>
         <div className="absolute top-12 -left-20 w-72 h-72 bg-purple-500 blur-3xl opacity-20 rounded-full"></div>
@@ -112,14 +104,20 @@ export default function PublicProfile() {
                       <MapPin className="w-4 h-4 text-indigo-500" />
                       SkillValix Scholar
                     </span>
+                    {profile.openToWork && (
+                      <div className="inline-flex items-center justify-center gap-1.5 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-lg font-bold text-sm shadow-sm md:hidden animate-pulse-slow">
+                        <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
+                        Hire Me
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
 
               {/* Status and Actions */}
-              <div className="flex flex-col items-center md:items-end gap-4 min-w-[200px]">
+              <div className="flex flex-col items-center md:items-end gap-5 min-w-[200px] w-full md:w-auto mt-4 md:mt-0">
                 {profile.openToWork && (
-                  <div className="inline-flex items-center justify-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 px-5 py-2.5 rounded-xl font-bold text-sm shadow-sm animate-pulse-slow">
+                  <div className="hidden md:inline-flex items-center justify-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 px-5 py-2.5 rounded-xl font-bold text-sm shadow-sm animate-pulse-slow">
                     <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full relative">
                       <span className="absolute inset-0 bg-emerald-500 rounded-full animate-ping opacity-75"></span>
                     </span>
@@ -128,7 +126,7 @@ export default function PublicProfile() {
                 )}
                 
                 {/* Social Links Row */}
-                <div className="flex gap-2">
+                <div className="flex flex-wrap justify-center gap-2 w-full md:w-auto">
                   {profile.github && (
                     <a href={profile.github.startsWith('http') ? profile.github : `https://${profile.github}`} target="_blank" rel="noopener noreferrer" className="w-12 h-12 flex items-center justify-center rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-200 transition-all hover:shadow-md hover:-translate-y-0.5" title="GitHub">
                       <Github className="w-5 h-5" />
@@ -151,6 +149,46 @@ export default function PublicProfile() {
                       <span className="hidden sm:inline">Resume</span>
                     </a>
                   )}
+                </div>
+              </div>
+            </div>
+            
+            {/* Quick Stats Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-10">
+              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 flex items-center gap-4">
+                <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center shrink-0">
+                  <Award className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-2xl font-black text-slate-900">{profile.certificates?.length || 0}</p>
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Certifications</p>
+                </div>
+              </div>
+              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 flex items-center gap-4">
+                <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center shrink-0">
+                  <Zap className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-2xl font-black text-slate-900">Expert</p>
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Skill Level</p>
+                </div>
+              </div>
+              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 flex items-center gap-4">
+                <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center shrink-0">
+                  <Target className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-2xl font-black text-slate-900">100%</p>
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Exam Accuracy</p>
+                </div>
+              </div>
+              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 flex items-center gap-4">
+                <div className="w-10 h-10 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center shrink-0">
+                  <Briefcase className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-2xl font-black text-slate-900">{profile.openToWork ? 'Yes' : 'No'}</p>
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Open for Roles</p>
                 </div>
               </div>
             </div>
