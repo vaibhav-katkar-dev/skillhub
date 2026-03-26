@@ -145,7 +145,7 @@ router.get('/download/:certId', async (req, res) => {
     const EMERALD_LT = '#34D399';
 
     // ── Ribbon theme colors ───────────────────────────────────────────────────
-    const RIB = RIBBON_THEMES[dynamicTheme] || RIBBON_THEMES.blue;
+    const RIB = RIBBON_THEMES[dynamicTheme] || RIBBON_THEMES.gold;
 
     // ── LAYOUT CONSTANTS ──────────────────────────────────────────────────────
     const SIDEBAR_W = 220;
@@ -170,7 +170,7 @@ router.get('/download/:certId', async (req, res) => {
     doc.save();
     doc.rect(12, 12, SIDEBAR_X - 12, H - 24).clip();
     doc.fontSize(100).font('Helvetica-Bold').fillOpacity(0.015).fill(DARK);
-    doc.rotate(-35, { origin: [W/2 - 100, H/2] });
+    doc.rotate(-35, { origin: [W / 2 - 100, H / 2] });
     // Draw pattern of watermarks
     ['SKILLVALIX', 'SKILLVALIX', 'SKILLVALIX'].forEach((txt, i) => {
       doc.text(txt, W / 2 - 500 + i * 150, H / 2 - 300 + i * 280, { lineBreak: false });
@@ -197,7 +197,7 @@ router.get('/download/:certId', async (req, res) => {
     // Premium Sparkle Accents (replacing old diagonal lines)
     doc.save();
     doc.rect(SIDEBAR_X, 0, SIDEBAR_W, H).clip();
-    
+
     // Tiny floating magic dots
     const dots = [
       { x: 30, y: 0.2 }, { x: 80, y: 0.3 }, { x: 140, y: 0.1 },
@@ -241,15 +241,15 @@ router.get('/download/:certId', async (req, res) => {
     //  SIDEBAR: Classic Premium Ribbon Card (Course Name)
     // ─────────────────────────────────────────────────────────────────────────
     // Start with a slightly smaller baseline for a more elegant, less heavy look
-    let coursePt = 22; 
+    let coursePt = 22;
     doc.font('Helvetica-Bold');
-    
+
     // The main badge width
-    const CARD_W = SIDEBAR_W - 32; 
+    const CARD_W = SIDEBAR_W - 32;
     const CARD_X = SIDEBAR_X + 16;
     // Tighter line-height (lineGap: 2) for luxury density
     const textOptions = { width: CARD_W - 24, align: 'center', lineGap: 2 };
-    
+
     // Intelligently scale down text so it fits securely (ensures max 3 lines)
     const words = courseTitle.split(' ');
     while (coursePt > 10) {
@@ -267,16 +267,16 @@ router.get('/download/:certId', async (req, res) => {
       }
       coursePt -= 1;
     }
-    
+
     // Precisely calculate the required dynamic card height
     const textHeight = doc.heightOfString(courseTitle, textOptions);
     const CARD_Y = 36;
     // Adding +2px extra inside the top padding to push label/title completely independent of border
-    const CARD_H = 62 + textHeight; 
+    const CARD_H = 62 + textHeight;
     const TAIL_W = 14;              // How far tails stick out
     const TAIL_OFFSET_Y = 16;       // Drop down for the tail fold look
     const NOTCH = 8;                // V-cut depth
-    
+
     doc.save();
 
     // 1. Left and Right folded Ribbon Tails (shadow color)
@@ -304,7 +304,7 @@ router.get('/download/:certId', async (req, res) => {
       CARD_X + 10, CARD_Y + CARD_H,
       CARD_X + 10, CARD_Y + CARD_H + TAIL_OFFSET_Y
     ]).fillOpacity(0.4).fill('#000000');
-    
+
     doc.polygon([
       CARD_X + CARD_W, CARD_Y + CARD_H,
       CARD_X + CARD_W - 10, CARD_Y + CARD_H,
@@ -329,7 +329,7 @@ router.get('/download/:certId', async (req, res) => {
     const INSET = 4;
     doc.roundedRect(CARD_X + INSET, CARD_Y + INSET, CARD_W - INSET * 2, CARD_H - INSET * 2, 4)
       .fill('#0D225C');
-    
+
     // Shiny gold/theme rim line inside
     doc.roundedRect(CARD_X + INSET, CARD_Y + INSET, CARD_W - INSET * 2, CARD_H - INSET * 2, 4)
       .lineWidth(0.75).strokeColor(RIB.light).stroke();
@@ -592,7 +592,7 @@ router.get('/download/:certId', async (req, res) => {
     const BOTTOM_Y = H - 72; // Pulled down for tighter balance (<= 60px from bottom edge)
 
     // Calculate vertical center of the bottom row (approx 36px tall block)
-    const ROW_CY = BOTTOM_Y + 16; 
+    const ROW_CY = BOTTOM_Y + 16;
 
     // ── Certificate ID ──
     doc.fontSize(8.5).font('Helvetica-Bold').fillColor(GRAY_LT)
@@ -607,14 +607,14 @@ router.get('/download/:certId', async (req, res) => {
     // ── QR Code ──
     const QR_SIZE = 72;
     const QR_X = SIDEBAR_X - QR_SIZE - 32;
-    const QR_Y = H - QR_SIZE - 44; 
+    const QR_Y = H - QR_SIZE - 44;
 
     // ── 0.5px Vertical Divider ──
     // Placed horizontally exactly centered between ID block and QR card start
     const DIVIDER_X = LX + (QR_X - 10 - LX) / 2;
     doc.moveTo(DIVIDER_X, ROW_CY - 20)
-       .lineTo(DIVIDER_X, ROW_CY + 20)
-       .lineWidth(0.5).strokeColor('#CBD5E1').stroke();
+      .lineTo(DIVIDER_X, ROW_CY + 20)
+      .lineWidth(0.5).strokeColor('#CBD5E1').stroke();
 
     // White card background behind QR
     doc.rect(QR_X - 10, QR_Y - 10, QR_SIZE + 20, QR_SIZE + 20).fill(WHITE);
