@@ -2,6 +2,7 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import Certificate from '../models/Certificate.js';
 import { authOptions } from '../middleware/auth.js';
 import { OAuth2Client } from 'google-auth-library';
 import nodemailer from 'nodemailer';
@@ -198,6 +199,52 @@ router.post('/reset-password/:token', async (req, res) => {
   } catch (err) {
     console.error('Reset Pass Error:', err);
     res.status(500).send('Error processing request.');
+  }
+});
+
+// ── Get Public Profile ──────────────────────────────────────────────────────
+router.get('/public/:id', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select('name createdAt github linkedin resume openToWork');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    
+    // We populate 'course' with 'title' and 'slug' if those are available on the Course model
+    const certs = await Certificate.find({ student: user._id }).populate('course', 'title slug');
+    
+    res.json({
+      name: user.name,
+      joinedAt: user.createdAt,
+      github: user.github,
+      linkedin: user.linkedin,
+      resume: user.resume,
+      openToWork: user.openToWork,
+      certificates: certs
+    });
+  } catch (err) {
+    console.error('Public Profile Error:', err);
+    res.status(500).send('Server Error loading public profile');
+  }
+});
+
+// ── Update Profile ────────────────────────────────────────────────────────
+router.put('/profile', authOptions, async (req, res) => {
+  try {
+    const { github, linkedin, resume, openToWork } = req.body;
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (github !== undefined) user.github = github;
+    if (linkedin !== undefined) user.linkedin = linkedin;
+    if (resume !== undefined) user.resume = resume;
+    if (openToWork !== undefined) user.openToWork = openToWork;
+
+    await user.save();
+    
+    const updatedUser = await User.findById(req.user.id).select('-password');
+    res.json(updatedUser);
+  } catch (err) {
+    console.error('Profile Update Error:', err);
+    res.status(500).send('Server error updating profile');
   }
 });
 

@@ -19,6 +19,7 @@ import Blog from './pages/Blog';
 import BlogPost from './pages/BlogPost';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import PublicProfile from './pages/PublicProfile';
 
 import AdminPanel from './pages/AdminPanel';
 import PrivacyPolicy from './pages/PrivacyPolicy';
@@ -60,6 +61,7 @@ function App() {
               <Route path="/courses/:slug/lesson/:lessonId" element={<LessonView />} />
               <Route path="/courses/:slug/quiz" element={<QuizView />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/u/:id" element={<PublicProfile />} />
               <Route path="/admin" element={<AdminPanel />} />
               <Route path="/admin/upload" element={<AdminPanel />} />
               <Route path="/verify" element={<VerifyCert />} />

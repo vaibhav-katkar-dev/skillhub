@@ -7,7 +7,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'https://api.skillvalix.com/api
 import {
   Download, CheckCircle, Award, Share2, BookOpen,
   ArrowRight, Loader2, Trophy, GraduationCap, Medal,
-  Sparkles, Clock, Star, Linkedin
+  Sparkles, Clock, Star, Linkedin, Github, FileText, User, Settings, Briefcase, X, Save
 } from 'lucide-react';
 
 /* ────────────────────────────────────────────
@@ -293,6 +293,38 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [copyMsg, setCopyMsg] = useState('');
 
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileData, setProfileData] = useState({
+    github: '', linkedin: '', resume: '', openToWork: false
+  });
+
+  useEffect(() => {
+    if (userData) {
+      setProfileData({
+        github: userData.github || '',
+        linkedin: userData.linkedin || '',
+        resume: userData.resume || '',
+        openToWork: userData.openToWork || false
+      });
+    }
+  }, [userData]);
+
+  const handleSaveProfile = async () => {
+    setSavingProfile(true);
+    try {
+      const res = await api.put('/auth/profile', profileData);
+      useAuthStore.setState({ user: res.data });
+      sessionStorage.setItem('skillvalix_user', JSON.stringify(res.data));
+      setEditingProfile(false);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to save profile details.');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
   useEffect(() => {
     // Wait until auth store finishes its initial loadUser
     if (authLoading) return;
@@ -370,7 +402,12 @@ const Dashboard = () => {
                 }
               </h1>
               {!loading && userData && (
-                <p className="text-indigo-300 text-sm font-medium mt-0.5">{userData.email}</p>
+                <div className="mt-2.5">
+                  <a href={`/u/${userData._id}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs font-bold bg-white/10 hover:bg-white/20 text-indigo-50 px-3 py-1.5 rounded-lg border border-white/20 transition-all shadow-sm">
+                    <Share2 className="w-3.5 h-3.5" />
+                    View Public Portfolio
+                  </a>
+                </div>
               )}
             </div>
 
@@ -473,8 +510,87 @@ const Dashboard = () => {
             </section>
           </div>
 
-          {/* RIGHT – Certificates */}
+          {/* RIGHT – Profile & Certificates */}
           <div>
+            {!loading && userData && (
+              <div className="mb-10">
+                <div className="flex items-center justify-between mb-6">
+                  <SectionHead
+                    icon={User} title="My Profile"
+                    iconCls="bg-blue-100 text-blue-600"
+                    count={userData.openToWork ? 'Hire Me' : undefined}
+                    countCls="bg-emerald-100 text-emerald-700 font-bold uppercase text-[10px]"
+                  />
+                  {!editingProfile && (
+                    <button onClick={() => setEditingProfile(true)} className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-indigo-600 transition-colors bg-white px-3 py-1.5 rounded-lg border shadow-sm">
+                      <Settings className="w-3.5 h-3.5" /> Edit
+                    </button>
+                  )}
+                </div>
+
+                <div className="bg-white border rounded-2xl p-5 shadow-sm transition-all duration-300">
+                  {editingProfile ? (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1.5"><Github className="w-3 h-3"/> GitHub Username / Link</label>
+                        <input type="text" value={profileData.github} onChange={e => setProfileData({...profileData, github: e.target.value})} placeholder="github.com/myname" className="w-full text-sm px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1.5"><Linkedin className="w-3 h-3"/> LinkedIn URL</label>
+                        <input type="text" value={profileData.linkedin} onChange={e => setProfileData({...profileData, linkedin: e.target.value})} placeholder="linkedin.com/in/myname" className="w-full text-sm px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1.5"><FileText className="w-3 h-3"/> Resume / Portfolio Link</label>
+                        <input type="text" value={profileData.resume} onChange={e => setProfileData({...profileData, resume: e.target.value})} placeholder="https://myportfolio.com" className="w-full text-sm px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
+                      </div>
+                      <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-xl hover:bg-slate-50">
+                        <input type="checkbox" checked={profileData.openToWork} onChange={e => setProfileData({...profileData, openToWork: e.target.checked})} className="w-5 h-5 rounded text-indigo-600" />
+                        <span className="text-sm font-bold text-slate-700 flex items-center gap-1.5"><Briefcase className="w-4 h-4 text-emerald-500"/> Open to Work/Offers</span>
+                      </label>
+                      <div className="flex gap-2 pt-2">
+                        <button onClick={() => setEditingProfile(false)} className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-bold transition-colors">Cancel</button>
+                        <button onClick={handleSaveProfile} disabled={savingProfile} className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-1.5 disabled:opacity-70">
+                          {savingProfile ? <Loader2 className="w-4 h-4 animate-spin"/> : <Save className="w-4 h-4" />} Save
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {profileData.github || profileData.linkedin || profileData.resume ? (
+                        <div className="flex flex-col gap-3">
+                          {profileData.github && (
+                            <a href={profileData.github.startsWith('http') ? profileData.github : `https://${profileData.github}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors border">
+                              <Github className="w-5 h-5 text-slate-700" />
+                              <span className="text-sm font-semibold text-slate-700 truncate">{profileData.github.replace(/^https?:\/\//, '')}</span>
+                            </a>
+                          )}
+                          {profileData.linkedin && (
+                            <a href={profileData.linkedin.startsWith('http') ? profileData.linkedin : `https://${profileData.linkedin}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 bg-blue-50/50 hover:bg-blue-50 rounded-xl transition-colors border border-blue-100">
+                              <Linkedin className="w-5 h-5 text-blue-600" />
+                              <span className="text-sm font-semibold text-blue-700 truncate">{profileData.linkedin.replace(/^https?:\/\//, '')}</span>
+                            </a>
+                          )}
+                          {profileData.resume && (
+                            <a href={profileData.resume.startsWith('http') ? profileData.resume : `https://${profileData.resume}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 bg-indigo-50/50 hover:bg-indigo-50 rounded-xl transition-colors border border-indigo-100">
+                              <FileText className="w-5 h-5 text-indigo-600" />
+                              <span className="text-sm font-semibold text-indigo-700 truncate">View Portfolio/Resume</span>
+                            </a>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-center py-4">
+                          <p className="text-sm text-slate-500 font-medium mb-3">Make your public portfolio stand out to recruiters.</p>
+                          <button onClick={() => setEditingProfile(true)} className="px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded-lg hover:bg-slate-800 transition-colors inline-flex items-center gap-2">
+                            Add Social Links
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             <SectionHead
               icon={Medal} title="My Certificates"
               iconCls="bg-amber-100 text-amber-600"

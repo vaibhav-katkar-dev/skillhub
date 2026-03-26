@@ -13,7 +13,11 @@ const userSchema = new mongoose.Schema({
     courseId: { type: String }, 
     attempts: { type: Number, default: 0 },
     unlockedAttempts: { type: Number, default: 0 }
-  }]
+  }],
+  github: { type: String, default: '' },
+  linkedin: { type: String, default: '' },
+  resume: { type: String, default: '' },
+  openToWork: { type: Boolean, default: false }
 }, { timestamps: true });
 
 export default mongoose.model('User', userSchema);
