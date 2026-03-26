@@ -1,45 +1,68 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import {
   BookOpen, Clock, Loader2,
-  ArrowRight, Sparkles, GraduationCap, Star
+  ArrowRight, Sparkles, GraduationCap, Star,
+  Search, Filter, X
 } from 'lucide-react';
 import { getCourseList, preloadCourses } from '../data/courseLoader';
 
 // Deeper, more saturated colour themes for better contrast
 const THEMES = {
-  blue: { bar: 'from-indigo-600 to-blue-700',   iconBg: 'bg-indigo-100',  iconText: 'text-indigo-700',  link: 'text-indigo-700' },
-  green: { bar: 'from-emerald-600 to-teal-700',  iconBg: 'bg-emerald-100', iconText: 'text-emerald-700', link: 'text-emerald-700' },
-  pink: { bar: 'from-rose-600 to-pink-700',     iconBg: 'bg-rose-100',    iconText: 'text-rose-700',    link: 'text-rose-700' },
+  blue:   { bar: 'from-indigo-600 to-blue-700',   iconBg: 'bg-indigo-100',  iconText: 'text-indigo-700',  link: 'text-indigo-700' },
+  green:  { bar: 'from-emerald-600 to-teal-700',  iconBg: 'bg-emerald-100', iconText: 'text-emerald-700', link: 'text-emerald-700' },
+  pink:   { bar: 'from-rose-600 to-pink-700',     iconBg: 'bg-rose-100',    iconText: 'text-rose-700',    link: 'text-rose-700' },
   orange: { bar: 'from-amber-500 to-orange-600',  iconBg: 'bg-amber-100',   iconText: 'text-amber-700',   link: 'text-amber-700' },
 };
+
+// Category map based on title keywords
+const CATEGORY_KEYWORDS = {
+  'HTML':       ['html'],
+  'CSS':        ['css'],
+  'JavaScript': ['javascript', 'js'],
+  'Python':     ['python'],
+  'Java':       ['java masterclass', 'ultimate java'],
+  'AI / ML':    ['artificial intelligence', 'machine learning', 'ai'],
+};
+
+function getCourseCategory(course) {
+  const title = (course.title || '').toLowerCase();
+  for (const [cat, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
+    if (keywords.some(k => title.includes(k))) return cat;
+  }
+  return 'Other';
+}
 
 // Skeleton card
 const Skeleton = () => (
   <div className="bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm animate-pulse">
     <div className="h-1.5 bg-slate-200" />
-    <div className="p-6">
-      <div className="w-12 h-12 rounded-2xl bg-slate-200 mb-5" />
+    <div className="p-5">
+      <div className="w-11 h-11 rounded-2xl bg-slate-200 mb-4" />
       <div className="h-5 bg-slate-200 rounded-lg mb-2 w-4/5" />
-      <div className="h-5 bg-slate-100 rounded-lg mb-4 w-3/5" />
+      <div className="h-4 bg-slate-100 rounded-lg mb-4 w-3/5" />
       <div className="space-y-2">
-        <div className="h-3.5 bg-slate-100 rounded" />
-        <div className="h-3.5 bg-slate-100 rounded w-11/12" />
-        <div className="h-3.5 bg-slate-100 rounded w-4/5" />
+        <div className="h-3 bg-slate-100 rounded" />
+        <div className="h-3 bg-slate-100 rounded w-11/12" />
+        <div className="h-3 bg-slate-100 rounded w-4/5" />
       </div>
-      <div className="h-px bg-slate-100 mt-6 mb-4" />
+      <div className="h-px bg-slate-100 mt-5 mb-3" />
       <div className="flex justify-between">
-        <div className="h-3.5 w-20 bg-slate-100 rounded" />
-        <div className="h-3.5 w-24 bg-slate-100 rounded" />
+        <div className="h-3 w-16 bg-slate-100 rounded" />
+        <div className="h-3 w-20 bg-slate-100 rounded" />
       </div>
     </div>
   </div>
 );
 
+const ALL_CATEGORIES = ['All', 'HTML', 'CSS', 'JavaScript', 'Python', 'Java', 'AI / ML', 'Other'];
+
 const Courses = () => {
-  const [courses, setCourses] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [courses, setCourses]     = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [search, setSearch]       = useState('');
+  const [activeCategory, setActiveCategory] = useState('All');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -54,6 +77,23 @@ const Courses = () => {
       }
     })();
   }, []);
+
+  const filtered = useMemo(() => {
+    let list = courses;
+    if (activeCategory !== 'All') {
+      list = list.filter(c => getCourseCategory(c) === activeCategory);
+    }
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(c =>
+        (c.title || '').toLowerCase().includes(q) ||
+        (c.description || '').toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [courses, search, activeCategory]);
+
+  const clearFilters = () => { setSearch(''); setActiveCategory('All'); };
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -71,9 +111,9 @@ const Courses = () => {
         <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-blue-400/20 blur-3xl pointer-events-none" />
         <div className="absolute -bottom-16 -left-16 w-72 h-72 rounded-full bg-cyan-400/20 blur-3xl pointer-events-none" />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 pb-28 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 pb-32 relative z-10">
           {/* label */}
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5 mb-6">
+          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5 mb-5">
             <GraduationCap className="w-4 h-4 text-cyan-300" />
             <span className="text-white/80 text-xs font-bold uppercase tracking-widest">SkillValix Library</span>
           </div>
@@ -87,12 +127,12 @@ const Courses = () => {
               </svg>
             </span>
           </h1>
-          <p className="text-indigo-100 text-lg font-medium max-w-2xl">
+          <p className="text-indigo-100 text-lg font-medium max-w-2xl mb-7">
             Industry-leading curriculum designed to take you from absolute beginner to professional. All courses are <span className="text-white font-bold underline decoration-cyan-400">100% free</span>.
           </p>
 
           {/* Stats row */}
-          <div className="flex flex-wrap items-center gap-4 mt-8">
+          <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2">
               <Sparkles className="w-4 h-4 text-yellow-300" />
               <span className="text-white text-sm font-bold">
@@ -111,23 +151,101 @@ const Courses = () => {
         </div>
       </div>
 
-      {/* ── COURSE GRID (overlaps hero) ── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 pb-20 relative z-10">
+      {/* ── SEARCH + FILTER BAR (overlaps hero) ── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 pb-4 relative z-20">
+        <div className="bg-white rounded-2xl shadow-xl border border-slate-100 p-4 sm:p-5">
+          <div className="flex flex-col sm:flex-row gap-3">
+            {/* Search Input */}
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                id="course-search"
+                type="text"
+                placeholder="Search courses…"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition"
+              />
+              {search && (
+                <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Category Select */}
+            <div className="relative">
+              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+              <select
+                id="course-category"
+                value={activeCategory}
+                onChange={e => setActiveCategory(e.target.value)}
+                className="w-full sm:w-auto appearance-none pl-9 pr-10 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition cursor-pointer"
+              >
+                {ALL_CATEGORIES.map(cat => (
+                  <option key={cat} value={cat}>{cat === 'All' ? 'All Categories' : cat}</option>
+                ))}
+              </select>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+              </div>
+            </div>
+          </div>
+
+          {/* Category Pills */}
+          <div className="flex overflow-x-auto hide-scrollbar gap-2 mt-3 pb-1">
+            {ALL_CATEGORIES.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`whitespace-nowrap px-3 py-1 rounded-full text-xs font-semibold transition-all duration-200 border ${
+                  activeCategory === cat
+                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                    : 'bg-white text-slate-500 border-slate-200 hover:border-indigo-300 hover:text-indigo-600'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── COURSE GRID ── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 pt-6 relative z-10">
+        {/* Results count */}
+        {!loading && (search || activeCategory !== 'All') && (
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-slate-500 text-sm">
+              Showing <strong className="text-slate-800">{filtered.length}</strong> of {courses.length} courses
+              {activeCategory !== 'All' && <span> in <strong className="text-indigo-600">{activeCategory}</strong></span>}
+              {search && <span> matching "<strong className="text-indigo-600">{search}</strong>"</span>}
+            </p>
+            <button
+              onClick={clearFilters}
+              className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1 transition"
+            >
+              <X className="w-3.5 h-3.5" /> Clear filters
+            </button>
+          </div>
+        )}
+
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {[1,2,3,4,5,6].map(i => <Skeleton key={i} />)}
           </div>
-        ) : courses.length === 0 ? (
-          <div className="bg-white border-2 border-dashed border-slate-200 rounded-3xl py-24 text-center shadow-sm">
+        ) : filtered.length === 0 ? (
+          <div className="bg-white border-2 border-dashed border-slate-200 rounded-3xl py-20 text-center shadow-sm">
             <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
               <BookOpen className="w-8 h-8 text-slate-300" />
             </div>
-            <p className="text-slate-600 font-bold text-lg">No courses available yet.</p>
-            <p className="text-slate-400 text-sm mt-1">Please check back soon!</p>
+            <p className="text-slate-600 font-bold text-lg">No courses found.</p>
+            <p className="text-slate-400 text-sm mt-1">Try a different search term or category.</p>
+            <button onClick={clearFilters} className="mt-4 text-sm text-indigo-600 font-semibold hover:underline">Clear filters</button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {courses.map((course) => {
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {filtered.map((course) => {
               const t = THEMES[course.theme] || THEMES.blue;
               return (
                 <div
@@ -137,45 +255,54 @@ const Courses = () => {
                 >
                   {/* ── Image banner (if image set) ── */}
                   {course.image ? (
-                    <div className="relative h-44 overflow-hidden flex-shrink-0">
+                    <div className="relative h-40 overflow-hidden flex-shrink-0">
                       <img
                         src={course.image}
                         alt={course.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         onError={e => { e.target.style.display = 'none'; e.target.parentNode.classList.add('fallback-bg'); }}
                       />
-                      {/* dark gradient overlay so text is always readable */}
+                      {/* dark gradient overlay */}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+                      {/* Category badge */}
+                      <div className="absolute top-3 right-3">
+                        <span className="bg-white/90 backdrop-blur-sm text-indigo-700 text-xs font-bold px-2.5 py-1 rounded-full">
+                          {getCourseCategory(course)}
+                        </span>
+                      </div>
                       {/* Title overlaid on image */}
                       <div className="absolute bottom-0 left-0 right-0 p-4">
-                        <h2 className="text-white text-lg font-extrabold leading-snug line-clamp-2 drop-shadow-sm">
+                        <h2 className="text-white text-base font-extrabold leading-snug line-clamp-2 drop-shadow-sm">
                           {course.title}
                         </h2>
                       </div>
                     </div>
                   ) : (
-                    /* ── No image: coloured strip + icon layout ── */
+                    /* ── No image: coloured strip ── */
                     <div className={`h-1.5 bg-gradient-to-r ${t.bar} flex-shrink-0`} />
                   )}
 
                   {/* ── Card body ── */}
-                  <div className="p-5 flex flex-col flex-1" style={{ minHeight: 180 }}>
-                    {/* Icon + title row (only show icon when NO image) */}
+                  <div className="p-5 flex flex-col flex-1">
+                    {/* Icon + title row (only show when NO image) */}
                     {!course.image && (
-                      <div className={`w-11 h-11 rounded-2xl ${t.iconBg} flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 flex-shrink-0 border border-black/5`}>
-                        <BookOpen className={`w-5 h-5 ${t.iconText}`} />
-                      </div>
-                    )}
-
-                    {/* Title (only shown here when NO image — otherwise it's on top of image) */}
-                    {!course.image && (
-                      <h2 className="text-lg font-bold text-slate-900 mb-2 leading-snug group-hover:text-indigo-700 transition-colors duration-200 line-clamp-2">
-                        {course.title}
-                      </h2>
+                      <>
+                        <div className="flex items-start justify-between mb-3">
+                          <div className={`w-10 h-10 rounded-xl ${t.iconBg} flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 flex-shrink-0 border border-black/5`}>
+                            <BookOpen className={`w-5 h-5 ${t.iconText}`} />
+                          </div>
+                          <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${t.iconBg} ${t.iconText}`}>
+                            {getCourseCategory(course)}
+                          </span>
+                        </div>
+                        <h2 className="text-base font-bold text-slate-900 mb-2 leading-snug group-hover:text-indigo-700 transition-colors duration-200 line-clamp-2">
+                          {course.title}
+                        </h2>
+                      </>
                     )}
 
                     {/* Description */}
-                    <p className="text-slate-500 text-sm leading-relaxed line-clamp-3 flex-1 mb-4">
+                    <p className="text-slate-500 text-sm leading-relaxed line-clamp-3 flex-1 mb-3">
                       {course.description}
                     </p>
 

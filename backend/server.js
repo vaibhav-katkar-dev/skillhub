@@ -16,6 +16,15 @@ import paymentRoutes from './routes/payments.js';
 
 dotenv.config();
 
+// ── Protect Server from Crashing Globally ─────────────────
+process.on('uncaughtException', (err) => {
+  console.error('🔥 Uncaught Exception (Caught to prevent crash):', err?.message || err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('🔥 Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
 const app = express();
 
 // ── Compression (gzip all responses) ──────────────────────
@@ -87,26 +96,65 @@ app.use('/api/payments', paymentRoutes);
 
 // ── Global Error Handler ───────────────────────────────────
 app.use((err, req, res, next) => {
-  console.error('[Global Error]', err.message);
-  res.status(err.status || 500).json({ message: err.message || 'Server Error' });
+  console.error('[Global Error]', err?.message || err);
+  if (res.headersSent) {
+    return next(err);
+  }
+  res.status(err?.status || 500).json({ 
+    message: err?.message || 'An unexpected server error occurred.',
+    success: false
+  });
 });
 
-// ── DB + Server ───────────────────────────────────────────
+// ── Serverless-Optimized DB Connection ────────────────────
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/skillvalix';
 
-mongoose.connect(MONGO_URI, {
-  maxPoolSize: 10,      // connection pool — reuse connections
-  serverSelectionTimeoutMS: 5000,
-  socketTimeoutMS: 45000,
-})
-  .then(() => {
-    console.log('✅ Connected to MongoDB');
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
+let cachedDb = global.mongoose;
+if (!cachedDb) {
+  cachedDb = global.mongoose = { conn: null, promise: null };
+}
+
+async function connectToDatabase() {
+  if (cachedDb.conn) {
+    // Reuse existing connection pool across serverless invocations
+    return cachedDb.conn;
+  }
+
+  if (!cachedDb.promise) {
+    cachedDb.promise = mongoose.connect(MONGO_URI, {
+      maxPoolSize: 10, // Prevent exhausting free tier DB limits
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+      bufferCommands: false, // Disable buffering so requests fail fast if DB is down
+    }).then((m) => {
+      console.log('✅ Connected to MongoDB (New Connection Pool)');
+      return m;
     });
-  })
-  .catch((err) => {
-    console.error('❌ Database connection error:', err);
-    process.exit(1);
+  }
+
+  try {
+    cachedDb.conn = await cachedDb.promise;
+  } catch (e) {
+    cachedDb.promise = null;
+    console.error('❌ Database connection error:', e);
+    throw e;
+  }
+  return cachedDb.conn;
+}
+
+// Initialize connection. Vercel container keeps this alive across warm starts.
+connectToDatabase().catch(err => {
+  console.error("Critical DB Initialization Failed.");
+});
+
+// ── Server Initialization ─────────────────────────────────
+// Only bind to a specific port if we are NOT running as a serverless function in Vercel
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`🚀 API Server running locally on port ${PORT}`);
   });
+}
+
+// Export the Express app as the default handler for Vercel Serverless functions
+export default app;
