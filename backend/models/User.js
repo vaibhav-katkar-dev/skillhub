@@ -17,6 +17,8 @@ const userSchema = new mongoose.Schema({
   github: { type: String, default: '' },
   linkedin: { type: String, default: '' },
   resume: { type: String, default: '' },
+  portfolio: { type: String, default: '' },
+  username: { type: String, unique: true, sparse: true },
   openToWork: { type: Boolean, default: false }
 }, { timestamps: true });
 

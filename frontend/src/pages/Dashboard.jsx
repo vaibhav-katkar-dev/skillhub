@@ -296,7 +296,7 @@ const Dashboard = () => {
   const [editingProfile, setEditingProfile] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileData, setProfileData] = useState({
-    github: '', linkedin: '', resume: '', openToWork: false
+    github: '', linkedin: '', resume: '', portfolio: '', username: '', openToWork: false
   });
 
   useEffect(() => {
@@ -305,6 +305,8 @@ const Dashboard = () => {
         github: userData.github || '',
         linkedin: userData.linkedin || '',
         resume: userData.resume || '',
+        portfolio: userData.portfolio || '',
+        username: userData.username || '',
         openToWork: userData.openToWork || false
       });
     }
@@ -403,7 +405,7 @@ const Dashboard = () => {
               </h1>
               {!loading && userData && (
                 <div className="mt-2.5">
-                  <a href={`/u/${userData._id || userData.id}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs font-bold bg-white/10 hover:bg-white/20 text-indigo-50 px-3 py-1.5 rounded-lg border border-white/20 transition-all shadow-sm">
+                  <a href={`/u/${userData.username || userData._id || userData.id}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs font-bold bg-white/10 hover:bg-white/20 text-indigo-50 px-3 py-1.5 rounded-lg border border-white/20 transition-all shadow-sm">
                     <Share2 className="w-3.5 h-3.5" />
                     View Public Portfolio
                   </a>
@@ -515,15 +517,15 @@ const Dashboard = () => {
             {!loading && userData && (
               <div className="mb-10">
                 <div className="flex items-center justify-between mb-6">
-                  <SectionHead
-                    icon={User} title="My Profile"
-                    iconCls="bg-blue-100 text-blue-600"
-                    count={userData.openToWork ? 'Hire Me' : undefined}
-                    countCls="bg-emerald-100 text-emerald-700 font-bold uppercase text-[10px]"
-                  />
+                  <h2 className="text-xl font-bold text-slate-900 mb-1 flex items-center justify-between">
+                    <div>
+                      Public Portfolio Settings
+                      <p className="text-sm font-normal text-slate-500 mt-1">Manage your custom portfolio link and social profiles.</p>
+                    </div>
+                  </h2>
                   {!editingProfile && (
-                    <button onClick={() => setEditingProfile(true)} className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-indigo-600 transition-colors bg-white px-3 py-1.5 rounded-lg border shadow-sm">
-                      <Settings className="w-3.5 h-3.5" /> Edit
+                    <button onClick={() => setEditingProfile(true)} className="text-sm font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-xl transition-colors">
+                      Edit Profile
                     </button>
                   )}
                 </div>
@@ -540,12 +542,23 @@ const Dashboard = () => {
                         <input type="text" value={profileData.linkedin} onChange={e => setProfileData({...profileData, linkedin: e.target.value})} placeholder="linkedin.com/in/myname" className="w-full text-sm px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
                       </div>
                       <div>
-                        <label className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1.5"><FileText className="w-3 h-3"/> Resume / Portfolio Link</label>
-                        <input type="text" value={profileData.resume} onChange={e => setProfileData({...profileData, resume: e.target.value})} placeholder="https://myportfolio.com" className="w-full text-sm px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
+                        <label className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1.5"><FileText className="w-3 h-3"/> Resume Link</label>
+                        <input type="text" value={profileData.resume} onChange={e => setProfileData({...profileData, resume: e.target.value})} placeholder="https://docs.google.com/..." className="w-full text-sm px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
                       </div>
-                      <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-xl hover:bg-slate-50">
-                        <input type="checkbox" checked={profileData.openToWork} onChange={e => setProfileData({...profileData, openToWork: e.target.checked})} className="w-5 h-5 rounded text-indigo-600" />
-                        <span className="text-sm font-bold text-slate-700 flex items-center gap-1.5"><Briefcase className="w-4 h-4 text-emerald-500"/> Open to Work/Offers</span>
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1.5"><GraduationCap className="w-3 h-3"/> Personal Portfolio</label>
+                        <input type="text" value={profileData.portfolio} onChange={e => setProfileData({...profileData, portfolio: e.target.value})} placeholder="https://myportfolio.com" className="w-full text-sm px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1.5"><Globe className="w-3 h-3"/> Custom Username Slug</label>
+                        <div className="flex">
+                          <span className="inline-flex items-center px-3 rounded-l-xl border border-r-0 border-slate-200 bg-slate-50 text-slate-500 sm:text-sm">skillvalix.com/u/</span>
+                          <input type="text" value={profileData.username} onChange={e => setProfileData({...profileData, username: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')})} placeholder={userData._id || 'vaibhav-katkar'} className="flex-1 min-w-0 text-sm px-3 py-2 border rounded-none rounded-r-xl focus:ring-2 focus:ring-indigo-500 outline-none uppercase-none" />
+                        </div>
+                      </div>
+                      <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-xl hover:bg-emerald-50 transition-colors">
+                        <input type="checkbox" checked={profileData.openToWork} onChange={e => setProfileData({...profileData, openToWork: e.target.checked})} className="w-5 h-5 rounded text-emerald-600" />
+                        <span className="text-sm font-bold text-slate-700">Display "Open to Work" Badge</span>
                       </label>
                       <div className="flex gap-2 pt-2">
                         <button onClick={() => setEditingProfile(false)} className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-bold transition-colors">Cancel</button>
@@ -556,24 +569,42 @@ const Dashboard = () => {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {profileData.github || profileData.linkedin || profileData.resume ? (
-                        <div className="flex flex-col gap-3">
+                      {profileData.github || profileData.linkedin || profileData.resume || profileData.portfolio ? (
+                        <div className="grid grid-cols-1 gap-3">
                           {profileData.github && (
-                            <a href={profileData.github.startsWith('http') ? profileData.github : `https://${profileData.github}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors border">
-                              <Github className="w-5 h-5 text-slate-700" />
-                              <span className="text-sm font-semibold text-slate-700 truncate">{profileData.github.replace(/^https?:\/\//, '')}</span>
+                            <a href={profileData.github.startsWith('http') ? profileData.github : `https://${profileData.github}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors border shadow-sm group">
+                              <div className="flex items-center gap-3 overflow-hidden">
+                                <Github className="w-5 h-5 text-slate-700 flex-shrink-0" />
+                                <span className="text-sm font-semibold text-slate-700 truncate">{profileData.github.replace(/^https?:\/\//, '')}</span>
+                              </div>
+                              <ArrowRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
                             </a>
                           )}
                           {profileData.linkedin && (
-                            <a href={profileData.linkedin.startsWith('http') ? profileData.linkedin : `https://${profileData.linkedin}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 bg-blue-50/50 hover:bg-blue-50 rounded-xl transition-colors border border-blue-100">
-                              <Linkedin className="w-5 h-5 text-blue-600" />
-                              <span className="text-sm font-semibold text-blue-700 truncate">{profileData.linkedin.replace(/^https?:\/\//, '')}</span>
+                            <a href={profileData.linkedin.startsWith('http') ? profileData.linkedin : `https://${profileData.linkedin}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 bg-blue-50/50 hover:bg-blue-50 rounded-xl transition-colors border border-blue-100 shadow-sm group">
+                              <div className="flex items-center gap-3 overflow-hidden">
+                                <Linkedin className="w-5 h-5 text-[#0A66C2] flex-shrink-0" />
+                                <span className="text-sm font-semibold text-blue-700 truncate">{profileData.linkedin.replace(/^https?:\/\//, '')}</span>
+                              </div>
+                              <ArrowRight className="w-4 h-4 text-blue-400 group-hover:translate-x-1 transition-transform" />
+                            </a>
+                          )}
+                          {profileData.portfolio && (
+                            <a href={profileData.portfolio.startsWith('http') ? profileData.portfolio : `https://${profileData.portfolio}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 bg-indigo-50/50 hover:bg-indigo-50 rounded-xl transition-colors border border-indigo-100 shadow-sm group">
+                              <div className="flex items-center gap-3 overflow-hidden">
+                                <GraduationCap className="w-5 h-5 text-indigo-600 flex-shrink-0" />
+                                <span className="text-sm font-semibold text-indigo-700 truncate">My Portfolio</span>
+                              </div>
+                              <ArrowRight className="w-4 h-4 text-indigo-400 group-hover:translate-x-1 transition-transform" />
                             </a>
                           )}
                           {profileData.resume && (
-                            <a href={profileData.resume.startsWith('http') ? profileData.resume : `https://${profileData.resume}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 bg-indigo-50/50 hover:bg-indigo-50 rounded-xl transition-colors border border-indigo-100">
-                              <FileText className="w-5 h-5 text-indigo-600" />
-                              <span className="text-sm font-semibold text-indigo-700 truncate">View Portfolio/Resume</span>
+                            <a href={profileData.resume.startsWith('http') ? profileData.resume : `https://${profileData.resume}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 bg-rose-50/50 hover:bg-rose-50 rounded-xl transition-colors border border-rose-100 shadow-sm group">
+                              <div className="flex items-center gap-3 overflow-hidden">
+                                <FileText className="w-5 h-5 text-rose-600 flex-shrink-0" />
+                                <span className="text-sm font-semibold text-rose-700 truncate">View Resume</span>
+                              </div>
+                              <ArrowRight className="w-4 h-4 text-rose-400 group-hover:translate-x-1 transition-transform" />
                             </a>
                           )}
                         </div>

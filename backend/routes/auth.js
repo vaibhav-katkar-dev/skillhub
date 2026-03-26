@@ -206,14 +206,22 @@ router.post('/reset-password/:token', async (req, res) => {
 // ── Get Public Profile ──────────────────────────────────────────────────────
 router.get('/public/:id', async (req, res) => {
   try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(404).json({ message: 'User not found' });
+    const queryParam = req.params.id;
+    let user;
+
+    if (mongoose.Types.ObjectId.isValid(queryParam)) {
+      user = await User.findById(queryParam).select('name createdAt github linkedin resume portfolio username openToWork');
+    }
+    
+    if (!user) {
+      // If not a valid ObjectId or not found, try searching by custom username
+      user = await User.findOne({ username: queryParam }).select('name createdAt github linkedin resume portfolio username openToWork');
     }
 
-    const user = await User.findById(req.params.id).select('name createdAt github linkedin resume openToWork');
     if (!user) return res.status(404).json({ message: 'User not found' });
     
     // Courses are in JSON, we can't populate them in MongoDB. Return raw certs.
+    // Make sure we select the necessary fields
     const certs = await Certificate.find({ student: user._id });
     
     res.json({
@@ -222,6 +230,8 @@ router.get('/public/:id', async (req, res) => {
       github: user.github,
       linkedin: user.linkedin,
       resume: user.resume,
+      portfolio: user.portfolio,
+      username: user.username,
       openToWork: user.openToWork,
       certificates: certs
     });
@@ -234,13 +244,24 @@ router.get('/public/:id', async (req, res) => {
 // ── Update Profile ────────────────────────────────────────────────────────
 router.put('/profile', authOptions, async (req, res) => {
   try {
-    const { github, linkedin, resume, openToWork } = req.body;
+    const { github, linkedin, resume, portfolio, username, openToWork } = req.body;
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (username !== undefined && username !== user.username) {
+      // Ensure it's lowercase, alphanumeric and dashes only
+      const formattedUsername = username.toLowerCase().replace(/[^a-z0-9-]/g, '');
+      const existingUser = await User.findOne({ username: formattedUsername });
+      if (existingUser) {
+        return res.status(400).json({ message: 'Username is already taken' });
+      }
+      user.username = formattedUsername;
+    }
 
     if (github !== undefined) user.github = github;
     if (linkedin !== undefined) user.linkedin = linkedin;
     if (resume !== undefined) user.resume = resume;
+    if (portfolio !== undefined) user.portfolio = portfolio;
     if (openToWork !== undefined) user.openToWork = openToWork;
 
     await user.save();

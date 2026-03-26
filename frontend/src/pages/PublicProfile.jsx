@@ -1,21 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import Navbar from '../components/Navbar';
+import { Award, Briefcase, Calendar, ChevronRight, FileText, Github, Linkedin, MapPin, CheckCircle, GraduationCap, Globe } from 'lucide-react';
 import { api } from '../store/authStore';
-import { Award, Calendar, GraduationCap, ArrowRight, Loader2, Star, Trophy, ExternalLink, Github, Linkedin, FileText, Briefcase } from 'lucide-react';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'https://api.skillvalix.com/api';
-
-const Sk = ({ cls }) => (
-  <div className={`bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 bg-[length:200%_100%] animate-[shimmer_1.8s_infinite] rounded-xl ${cls}`} />
-);
 
 export default function PublicProfile() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -31,13 +24,15 @@ export default function PublicProfile() {
           const rawCourses = await coursesRes.json();
           const allCourses = rawCourses.map(item => item.course);
           
-          // Map course details onto the certificates
           profileData.certificates = profileData.certificates.map(cert => {
             const courseIdStr = cert.course?._id || cert.course;
             const matchedCourse = allCourses.find(c => c._id.toString() === courseIdStr.toString());
             return {
               ...cert,
-              course: matchedCourse || { title: 'Verified Certification' }
+              course: matchedCourse || { 
+                title: 'Verified Certification',
+                image: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=600&auto=format&fit=crop'
+              }
             };
           });
         }
@@ -53,178 +48,183 @@ export default function PublicProfile() {
     fetchProfile();
   }, [id]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center pt-24 pb-20 px-4">
-        <Sk cls="w-24 h-24 rounded-full mb-6" />
-        <Sk cls="h-10 w-64 mb-3" />
-        <Sk cls="h-5 w-40 mb-12" />
-        <div className="w-full max-w-4xl grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Sk cls="h-40" /><Sk cls="h-40" /><Sk cls="h-40" /><Sk cls="h-40" />
+  if (loading) return (
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      <Navbar />
+      <div className="flex-1 flex items-center justify-center">
+        <div className="animate-spin w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full"></div>
+      </div>
+    </div>
+  );
+
+  if (error) return (
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      <Navbar />
+      <div className="flex-1 flex max-w-3xl mx-auto w-full items-center justify-center p-6">
+        <div className="bg-white p-8 rounded-3xl shadow-xl shadow-indigo-100/50 text-center w-full border border-slate-100">
+          <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Briefcase className="w-10 h-10" />
+          </div>
+          <h2 className="text-2xl font-black text-slate-800 mb-3">{error}</h2>
+          <p className="text-slate-500 mb-8">The link might be broken, or the user hasn't made their profile public yet.</p>
+          <Link to="/" className="inline-flex bg-indigo-600 text-white font-bold py-3 px-8 rounded-xl hover:bg-indigo-700 transition-colors">
+            Return to Homepage
+          </Link>
         </div>
       </div>
-    );
-  }
-
-  if (error || !profile) {
-    return (
-      <div className="min-h-[70vh] bg-[#f8fafc] flex flex-col items-center justify-center p-4">
-        <div className="w-20 h-20 bg-slate-200 rounded-full flex items-center justify-center mb-6">
-          <Award className="w-10 h-10 text-slate-400" />
-        </div>
-        <h2 className="text-2xl font-black text-slate-800 mb-2">Profile Not Found</h2>
-        <p className="text-slate-500 mb-8 max-w-sm text-center">
-          {error || "We couldn't locate this user's public portfolio."}
-        </p>
-        <button onClick={() => navigate('/')} className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors">
-          Explore Free Courses
-        </button>
-      </div>
-    );
-  }
-
-  // Generate initials for avatar
-  const initials = profile.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?';
-  const joinDate = new Date(profile.joinedAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] pb-24">
-      <Helmet>
-        <title>{profile.name}'s Profile | SkillValix</title>
-        <meta name="description" content={`View ${profile.name}'s verified certifications and achievements on SkillValix.`} />
-      </Helmet>
+    <div className="min-h-screen bg-slate-50 flex flex-col selection:bg-indigo-100 selection:text-indigo-900">
+      <Navbar />
+      
+      {/* Decorative Background */}
+      <div className="absolute top-0 inset-x-0 h-96 bg-gradient-to-b from-indigo-900 via-indigo-800 to-slate-50 pointer-events-none -z-10 overflow-hidden">
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+        <div className="absolute -top-24 -right-24 w-96 h-96 bg-indigo-500 blur-3xl opacity-20 rounded-full"></div>
+        <div className="absolute top-12 -left-20 w-72 h-72 bg-purple-500 blur-3xl opacity-20 rounded-full"></div>
+      </div>
 
-      {/* ── COVER HIGHLIGHT ── */}
-      <div className="bg-gradient-to-br from-indigo-700 via-violet-700 to-purple-800 pt-20 pb-32 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-[0.05]"
-          style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '32px 32px' }} />
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full bg-violet-500/30 blur-3xl -translate-y-1/2 -translate-x-1/2 pointer-events-none" />
-        
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 relative z-10 text-center flex flex-col items-center">
-          <div className="relative">
-            <div className="w-24 h-24 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white text-3xl font-black shadow-2xl mb-6 flex-shrink-0 animate-[fadeUp_0.5s_ease_forwards]">
-              {initials}
+      <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+        <div className="bg-white rounded-[2rem] shadow-2xl shadow-slate-200/50 overflow-hidden border border-slate-100">
+          
+          {/* Header Section */}
+          <div className="relative px-8 lg:px-12 pt-12 pb-10 border-b border-slate-100 bg-white">
+            <div className="flex flex-col md:flex-row items-center md:items-start md:justify-between gap-6">
+              
+              {/* User Identity */}
+              <div className="flex flex-col items-center md:items-start gap-4">
+                <div className="flex items-center justify-center w-24 h-24 bg-gradient-to-tr from-indigo-600 to-purple-600 text-white text-4xl font-black rounded-2xl shadow-lg shadow-indigo-200">
+                  {profile.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="text-center md:text-left">
+                  <h1 className="text-3xl lg:text-4xl font-black text-slate-900 tracking-tight flex items-center justify-center md:justify-start gap-3">
+                    {profile.name}
+                    <CheckCircle className="w-7 h-7 text-emerald-500 fill-emerald-50" />
+                  </h1>
+                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-3 text-slate-500 font-medium">
+                    <span className="flex items-center gap-1.5 bg-slate-100 px-3 py-1 rounded-lg text-sm">
+                      <Calendar className="w-4 h-4 text-indigo-500" />
+                      Joined {new Date(profile.joinedAt).getFullYear()}
+                    </span>
+                    <span className="flex items-center gap-1.5 bg-slate-100 px-3 py-1 rounded-lg text-sm">
+                      <MapPin className="w-4 h-4 text-indigo-500" />
+                      SkillValix Scholar
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status and Actions */}
+              <div className="flex flex-col items-center md:items-end gap-4 min-w-[200px]">
+                {profile.openToWork && (
+                  <div className="inline-flex items-center justify-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 px-5 py-2.5 rounded-xl font-bold text-sm shadow-sm animate-pulse-slow">
+                    <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full relative">
+                      <span className="absolute inset-0 bg-emerald-500 rounded-full animate-ping opacity-75"></span>
+                    </span>
+                    Available for Hire
+                  </div>
+                )}
+                
+                {/* Social Links Row */}
+                <div className="flex gap-2">
+                  {profile.github && (
+                    <a href={profile.github.startsWith('http') ? profile.github : `https://${profile.github}`} target="_blank" rel="noopener noreferrer" className="w-12 h-12 flex items-center justify-center rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-200 transition-all hover:shadow-md hover:-translate-y-0.5" title="GitHub">
+                      <Github className="w-5 h-5" />
+                    </a>
+                  )}
+                  {profile.linkedin && (
+                    <a href={profile.linkedin.startsWith('http') ? profile.linkedin : `https://${profile.linkedin}`} target="_blank" rel="noopener noreferrer" className="w-12 h-12 flex items-center justify-center rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 border border-blue-200 transition-all hover:shadow-md hover:-translate-y-0.5" title="LinkedIn">
+                      <Linkedin className="w-5 h-5" />
+                    </a>
+                  )}
+                  {profile.portfolio && (
+                    <a href={profile.portfolio.startsWith('http') ? profile.portfolio : `https://${profile.portfolio}`} target="_blank" rel="noopener noreferrer" className="px-5 h-12 flex items-center justify-center gap-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold border border-indigo-200 transition-all hover:shadow-md hover:-translate-y-0.5" title="Portfolio">
+                      <Globe className="w-5 h-5" />
+                      <span className="hidden sm:inline">Portfolio</span>
+                    </a>
+                  )}
+                  {profile.resume && (
+                    <a href={profile.resume.startsWith('http') ? profile.resume : `https://${profile.resume}`} target="_blank" rel="noopener noreferrer" className="px-5 h-12 flex items-center justify-center gap-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold transition-all hover:shadow-lg hover:shadow-slate-900/20 hover:-translate-y-0.5" title="View Resume">
+                      <FileText className="w-5 h-5" />
+                      <span className="hidden sm:inline">Resume</span>
+                    </a>
+                  )}
+                </div>
+              </div>
             </div>
-            {profile.openToWork && (
-              <div className="absolute -bottom-3 -right-3 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-lg border-2 border-indigo-700 shadow-md flex items-center gap-1 animate-bounce">
-                <Briefcase className="w-3 h-3" /> Hire Me
+          </div>
+
+          {/* Certifications Section */}
+          <div className="p-8 lg:p-12 bg-slate-50">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center shadow-sm">
+                <Award className="w-5 h-5" />
+              </div>
+              <h2 className="text-2xl font-black text-slate-900">Verified Certifications</h2>
+            </div>
+            
+            {profile.certificates?.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {profile.certificates.map(cert => (
+                  <div key={cert.certificateId} className="group bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl hover:border-indigo-200 transition-all hover:-translate-y-1 flex flex-col">
+                    <div className="relative h-40 bg-slate-100 overflow-hidden border-b border-slate-100">
+                      {cert.course?.image && (
+                        <img src={cert.course.image} alt={cert.course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent"></div>
+                      <div className="absolute bottom-4 left-4 right-4">
+                        <span className="bg-indigo-500/90 backdrop-blur-sm text-white text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-md mb-2 inline-block shadow-sm">
+                          Completed
+                        </span>
+                        <h3 className="text-white font-bold leading-tight line-clamp-2">
+                          {cert.course?.title || 'Certification Title'}
+                        </h3>
+                      </div>
+                    </div>
+                    <div className="p-5 flex-1 flex flex-col justify-between gap-4">
+                      <div>
+                        <p className="text-xs font-semibold text-slate-500 mb-1">CREDENTIAL ID</p>
+                        <p className="font-mono text-sm text-slate-800 bg-slate-50 px-2 py-1 rounded border border-slate-100">{cert.certificateId}</p>
+                      </div>
+                      <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+                        <span className="text-sm font-semibold text-slate-500">
+                          {new Date(cert.issueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </span>
+                        <Link to={`/verify/${cert.certificateId}`} className="text-sm font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 group/btn">
+                          Verify
+                          <ChevronRight className="w-4 h-4 group-hover/btn:translate-x-0.5 transition-transform" />
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white border-2 border-dashed border-slate-200 rounded-3xl p-12 text-center">
+                <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Award className="w-8 h-8" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-700 mb-2">No Certifications Yet</h3>
+                <p className="text-slate-500 max-w-sm mx-auto">This academic hasn't completed any SkillValix masterclasses yet. Check back later!</p>
               </div>
             )}
           </div>
-          
-          <h1 className="text-3xl sm:text-5xl font-black text-white leading-tight mb-3">
-            {profile.name}
-          </h1>
-          
-          <div className="flex items-center justify-center gap-4 text-indigo-200 text-sm font-medium mb-5">
-            <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4" /> Joined {joinDate}</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
-            <span className="flex items-center gap-1.5"><Trophy className="w-4 h-4 text-yellow-400" /> {profile.certificates.length} Certifications</span>
-          </div>
 
-          {/* Social Links */}
-          {(profile.github || profile.linkedin || profile.resume) && (
-            <div className="flex items-center justify-center gap-3">
-              {profile.github && (
-                <a href={profile.github.startsWith('http') ? profile.github : `https://${profile.github}`} target="_blank" rel="noopener noreferrer" className="p-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl border border-white/20 transition-colors shadow-sm" title="GitHub">
-                  <Github className="w-5 h-5" />
-                </a>
-              )}
-              {profile.linkedin && (
-                <a href={profile.linkedin.startsWith('http') ? profile.linkedin : `https://${profile.linkedin}`} target="_blank" rel="noopener noreferrer" className="p-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl border border-white/20 transition-colors shadow-sm" title="LinkedIn">
-                  <Linkedin className="w-5 h-5" />
-                </a>
-              )}
-              {profile.resume && (
-                <a href={profile.resume.startsWith('http') ? profile.resume : `https://${profile.resume}`} target="_blank" rel="noopener noreferrer" className="p-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl border border-white/20 transition-colors shadow-sm" title="View Resume">
-                  <FileText className="w-5 h-5" />
-                </a>
-              )}
-            </div>
-          )}
         </div>
-      </div>
 
-      {/* ── CERTIFICATES BOARD ── */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 relative z-10 -mt-16">
-        <h2 className="text-slate-800 text-lg font-black uppercase tracking-widest mb-6 flex items-center gap-2 drop-shadow-sm">
-          <GraduationCap className="w-6 h-6 text-indigo-600" />
-          Verified Accolades
-        </h2>
-
-        {profile.certificates.length === 0 ? (
-          <div className="bg-white border-2 border-dashed border-slate-200 rounded-3xl p-12 text-center shadow-sm">
-            <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
-              <Star className="w-8 h-8 text-slate-300" />
-            </div>
-            <p className="text-slate-600 font-bold text-lg">No certifications yet.</p>
-            <p className="text-slate-400 text-sm mt-1 mb-6 max-w-xs mx-auto">This student is currently working hard on their first certification.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {profile.certificates.map(cert => (
-              <div key={cert.certificateId} className="group bg-white border border-slate-100 hover:border-indigo-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                <div className="h-2 bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400" />
-                <div className="p-6">
-                  <div className="flex items-start gap-4 mb-5">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center flex-shrink-0 shadow-lg shadow-amber-300/40">
-                      <Award className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0 pt-1">
-                      <h3 className="font-extrabold text-slate-900 text-base leading-tight mb-1">
-                        {cert.course?.title || 'Unknown Course'}
-                      </h3>
-                      <p className="text-xs text-slate-500 font-medium flex items-center gap-1">
-                        Issued: {new Date(cert.issueDate).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 mb-4 flex justify-between items-center">
-                    <div>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Credential ID</p>
-                      <p className="text-xs font-mono font-bold text-slate-600">{cert.certificateId}</p>
-                    </div>
-                    {cert.course?.slug && (
-                      <Link to={`/courses/${cert.course.slug}`} className="text-indigo-600 hover:bg-indigo-50 p-1.5 rounded-lg transition-colors" title="View Course">
-                        <ExternalLink className="w-4 h-4" />
-                      </Link>
-                    )}
-                  </div>
-                  
-                  <a
-                    href={`/verify/${cert.certificateId}`}
-                    target="_blank" rel="noopener noreferrer"
-                    className="w-full relative overflow-hidden bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[.98]"
-                  >
-                    View Official Credential <ArrowRight className="w-3.5 h-3.5" />
-                  </a>
-                </div>
-              </div>
-            ))}
+        {/* Marketing Footer (Viral Loop) */}
+        {!loading && !error && (
+          <div className="mt-12 text-center bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
+            <h3 className="text-lg font-bold text-slate-800 mb-2">Want to showcase your own skills?</h3>
+            <p className="text-slate-500 mb-5 max-w-lg mx-auto">Join SkillValix today to master web development, earn verified credentials, and land your dream role.</p>
+            <Link to="/" className="inline-flex items-center justify-center px-6 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold border border-indigo-200 rounded-xl transition-colors">
+              Get Started for Free
+            </Link>
           </div>
         )}
-
-        {/* ── CALL TO ACTION ── */}
-        <div className="mt-16 bg-gradient-to-br from-blue-50 to-indigo-50 border border-indigo-100 rounded-3xl p-8 sm:p-12 text-center relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-400/10 rounded-full blur-3xl" />
-          <div className="relative z-10">
-            <h3 className="text-2xl font-black text-slate-900 mb-3">Want your own Portfolio?</h3>
-            <p className="text-slate-600 max-w-md mx-auto mb-8 font-medium">
-              Join SkillValix to learn web development for free and earn verifiable certificates you can share with employers.
-            </p>
-            <div className="flex justify-center flex-wrap gap-4">
-              <Link to="/register" className="px-8 py-3.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-600/20 transition-all hover:-translate-y-0.5">
-                Join for Free
-              </Link>
-              <Link to="/courses" className="px-8 py-3.5 bg-white text-slate-700 font-bold rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all">
-                Browse Courses
-              </Link>
-            </div>
-          </div>
-        </div>
-
-      </div>
+      </main>
     </div>
   );
 }
