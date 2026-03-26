@@ -7,7 +7,8 @@ const API_BASE = import.meta.env.VITE_API_URL || 'https://api.skillvalix.com/api
 import {
   Download, CheckCircle, Award, Share2, BookOpen,
   ArrowRight, Loader2, Trophy, GraduationCap, Medal,
-  Sparkles, Clock, Star, Linkedin, Github, FileText, User, Settings, Briefcase, X, Save
+  Sparkles, Clock, Star, Linkedin, Github, FileText, Globe,
+  User, Settings, Briefcase, X, Save
 } from 'lucide-react';
 
 /* ────────────────────────────────────────────
@@ -462,11 +463,20 @@ const Dashboard = () => {
       {/* ── MAIN CONTENT ── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
         
-        {/* Tab Navigation */}
-        <div className="flex border-b border-slate-200 mb-8 overflow-x-auto select-none no-scrollbar">
-          <button onClick={() => setActiveTab('learning')} className={`px-5 py-3.5 text-sm font-bold border-b-2 whitespace-nowrap transition-colors ${activeTab === 'learning' ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-slate-500 hover:text-slate-800'}`}>My Learning Path</button>
-          <button onClick={() => setActiveTab('certificates')} className={`px-5 py-3.5 text-sm font-bold border-b-2 whitespace-nowrap transition-colors ${activeTab === 'certificates' ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-slate-500 hover:text-slate-800'}`}>Verified Certificates</button>
-          <button onClick={() => setActiveTab('profile')} className={`px-5 py-3.5 text-sm font-bold border-b-2 whitespace-nowrap transition-colors ${activeTab === 'profile' ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-slate-500 hover:text-slate-800'}`}>Public Profile Settings</button>
+        {/* Tab Navigation — always fully visible on mobile with equal-width buttons */}
+        <div className="grid grid-cols-3 border-b border-slate-200 mb-8">
+          <button onClick={() => setActiveTab('learning')} className={`py-3.5 text-xs sm:text-sm font-bold border-b-2 transition-colors text-center flex flex-col items-center gap-1 ${activeTab === 'learning' ? 'border-indigo-600 text-indigo-700 bg-indigo-50/40' : 'border-transparent text-slate-500 hover:text-slate-800'}`}>
+            <BookOpen className="w-4 h-4" />
+            Learning
+          </button>
+          <button onClick={() => setActiveTab('certificates')} className={`py-3.5 text-xs sm:text-sm font-bold border-b-2 transition-colors text-center flex flex-col items-center gap-1 ${activeTab === 'certificates' ? 'border-indigo-600 text-indigo-700 bg-indigo-50/40' : 'border-transparent text-slate-500 hover:text-slate-800'}`}>
+            <Medal className="w-4 h-4" />
+            Certificates
+          </button>
+          <button onClick={() => setActiveTab('profile')} className={`py-3.5 text-xs sm:text-sm font-bold border-b-2 transition-colors text-center flex flex-col items-center gap-1 ${activeTab === 'profile' ? 'border-indigo-600 text-indigo-700 bg-indigo-50/40' : 'border-transparent text-slate-500 hover:text-slate-800'}`}>
+            <User className="w-4 h-4" />
+            Portfolio
+          </button>
         </div>
 
         <div className="space-y-10">
