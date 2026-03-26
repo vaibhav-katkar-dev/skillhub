@@ -258,6 +258,94 @@ const BlogPost = () => {
           )}
         </aside>
       </div>
+
+      {/* ── Continue Reading ─────────────────────────────────────────────────── */}
+      {(() => {
+        // Priority: same-category first, then fill with any other posts
+        const sameCat = blogPosts.filter(p => p.id !== post.id && p.category === post.category);
+        const others  = blogPosts.filter(p => p.id !== post.id && p.category !== post.category);
+        const suggested = [...sameCat, ...others].slice(0, 3);
+        if (suggested.length === 0) return null;
+
+        return (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 pb-20">
+            {/* Section header */}
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <p className="text-xs font-bold text-indigo-600 uppercase tracking-widest mb-1">Keep Learning</p>
+                <h2 className="text-2xl sm:text-3xl font-black text-slate-900">Continue Reading</h2>
+              </div>
+              <Link
+                to="/blog"
+                className="hidden sm:flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-indigo-600 transition-colors"
+              >
+                All Articles <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+
+            {/* Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {suggested.map(p => (
+                <Link
+                  key={p.id}
+                  to={`/blog/${p.id}`}
+                  className="group bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col"
+                >
+                  {/* Thumbnail */}
+                  <div className="relative h-40 overflow-hidden flex-shrink-0">
+                    <img
+                      src={p.imageUrl}
+                      alt={p.imageAlt || p.title}
+                      loading="lazy"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                    <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-indigo-700 text-xs font-bold px-2.5 py-1 rounded-full">
+                      {p.category}
+                    </span>
+                  </div>
+
+                  {/* Body */}
+                  <div className="p-4 flex flex-col flex-grow">
+                    <div className="flex items-center gap-3 text-xs text-slate-400 mb-2">
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" /> {p.readTime}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3" /> {p.date}
+                      </span>
+                    </div>
+                    <h3 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors leading-snug line-clamp-2 mb-2">
+                      {p.title}
+                    </h3>
+                    <p className="text-xs text-slate-500 leading-relaxed line-clamp-2 flex-grow mb-3">
+                      {p.excerpt}
+                    </p>
+                    <div className="flex items-center justify-between pt-3 border-t border-slate-100 mt-auto">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-5 h-5 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center flex-shrink-0">
+                          <span className="text-white text-[10px] font-bold">{p.author.charAt(0)}</span>
+                        </div>
+                        <span className="text-xs font-semibold text-slate-600 truncate max-w-[100px]">{p.author}</span>
+                      </div>
+                      <span className="text-indigo-600 text-xs font-bold flex items-center gap-0.5 group-hover:gap-1.5 transition-all">
+                        Read <ArrowRight className="w-3.5 h-3.5" />
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            {/* Mobile "all articles" link */}
+            <div className="sm:hidden text-center mt-6">
+              <Link to="/blog" className="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600 hover:underline">
+                Browse all articles <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 };

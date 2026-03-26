@@ -794,58 +794,133 @@ export default function Home() {
         <div style={{ position:'absolute', width:600, height:600, borderRadius:'50%', background:'rgba(255,255,255,0.07)', filter:'blur(80px)', top:'-30%', left:'-10%', animation:'floatA 11s ease-in-out infinite', pointerEvents:'none' }} />
         <div style={{ position:'absolute', width:500, height:500, borderRadius:'50%', background:'rgba(236,72,153,0.18)', filter:'blur(80px)', bottom:'-25%', right:'-10%', animation:'floatB 13s ease-in-out infinite', pointerEvents:'none' }} />
 
-        <div style={{ position:'relative', zIndex:10, textAlign:'center', maxWidth:840, width:'100%' }}>
-          {/* Mini badge */}
-          <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(255,255,255,0.12)', border:'1px solid rgba(255,255,255,0.2)', borderRadius:100, padding:'7px 18px', marginBottom:36, backdropFilter:'blur(10px)' }}>
-            <Target size={14} style={{ color:'#fbbf24' }} />
-            <span style={{ fontSize:13, fontWeight:600, color:'rgba(255,255,255,0.8)' }}>Join 2,800+ learners already on the platform</span>
-          </div>
+        <div style={{ position:'relative', zIndex:10, maxWidth:1100, width:'100%', display:'flex', flexDirection:'column', lg:{flexDirection:'row'}, alignItems:'center', gap:{xs:60, lg:80} }} className="lg:flex-row">
+          
+          {/* Left Text */}
+          <div style={{ flex:1, textAlign:'left', maxWidth:600 }} className="text-center lg:text-left mx-auto lg:mx-0">
+            {/* Mini badge */}
+            <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(255,255,255,0.12)', border:'1px solid rgba(255,255,255,0.2)', borderRadius:100, padding:'7px 18px', marginBottom:36, backdropFilter:'blur(10px)' }}>
+              <Target size={14} style={{ color:'#fbbf24' }} />
+              <span style={{ fontSize:13, fontWeight:600, color:'rgba(255,255,255,0.8)' }}>Join 2,800+ learners already on the platform</span>
+            </div>
 
-          <h2 style={{ fontSize:'clamp(2.2rem,6vw,4rem)', fontWeight:900, color:'#fff', lineHeight:1.0, marginBottom:24, letterSpacing:'-0.02em' }}>
-            Your career in tech<br />
-            <span style={{ background:'linear-gradient(135deg,#e0e7ff,#c4b5fd,#f9a8d4)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>
-              starts right here.
-            </span>
-          </h2>
-
-          <p style={{ fontSize:18, color:'rgba(255,255,255,0.65)', maxWidth:560, margin:'0 auto 48px', lineHeight:1.75, fontWeight:400 }}>
-            100% free courses. Interactive learning. Verifiable certificates. Join the community today.
-          </p>
-
-          <div style={{ display:'flex', flexWrap:'wrap', alignItems:'center', justifyContent:'center', gap:16 }}>
-            <Link to="/register" id="cta-create-account" style={{
-              display:'inline-flex', alignItems:'center', gap:10,
-              background:'#fff', color:'#4338ca', fontWeight:800, fontSize:17,
-              padding:'18px 44px', borderRadius:16, textDecoration:'none',
-              boxShadow:'0 4px 28px rgba(0,0,0,0.25)',
-              transition:'transform .2s, box-shadow .2s',
-            }}
-            onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px) scale(1.03)';e.currentTarget.style.boxShadow='0 8px 40px rgba(0,0,0,0.35)';}}
-            onMouseLeave={e=>{e.currentTarget.style.transform='';e.currentTarget.style.boxShadow='0 4px 28px rgba(0,0,0,0.25)';}}
-            >
-              <Rocket size={20} /> Create Free Account
-            </Link>
-            <Link to="/courses" id="cta-browse-courses" style={{
-              display:'inline-flex', alignItems:'center', gap:10,
-              background:'rgba(255,255,255,0.12)', color:'#fff', fontWeight:700, fontSize:17,
-              padding:'17px 36px', borderRadius:16, textDecoration:'none',
-              border:'2px solid rgba(255,255,255,0.3)',
-              transition:'all .2s',
-            }}
-            onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.2)';e.currentTarget.style.borderColor='rgba(255,255,255,0.6)';e.currentTarget.style.transform='translateY(-2px)';}}
-            onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.12)';e.currentTarget.style.borderColor='rgba(255,255,255,0.3)';e.currentTarget.style.transform='';}}
-            >
-              <BookOpen size={20} /> Browse Courses
-            </Link>
-          </div>
-
-          {/* Trust strip */}
-          <div style={{ display:'flex', flexWrap:'wrap', justifyContent:'center', gap:'8px 28px', marginTop:40 }}>
-            {['No credit card','Always free','Cancel anytime'].map((t,i) => (
-              <span key={i} style={{ display:'flex', alignItems:'center', gap:7, fontSize:13, color:'rgba(255,255,255,0.5)', fontWeight:500 }}>
-                <CheckCircle2 size={15} style={{ color:'rgba(52,211,153,0.7)' }} />{t}
+            <h2 style={{ fontSize:'clamp(2.2rem,5vw,3.5rem)', fontWeight:900, color:'#fff', lineHeight:1.05, marginBottom:24, letterSpacing:'-0.02em' }}>
+              Your career in tech<br />
+              <span style={{ background:'linear-gradient(135deg,#e0e7ff,#c4b5fd,#f9a8d4)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>
+                starts right here.
               </span>
-            ))}
+            </h2>
+
+            <p style={{ fontSize:18, color:'rgba(255,255,255,0.65)', maxWidth:560, margin:'0 auto 48px', lineHeight:1.75, fontWeight:400 }} className="lg:ml-0">
+              100% free courses. Interactive learning. Verifiable certificates. Join the community today.
+            </p>
+
+            <div style={{ display:'flex', flexWrap:'wrap', alignItems:'center', justifyContent:'center', gap:16 }} className="lg:justify-start">
+              <Link to="/register" id="cta-create-account" style={{
+                display:'inline-flex', alignItems:'center', gap:10,
+                background:'#fff', color:'#4338ca', fontWeight:800, fontSize:17,
+                padding:'18px 44px', borderRadius:16, textDecoration:'none',
+                boxShadow:'0 4px 28px rgba(0,0,0,0.25)',
+                transition:'transform .2s, box-shadow .2s',
+              }}
+              onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px) scale(1.03)';e.currentTarget.style.boxShadow='0 8px 40px rgba(0,0,0,0.35)';}}
+              onMouseLeave={e=>{e.currentTarget.style.transform='';e.currentTarget.style.boxShadow='0 4px 28px rgba(0,0,0,0.25)';}}
+              >
+                <Rocket size={20} /> Create Free Account
+              </Link>
+              <Link to="/courses" id="cta-browse-courses" style={{
+                display:'inline-flex', alignItems:'center', gap:10,
+                background:'rgba(255,255,255,0.12)', color:'#fff', fontWeight:700, fontSize:17,
+                padding:'17px 36px', borderRadius:16, textDecoration:'none',
+                border:'2px solid rgba(255,255,255,0.3)',
+                transition:'all .2s',
+              }}
+              onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.2)';e.currentTarget.style.borderColor='rgba(255,255,255,0.6)';e.currentTarget.style.transform='translateY(-2px)';}}
+              onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.12)';e.currentTarget.style.borderColor='rgba(255,255,255,0.3)';e.currentTarget.style.transform='';}}
+              >
+                <BookOpen size={20} /> Browse Courses
+              </Link>
+            </div>
+
+            {/* Trust strip */}
+            <div style={{ display:'flex', flexWrap:'wrap', justifyContent:'center', gap:'8px 28px', marginTop:40 }} className="lg:justify-start">
+              {['No credit card','Always free','Cancel anytime'].map((t,i) => (
+                <span key={i} style={{ display:'flex', alignItems:'center', gap:7, fontSize:13, color:'rgba(255,255,255,0.5)', fontWeight:500 }}>
+                  <CheckCircle2 size={15} style={{ color:'rgba(52,211,153,0.7)' }} />{t}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Right Floating Certificate (CSS Only, 0kb network) */}
+          <div className="hidden lg:block relative" style={{ flex:1, maxWidth:450, perspective:1000 }}>
+            <div style={{
+              width:'100%', aspectRatio:'1.4/1', background:'#fff', borderRadius:16,
+              transform:'rotateY(-15deg) rotateX(10deg) rotateZ(4deg)',
+              boxShadow:'-20px 30px 60px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(0,0,0,0.05)',
+              padding:32, position:'relative', overflow:'hidden',
+              animation:'floatA 6s ease-in-out infinite alternate',
+              border:'8px solid #f8fafc'
+            }}>
+              {/* Certificate Inner Border */}
+              <div style={{ position:'absolute', inset:12, border:'2px solid #e2e8f0', borderRadius:8 }} />
+              <div style={{ position:'absolute', inset:16, border:'1px solid #f1f5f9', borderRadius:4 }} />
+              
+              {/* Certificate Content Header */}
+              <div style={{ textAlign:'center', marginTop:10 }}>
+                <div style={{ fontSize:10, fontWeight:800, color:'#4f46e5', letterSpacing:'0.2em', textTransform:'uppercase', marginBottom:8 }}>SkillValix</div>
+                <div style={{ fontSize:22, fontWeight:900, color:'#0f172a', fontFamily:'serif' }}>Certificate of Completion</div>
+                <div style={{ fontSize:9, color:'#64748b', marginTop:4, textTransform:'uppercase', letterSpacing:'0.1em' }}>This is to certify that</div>
+              </div>
+
+              {/* Fake Name line */}
+              <div style={{ marginTop:24, textAlign:'center' }}>
+                <div style={{ borderBottom:'1px solid #cbd5e1', width:'70%', margin:'0 auto', paddingBottom:4 }}>
+                  <span style={{ fontSize:18, fontStyle:'italic', color:'#1e293b', fontFamily:'serif' }}>Student Name</span>
+                </div>
+              </div>
+
+              {/* Fake info */}
+              <div style={{ textAlign:'center', marginTop:12 }}>
+                <div style={{ fontSize:9, color:'#64748b' }}>has successfully completed the online course</div>
+                <div style={{ fontSize:12, fontWeight:700, color:'#334155', marginTop:4 }}>The Ultimate Web Masterclass</div>
+              </div>
+
+              {/* Bottom Signatures & Seal */}
+              <div style={{ position:'absolute', bottom:32, left:32, right:32, display:'flex', justifyContent:'space-between', alignItems:'flex-end' }}>
+                <div style={{ textAlign:'center', width:90 }}>
+                  <div style={{ borderBottom:'1px solid #cbd5e1', height:20, display:'flex', alignItems:'flex-end', justifyContent:'center' }}>
+                    <span style={{ fontFamily:'cursive', fontSize:14, color:'#334155' }}>V.Katkar</span>
+                  </div>
+                  <div style={{ fontSize:7, color:'#94a3b8', marginTop:4, textTransform:'uppercase' }}>Instructor</div>
+                </div>
+
+                {/* Gold Seal */}
+                <div style={{
+                  width:56, height:56, borderRadius:'50%',
+                  background:'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)',
+                  boxShadow:'0 4px 12px rgba(217,119,6,0.4)',
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  position:'relative'
+                }}>
+                  <div style={{ position:'absolute', inset:3, border:'1px dashed rgba(255,255,255,0.6)', borderRadius:'50%' }} />
+                  <Award size={24} style={{ color:'#fff' }} />
+                </div>
+
+                <div style={{ textAlign:'center', width:90 }}>
+                  <div style={{ borderBottom:'1px solid #cbd5e1', height:20, fontSize:10, color:'#334155', display:'flex', alignItems:'flex-end', justifyContent:'center' }}>
+                    {new Date().toLocaleDateString('en-GB')}
+                  </div>
+                  <div style={{ fontSize:7, color:'#94a3b8', marginTop:4, textTransform:'uppercase' }}>Date Issued</div>
+                </div>
+              </div>
+
+              {/* Glare effect */}
+              <div style={{ position:'absolute', inset:0, background:'linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.4) 25%, transparent 30%)', pointerEvents:'none' }} />
+            </div>
+
+            {/* Glowing shadow base */}
+            <div style={{ position:'absolute', bottom:-40, left:'10%', right:'10%', height:20, background:'rgba(0,0,0,0.5)', filter:'blur(20px)', borderRadius:'50%', zIndex:-1, transform:'rotateX(80deg)' }} />
           </div>
         </div>
       </section>

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useParams, Link } from 'react-router-dom';
 import { getCourseBySlug } from '../data/courseLoader';
-import { PlayCircle, ShieldCheck, ListTodo, Loader2, BookOpen, Clock } from 'lucide-react';
+import { PlayCircle, ShieldCheck, ListTodo, Loader2, BookOpen, Clock, Award, Sparkles, Zap } from 'lucide-react';
 
 const THEMES = {
   blue: 'from-blue-600 to-indigo-700',
@@ -31,7 +31,7 @@ const CourseDetail = () => {
       }
     };
     fetchCourse();
-    
+
     const savedProgress = JSON.parse(localStorage.getItem('skillvalix_progress')) || {};
     if (savedProgress[slug]) {
       setCompletedLessons(savedProgress[slug]);
@@ -92,7 +92,7 @@ const CourseDetail = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Progress Bar Override (Demo) */}
         <div className="relative z-10 mt-8 bg-black/20 rounded-xl p-4 backdrop-blur-md border border-white/10">
           <div className="flex justify-between items-end mb-2">
@@ -113,8 +113,8 @@ const CourseDetail = () => {
         </h2>
         <div className="space-y-4">
           {lessons.map((lesson, idx) => (
-            <Link 
-              key={lesson._id} 
+            <Link
+              key={lesson._id}
               to={`/courses/${slug}/lesson/${lesson._id}`}
               className="group flex items-center p-5 bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-300 transition-all"
             >
@@ -129,18 +129,132 @@ const CourseDetail = () => {
           ))}
         </div>
 
-        {/* Final Quiz CTA */}
-        <div className="mt-8 p-6 bg-emerald-50 border border-emerald-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
-          <div>
-            <h3 className="text-xl font-bold text-emerald-800 mb-1">Certification Exam</h3>
-            <p className="text-emerald-700">Complete all modules, then sit the exam to earn your verified certificate.</p>
+        {/* ── Premium Exam CTA (Light / Gold Theme) ─────────── */}
+        <style>{`
+          @keyframes goldShimmer {
+            0%   { background-position: 200% center }
+            100% { background-position: -200% center }
+          }
+          @keyframes goldBorderSweep {
+            0%,100% { opacity: 0.5 }
+            50%      { opacity: 1 }
+          }
+          @keyframes goldFloat {
+            0%,100% { transform: translateY(0px) rotate(0deg) }
+            50%     { transform: translateY(-5px) rotate(10deg) }
+          }
+          @keyframes goldBtnShine {
+            0%   { background-position: -200% center }
+            100% { background-position: 200% center }
+          }
+          @keyframes softPing {
+            0%       { transform:scale(1); opacity:.6 }
+            75%,100% { transform:scale(2); opacity:0 }
+          }
+          .exam-gold-txt {
+            background: linear-gradient(90deg, #b45309, #d97706, #f59e0b, #fbbf24, #d97706, #b45309);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: goldShimmer 4s linear infinite;
+          }
+          .exam-gold-btn {
+            background: linear-gradient(100deg, #f59e0b 0%, #fbbf24 30%, #fff8e7 50%, #fbbf24 70%, #f59e0b 100%);
+            background-size: 220% auto;
+            animation: goldBtnShine 3s linear infinite;
+            transition: transform .2s ease, box-shadow .2s ease;
+          }
+          .exam-gold-btn:hover {
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 8px 28px rgba(245,158,11,0.40);
+          }
+        `}</style>
+
+        <div
+          style={{
+            marginTop: 40,
+            position: 'relative',
+            borderRadius: 24,
+            overflow: 'hidden',
+            background: '#fffdf5',
+            border: '1.5px solid #fde68a',
+            boxShadow: '0 4px 32px rgba(245,158,11,0.10), 0 1px 6px rgba(0,0,0,0.05)',
+            padding: '36px 32px',
+          }}
+        >
+          {/* Soft gold ambient wash */}
+          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 80% 70% at 50% 110%, rgba(253,230,138,0.35) 0%, transparent 70%)', pointerEvents: 'none' }} />
+
+          {/* Subtle dot pattern */}
+          <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle, rgba(245,158,11,0.12) 1px, transparent 1px)', backgroundSize: '24px 24px', pointerEvents: 'none' }} />
+
+          {/* Floating sparkle icons */}
+          <div style={{ position: 'absolute', top: 18, right: 22, animation: 'goldFloat 4s ease-in-out infinite', pointerEvents: 'none' }}>
+            <Sparkles style={{ color: '#fbbf24', width: 20, height: 20, opacity: 0.7 }} />
           </div>
-          <Link 
-            to={`/courses/${slug}/quiz`}
-            className="flex-shrink-0 whitespace-nowrap bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-3 rounded-lg font-medium shadow-md shadow-emerald-600/20 transition-all active:scale-95 text-center"
-          >
-            Take Exam
-          </Link>
+          <div style={{ position: 'absolute', bottom: 18, right: 64, animation: 'goldFloat 6s ease-in-out infinite 1.5s', pointerEvents: 'none' }}>
+            <Award style={{ color: '#d97706', width: 17, height: 17, opacity: 0.5 }} />
+          </div>
+
+          {/* Content */}
+          <div style={{ position: 'relative', zIndex: 10 }}>
+            {/* Badge */}
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fef3c7', border: '1px solid #fde68a', borderRadius: 100, padding: '5px 14px', marginBottom: 18 }}>
+              <span style={{ position: 'relative', display: 'flex', width: 7, height: 7 }}>
+                <span style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: '#f59e0b', animation: 'softPing 2.4s ease-out infinite' }} />
+                <span style={{ position: 'relative', width: 7, height: 7, borderRadius: '50%', background: '#f59e0b', display: 'block' }} />
+              </span>
+              <span style={{ fontSize: 11, fontWeight: 800, color: '#92400e', letterSpacing: '0.07em', textTransform: 'uppercase' }}>Certification Exam</span>
+            </div>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 24 }}>
+              {/* Left: text */}
+              <div style={{ flex: 1, minWidth: 220 }}>
+                <h3 style={{ fontSize: 'clamp(1.4rem,3vw,1.9rem)', fontWeight: 900, color: '#1e293b', lineHeight: 1.15, marginBottom: 10 }}>
+                  Ready to get{' '}
+                  <span className="exam-gold-txt">certified?</span>
+                </h3>
+                <p style={{ fontSize: 14, color: '#64748b', lineHeight: 1.75, maxWidth: 400, marginBottom: 18 }}>
+                  Complete the modules above, then sit the exam. Pass once and earn your verifiable PDF certificate instantly.
+                </p>
+
+                {/* Trust badges */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 18px' }}>
+                  {[
+                    { icon: ShieldCheck, text: 'Tamper-proof certificate', color: '#059669' },
+                    { icon: Award, text: 'Unique verification ID', color: '#7c3aed' },
+                    { icon: Zap, text: 'Instant PDF download', color: '#d97706' },
+                  ].map(({ icon: Icon, text, color }) => (
+                    <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12.5, fontWeight: 500, color: '#64748b' }}>
+                      <Icon style={{ width: 14, height: 14, color, flexShrink: 0 }} />
+                      {text}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right: CTA */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                <Link
+                  to={`/courses/${slug}/quiz`}
+                  id="take-exam-cta"
+                  className="exam-gold-btn"
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 10,
+                    color: '#78350f', fontWeight: 800, fontSize: 15,
+                    padding: '15px 32px', borderRadius: 14,
+                    textDecoration: 'none', whiteSpace: 'nowrap',
+                    boxShadow: '0 4px 16px rgba(245,158,11,0.25)',
+                  }}
+                >
+                  <Award style={{ width: 18, height: 18 }} />
+                  Take Exam →
+                </Link>
+                <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500 }}>No time limit · click to attempt</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

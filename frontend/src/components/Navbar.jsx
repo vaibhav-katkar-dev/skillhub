@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { Menu, X, ChevronRight } from 'lucide-react';
 import Logo from './Logo';
@@ -11,12 +11,66 @@ const navLinks = [
   { to: '/verify', label: 'Verify Certificate' },
 ];
 
+// Pages where the hide-on-scroll behaviour is active
+const HIDE_ON_SCROLL_PATHS = ['/', '/courses', '/blog'];
+
 const Navbar = () => {
   const { isAuthenticated, user, logout } = useAuthStore();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen]       = useState(false);
+  const [visible, setVisible]             = useState(true);
+  const [atTop, setAtTop]                 = useState(true);
+  const lastScrollY                       = useRef(0);
+  const location                          = useLocation();
+
+  const hideOnScroll = HIDE_ON_SCROLL_PATHS.includes(location.pathname);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMenuOpen(false);
+    // Reset visibility when page changes
+    setVisible(true);
+    setAtTop(true);
+    lastScrollY.current = 0;
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!hideOnScroll) {
+      // Always visible on other pages
+      setVisible(true);
+      return;
+    }
+
+    const handleScroll = () => {
+      const y = window.scrollY;
+      setAtTop(y < 10);
+
+      if (y < 10) {
+        // Always show at very top
+        setVisible(true);
+      } else if (y > lastScrollY.current && y > 80) {
+        // Scrolling DOWN — hide
+        setVisible(false);
+        setIsMenuOpen(false); // close mobile menu if open
+      } else if (y < lastScrollY.current) {
+        // Scrolling UP — reveal
+        setVisible(true);
+      }
+      lastScrollY.current = y;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [hideOnScroll]);
 
   return (
-    <nav className="bg-white/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+    <nav
+      className={`
+        bg-white/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50
+        transition-transform duration-300 ease-in-out
+        ${visible ? 'translate-y-0' : '-translate-y-full'}
+        ${atTop ? 'shadow-none' : 'shadow-md'}
+      `}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
 
@@ -90,7 +144,7 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Mobile Hamburger — only visible on small screens */}
+          {/* Mobile Hamburger */}
           <button
             className="md:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -101,7 +155,7 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Dropdown Menu — only on small screens */}
+      {/* Mobile Dropdown Menu */}
       {isMenuOpen && (
         <div className="md:hidden border-t border-slate-100 bg-white px-4 py-3 space-y-1 shadow-lg">
           {navLinks.map(({ to, label }) => (

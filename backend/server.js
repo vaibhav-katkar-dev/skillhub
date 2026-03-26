@@ -88,6 +88,11 @@ app.use('/api/auth/register', authLimiter);
 app.use('/api/certificates/download', certLimiter);
 
 // ── Routes ─────────────────────────────────────────────────
+app.use('/api/auth', ensureDatabaseConnection);
+app.use('/api/quizzes', ensureDatabaseConnection);
+app.use('/api/certificates', ensureDatabaseConnection);
+app.use('/api/payments', ensureDatabaseConnection);
+
 app.use('/api/auth', authRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/quizzes', quizRoutes);
@@ -116,6 +121,11 @@ if (!cachedDb) {
 }
 
 async function connectToDatabase() {
+  if (mongoose.connection.readyState === 1) {
+    cachedDb.conn = mongoose;
+    return cachedDb.conn;
+  }
+
   if (cachedDb.conn) {
     // Reuse existing connection pool across serverless invocations
     return cachedDb.conn;
@@ -141,6 +151,19 @@ async function connectToDatabase() {
     throw e;
   }
   return cachedDb.conn;
+}
+
+async function ensureDatabaseConnection(req, res, next) {
+  try {
+    await connectToDatabase();
+    next();
+  } catch (err) {
+    console.error('❌ Request blocked: database unavailable:', err?.message || err);
+    res.status(503).json({
+      message: 'Database temporarily unavailable. Please try again in a moment.',
+      success: false,
+    });
+  }
 }
 
 // Initialize connection. Vercel container keeps this alive across warm starts.
