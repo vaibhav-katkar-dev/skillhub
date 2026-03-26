@@ -527,12 +527,12 @@ router.get('/download/:certId', async (req, res) => {
        .fillColor('#2563EB').text('valix', { lineBreak: false, characterSpacing: -2 });
 
     // Underline
-    doc.moveTo(245, 155).lineTo(520, 155).lineWidth(0.8).strokeOpacity(0.35).strokeColor('#d1d5db').stroke();
+    doc.moveTo(245, 155).lineTo(580, 155).lineWidth(1.2).strokeOpacity(0.3).strokeColor('#d1d5db').stroke();
     doc.strokeOpacity(1);
 
-    // Tagline
-    doc.fontSize(8).font('Helvetica-Bold').fillColor('#9ca3af')
-       .text('LEARN  ·  VALIDATE  ·  GROW', 245, 170, { lineBreak: false, characterSpacing: 3 });
+    // Tagline — fontSize compensates for LOGO_SCALE so it renders visibly (~10px on page)
+    doc.fontSize(24).font('Helvetica-Bold').fillColor('#9ca3af')
+       .text('LEARN  ·  VALIDATE  ·  GROW', 245, 172, { lineBreak: false, characterSpacing: 3.5 });
 
     doc.restore();
 
