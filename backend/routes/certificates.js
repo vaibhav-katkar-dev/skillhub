@@ -10,9 +10,19 @@ import { v4 as uuidv4 } from 'uuid';
 import { authOptions } from '../middleware/auth.js';
 import { getCourseFromJSON, getAllCoursesFromJSON } from '../utils/courseData.js';
 
+import fs from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-// MSME logo is drawn as vectors — no external file needed
+
+// ── MSME logo: read once at startup into memory, reused on every request ──
+const MSME_LOGO_PATH = path.join(__dirname, '../assets/msme-logo.png');
+let _msmeBuf = null;
+function getMsmeBuf() {
+  if (!_msmeBuf && fs.existsSync(MSME_LOGO_PATH)) {
+    _msmeBuf = fs.readFileSync(MSME_LOGO_PATH);
+  }
+  return _msmeBuf;
+}
 
 const router = express.Router();
 
@@ -542,74 +552,11 @@ router.get('/download/:certId', async (req, res) => {
 
     doc.restore();
 
-    // ── MSME Logo (Top Right of Content Area) — pure vector, no PNG file ──
-    {
-      // Position: just to the left of the blue sidebar, top-aligned with SkillValix logo
-      const MX = SIDEBAR_X - 130;  // left edge of the MSME block
-      const MY = LY + 4;           // top edge
-
-      doc.save();
-
-      // ── Ashoka Pillar (simplified geometric representation) ──────────────
-      const PX = MX;       // pillar area left
-      const PY = MY;       // pillar area top
-      const PH = 52;       // total pillar height
-      const PW = 34;       // pillar area width
-
-      // Capital / Lion head block (dark grey rounded rect)
-      doc.roundedRect(PX + 4, PY, PW - 8, 14, 3).fill('#3a3a3a');
-
-      // Three lion dots (symbolising lion heads)
-      doc.circle(PX + 9,  PY + 7, 3.5).fill('#1a1a1a');
-      doc.circle(PX + PW / 2, PY + 7, 3.5).fill('#1a1a1a');
-      doc.circle(PX + PW - 9, PY + 7, 3.5).fill('#1a1a1a');
-
-      // Abacus band
-      doc.rect(PX + 2, PY + 14, PW - 4, 5).fill('#555555');
-
-      // Dharmachakra wheel (circle with spokes)
-      const WCX = PX + PW / 2;
-      const WCY = PY + 24;
-      doc.circle(WCX, WCY, 7).lineWidth(1.5).strokeColor('#333333').stroke();
-      doc.circle(WCX, WCY, 1.5).fill('#333333');
-      for (let sp = 0; sp < 8; sp++) {
-        const ang = (sp * Math.PI) / 4;
-        doc.moveTo(WCX + Math.cos(ang) * 2, WCY + Math.sin(ang) * 2)
-           .lineTo(WCX + Math.cos(ang) * 6.5, WCY + Math.sin(ang) * 6.5)
-           .lineWidth(0.8).strokeColor('#333333').stroke();
-      }
-
-      // Base / plinth
-      doc.roundedRect(PX + 1, PY + 31, PW - 2, 10, 2).fill('#444444');
-
-      // Shaft
-      doc.roundedRect(PX + PW / 2 - 2.5, PY + 41, 5, PH - 41, 1).fill('#555555');
-
-      // "Satyamev Jayate" tiny text
-      doc.fontSize(4.5).font('Helvetica').fillColor('#555555')
-         .text('SATYAMEV JAYATE', PX - 2, MY + PH + 1, { width: PW + 4, align: 'center', lineBreak: false });
-
-      // ── MSME red bold letters ──────────────────────────────────────────────
-      const TX = PX + PW + 5;  // text area left
-      const TY = MY - 2;
-      const RED = '#CC0000';
-
-      doc.fontSize(22).font('Helvetica-Bold').fillColor(RED)
-         .text('MSME', TX, TY, { lineBreak: false, characterSpacing: 1.5 });
-
-      // Horizontal rule below MSME
-      doc.moveTo(TX, TY + 26).lineTo(TX + 82, TY + 26)
-         .lineWidth(1).strokeColor('#333333').stroke();
-
-      // Hindi subtitle (simplified as transliterated text to avoid font issues)
-      doc.fontSize(6).font('Helvetica').fillColor('#111111')
-         .text('Sukshm, Laghu evam Madhyam Udyam', TX, TY + 29, { width: 84, lineBreak: false });
-
-      // English subtitle
-      doc.fontSize(5.5).font('Helvetica-Bold').fillColor('#111111')
-         .text('MICRO, SMALL & MEDIUM ENTERPRISES', TX, TY + 40, { width: 84, lineBreak: false });
-
-      doc.restore();
+    // ── MSME Logo (Top Right of Content Area) — cached PNG buffer, one disk read ever ──
+    const msmeBuf = getMsmeBuf();
+    if (msmeBuf) {
+      const MSME_W = 90;
+      doc.image(msmeBuf, SIDEBAR_X - MSME_W - 28, LY + 4, { width: MSME_W });
     }
 
     // ── Separator ─────────────────────────────────────────────────────────
