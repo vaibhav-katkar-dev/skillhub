@@ -1,4 +1,7 @@
 import express from 'express';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
 import User from '../models/User.js';
@@ -7,6 +10,10 @@ import Quiz from '../models/Quiz.js';
 import { v4 as uuidv4 } from 'uuid';
 import { authOptions } from '../middleware/auth.js';
 import { getCourseFromJSON, getAllCoursesFromJSON } from '../utils/courseData.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const MSME_LOGO_PATH = path.join(__dirname, '../assets/msme-logo.png');
 
 const router = express.Router();
 
@@ -535,6 +542,16 @@ router.get('/download/:certId', async (req, res) => {
        .text('LEARN  ·  VALIDATE  ·  GROW', 245, 172, { lineBreak: false, characterSpacing: 3.5 });
 
     doc.restore();
+
+    // ── MSME Logo (Top Right of Content Area) ─────────────────────────────
+    if (fs.existsSync(MSME_LOGO_PATH)) {
+      // Draw next to SkillValix logo (which ends around X=320)
+      const MSME_W = 85;
+      doc.image(MSME_LOGO_PATH, SIDEBAR_X - MSME_W - 40, LY + 6, {
+        width: MSME_W,
+        align: 'right'
+      });
+    }
 
     // ── Separator ─────────────────────────────────────────────────────────
     const SEP_Y = LY + 90 + 16;
