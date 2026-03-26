@@ -492,8 +492,8 @@ router.get('/download/:certId', async (req, res) => {
 
     // ── Logo icon ─────────────────────────────────────────────────────────
     const LX = LEFT_PAD;
-    const LY = 40;
-    const LOGO_SCALE = 60 / 270;
+    const LY = 28;
+    const LOGO_SCALE = 110 / 270;
 
     doc.save();
     doc.translate(LX, LY);
@@ -537,7 +537,7 @@ router.get('/download/:certId', async (req, res) => {
     doc.restore();
 
     // ── Separator ─────────────────────────────────────────────────────────
-    const SEP_Y = LY + 60 + 24;
+    const SEP_Y = LY + 90 + 16;
     doc.moveTo(LX, SEP_Y).lineTo(SIDEBAR_X - 40, SEP_Y)
       .lineWidth(0.5).strokeColor(BORDER).stroke();
 
