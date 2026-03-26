@@ -602,63 +602,75 @@ router.get('/download/:certId', async (req, res) => {
       );
 
     // ═════════════════════════════════════════════════════════════════════════
-    //  4. BOTTOM ROW: Cert ID + QR
+    //  4. BOTTOM ROW: Cert ID (left column) + QR (right column)
+    //  Layout (all Y values are absolute — no PDFKit cursor bleed between cols)
+    //
+    //  LEFT COLUMN (X = LX):            RIGHT COLUMN (X = QR_X area):
+    //  BOTTOM_Y+0  → "CERTIFICATE ID"   QR_Y        → [QR image]
+    //  BOTTOM_Y+16 → cert ID value      QR_Y+72+8   → thin rule
+    //  BOTTOM_Y+34 → thin rule          QR_Y+72+18  → "SCAN TO VERIFY"
+    //  BOTTOM_Y+42 → "Issued by …"
     // ═════════════════════════════════════════════════════════════════════════
-    const BOTTOM_Y = H - 72; // Pulled down for tighter balance (<= 60px from bottom edge)
 
-    // Calculate vertical center of the bottom row (approx 36px tall block)
-    const ROW_CY = BOTTOM_Y + 16;
+    // ── Fixed pixel constants ──────────────────────────────────────────────
+    const BOTTOM_Y  = H - 72;          // top of left cert-ID block
+    const QR_SIZE   = 72;
+    const QR_X      = SIDEBAR_X - QR_SIZE - 32;
+    const QR_Y      = H - QR_SIZE - 44;   // QR card top  (~479 on A4-L)
+    const ISSUED_Y  = BOTTOM_Y + 40;      // "Issued by" absolute Y (~551)
+    const LEFT_W    = QR_X - 20 - LX;     // left column width (stops before QR card)
 
-    // ── Certificate ID ──
+    // ── Left column ─────────────────────────────────────────────────────────
+
+    // "CERTIFICATE ID" label
     doc.fontSize(8.5).font('Helvetica-Bold').fillColor(GRAY_LT)
       .text('CERTIFICATE ID', LX, BOTTOM_Y, {
-        lineBreak: false,
-        characterSpacing: 2
+        width: LEFT_W, lineBreak: false, characterSpacing: 2
       });
 
+    // Cert ID value
     doc.fontSize(11).font('Helvetica-Bold').fillColor(DARK_MID)
-      .text(cert.certificateId, LX, BOTTOM_Y + 16, { lineBreak: false });
+      .text(cert.certificateId, LX, BOTTOM_Y + 16, {
+        width: LEFT_W, lineBreak: false
+      });
 
-    // ── QR Code ──
-    const QR_SIZE = 72;
-    const QR_X = SIDEBAR_X - QR_SIZE - 32;
-    const QR_Y = H - QR_SIZE - 44;
+    // Hairline separator between cert ID and authority line
+    doc.moveTo(LX, ISSUED_Y - 8)
+      .lineTo(LX + LEFT_W, ISSUED_Y - 8)
+      .lineWidth(0.3).strokeColor(BORDER).stroke();
 
-    // ── QR: white card + image ──────────────────────────────────────────────
+    // "Issued by Skillvalix · MSME Registered" — formal authority line
+    doc.fontSize(9).font('Helvetica').fillColor(GRAY_MID)
+      .text(
+        'Issued by Skillvalix  ·  MSME Registered',
+        LX, ISSUED_Y,
+        { width: LEFT_W, align: 'left', lineBreak: false, characterSpacing: 0.5 }
+      );
+
+    // ── Right column: QR panel (fully self-contained) ────────────────────────
+
+    // White card behind QR
     doc.rect(QR_X - 10, QR_Y - 10, QR_SIZE + 20, QR_SIZE + 20).fill(WHITE);
     doc.rect(QR_X - 10, QR_Y - 10, QR_SIZE + 20, QR_SIZE + 20)
       .lineWidth(1).strokeColor(BORDER).stroke();
 
+    // QR image
     doc.image(qrBuffer, QR_X, QR_Y, { width: QR_SIZE, height: QR_SIZE });
 
-    doc.fontSize(8).font('Helvetica-Bold').fillColor(GRAY_LT)
-      .text('SCAN TO VERIFY', QR_X - 10, QR_Y + QR_SIZE + 16, {
+    // Thin rule below QR card
+    const QR_CARD_BOTTOM = QR_Y + QR_SIZE + 10;
+    doc.moveTo(QR_X - 10, QR_CARD_BOTTOM + 6)
+      .lineTo(QR_X + QR_SIZE + 10, QR_CARD_BOTTOM + 6)
+      .lineWidth(0.3).strokeColor(BORDER).stroke();
+
+    // "SCAN TO VERIFY" label — pinned below QR card rule
+    doc.fontSize(7.5).font('Helvetica-Bold').fillColor(GRAY_LT)
+      .text('SCAN TO VERIFY', QR_X - 10, QR_CARD_BOTTOM + 10, {
         width: QR_SIZE + 20,
         align: 'center',
         characterSpacing: 1,
         lineBreak: false
       });
-
-    // ── Authority footer — "Issued by Skillvalix · MSME Registered" ─────────
-    // Thin hairline rule above footer (spans full left content area)
-    const FOOTER_Y = H - 24;
-    doc.moveTo(LX, FOOTER_Y - 6)
-      .lineTo(SIDEBAR_X - 40, FOOTER_Y - 6)
-      .lineWidth(0.3).strokeColor(BORDER).stroke();
-
-    // Single-line minimal authority text — centered across content width
-    doc.fontSize(9).font('Helvetica').fillColor(GRAY_MID)
-      .text(
-        'Issued by Skillvalix  ·  MSME Registered',
-        LX,
-        FOOTER_Y,
-        {
-          width: SIDEBAR_X - 40 - LX,
-          align: 'center',
-          lineBreak: false,
-          characterSpacing: 0.6
-        }
-      );
 
     doc.end();
 
