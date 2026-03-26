@@ -20,7 +20,7 @@ export default function Logo({
       <svg
         width={s.width}
         height={s.height}
-        viewBox="0 0 520 190"
+        viewBox="0 0 520 220"
         xmlns="http://www.w3.org/2000/svg"
         aria-label="SkillValix"
       >
@@ -61,14 +61,14 @@ export default function Logo({
         {/* ── TAGLINE (only in footer via tagline prop) ── */}
         {tagline && (
           <g>
-            <line x1="152" y1="122" x2="510" y2="122" stroke="#d1d5db" strokeWidth="0.8"/>
+            <line x1="152" y1="135" x2="510" y2="135" stroke="#d1d5db" strokeWidth="1"/>
             <text
               x="152"
-              y="148"
+              y="168"
               fontFamily="'DM Sans', 'Segoe UI', system-ui, sans-serif"
-              fontSize="12"
-              fontWeight="600"
-              letterSpacing="3.5"
+              fontSize="22"
+              fontWeight="700"
+              letterSpacing="4"
               fill="#9ca3af"
             >
               LEARN · VALIDATE · GROW
