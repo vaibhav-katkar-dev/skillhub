@@ -8,7 +8,7 @@ const PreFooterCTA = () => {
   const { isAuthenticated, user } = useAuthStore();
 
   // Don't show the CTA on auth or admin pages
-  const hiddenPaths = ['/login', '/register', '/admin', '/admin/upload'];
+  const hiddenPaths = ['/login', '/register', '/admin', '/admin/upload', '/dashboard'];
   if (hiddenPaths.includes(location.pathname)) {
     return null;
   }
