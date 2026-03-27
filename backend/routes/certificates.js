@@ -19,6 +19,18 @@ let activePdfGenerations = 0;
 const pdfGenerationQueue = [];
 const queuedCertificateIds = new Set();
 
+function hasStoredPdf(cert) {
+  if (!cert) return false;
+  if (Object.prototype.hasOwnProperty.call(cert, 'pdfBuffer')) {
+    return Buffer.isBuffer(cert.pdfBuffer) && cert.pdfBuffer.length > 0;
+  }
+  return Number(cert.pdfSizeBytes || 0) > 0;
+}
+
+function isPdfReady(cert) {
+  return cert?.pdfStatus === 'ready' && hasStoredPdf(cert);
+}
+
 function normalizeId(value) {
   if (!value) return null;
   if (typeof value === 'string') return value;
@@ -168,9 +180,9 @@ function buildCertificatePdfBuffer({ studentName, courseTitle, certificateId, is
 async function prepareCertificatePdf(certificateId) {
   const staleBefore = new Date(Date.now() - PDF_GENERATION_STALE_MS);
 
-  let cert = await Certificate.findOne({ certificateId }).select('certificateId pdfStatus pdfRequestedAt').lean();
+  let cert = await Certificate.findOne({ certificateId }).select('certificateId pdfStatus pdfRequestedAt pdfSizeBytes').lean();
   if (!cert) return { status: 'missing' };
-  if (cert.pdfStatus === 'ready') return { status: 'ready' };
+  if (isPdfReady(cert)) return { status: 'ready' };
 
   const lockedCert = await Certificate.findOneAndUpdate(
     {
@@ -193,7 +205,7 @@ async function prepareCertificatePdf(certificateId) {
   );
 
   if (!lockedCert) {
-    cert = await Certificate.findOne({ certificateId }).select('certificateId pdfStatus').lean();
+    cert = await Certificate.findOne({ certificateId }).select('certificateId pdfStatus pdfSizeBytes').lean();
     return { status: cert?.pdfStatus || 'queued' };
   }
 
@@ -261,7 +273,7 @@ async function waitForPreparedPdf(certificateId, timeoutMs = DOWNLOAD_WAIT_MS) {
       .lean();
 
     if (!cert) return null;
-    if (cert.pdfStatus === 'ready' && cert.pdfBuffer?.length) return cert;
+    if (isPdfReady(cert)) return cert;
     if (cert.pdfStatus === 'failed') return cert;
 
     await new Promise(resolve => setTimeout(resolve, DOWNLOAD_WAIT_POLL_MS));
@@ -292,11 +304,27 @@ function processPdfQueue() {
     });
 }
 
+async function startCertificatePreparation(certificateId) {
+  activePdfGenerations += 1;
+  try {
+    return await prepareCertificatePdf(certificateId);
+  } finally {
+    activePdfGenerations -= 1;
+    if (pdfGenerationQueue.length > 0) {
+      setImmediate(processPdfQueue);
+    }
+  }
+}
+
 async function enqueueCertificatePreparation(certificateId) {
   await Certificate.updateOne(
     {
       certificateId,
-      pdfStatus: { $nin: ['ready', 'generating'] },
+      $or: [
+        { pdfStatus: { $nin: ['ready', 'generating'] } },
+        { pdfStatus: 'ready', pdfSizeBytes: { $lte: 0 } },
+        { pdfStatus: 'ready', pdfSizeBytes: { $exists: false } },
+      ],
     },
     {
       $set: {
@@ -307,11 +335,18 @@ async function enqueueCertificatePreparation(certificateId) {
     }
   );
 
+  if (activePdfGenerations < MAX_CONCURRENT_PDF_GENERATIONS && pdfGenerationQueue.length === 0) {
+    queuedCertificateIds.delete(certificateId);
+    return startCertificatePreparation(certificateId);
+  }
+
   if (!queuedCertificateIds.has(certificateId)) {
     queuedCertificateIds.add(certificateId);
     pdfGenerationQueue.push(certificateId);
     processPdfQueue();
   }
+
+  return { status: 'queued' };
 }
 
 function certificateResponseShape(cert, courseTitle) {
@@ -321,7 +356,7 @@ function certificateResponseShape(cert, courseTitle) {
       _id: normalizeId(cert.course),
       title: courseTitle,
     },
-    pdfReady: cert.pdfStatus === 'ready',
+    pdfReady: isPdfReady(cert),
   };
 }
 
@@ -386,6 +421,7 @@ router.get('/mine', authOptions, async (req, res) => {
   try {
     const certs = await Certificate.find({ student: req.user.id })
       .populate('student', 'name')
+      .select('student course courseTitleSnapshot certificateId issueDate createdAt pdfStatus pdfSizeBytes pdfGeneratedAt pdfRequestedAt pdfError')
       .sort({ issueDate: -1 })
       .lean();
 
@@ -414,27 +450,27 @@ router.get('/mine', authOptions, async (req, res) => {
 
 router.post('/prepare/:certId', authOptions, async (req, res) => {
   try {
-    const cert = await Certificate.findOne({ certificateId: req.params.certId }).select('certificateId student pdfStatus').lean();
+    const cert = await Certificate.findOne({ certificateId: req.params.certId }).select('certificateId student pdfStatus pdfSizeBytes').lean();
     if (!cert) return res.status(404).json({ message: 'Certificate not found.' });
     if (!canAccessCertificate(req.user, cert)) {
       return res.status(403).json({ message: 'You do not have access to prepare this certificate.' });
     }
 
-    if (cert.pdfStatus !== 'ready') {
+    if (!isPdfReady(cert)) {
       await enqueueCertificatePreparation(cert.certificateId);
     }
 
     const latest = await Certificate.findOne({ certificateId: cert.certificateId })
-      .select('certificateId pdfStatus pdfGeneratedAt pdfError')
+      .select('certificateId pdfStatus pdfSizeBytes pdfGeneratedAt pdfError')
       .lean();
 
     res.setHeader('Cache-Control', 'no-store');
-    res.status(latest?.pdfStatus === 'ready' ? 200 : 202).json({
+    res.status(isPdfReady(latest) ? 200 : 202).json({
       certificateId: cert.certificateId,
       pdfStatus: latest?.pdfStatus || 'queued',
-      pdfReady: latest?.pdfStatus === 'ready',
+      pdfReady: isPdfReady(latest),
       pdfGeneratedAt: latest?.pdfGeneratedAt || null,
-      retryAfterSeconds: latest?.pdfStatus === 'ready' ? 0 : PDF_RETRY_AFTER_SECONDS,
+      retryAfterSeconds: isPdfReady(latest) ? 0 : PDF_RETRY_AFTER_SECONDS,
       pdfError: latest?.pdfError || '',
     });
   } catch (err) {
@@ -446,7 +482,7 @@ router.post('/prepare/:certId', authOptions, async (req, res) => {
 router.get('/status/:certId', async (req, res) => {
   try {
     const cert = await Certificate.findOne({ certificateId: req.params.certId })
-      .select('certificateId pdfStatus pdfGeneratedAt pdfError')
+      .select('certificateId pdfStatus pdfSizeBytes pdfGeneratedAt pdfError')
       .lean();
 
     if (!cert) return res.status(404).json({ message: 'Certificate not found.' });
@@ -455,9 +491,9 @@ router.get('/status/:certId', async (req, res) => {
     res.json({
       certificateId: cert.certificateId,
       pdfStatus: cert.pdfStatus || 'pending',
-      pdfReady: cert.pdfStatus === 'ready',
+      pdfReady: isPdfReady(cert),
       pdfGeneratedAt: cert.pdfGeneratedAt || null,
-      retryAfterSeconds: cert.pdfStatus === 'ready' ? 0 : PDF_RETRY_AFTER_SECONDS,
+      retryAfterSeconds: isPdfReady(cert) ? 0 : PDF_RETRY_AFTER_SECONDS,
       pdfError: cert.pdfError || '',
     });
   } catch (err) {
@@ -471,7 +507,7 @@ router.get('/download/:certId', async (req, res) => {
     let cert = await loadCertificateForRendering(req.params.certId, true);
     if (!cert) return res.status(404).json({ message: 'Certificate not found.' });
 
-    if (cert.pdfStatus === 'ready' && cert.pdfBuffer?.length) {
+    if (isPdfReady(cert)) {
       res.setHeader('Content-Type', cert.pdfMimeType || 'application/pdf');
       res.setHeader('Content-Disposition', `inline; filename=Certificate-${cert.certificateId}.pdf`);
       res.setHeader('Cache-Control', 'public, max-age=86400');
@@ -481,7 +517,7 @@ router.get('/download/:certId', async (req, res) => {
     await enqueueCertificatePreparation(cert.certificateId);
     cert = await waitForPreparedPdf(cert.certificateId);
 
-    if (cert?.pdfStatus === 'ready' && cert.pdfBuffer?.length) {
+    if (isPdfReady(cert)) {
       res.setHeader('Content-Type', cert.pdfMimeType || 'application/pdf');
       res.setHeader('Content-Disposition', `inline; filename=Certificate-${cert.certificateId}.pdf`);
       res.setHeader('Cache-Control', 'public, max-age=86400');
@@ -523,7 +559,7 @@ router.get('/verify/:certId', async (req, res) => {
       issueDate: cert.issueDate,
       certificateId: cert.certificateId,
       pdfStatus: cert.pdfStatus || 'pending',
-      pdfReady: cert.pdfStatus === 'ready',
+      pdfReady: isPdfReady(cert),
     });
   } catch (err) {
     console.error('[Certificates] Verify error:', err);
