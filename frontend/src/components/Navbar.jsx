@@ -7,6 +7,7 @@ import Logo from './Logo';
 const navLinks = [
   { to: '/', label: 'Home' },
   { to: '/courses', label: 'Courses' },
+  { to: '/events', label: 'Events' },
   { to: '/blog', label: 'Blog' },
   { to: '/verify', label: 'Verify Certificate' },
 ];

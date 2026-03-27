@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Navigate } from 'react-router-dom';
 import { useAuthStore, api } from '../store/authStore';
@@ -38,9 +38,24 @@ const AdminPanel = () => {
   const [analyticsError, setAnalyticsError] = useState('');
   const [tab, setTab] = useState('analytics');
 
+  // Hackathon manager state
+  const [hacks, setHacks] = useState([]);
+  const [hacksLoading, setHacksLoading] = useState(false);
+  const [hackForm, setHackForm] = useState({ title: '', tagline: '', description: '', theme: '', status: 'upcoming', registrationLink: '', image: '', tags: '', visible: false, featured: false });
+  const [hackSaving, setHackSaving] = useState(false);
+  const [hackMsg, setHackMsg] = useState('');
+
   useEffect(() => {
     getCourseList().then(setCourses).catch(console.error);
   }, []);
+
+  const loadHacks = async () => {
+    setHacksLoading(true);
+    try { const r = await api.get('/events/admin/hackathons'); setHacks(r.data); } catch { setHacks([]); }
+    finally { setHacksLoading(false); }
+  };
+
+  useEffect(() => { if (tab === 'hackathons') loadHacks(); }, [tab]);
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'admin') return;
@@ -195,6 +210,7 @@ const AdminPanel = () => {
             {[
               { key: 'analytics', label: 'Analytics', icon: BarChart3 },
               { key: 'quiz', label: 'Quiz Manager', icon: ClipboardList },
+              { key: 'hackathons', label: 'Hackathons', icon: Award },
               { key: 'guide', label: 'Course Guide', icon: BookOpen },
             ].map(({ key, label, icon: Icon }) => (
               <button
@@ -755,6 +771,97 @@ const AdminPanel = () => {
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        )}
+        {tab === 'hackathons' && (
+          <div className="space-y-6">
+            {/* Create hackathon form */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+              <h2 className="text-lg font-bold text-slate-900 mb-5 flex items-center gap-2"><Award className="w-5 h-5 text-amber-500" /> Post a Hackathon</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {[['title','Title *'],['tagline','Tagline'],['theme','Theme (e.g. AI/ML)'],['registrationLink','Registration Link'],['image','Banner Image URL'],['tags','Tags (comma-separated)']].map(([key, label]) => (
+                  <div key={key}>
+                    <label className="block text-xs font-semibold text-slate-500 mb-1">{label}</label>
+                    <input value={hackForm[key]} onChange={e => setHackForm(p => ({ ...p, [key]: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+                  </div>
+                ))}
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">Description *</label>
+                  <textarea value={hackForm.description} onChange={e => setHackForm(p => ({ ...p, description: e.target.value }))} rows={3} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">Status</label>
+                  <select value={hackForm.status} onChange={e => setHackForm(p => ({ ...p, status: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none">
+                    <option value="upcoming">Upcoming</option>
+                    <option value="live">Live</option>
+                    <option value="ended">Ended</option>
+                  </select>
+                </div>
+                <div className="flex items-center gap-6 mt-4">
+                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
+                    <input type="checkbox" checked={hackForm.visible} onChange={e => setHackForm(p => ({ ...p, visible: e.target.checked }))} className="rounded" />
+                    Visible to public
+                  </label>
+                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
+                    <input type="checkbox" checked={hackForm.featured} onChange={e => setHackForm(p => ({ ...p, featured: e.target.checked }))} className="rounded" />
+                    Featured
+                  </label>
+                </div>
+              </div>
+              {hackMsg && <div className={`mt-4 p-3 rounded-xl text-sm font-medium ${hackMsg.startsWith('✅') ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>{hackMsg}</div>}
+              <button
+                onClick={async () => {
+                  if (!hackForm.title || !hackForm.description) { setHackMsg('❌ Title and description are required.'); return; }
+                  setHackSaving(true); setHackMsg('');
+                  try {
+                    const payload = { ...hackForm, tags: hackForm.tags.split(',').map(t => t.trim()).filter(Boolean) };
+                    await api.post('/events/hackathons', payload);
+                    setHackMsg('✅ Hackathon posted successfully!');
+                    setHackForm({ title: '', tagline: '', description: '', theme: '', status: 'upcoming', registrationLink: '', image: '', tags: '', visible: false, featured: false });
+                    loadHacks();
+                  } catch (e) { setHackMsg('❌ ' + (e.response?.data?.message || 'Failed to save.')); }
+                  finally { setHackSaving(false); }
+                }}
+                disabled={hackSaving}
+                className="mt-5 px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-sm hover:opacity-90 transition disabled:opacity-60"
+              >
+                {hackSaving ? 'Saving…' : '🚀 Post Hackathon'}
+              </button>
+            </div>
+
+            {/* Existing hackathons list */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+              <h2 className="text-lg font-bold text-slate-900 mb-5">All Hackathons</h2>
+              {hacksLoading ? (
+                <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-20 rounded-xl bg-slate-100 animate-pulse" />)}</div>
+              ) : hacks.length === 0 ? (
+                <p className="text-slate-400 text-sm">No hackathons created yet.</p>
+              ) : (
+                <div className="space-y-3">
+                  {hacks.map(h => (
+                    <div key={h._id} className="rounded-xl border border-slate-200 p-4 flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-bold text-slate-900">{h.title}</span>
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${h.status === 'live' ? 'bg-emerald-100 text-emerald-700' : h.status === 'ended' ? 'bg-slate-100 text-slate-500' : 'bg-amber-100 text-amber-700'}`}>{h.status}</span>
+                          {h.visible ? <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Visible</span> : <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-400">Hidden</span>}
+                          {h.featured && <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">⭐ Featured</span>}
+                        </div>
+                        <p className="text-sm text-slate-500 mt-1 truncate">{h.description}</p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button onClick={async () => { await api.put(`/events/hackathons/${h._id}`, { visible: !h.visible }); loadHacks(); }} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${h.visible ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}>
+                          {h.visible ? 'Hide' : 'Show'}
+                        </button>
+                        <button onClick={async () => { if (!confirm('Delete this hackathon?')) return; await api.delete(`/events/hackathons/${h._id}`); loadHacks(); }} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-red-600 hover:bg-red-100 transition">
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}

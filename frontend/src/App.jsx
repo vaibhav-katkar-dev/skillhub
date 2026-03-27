@@ -29,6 +29,9 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import RefundPolicy from './pages/RefundPolicy';
 import CookiePolicy from './pages/CookiePolicy';
+import Events from './pages/Events';
+import JobSimulation from './pages/JobSimulation';
+import VerifyEventCert from './pages/VerifyEventCert';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -71,6 +74,10 @@ function App() {
               <Route path="/verify/:certId" element={<VerifyCert />} />
               <Route path="/blog" element={<Blog />} />
               <Route path="/blog/:slug" element={<BlogPost />} />
+              <Route path="/events" element={<Events />} />
+              <Route path="/events/job-simulation/:id" element={<JobSimulation />} />
+              <Route path="/verify-event/:certId" element={<VerifyEventCert />} />
+              <Route path="/verify-event" element={<VerifyEventCert />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms" element={<TermsOfService />} />
               <Route path="/refund-policy" element={<RefundPolicy />} />

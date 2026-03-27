@@ -13,6 +13,7 @@ import courseRoutes from './routes/courses.js';
 import quizRoutes from './routes/quizzes.js';
 import certRoutes from './routes/certificates.js';
 import paymentRoutes from './routes/payments.js';
+import eventRoutes from './routes/events.js';
 
 dotenv.config();
 
@@ -150,6 +151,7 @@ app.use('/api/admin', ensureDatabaseConnection);
 app.use('/api/quizzes', ensureDatabaseConnection);
 app.use('/api/certificates', ensureDatabaseConnection);
 app.use('/api/payments', ensureDatabaseConnection);
+app.use('/api/events', ensureDatabaseConnection);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
@@ -157,6 +159,7 @@ app.use('/api/courses', courseRoutes);
 app.use('/api/quizzes', quizRoutes);
 app.use('/api/certificates', certRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/events', eventRoutes);
 
 app.use((err, req, res, next) => {
   console.error('[Global Error]', err?.message || err);
