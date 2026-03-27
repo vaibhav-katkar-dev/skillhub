@@ -2,6 +2,8 @@ import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
+import Razorpay from 'razorpay';
+import crypto from 'crypto';
 import Hackathon from '../models/Hackathon.js';
 import EventCertificate from '../models/EventCertificate.js';
 import User from '../models/User.js';
@@ -223,20 +225,87 @@ function buildEventCertificatePdf({ studentName, eventTitle, role, certificateId
   });
 }
 
-// ─── Generate event certificate (authenticated) ───────────────────────────────
+// ─── Razorpay Order Creation (Event Certificates) ───────────────────────────
+router.post('/certificates/razorpay-order', authOptions, async (req, res) => {
+  try {
+    const { eventTitle } = req.body;
+    if (!eventTitle) return res.status(400).json({ message: 'eventTitle is required.' });
+
+    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+      return res.status(500).json({ message: 'Razorpay keys not configured' });
+    }
+
+    const user = await User.findById(req.user.id).lean();
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Job simulations are priced at ₹99 by default. Admin gets it for ₹1.
+    const isAdminTestMode = user.role === 'admin';
+    const amountToCharge = isAdminTestMode ? 100 : 9900; // paise
+
+    const rzp = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    });
+
+    const expectedReceipt = `receipt_event_${req.user.id}`.substring(0, 40);
+    const options = {
+      amount: amountToCharge,
+      currency: 'INR',
+      receipt: expectedReceipt,
+    };
+
+    const order = await rzp.orders.create(options);
+    res.json({
+      ...order,
+      isAdminTestMode,
+      displayAmountRupees: amountToCharge / 100,
+    });
+  } catch (err) {
+    console.error('[Events] Razorpay order error:', err);
+    res.status(500).json({ message: 'Error creating payment order' });
+  }
+});
+
+// ─── Generate event certificate (Verified Payment Required) ─────────────────
 router.post('/certificates/generate', authOptions, async (req, res) => {
   try {
-    const { eventType, eventTitle, role, paymentId } = req.body;
+    const { eventType, eventTitle, role, razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
     if (!eventType || !eventTitle) return res.status(400).json({ message: 'eventType and eventTitle are required.' });
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({ message: 'Missing required payment verification fields' });
+    }
+
+    const body = razorpay_order_id + '|' + razorpay_payment_id;
+    const expectedSignature = crypto
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .update(body.toString())
+      .digest('hex');
+
+    if (expectedSignature !== razorpay_signature) {
+      return res.status(400).json({ message: 'Invalid payment signature - potential tampering detected' });
+    }
 
     const user = await User.findById(req.user.id).lean();
     if (!user) return res.status(404).json({ message: 'User not found.' });
 
-    // Check for existing cert
+    const rzp = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    });
+
+    const order = await rzp.orders.fetch(razorpay_order_id);
+    const expectedReceipt = `receipt_event_${req.user.id}`.substring(0, 40);
+    const expectedAmount = user.role === 'admin' ? 100 : 9900;
+
+    if (!order || order.receipt !== expectedReceipt || order.amount !== expectedAmount) {
+      return res.status(400).json({ message: 'Payment mismatch: The order amount or receipt is invalid.' });
+    }
+
+    // Payment successfully verified! Create the certificate records.
     let cert = await EventCertificate.findOne({ student: user._id, eventTitle, eventType });
     if (!cert) {
       const certId = `EVC-${uuidv4().substring(0, 8).toUpperCase()}`;
-      cert = new EventCertificate({ student: user._id, eventType, eventTitle, role, certificateId: certId, paymentId });
+      cert = new EventCertificate({ student: user._id, eventType, eventTitle, role, certificateId: certId, paymentId: razorpay_payment_id });
       await cert.save();
     }
 

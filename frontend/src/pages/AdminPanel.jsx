@@ -7,7 +7,7 @@ import {
   ShieldCheck, BookOpen, FileJson, Upload, CheckCircle,
   AlertCircle, ChevronDown, Loader2, Plus,
   ClipboardList, Edit3, RefreshCw, BarChart3, Users,
-  Award, Activity, Lock, Database, Eye
+  Award, Activity, Lock, Database, Eye, Star
 } from 'lucide-react';
 
 const QUIZ_TEMPLATE = {
