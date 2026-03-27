@@ -13,7 +13,8 @@ const JSON_PATH = path.resolve(__dirname, '../../frontend/public/data/all-course
 export async function getAllCoursesFromJSON() {
   try {
     const data = await fs.readFile(JSON_PATH, 'utf-8');
-    return JSON.parse(data);
+    const sanitized = data.charCodeAt(0) === 0xfeff ? data.slice(1) : data;
+    return JSON.parse(sanitized);
   } catch (err) {
     console.warn(`[JSONLoader] Could not read all-courses.json at ${JSON_PATH}:`, err.message);
     return [];

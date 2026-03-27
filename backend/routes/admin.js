@@ -10,8 +10,9 @@ const router = express.Router();
 function normalizeId(value) {
   if (!value) return null;
   if (typeof value === 'string') return value;
+  if (typeof value.toHexString === 'function') return value.toHexString();
   if (typeof value === 'object') {
-    if (value._id) return normalizeId(value._id);
+    if (Object.prototype.hasOwnProperty.call(value, '_id')) return normalizeId(value._id);
     if (typeof value.toString === 'function') {
       const str = value.toString();
       return str && str !== '[object Object]' ? str : null;
