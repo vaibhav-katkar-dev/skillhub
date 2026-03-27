@@ -7,7 +7,6 @@ import morgan from 'morgan';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 
-// Route Imports
 import authRoutes from './routes/auth.js';
 import adminRoutes from './routes/admin.js';
 import courseRoutes from './routes/courses.js';
@@ -17,70 +16,64 @@ import paymentRoutes from './routes/payments.js';
 
 dotenv.config();
 
-// ── Protect Server from Crashing Globally ─────────────────
 process.on('uncaughtException', (err) => {
-  console.error('🔥 Uncaught Exception (Caught to prevent crash):', err?.message || err);
+  console.error('[Server] Uncaught exception:', err?.message || err);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('🔥 Unhandled Rejection at:', promise, 'reason:', reason);
+  console.error('[Server] Unhandled rejection at:', promise, 'reason:', reason);
 });
 
 const app = express();
+app.disable('x-powered-by');
+app.set('trust proxy', 1);
 
-// ── Compression (gzip all responses) ──────────────────────
 app.use(compression());
-
-// ── Security & Logging ─────────────────────────────────────
 app.use(express.json({ limit: '2mb' }));
+
 const ALLOWED_ORIGINS = [
   'https://skillvalix.com',
   'https://www.skillvalix.com',
-
-  'http://localhost:5173',  // local dev
+  'http://localhost:5173',
   'http://localhost:3000',
 ];
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, curl, Postman)
     if (!origin) return callback(null, true);
     if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
-    callback(new Error(`CORS: origin ${origin} not allowed`));
+    return callback(new Error(`CORS: origin ${origin} not allowed`));
   },
   credentials: true,
 }));
+
 app.use(helmet({
-  crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' }, // Required for Google OAuth popup
+  crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
 }));
 app.use(morgan('dev'));
 
-// ── Rate Limiting ──────────────────────────────────────────
-// General limiter for all API routes
 const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200,                  // 200 requests per 15 min per IP
+  windowMs: 15 * 60 * 1000,
+  max: 200,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { message: 'Too many requests, please try again after 15 minutes.' }
+  message: { message: 'Too many requests, please try again after 15 minutes.' },
 });
 
-// Stricter limiter for auth routes (prevent brute force)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20,  // 20 login/register attempts per 15 min
+  max: 20,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { message: 'Too many login attempts, please try again after 15 minutes.' }
+  message: { message: 'Too many login attempts, please try again after 15 minutes.' },
 });
 
-// Strict limiter for certificate generation
 const certLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 30,                   // 30 cert downloads per hour
+  windowMs: 60 * 60 * 1000,
+  max: 30,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { message: 'Too many certificate requests, please try again in an hour.' }
+  message: { message: 'Too many certificate requests, please try again in an hour.' },
 });
 
 app.use('/api/', generalLimiter);
@@ -88,33 +81,6 @@ app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 app.use('/api/certificates/download', certLimiter);
 
-// ── Routes ─────────────────────────────────────────────────
-app.use('/api/auth', ensureDatabaseConnection);
-app.use('/api/admin', ensureDatabaseConnection);
-app.use('/api/quizzes', ensureDatabaseConnection);
-app.use('/api/certificates', ensureDatabaseConnection);
-app.use('/api/payments', ensureDatabaseConnection);
-
-app.use('/api/auth', authRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/courses', courseRoutes);
-app.use('/api/quizzes', quizRoutes);
-app.use('/api/certificates', certRoutes);
-app.use('/api/payments', paymentRoutes);
-
-// ── Global Error Handler ───────────────────────────────────
-app.use((err, req, res, next) => {
-  console.error('[Global Error]', err?.message || err);
-  if (res.headersSent) {
-    return next(err);
-  }
-  res.status(err?.status || 500).json({ 
-    message: err?.message || 'An unexpected server error occurred.',
-    success: false
-  });
-});
-
-// ── Serverless-Optimized DB Connection ────────────────────
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/skillvalix';
 
@@ -130,29 +96,29 @@ async function connectToDatabase() {
   }
 
   if (cachedDb.conn) {
-    // Reuse existing connection pool across serverless invocations
     return cachedDb.conn;
   }
 
   if (!cachedDb.promise) {
     cachedDb.promise = mongoose.connect(MONGO_URI, {
-      maxPoolSize: 10, // Prevent exhausting free tier DB limits
+      maxPoolSize: 10,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
-      bufferCommands: false, // Disable buffering so requests fail fast if DB is down
+      bufferCommands: false,
     }).then((m) => {
-      console.log('✅ Connected to MongoDB (New Connection Pool)');
+      console.log('[Database] Connected to MongoDB');
       return m;
     });
   }
 
   try {
     cachedDb.conn = await cachedDb.promise;
-  } catch (e) {
+  } catch (err) {
     cachedDb.promise = null;
-    console.error('❌ Database connection error:', e);
-    throw e;
+    console.error('[Database] Connection error:', err);
+    throw err;
   }
+
   return cachedDb.conn;
 }
 
@@ -161,7 +127,7 @@ async function ensureDatabaseConnection(req, res, next) {
     await connectToDatabase();
     next();
   } catch (err) {
-    console.error('❌ Request blocked: database unavailable:', err?.message || err);
+    console.error('[Database] Request blocked: unavailable:', err?.message || err);
     res.status(503).json({
       message: 'Database temporarily unavailable. Please try again in a moment.',
       success: false,
@@ -169,18 +135,48 @@ async function ensureDatabaseConnection(req, res, next) {
   }
 }
 
-// Initialize connection. Vercel container keeps this alive across warm starts.
-connectToDatabase().catch(err => {
-  console.error("Critical DB Initialization Failed.");
+app.get('/api/health', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({
+    success: true,
+    uptimeSeconds: Math.round(process.uptime()),
+    databaseReady: mongoose.connection.readyState === 1,
+    timestamp: new Date().toISOString(),
+  });
 });
 
-// ── Server Initialization ─────────────────────────────────
-// Only bind to a specific port if we are NOT running as a serverless function in Vercel
+app.use('/api/auth', ensureDatabaseConnection);
+app.use('/api/admin', ensureDatabaseConnection);
+app.use('/api/quizzes', ensureDatabaseConnection);
+app.use('/api/certificates', ensureDatabaseConnection);
+app.use('/api/payments', ensureDatabaseConnection);
+
+app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/courses', courseRoutes);
+app.use('/api/quizzes', quizRoutes);
+app.use('/api/certificates', certRoutes);
+app.use('/api/payments', paymentRoutes);
+
+app.use((err, req, res, next) => {
+  console.error('[Global Error]', err?.message || err);
+  if (res.headersSent) {
+    return next(err);
+  }
+  res.status(err?.status || 500).json({
+    message: err?.message || 'An unexpected server error occurred.',
+    success: false,
+  });
+});
+
+connectToDatabase().catch(() => {
+  console.error('Critical DB initialization failed.');
+});
+
 if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
   app.listen(PORT, () => {
-    console.log(`🚀 API Server running locally on port ${PORT}`);
+    console.log(`API server running locally on port ${PORT}`);
   });
 }
 
-// Export the Express app as the default handler for Vercel Serverless functions
 export default app;

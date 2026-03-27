@@ -4,7 +4,7 @@ import Certificate from '../models/Certificate.js';
 import User from '../models/User.js';
 import { authOptions, adminCheck } from '../middleware/auth.js';
 import { v4 as uuidv4 } from 'uuid';
-import { getQuizFromJSON, getCourseFromJSON } from '../utils/courseData.js';
+import { getCourseFromJSON } from '../utils/courseData.js';
 
 const router = express.Router();
 const ADMIN_TEST_PASSING_SCORE = 30;
@@ -124,11 +124,16 @@ router.post('/:courseId/submit', authOptions, async (req, res) => {
           student: user._id,
           course: req.params.courseId,
           courseTitleSnapshot,
-          certificateId: certId
+          certificateId: certId,
+          pdfStatus: 'pending'
         });
         await cert.save();
       } else if (!cert.courseTitleSnapshot && courseTitleSnapshot) {
         cert.courseTitleSnapshot = courseTitleSnapshot;
+        cert.pdfStatus = cert.pdfStatus || 'pending';
+        await cert.save();
+      } else if (!cert.pdfStatus) {
+        cert.pdfStatus = 'pending';
         await cert.save();
       }
 
@@ -144,6 +149,7 @@ router.post('/:courseId/submit', authOptions, async (req, res) => {
       certificateId,
       passingScore: effectivePassingScore,
       isAdminTestMode: req.user?.role === 'admin',
+      certificateRetryAfterSeconds: passed ? 10 : 0,
       message: passed ? 'Passed!' : 'Failed. Try again.'
     });
   } catch (err) {

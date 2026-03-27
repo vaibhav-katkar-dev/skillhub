@@ -20,7 +20,7 @@ const STATS = [
 ];
 
 const HOW_IT_WORKS = [
-  { step: 1, label: '01', title: 'Pick a Course',         desc: 'Browse our growing library of structured web development courses â€” all completely free.',    icon: BookOpen,    accent: '#6366f1', light: '#eef2ff' },
+  { step: 1, label: '01', title: 'Pick a Course',         desc: 'Browse our growing library of structured web development courses - all completely free.',    icon: BookOpen,    accent: '#6366f1', light: '#eef2ff' },
   { step: 2, label: '02', title: 'Study the Lessons',     desc: 'Work through interactive, code-rich modules at your own pace. No deadlines, no pressure.',    icon: Play,        accent: '#8b5cf6', light: '#f5f3ff' },
   { step: 3, label: '03', title: 'Take the Exam',         desc: "When you're ready, sit the assessment. Questions are server-graded to keep results secure.",   icon: BrainCircuit,accent: '#a855f7', light: '#faf5ff' },
   { step: 4, label: '04', title: 'Earn Your Certificate', desc: 'Pass and instantly download your verifiable PDF certificate to share with the world.',         icon: Award,       accent: '#10b981', light: '#ecfdf5' },
@@ -37,7 +37,7 @@ const COURSES = [
     badge: 'Most Popular',
     badgeColor: '#6366f1',
     tags: ['HTML5', 'Semantics', 'Forms', 'SEO'],
-    desc: 'A complete deep-dive into modern HTML â€” from document structure to semantic tags, accessibility and forms.',
+    desc: 'A complete deep-dive into modern HTML - from document structure to semantic tags, accessibility and forms.',
     image: 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&q=80&w=800&h=500',
     accent: '#6366f1',
     accentLight: '#eef2ff',
@@ -53,7 +53,7 @@ const COURSES = [
     badge: 'Trending',
     badgeColor: '#0ea5e9',
     tags: ['CSS3', 'Flexbox', 'Grid', 'Animations'],
-    desc: 'Master styling from the ground up â€” cascade, specificity, Flexbox, Grid, and CSS animations.',
+    desc: 'Master styling from the ground up - cascade, specificity, Flexbox, Grid, and CSS animations.',
     image: 'https://images.unsplash.com/photo-1507721999472-8ed4421c4af2?auto=format&fit=crop&q=80&w=800&h=500',
     accent: '#0ea5e9',
     accentLight: '#f0f9ff',
@@ -69,7 +69,7 @@ const COURSES = [
     badge: 'New',
     badgeColor: '#f59e0b',
     tags: ['ES6+', 'DOM', 'Events', 'APIs'],
-    desc: 'Learn the language of the web â€” variables, functions, DOM manipulation, and async JavaScript.',
+    desc: 'Learn the language of the web - variables, functions, DOM manipulation, and async JavaScript.',
     image: 'https://images.unsplash.com/photo-1555099962-4199c345e5dd?auto=format&fit=crop&q=80&w=800&h=500',
     accent: '#f59e0b',
     accentLight: '#fffbeb',
@@ -78,7 +78,7 @@ const COURSES = [
 ];
 
 const FEATURES = [
-  { icon: BookOpen,     bg: '#eff6ff', color: '#3b82f6', title: 'Structured Learning Paths',  desc: 'Content built in clear progression â€” from fundamentals to advanced mastery.' },
+  { icon: BookOpen,     bg: '#eff6ff', color: '#3b82f6', title: 'Structured Learning Paths',  desc: 'Content built in clear progression - from fundamentals to advanced mastery.' },
   { icon: BrainCircuit, bg: '#f5f3ff', color: '#7c3aed', title: 'Interactive Exams',          desc: 'Server-graded assessments with instant feedback to solidify your understanding.' },
   { icon: Award,        bg: '#ecfdf5', color: '#059669', title: 'Verifiable Certificates',    desc: 'Pass the exam, earn a secure PDF certificate with a unique trackable ID.' },
   { icon: Code2,        bg: '#fff1f2', color: '#e11d48', title: 'Real-World Code Snippets',   desc: 'Annotated, live code examples you can copy, adapt, and run immediately.' },
@@ -93,10 +93,10 @@ const TESTIMONIALS = [
 ];
 
 const FAQS = [
-  { q: 'Is SkillValix really free?',              a: 'Yes â€” completely. Every course, every exam, every certificate is free. No hidden fees, no premium tiers. We believe education should be accessible to everyone.' },
+  { q: 'Is SkillValix really free?',              a: 'Yes - completely. Every course, every exam, every certificate is free. No hidden fees, no premium tiers. We believe education should be accessible to everyone.' },
   { q: 'How are the certificates verified?',    a: 'Each certificate has a unique ID. Anyone can visit our Verify page, enter that ID and see your full result and completion date in seconds.' },
   { q: 'Do I need prior experience to start?',  a: 'Not at all. Every course starts from zero and assumes no prior knowledge. If you can browse the web, you can start learning with us.' },
-  { q: 'Can I learn at my own pace?',           a: 'Absolutely. There are no deadlines, cohorts, or time limits. Start a lesson, pause, continue tomorrow â€” your progress is always saved.' },
+  { q: 'Can I learn at my own pace?',           a: 'Absolutely. There are no deadlines, cohorts, or time limits. Start a lesson, pause, continue tomorrow - your progress is always saved.' },
   { q: 'How difficult are the exams?',          a: "Challenging but fair. Each question links directly to lesson content, so thorough study leads to a confident pass. You can retake them too." },
 ];
 
@@ -232,8 +232,8 @@ export default function Home() {
     <div style={{ fontFamily: "'Inter', system-ui, sans-serif", background: '#f8faff', color: '#0f172a', overflowX: 'hidden' }}>
       <Helmet>
         {/* â”€â”€ Primary SEO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-        <title>SkillValix â€” Free Online Coding Courses with Certificates | Learn HTML, CSS, JavaScript, Python & More</title>
-        <meta name="description" content="Learn to code 100% FREE â€” no credit card, no hidden fees, ever. SkillValix offers structured courses in HTML, CSS, JavaScript, Python, Java &amp; AI with verifiable certificates. Join 2,800+ students already building their careers online. Start today!" />
+        <title>SkillValix - Free Online Coding Courses with Certificates | Learn HTML, CSS, JavaScript, Python and More</title>
+        <meta name="description" content="Learn to code 100% FREE - no credit card, no hidden fees, ever. SkillValix offers structured courses in HTML, CSS, JavaScript, Python, Java and AI with verifiable certificates. Join 2,800+ students already building their careers online. Start today!" />
         <meta name="keywords" content="free online coding courses, free web development course, learn HTML free, learn CSS free, learn JavaScript free, Python for beginners free, free programming courses India, coding courses with certificates, learn to code for free, web development for beginners, best free coding website, free HTML CSS JavaScript course, online learning platform India, programming certificate online free, learn AI machine learning free, free computer science courses, free tech courses 2026, programming for students free, software development course free, SkillValix, skillvalix.com" />
         <link rel="canonical" href="https://www.skillvalix.com/" />
         <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
@@ -245,19 +245,19 @@ export default function Home() {
         <meta property="og:url" content="https://www.skillvalix.com/" />
         <meta property="og:site_name" content="SkillValix" />
         <meta property="og:locale" content="en_IN" />
-        <meta property="og:title" content="SkillValix â€” Free Coding Courses with Certificates | HTML, CSS, JS, Python, AI" />
+        <meta property="og:title" content="SkillValix - Free Coding Courses with Certificates | HTML, CSS, JS, Python, AI" />
         <meta property="og:description" content="Learn in-demand tech skills 100% free. SkillValix offers structured beginner-to-pro courses with real exam assessments and verifiable PDF certificates. No credit card. No paywall. Ever." />
         <meta property="og:image" content="https://www.skillvalix.com/og-home.png" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
-        <meta property="og:image:alt" content="SkillValix â€” Free Online Coding Courses with Certificates" />
+        <meta property="og:image:alt" content="SkillValix - Free Online Coding Courses with Certificates" />
 
         {/* â”€â”€ Twitter Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:site" content="@SkillValix" />
         <meta name="twitter:creator" content="@SkillValix" />
-        <meta name="twitter:title" content="SkillValix â€” Free Coding Courses with Certificates" />
-        <meta name="twitter:description" content="Master HTML, CSS, JavaScript, Python, Java & AI for free. Get verifiable certificates and boost your career â€” no credit card needed." />
+        <meta name="twitter:title" content="SkillValix - Free Coding Courses with Certificates" />
+        <meta name="twitter:description" content="Master HTML, CSS, JavaScript, Python, Java and AI for free. Get verifiable certificates and boost your career - no credit card needed." />
         <meta name="twitter:image" content="https://www.skillvalix.com/og-home.png" />
 
         {/* â”€â”€ JSON-LD: WebSite + Sitelinks Search Box â”€â”€â”€â”€â”€â”€â”€ */}
@@ -450,7 +450,7 @@ export default function Home() {
           <div style={{ display:'flex', flexWrap:'wrap', justifyContent:'center', alignItems:'center', gap:'10px 28px' }}>
             {[
               { icon: CheckCircle2, text: '2,800+ students enrolled', color: '#10b981' },
-              { icon: Award,        text: 'Free forever â€” no card needed', color: '#6366f1' },
+              { icon: Award,        text: 'Free forever - no card needed', color: '#6366f1' },
               { icon: Star,         text: '4.9 avg course rating', color: '#f59e0b' },
             ].map(({ icon: Icon, text, color }, i) => (
               <span key={i} style={{ display:'flex', alignItems:'center', gap:6, fontSize:13, fontWeight:500, color:'#64748b' }}>
@@ -480,8 +480,8 @@ export default function Home() {
       â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <div style={{ background:'#f1f5f9', borderTop:'1px solid #e2e8f0', borderBottom:'1px solid #e2e8f0', padding:'18px 0', overflow:'hidden' }}>
         <div style={{ display:'flex', width:'max-content', animation:'marqueeScroll 22s linear infinite' }}>
-          {[...Array(4)].flatMap(() => ['HTML5','âœ¦','CSS3','âœ¦','JavaScript','âœ¦','React','âœ¦','Node.js','âœ¦','Git','âœ¦']).map((item,i) => (
-            <span key={i} style={{ marginRight:28, fontSize:12, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em', color: item==='âœ¦' ? '#c7d2fe' : '#94a3b8' }}>
+          {[...Array(4)].flatMap(() => ['HTML5','•','CSS3','•','JavaScript','•','React','•','Node.js','•','Git','•']).map((item,i) => (
+            <span key={i} style={{ marginRight:28, fontSize:12, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em', color: item==='•' ? '#c7d2fe' : '#94a3b8' }}>
               {item}
             </span>
           ))}

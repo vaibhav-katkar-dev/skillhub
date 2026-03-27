@@ -45,6 +45,12 @@ router.get('/analytics', authOptions, adminCheck, async (req, res) => {
       totalAdmins,
       totalQuizzes,
       totalCertificates,
+      readyCertificates,
+      pendingCertificates,
+      queuedCertificates,
+      generatingCertificates,
+      failedCertificates,
+      pdfStorageStats,
       recentUsers,
       recentCertificates,
       quizDocs,
@@ -55,6 +61,25 @@ router.get('/analytics', authOptions, adminCheck, async (req, res) => {
       User.countDocuments({ role: 'admin' }),
       Quiz.countDocuments(),
       Certificate.countDocuments(),
+      Certificate.countDocuments({ pdfStatus: 'ready' }),
+      Certificate.countDocuments({ pdfStatus: 'pending' }),
+      Certificate.countDocuments({ pdfStatus: 'queued' }),
+      Certificate.countDocuments({ pdfStatus: 'generating' }),
+      Certificate.countDocuments({ pdfStatus: 'failed' }),
+      Certificate.aggregate([
+        {
+          $group: {
+            _id: null,
+            totalPdfBytes: { $sum: { $ifNull: ['$pdfSizeBytes', 0] } },
+            avgPdfBytes: { $avg: { $ifNull: ['$pdfSizeBytes', 0] } },
+            cachedPdfCount: {
+              $sum: {
+                $cond: [{ $gt: [{ $ifNull: ['$pdfSizeBytes', 0] }, 0] }, 1, 0],
+              },
+            },
+          },
+        },
+      ]),
       User.find()
         .select('name email role createdAt')
         .sort({ createdAt: -1 })
@@ -121,6 +146,14 @@ router.get('/analytics', authOptions, adminCheck, async (req, res) => {
       (sum, entry) => sum + (entry.quiz ? 1 : 0),
       0
     );
+    const pdfStats = pdfStorageStats[0] || {};
+    const totalPdfBytes = pdfStats.totalPdfBytes || 0;
+    const avgPdfBytes = pdfStats.avgPdfBytes || 0;
+    const cachedPdfCount = pdfStats.cachedPdfCount || 0;
+    const queueDepth = pendingCertificates + queuedCertificates + generatingCertificates;
+    const cachedPdfCoverage = totalCertificates
+      ? Math.round((cachedPdfCount / totalCertificates) * 100)
+      : 0;
 
     res.json({
       generatedAt: new Date().toISOString(),
@@ -141,6 +174,30 @@ router.get('/analytics', authOptions, adminCheck, async (req, res) => {
         averageCertificatesPerCertifiedUser: uniqueCertifiedUsers
           ? Number((totalCertificates / uniqueCertifiedUsers).toFixed(2))
           : 0,
+      },
+      certificatePipeline: {
+        ready: readyCertificates,
+        pending: pendingCertificates,
+        queued: queuedCertificates,
+        generating: generatingCertificates,
+        failed: failedCertificates,
+        queueDepth,
+        cachedPdfCount,
+        cachedPdfCoverage,
+        totalCachedPdfBytes: totalPdfBytes,
+        totalCachedPdfMb: Number((totalPdfBytes / (1024 * 1024)).toFixed(2)),
+        averagePdfBytes: Math.round(avgPdfBytes || 0),
+        averagePdfKb: Number(((avgPdfBytes || 0) / 1024).toFixed(2)),
+      },
+      certificateArchitecture: {
+        previousFlow: 'Each download request could regenerate the certificate PDF synchronously.',
+        currentFlow: 'Certificate records are saved first, PDF generation is queued, and ready PDFs are cached for fast repeat downloads.',
+        mainWins: [
+          'Repeat downloads avoid CPU-heavy regeneration once the PDF is cached.',
+          'Users receive controlled waiting states instead of timeouts during bursts.',
+          'Queue state is persisted in MongoDB so certificate records remain recoverable across retries.',
+        ],
+        scalingLimit: 'This is a strong serverless-safe improvement, but the in-memory queue still runs per warm instance rather than as a fully distributed global queue.',
       },
       permissions: {
         canViewAnalytics: true,
@@ -199,10 +256,12 @@ router.get('/analytics', authOptions, adminCheck, async (req, res) => {
           'JWT secret fallback removed',
           'Certificate generation restricted to completed courses',
           'Payment verification now checks order receipt and amount',
+          'Certificate downloads now prefer cached PDFs over regenerating on every request',
         ],
         watchList: [
           'Lesson and blog HTML rendering should stay trusted or be sanitized before rendering',
           'Certificate PDF generation is CPU-heavy compared to normal API requests',
+          'Serverless queue coordination is per warm instance, so very large bursts still need a true external queue for best scale',
         ],
       },
       courseBreakdown: courseBreakdown.slice(0, 8),

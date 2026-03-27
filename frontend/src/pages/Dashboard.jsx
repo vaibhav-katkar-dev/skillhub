@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { api, useAuthStore, cachedGet } from '../store/authStore';
+import { api, useAuthStore, cachedGet, clearCache } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
+import { getCourseList } from '../data/courseLoader';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://api.skillvalix.com/api';
 import {
@@ -183,7 +184,7 @@ const CertCard = ({ cert, onDownload, copyMsg, onCopy }) => {
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="font-extrabold text-slate-900 text-sm leading-tight line-clamp-2">
-              {cert.course?.title || 'Unknown Course'}
+              {cert.course?.title || 'Certificate Course'}
             </h3>
             <p className="text-[10px] text-slate-400 font-medium mt-0.5 flex items-center gap-1">
               <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />
@@ -202,11 +203,15 @@ const CertCard = ({ cert, onDownload, copyMsg, onCopy }) => {
           {/* Row 1: Core Actions */}
           <div className="flex gap-2">
             <button
-              onClick={() => onDownload(cert.certificateId)}
-              className="flex-1 relative overflow-hidden bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-[.98]"
+              onClick={() => onDownload(cert)}
+              className={`flex-1 relative overflow-hidden text-white text-xs font-bold py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-[.98] ${
+                cert.pdfReady
+                  ? 'bg-slate-900 hover:bg-slate-800'
+                  : 'bg-amber-500 hover:bg-amber-400'
+              }`}
             >
-              <Download className="w-3.5 h-3.5" />
-              Download PDF
+              {cert.pdfReady ? <Download className="w-3.5 h-3.5" /> : <Loader2 className={`w-3.5 h-3.5 ${cert.pdfStatus === 'generating' || cert.pdfStatus === 'queued' ? 'animate-spin' : ''}`} />}
+              {cert.pdfReady ? 'Download PDF' : cert.pdfStatus === 'failed' ? 'Retry PDF' : 'Prepare PDF'}
             </button>
 
             <button
@@ -338,16 +343,12 @@ const Dashboard = () => {
     (async () => {
       try {
         // Use cachedGet — won't hit the network again within 5 minutes
-        const [cR, response] = await Promise.all([
+        const [cR, courseList] = await Promise.all([
           cachedGet('certs_mine', '/certificates/mine'),
-          fetch('/data/all-courses.json')
+          getCourseList()
         ]);
-        if (!response.ok) throw new Error('Failed to load courses');
-        const raw = await response.json();
-        // all-courses.json is [{course:{...}, lessons:[...]}, ...]
-        const coR = raw.map(item => item.course);
         setCerts(cR);
-        setCourses(coR);
+        setCourses(courseList);
       } catch (e) {
         console.error(e);
       } finally {
@@ -356,7 +357,40 @@ const Dashboard = () => {
     })();
   }, [isAuthenticated, authLoading, navigate]);
 
-  const dl = id => window.open(`${API_BASE}/certificates/download/${id}`, '_blank');
+  useEffect(() => {
+    if (!isAuthenticated || certs.length === 0) return undefined;
+    const hasPendingPdf = certs.some(cert => !cert.pdfReady);
+    if (!hasPendingPdf) return undefined;
+
+    const intervalId = setInterval(async () => {
+      try {
+        clearCache('certs_mine');
+        const res = await api.get('/certificates/mine');
+        setCerts(res.data);
+      } catch (err) {
+        console.error('Certificate polling failed', err);
+      }
+    }, 5000);
+
+    return () => clearInterval(intervalId);
+  }, [certs, isAuthenticated]);
+
+  const dl = async (cert) => {
+    if (!cert?.pdfReady) {
+      try {
+        await api.post(`/certificates/prepare/${cert.certificateId}`);
+        clearCache('certs_mine');
+        const refreshed = await api.get('/certificates/mine');
+        setCerts(refreshed.data);
+        alert('Your certificate PDF is being prepared. Please wait about 10 seconds and try again.');
+      } catch (err) {
+        alert(err.response?.data?.message || 'Failed to prepare the certificate PDF.');
+      }
+      return;
+    }
+
+    window.open(`${API_BASE}/certificates/download/${cert.certificateId}`, '_blank');
+  };
   const copy = id => {
     navigator.clipboard.writeText(`${window.location.origin}/verify/${id}`);
     setCopyMsg(id);

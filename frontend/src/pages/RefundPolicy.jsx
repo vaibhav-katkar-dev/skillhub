@@ -36,8 +36,8 @@ export default function RefundPolicy() {
   return (
     <div className="min-h-screen bg-slate-950">
       <Helmet>
-        <title>Refund Policy – SkillHub</title>
-        <meta name="description" content="Understand SkillHub's refund policy for exam access payments — when refunds apply and how to request one." />
+        <title>Refund Policy | SkillValix</title>
+        <meta name="description" content="Understand SkillValix refund policy for exam access payments, including when refunds apply and how to request one." />
       </Helmet>
 
       {/* Hero */}
@@ -77,7 +77,7 @@ export default function RefundPolicy() {
         </div>
 
         <Section title="1. What Requires Payment">
-          <p>Course content on SkillHub is <strong className="text-slate-300">free to access</strong>. Only the <strong className="text-slate-300">Certification Exam</strong> for each course requires a one-time payment.</p>
+          <p>Course content on SkillValix is <strong className="text-slate-300">free to access</strong>. Only the <strong className="text-slate-300">Certification Exam</strong> for each course requires a one-time payment.</p>
           <p>This payment grants you <strong className="text-slate-300">lifetime access</strong> to that course's exam with unlimited retakes until you pass and earn your certificate.</p>
         </Section>
 

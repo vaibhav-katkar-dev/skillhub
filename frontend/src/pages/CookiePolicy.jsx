@@ -4,8 +4,8 @@ import { Cookie, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const LAST_UPDATED = 'March 25, 2026';
-const EMAIL       = 'support@skillvalix.com';
-const SITE        = 'www.skillvalix.com';
+const EMAIL = 'support@skillvalix.com';
+const SITE = 'www.skillvalix.com';
 
 const Section = ({ title, children }) => (
   <section className="mb-10">
@@ -24,7 +24,7 @@ const CookieTable = ({ rows }) => (
     <table className="w-full text-sm text-left">
       <thead className="bg-slate-900 text-slate-400 text-xs uppercase tracking-wider">
         <tr>
-          {['Cookie Name', 'Purpose', 'Duration', 'Type'].map(h => (
+          {['Cookie Name', 'Purpose', 'Duration', 'Type'].map((h) => (
             <th key={h} className="px-4 py-3 font-semibold">{h}</th>
           ))}
         </tr>
@@ -36,11 +36,15 @@ const CookieTable = ({ rows }) => (
             <td className="px-4 py-3 text-slate-400">{r.purpose}</td>
             <td className="px-4 py-3 text-slate-500">{r.duration}</td>
             <td className="px-4 py-3">
-              <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold border ${
-                r.type === 'Essential'
-                  ? 'bg-green-500/10 border-green-500/30 text-green-400'
-                  : 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400'
-              }`}>{r.type}</span>
+              <span
+                className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold border ${
+                  r.type === 'Essential'
+                    ? 'bg-green-500/10 border-green-500/30 text-green-400'
+                    : 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400'
+                }`}
+              >
+                {r.type}
+              </span>
             </td>
           </tr>
         ))}
@@ -53,11 +57,13 @@ export default function CookiePolicy() {
   return (
     <div className="min-h-screen bg-slate-950">
       <Helmet>
-        <title>Cookie Policy – SkillHub</title>
-        <meta name="description" content="Learn how SkillHub uses cookies — what they are, which ones we use, and how you can control them." />
+        <title>Cookie Policy | SkillValix</title>
+        <meta
+          name="description"
+          content="Learn how SkillValix uses cookies, which ones we use, and how you can control them."
+        />
       </Helmet>
 
-      {/* Hero */}
       <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border-b border-slate-800">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="flex items-center gap-3 mb-4">
@@ -74,16 +80,14 @@ export default function CookiePolicy() {
         </div>
       </div>
 
-      {/* Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-
         <Section title="1. What Are Cookies?">
           <p>Cookies are small text files placed on your device by a website when you visit it. They help websites remember your preferences, keep you signed in, and understand how you use the site.</p>
-          <p>Cookies are not programs — they cannot carry viruses or install malware on your device.</p>
+          <p>Cookies are not programs. They cannot carry viruses or install malware on your device.</p>
         </Section>
 
         <Section title="2. Types of Cookies We Use">
-          <p>We keep our cookie usage minimal and purposeful. We use only <strong className="text-slate-300">Essential</strong> cookies required to operate the Platform.</p>
+          <p>We keep our cookie usage minimal and purposeful. We use only <strong className="text-slate-300">Essential</strong> cookies required to operate the platform.</p>
 
           <CookieTable rows={[
             {
@@ -94,7 +98,7 @@ export default function CookiePolicy() {
             },
             {
               name: 'skillhub_pref',
-              purpose: 'Remembers lightweight UI preferences (e.g., last visited course)',
+              purpose: 'Remembers lightweight UI preferences such as the last visited course',
               duration: '30 days',
               type: 'Essential',
             },
@@ -113,11 +117,11 @@ export default function CookiePolicy() {
           ]} />
         </Section>
 
-        <Section title="3. What We Do NOT Use">
+        <Section title="3. What We Do Not Use">
           <p>We <strong className="text-slate-300">do not</strong> use:</p>
           <ul className="list-disc pl-5 space-y-1">
             <li>Advertising or tracking cookies</li>
-            <li>Third-party analytics cookies (e.g., Google Analytics)</li>
+            <li>Third-party analytics cookies</li>
             <li>Social media tracking pixels</li>
             <li>Cross-site behavioural profiling</li>
           </ul>
@@ -126,27 +130,27 @@ export default function CookiePolicy() {
         <Section title="4. How to Control Cookies">
           <p>You can control and delete cookies through your browser settings:</p>
           <ul className="list-disc pl-5 space-y-1">
-            <li><strong className="text-slate-300">Chrome:</strong> Settings → Privacy and Security → Cookies and other site data</li>
-            <li><strong className="text-slate-300">Firefox:</strong> Settings → Privacy & Security → Cookies and Site Data</li>
-            <li><strong className="text-slate-300">Safari:</strong> Preferences → Privacy → Manage Website Data</li>
-            <li><strong className="text-slate-300">Edge:</strong> Settings → Cookies and site permissions</li>
+            <li><strong className="text-slate-300">Chrome:</strong> Settings &gt; Privacy and Security &gt; Cookies and other site data</li>
+            <li><strong className="text-slate-300">Firefox:</strong> Settings &gt; Privacy and Security &gt; Cookies and Site Data</li>
+            <li><strong className="text-slate-300">Safari:</strong> Preferences &gt; Privacy &gt; Manage Website Data</li>
+            <li><strong className="text-slate-300">Edge:</strong> Settings &gt; Cookies and site permissions</li>
           </ul>
           <p className="mt-2 p-3 bg-yellow-500/5 border border-yellow-500/20 rounded-lg text-yellow-300/80">
-            ⚠️ Disabling cookies may prevent you from staying logged in or completing payments on the Platform.
+            Disabling cookies may prevent you from staying logged in or completing payments on the platform.
           </p>
         </Section>
 
         <Section title="5. Third-Party Cookies">
           <p>Our payment provider <strong className="text-slate-300">Razorpay</strong> and authentication provider <strong className="text-slate-300">Google</strong> may set cookies governed by their own policies:</p>
           <ul className="list-disc pl-5 space-y-1">
-            <li><a href="https://razorpay.com/privacy/" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Razorpay Privacy Policy ↗</a></li>
-            <li><a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Google Privacy Policy ↗</a></li>
+            <li><a href="https://razorpay.com/privacy/" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Razorpay Privacy Policy</a></li>
+            <li><a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Google Privacy Policy</a></li>
           </ul>
         </Section>
 
         <Section title="6. Consent">
           <p>By continuing to use {SITE} after seeing our cookie notice, you consent to our use of essential cookies as described in this policy.</p>
-          <p>Since we only use essential cookies, we are not required to obtain separate opt-in consent for analytics or advertising cookies — we simply don't use them.</p>
+          <p>Since we only use essential cookies, we are not required to obtain separate opt-in consent for analytics or advertising cookies because we do not use them.</p>
         </Section>
 
         <Section title="7. Updates to This Policy">
@@ -158,9 +162,9 @@ export default function CookiePolicy() {
         </Section>
 
         <div className="mt-10 pt-8 border-t border-slate-800 flex flex-wrap gap-4 text-sm">
-          <Link to="/privacy-policy" className="text-blue-400 hover:underline">Privacy Policy →</Link>
-          <Link to="/terms" className="text-blue-400 hover:underline">Terms of Service →</Link>
-          <Link to="/refund-policy" className="text-blue-400 hover:underline">Refund Policy →</Link>
+          <Link to="/privacy-policy" className="text-blue-400 hover:underline">Privacy Policy</Link>
+          <Link to="/terms" className="text-blue-400 hover:underline">Terms of Service</Link>
+          <Link to="/refund-policy" className="text-blue-400 hover:underline">Refund Policy</Link>
         </div>
       </div>
     </div>

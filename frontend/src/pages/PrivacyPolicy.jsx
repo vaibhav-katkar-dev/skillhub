@@ -4,7 +4,7 @@ import { Shield, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const LAST_UPDATED = 'March 25, 2026';
-const COMPANY     = 'SkillHub (SkillValix Learning Platform)';
+const COMPANY     = 'SkillValix Learning Platform';
 const SITE        = 'www.skillvalix.com';
 const EMAIL       = 'support@skillvalix.com';
 
@@ -24,8 +24,8 @@ export default function PrivacyPolicy() {
   return (
     <div className="min-h-screen bg-slate-950">
       <Helmet>
-        <title>Privacy Policy – SkillHub</title>
-        <meta name="description" content="Read SkillHub's Privacy Policy to understand how we collect, use, and protect your personal data." />
+        <title>Privacy Policy | SkillValix</title>
+        <meta name="description" content="Read SkillValix Privacy Policy to understand how we collect, use, and protect your personal data." />
       </Helmet>
 
       {/* Hero */}

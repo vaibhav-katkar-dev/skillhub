@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { normalizeHtmlContent, normalizeDisplayText } from '../utils/text';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Calendar, User, Clock, ArrowLeft, BookOpen, ArrowRight, Tag } from 'lucide-react';
 import { blogPosts } from '../data/blogs';
@@ -179,7 +180,7 @@ const BlogPost = () => {
         <article className="lg:col-span-8 bg-white p-8 md:p-12 rounded-2xl shadow-sm border border-slate-200">
           <div
             className="prose prose-slate prose-lg md:prose-xl max-w-none prose-headings:font-bold prose-headings:text-slate-900 prose-a:text-blue-600 prose-img:rounded-xl prose-code:text-blue-700 prose-pre:bg-slate-900 prose-pre:text-slate-100"
-            dangerouslySetInnerHTML={{ __html: post.content }}
+            dangerouslySetInnerHTML={{ __html: normalizeHtmlContent(post.content) }}
           />
 
           {/* Tags */}
@@ -192,7 +193,7 @@ const BlogPost = () => {
                     key={tag}
                     className="bg-slate-100 text-slate-600 text-xs font-semibold px-3 py-1 rounded-full hover:bg-blue-50 hover:text-blue-700 transition-colors cursor-default"
                   >
-                    {tag}
+                    {normalizeDisplayText(tag)}
                   </span>
                 ))}
               </div>

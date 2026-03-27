@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { normalizeHtmlContent } from '../utils/text';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getCourseBySlug } from '../data/courseLoader';
 import {
@@ -918,7 +919,7 @@ const LessonView = () => {
                     />
                   </div>
                 )}
-                <div dangerouslySetInnerHTML={{ __html: lesson.content }} />
+                <div dangerouslySetInnerHTML={{ __html: normalizeHtmlContent(lesson.content) }} />
 
                 <section className="lv-practice-wrap" aria-label="Lesson practice lab">
                   <div className="lv-practice-head">

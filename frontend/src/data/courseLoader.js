@@ -16,6 +16,8 @@
  *  - Save. Done.
  */
 
+import { normalizeDeepStrings } from '../utils/text';
+
 // ── Module-level cache ──────────────────────────────────
 let _promise = null;   // in-flight or resolved promise
 let _data    = null;   // cached parsed array
@@ -31,8 +33,9 @@ async function _load() {
       return res.json();
     })
     .then(parsed => {
-      _data = parsed;
-      return parsed;
+      const normalized = normalizeDeepStrings(parsed);
+      _data = normalized;
+      return normalized;
     });
 
   return _promise;

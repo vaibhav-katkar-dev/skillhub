@@ -361,6 +361,35 @@ const AdminPanel = () => {
 
               <div className="space-y-6">
                 <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                  <h2 className="text-lg font-bold text-slate-900 mb-4">Certificate Queue Health</h2>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { label: 'Ready PDFs', value: analytics?.certificatePipeline?.ready ?? '-', tone: 'border-emerald-200 bg-emerald-50' },
+                      { label: 'Pending', value: analytics?.certificatePipeline?.pending ?? '-', tone: 'border-slate-200 bg-slate-50' },
+                      { label: 'Queued', value: analytics?.certificatePipeline?.queued ?? '-', tone: 'border-amber-200 bg-amber-50' },
+                      { label: 'Generating', value: analytics?.certificatePipeline?.generating ?? '-', tone: 'border-indigo-200 bg-indigo-50' },
+                      { label: 'Failed', value: analytics?.certificatePipeline?.failed ?? '-', tone: 'border-rose-200 bg-rose-50' },
+                      { label: 'Queue Depth', value: analytics?.certificatePipeline?.queueDepth ?? '-', tone: 'border-violet-200 bg-violet-50' },
+                    ].map(({ label, value, tone }) => (
+                      <div key={label} className={`rounded-xl border p-4 ${tone}`}>
+                        <p className="text-xs font-bold uppercase tracking-wide text-slate-500">{label}</p>
+                        <p className="mt-2 text-2xl font-black text-slate-900">{value}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-4 rounded-2xl bg-slate-50 border border-slate-200 p-4">
+                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500">PDF Cache</p>
+                    <div className="mt-3 space-y-2 text-sm">
+                      <div className="flex items-center justify-between"><span className="text-slate-500">Cached PDFs</span><span className="font-bold text-slate-900">{analytics?.certificatePipeline?.cachedPdfCount ?? '-'}</span></div>
+                      <div className="flex items-center justify-between"><span className="text-slate-500">Coverage</span><span className="font-bold text-slate-900">{analytics?.certificatePipeline?.cachedPdfCoverage ?? '-'}%</span></div>
+                      <div className="flex items-center justify-between"><span className="text-slate-500">Avg PDF size</span><span className="font-bold text-slate-900">{analytics?.certificatePipeline?.averagePdfKb ? `${analytics.certificatePipeline.averagePdfKb} KB` : '-'}</span></div>
+                      <div className="flex items-center justify-between"><span className="text-slate-500">Total cached size</span><span className="font-bold text-slate-900">{formatSize(analytics?.certificatePipeline?.totalCachedPdfBytes)}</span></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
                   <h2 className="text-lg font-bold text-slate-900 mb-4">Recent Users</h2>
                   <div className="space-y-3">
                     {analyticsLoading && Array.from({ length: 4 }).map((_, idx) => (
@@ -471,6 +500,43 @@ const AdminPanel = () => {
                   <p className="mt-2 text-sm text-amber-900 font-medium">
                     {analytics?.capacityEstimate?.practicalBottleneck || 'No bottleneck estimate available yet.'}
                   </p>
+                </div>
+
+                <div className="mt-5 rounded-2xl border border-indigo-200 bg-indigo-50 p-5">
+                  <p className="text-xs font-bold uppercase tracking-wide text-indigo-700">Certificate Strategy</p>
+                  <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div className="rounded-xl border border-rose-200 bg-white p-4">
+                      <p className="font-semibold text-slate-900">Previous flow</p>
+                      <p className="mt-2 text-slate-600">
+                        {analytics?.certificateArchitecture?.previousFlow || 'No previous flow summary available.'}
+                      </p>
+                    </div>
+                    <div className="rounded-xl border border-emerald-200 bg-white p-4">
+                      <p className="font-semibold text-slate-900">Current flow</p>
+                      <p className="mt-2 text-slate-600">
+                        {analytics?.certificateArchitecture?.currentFlow || 'No current flow summary available.'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {analytics?.certificateArchitecture?.mainWins?.length ? analytics.certificateArchitecture.mainWins.map((item) => (
+                      <div key={item} className="rounded-xl border border-indigo-200 bg-white p-4 text-sm text-slate-700">
+                        {item}
+                      </div>
+                    )) : (
+                      <div className="rounded-xl border border-dashed border-indigo-200 bg-white p-4 text-sm text-slate-500 md:col-span-3">
+                        Improvement notes are not available yet.
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-4 rounded-xl border border-amber-200 bg-white p-4">
+                    <p className="text-xs font-bold uppercase tracking-wide text-amber-700">Scaling Limit</p>
+                    <p className="mt-2 text-sm text-slate-700">
+                      {analytics?.certificateArchitecture?.scalingLimit || 'No scaling-limit note available.'}
+                    </p>
+                  </div>
                 </div>
               </div>
 

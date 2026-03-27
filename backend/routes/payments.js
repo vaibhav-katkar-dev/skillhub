@@ -9,13 +9,20 @@ const router = express.Router();
 router.post('/razorpay-order', authOptions, async (req, res) => {
   try {
     const { courseId } = req.body;
+    if (!courseId || typeof courseId !== 'string') {
+      return res.status(400).json({ message: 'A valid courseId is required' });
+    }
 
     if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
       return res.status(500).json({ message: 'Razorpay keys not configured' });
     }
 
     const user = await User.findById(req.user.id);
-    const isAdminTestMode = user?.role === 'admin';
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const isAdminTestMode = user.role === 'admin';
     const amountToCharge = isAdminTestMode ? 100 : 4900;
 
     const rzp = new Razorpay({
@@ -45,6 +52,15 @@ router.post('/razorpay-order', authOptions, async (req, res) => {
 router.post('/razorpay-verify', authOptions, async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, courseId } = req.body;
+    if (!courseId || typeof courseId !== 'string') {
+      return res.status(400).json({ success: false, message: 'A valid courseId is required' });
+    }
+    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+      return res.status(500).json({ success: false, message: 'Razorpay keys not configured' });
+    }
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({ success: false, message: 'Missing payment verification fields' });
+    }
 
     const body = razorpay_order_id + '|' + razorpay_payment_id;
     const expectedSignature = crypto
@@ -58,14 +74,16 @@ router.post('/razorpay-verify', authOptions, async (req, res) => {
         key_secret: process.env.RAZORPAY_KEY_SECRET,
       });
       const user = await User.findById(req.user.id);
+      if (!user) {
+        return res.status(404).json({ success: false, message: 'User not found' });
+      }
       const order = await rzp.orders.fetch(razorpay_order_id);
       const expectedReceipt = `receipt_${courseId}_${req.user.id}`.substring(0, 40);
-      const expectedAmount = user?.role === 'admin' ? 100 : 4900;
+      const expectedAmount = user.role === 'admin' ? 100 : 4900;
 
       if (!order || order.receipt !== expectedReceipt || order.amount !== expectedAmount) {
         return res.status(400).json({ success: false, message: 'Payment does not match this course unlock request' });
       }
-
       let attemptRecord = user.quizAttempts?.find(a => a.courseId === courseId);
 
       if (!attemptRecord) {

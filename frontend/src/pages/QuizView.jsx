@@ -23,6 +23,47 @@ const QuizView = () => {
   const [existingCert, setExistingCert] = useState(null);
   const [paying, setPaying] = useState(false);
   const [paymentInfo, setPaymentInfo] = useState(null);
+  const [certReady, setCertReady] = useState(false);
+  const [certPreparing, setCertPreparing] = useState(false);
+  const [certRetryAfter, setCertRetryAfter] = useState(0);
+  const [certStatusMessage, setCertStatusMessage] = useState('');
+
+  const pollCertificateStatus = async (certificateId) => {
+    try {
+      const res = await api.get(`/certificates/status/${certificateId}`);
+      setCertRetryAfter(res.data.retryAfterSeconds || 0);
+      if (res.data.pdfReady) {
+        setCertReady(true);
+        setCertPreparing(false);
+        setCertStatusMessage('Your certificate PDF is ready to download.');
+        clearCache('certs_mine');
+      }
+    } catch (err) {
+      console.error('Certificate status polling failed', err);
+    }
+  };
+
+  const prepareCertificate = async (certificateId) => {
+    if (!certificateId) return;
+    setGeneratedCertId(certificateId);
+    setCertPreparing(true);
+    setCertReady(false);
+    try {
+      const res = await api.post(`/certificates/prepare/${certificateId}`);
+      setCertRetryAfter(res.data.retryAfterSeconds || 0);
+      if (res.data.pdfReady) {
+        setCertReady(true);
+        setCertPreparing(false);
+        setCertStatusMessage('Your certificate PDF is ready to download.');
+        clearCache('certs_mine');
+      } else {
+        setCertStatusMessage('Certificate created successfully. The PDF is now being prepared safely in the background.');
+      }
+    } catch (err) {
+      setCertPreparing(false);
+      setCertStatusMessage(err.response?.data?.message || 'Failed to prepare certificate PDF.');
+    }
+  };
 
   useEffect(() => {
     if (authLoading) return;
@@ -52,6 +93,12 @@ const QuizView = () => {
           if (pastCert) {
             setAlreadyPassed(true);
             setExistingCert(pastCert);
+            if (pastCert.pdfReady) {
+              setCertReady(true);
+            } else {
+              setGeneratedCertId(pastCert.certificateId);
+              prepareCertificate(pastCert.certificateId);
+            }
           }
         } catch (certErr) {
           console.error('Could not fetch user certificates', certErr);
@@ -65,6 +112,22 @@ const QuizView = () => {
 
     fetchQuiz();
   }, [slug, isAuthenticated, navigate, authLoading]);
+
+  useEffect(() => {
+    if (!certPreparing || !generatedCertId || certReady) return undefined;
+    const intervalId = setInterval(() => {
+      pollCertificateStatus(generatedCertId);
+    }, 4000);
+    return () => clearInterval(intervalId);
+  }, [certPreparing, generatedCertId, certReady]);
+
+  useEffect(() => {
+    if (!certPreparing || certReady || certRetryAfter <= 0) return undefined;
+    const timerId = setInterval(() => {
+      setCertRetryAfter(prev => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timerId);
+  }, [certPreparing, certReady, certRetryAfter]);
 
   const handleOptionSelect = (qIndex, oIndex) => {
     setAnswers(prev => ({ ...prev, [qIndex]: oIndex }));
@@ -87,6 +150,7 @@ const QuizView = () => {
       if (res.data.passed && res.data.certificateId) {
         setGeneratedCertId(res.data.certificateId);
         clearCache('certs_mine');
+        prepareCertificate(res.data.certificateId);
       }
 
       if (!res.data.passed) {
@@ -191,7 +255,7 @@ const QuizView = () => {
 
           {result.passed ? (
             <p className="text-slate-600 mb-8 max-w-md mx-auto">
-              You&apos;ve mastered this subject. Your verifiable PDF certificate has been generated successfully.
+              You&apos;ve mastered this subject. Your certificate record is ready, and the PDF is being prepared safely for download.
             </p>
           ) : (
             <p className="text-slate-600 mb-8 max-w-md mx-auto">
@@ -200,12 +264,23 @@ const QuizView = () => {
           )}
 
           <div className="flex justify-center gap-4 flex-wrap">
-            {result.passed && generatedCertId && (
+            {result.passed && generatedCertId && certReady && (
               <button
                 onClick={() => window.open(`${API_BASE}/certificates/download/${generatedCertId}`, '_blank')}
                 className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition-colors shadow-md shadow-emerald-500/20 flex items-center gap-2"
               >
                 <Download className="w-5 h-5" /> Download Certificate
+              </button>
+            )}
+
+            {result.passed && generatedCertId && !certReady && (
+              <button
+                onClick={() => prepareCertificate(generatedCertId)}
+                disabled={certPreparing}
+                className="px-6 py-3 bg-amber-500 hover:bg-amber-400 disabled:bg-amber-300 text-white rounded-xl font-bold transition-colors shadow-md shadow-amber-500/20 flex items-center gap-2"
+              >
+                <Loader2 className={`w-5 h-5 ${certPreparing ? 'animate-spin' : ''}`} />
+                {certPreparing ? `Preparing PDF${certRetryAfter > 0 ? ` (${certRetryAfter}s)` : ''}` : 'Prepare Certificate PDF'}
               </button>
             )}
 
@@ -229,6 +304,10 @@ const QuizView = () => {
               </button>
             )}
           </div>
+
+          {result.passed && certStatusMessage && (
+            <p className="mt-5 text-sm font-medium text-slate-600">{certStatusMessage}</p>
+          )}
         </div>
       ) : alreadyPassed ? (
         <div className="p-8 rounded-3xl border shadow-sm text-center bg-blue-50 border-blue-200">
@@ -244,16 +323,29 @@ const QuizView = () => {
             You have already cleared this Certification Exam.
           </p>
           <p className="text-slate-600 mb-8 max-w-md mx-auto">
-            Your certificate is ready to download. You do not need to take this exam again.
+            {certReady
+              ? 'Your certificate is ready to download. You do not need to take this exam again.'
+              : 'Your certificate record already exists. The PDF is being prepared so repeated requests do not overload the server.'}
           </p>
 
           <div className="flex justify-center gap-4 flex-wrap">
-            {existingCert && (
+            {existingCert && certReady && (
               <button
                 onClick={() => window.open(`${API_BASE}/certificates/download/${existingCert.certificateId}`, '_blank')}
                 className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition-colors shadow-md shadow-blue-500/20 flex items-center gap-2"
               >
                 <Download className="w-5 h-5" /> Download Certificate
+              </button>
+            )}
+
+            {existingCert && !certReady && (
+              <button
+                onClick={() => prepareCertificate(existingCert.certificateId)}
+                disabled={certPreparing}
+                className="px-6 py-3 bg-amber-500 hover:bg-amber-400 disabled:bg-amber-300 text-white rounded-xl font-bold transition-colors shadow-md shadow-amber-500/20 flex items-center gap-2"
+              >
+                <Loader2 className={`w-5 h-5 ${certPreparing ? 'animate-spin' : ''}`} />
+                {certPreparing ? `Preparing PDF${certRetryAfter > 0 ? ` (${certRetryAfter}s)` : ''}` : 'Prepare Certificate PDF'}
               </button>
             )}
 
@@ -268,6 +360,10 @@ const QuizView = () => {
               Go to Dashboard
             </button>
           </div>
+
+          {certStatusMessage && (
+            <p className="mt-5 text-sm font-medium text-slate-600">{certStatusMessage}</p>
+          )}
         </div>
       ) : quiz?.requirePayment ? (
         <div className="bg-white border-2 border-indigo-100 rounded-3xl max-w-md mx-auto mt-8 shadow-2xl relative overflow-hidden flex flex-col">
