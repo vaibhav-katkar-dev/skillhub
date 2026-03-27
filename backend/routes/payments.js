@@ -15,23 +15,27 @@ router.post('/razorpay-order', authOptions, async (req, res) => {
     }
 
     const user = await User.findById(req.user.id);
-    let attemptRecord = user.quizAttempts?.find(a => a.courseId === courseId);
-
-    const amountToCharge = 4900; // Flat ₹49 for specific Certification Access
+    const isAdminTestMode = user?.role === 'admin';
+    const amountToCharge = isAdminTestMode ? 100 : 4900;
 
     const rzp = new Razorpay({
       key_id: process.env.RAZORPAY_KEY_ID,
       key_secret: process.env.RAZORPAY_KEY_SECRET,
     });
 
+    const expectedReceipt = `receipt_${courseId}_${req.user.id}`.substring(0, 40);
     const options = {
       amount: amountToCharge,
       currency: 'INR',
-      receipt: `receipt_${courseId}_${req.user.id}`.substring(0, 40)
+      receipt: expectedReceipt,
     };
 
     const order = await rzp.orders.create(options);
-    res.json(order);
+    res.json({
+      ...order,
+      isAdminTestMode,
+      displayAmountRupees: amountToCharge / 100,
+    });
   } catch (err) {
     console.error('Razorpay order error:', err);
     res.status(500).json({ message: 'Error creating payment order' });
@@ -49,8 +53,19 @@ router.post('/razorpay-verify', authOptions, async (req, res) => {
       .digest('hex');
 
     if (expectedSignature === razorpay_signature) {
-      // Find or create attempt record
+      const rzp = new Razorpay({
+        key_id: process.env.RAZORPAY_KEY_ID,
+        key_secret: process.env.RAZORPAY_KEY_SECRET,
+      });
       const user = await User.findById(req.user.id);
+      const order = await rzp.orders.fetch(razorpay_order_id);
+      const expectedReceipt = `receipt_${courseId}_${req.user.id}`.substring(0, 40);
+      const expectedAmount = user?.role === 'admin' ? 100 : 4900;
+
+      if (!order || order.receipt !== expectedReceipt || order.amount !== expectedAmount) {
+        return res.status(400).json({ success: false, message: 'Payment does not match this course unlock request' });
+      }
+
       let attemptRecord = user.quizAttempts?.find(a => a.courseId === courseId);
 
       if (!attemptRecord) {
@@ -58,6 +73,7 @@ router.post('/razorpay-verify', authOptions, async (req, res) => {
       } else {
         attemptRecord.unlockedAttempts = 1000;
       }
+
       await user.save();
       res.json({ success: true });
     } else {

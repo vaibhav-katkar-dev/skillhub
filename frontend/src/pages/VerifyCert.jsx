@@ -138,83 +138,93 @@ const VerifyCert = () => {
             )}
           </div>
 
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-300/20 via-blue-300/10 to-indigo-400/20 blur-3xl rounded-[2rem]" />
-            <div className="relative bg-white border border-slate-200 rounded-[2rem] shadow-[0_24px_80px_rgba(15,23,42,0.12)] overflow-hidden">
-              <div className="h-3 bg-gradient-to-r from-emerald-400 via-blue-500 to-indigo-600" />
-              <div className="p-7 sm:p-8">
-                <div className="flex items-start justify-between gap-4 mb-8">
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Verification Result</p>
-                    <h2 className="mt-2 text-2xl font-black text-slate-900">
-                      {result ? 'Certificate Authenticated' : 'Certificate Preview'}
-                    </h2>
-                  </div>
-                  <div className={`rounded-2xl px-4 py-2 text-sm font-bold border ${result ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-500 border-slate-200'}`}>
-                    {result ? 'Valid' : 'Awaiting ID'}
-                  </div>
-                </div>
-
-                <div className="rounded-[1.75rem] border border-slate-200 bg-[linear-gradient(135deg,#f8fafc_0%,#ffffff_45%,#f1f5f9_100%)] p-6 sm:p-7 shadow-inner">
-                  <div className="flex items-center justify-between gap-4 pb-5 border-b border-slate-200">
+          {(loading || result) && (
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-300/20 via-blue-300/10 to-indigo-400/20 blur-3xl rounded-[2rem]" />
+              <div className="relative bg-white border border-slate-200 rounded-[2rem] shadow-[0_24px_80px_rgba(15,23,42,0.12)] overflow-hidden">
+                <div className="h-3 bg-gradient-to-r from-emerald-400 via-blue-500 to-indigo-600" />
+                <div className="p-7 sm:p-8">
+                  <div className="flex items-start justify-between gap-4 mb-8">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.2em] text-slate-400 font-bold">SkillValix</p>
-                      <h3 className="text-2xl font-black text-slate-900 mt-1">Certificate of Completion</h3>
+                      <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Verification Result</p>
+                      <h2 className="mt-2 text-2xl font-black text-slate-900">
+                        {loading ? 'Checking Certificate' : 'Certificate Authenticated'}
+                      </h2>
                     </div>
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-blue-600 flex items-center justify-center shadow-lg shadow-indigo-500/25">
-                      <Award className="w-7 h-7 text-white" />
-                    </div>
-                  </div>
-
-                  <div className="mt-6 space-y-5">
-                    <div>
-                      <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400 font-bold mb-1">Recipient</p>
-                      <p className="text-2xl font-black text-slate-900 break-words">{result?.studentName || 'Verified Learner Name'}</p>
-                    </div>
-
-                    <div>
-                      <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400 font-bold mb-1">Course</p>
-                      <p className="text-lg font-bold text-blue-700 break-words">{result?.courseTitle || 'Your course title appears here after verification'}</p>
-                    </div>
-
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      <div className="rounded-2xl bg-white border border-slate-200 p-4">
-                        <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400 font-bold mb-1">Issue Date</p>
-                        <p className="font-semibold text-slate-800">
-                          {result?.issueDate ? new Date(result.issueDate).toLocaleDateString('en-IN', {
-                            day: '2-digit',
-                            month: 'long',
-                            year: 'numeric',
-                          }) : 'Day Month Year'}
-                        </p>
-                      </div>
-                      <div className="rounded-2xl bg-white border border-slate-200 p-4">
-                        <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400 font-bold mb-1">Certificate ID</p>
-                        <p className="font-mono text-sm font-semibold text-slate-800 break-all">{result?.certificateId || 'CERT-XXXXXXXX'}</p>
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl bg-emerald-50 border border-emerald-200 p-4 flex items-start gap-3">
-                      <CheckCircle className={`w-5 h-5 mt-0.5 shrink-0 ${result ? 'text-emerald-600' : 'text-emerald-400'}`} />
-                      <div>
-                        <p className="font-bold text-emerald-800">{result ? 'This certificate is valid.' : 'Verified certificates appear here.'}</p>
-                        <p className="text-sm text-emerald-700/80 mt-1">
-                          {result
-                            ? 'The certificate details match an official SkillValix record.'
-                            : 'Once a valid certificate ID is entered, this panel becomes the official authenticity record.'}
-                        </p>
-                      </div>
+                    <div className={`rounded-2xl px-4 py-2 text-sm font-bold border ${result ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
+                      {result ? 'Valid' : 'Verifying'}
                     </div>
                   </div>
-                </div>
 
-                <div className="mt-6 flex items-center gap-2 text-sm text-slate-500">
-                  <Sparkles className="w-4 h-4 text-amber-500" />
-                  <span>SkillValix certificates are designed to be simple to verify and easy to trust.</span>
+                  <div className="rounded-[1.75rem] border border-slate-200 bg-[linear-gradient(135deg,#f8fafc_0%,#ffffff_45%,#f1f5f9_100%)] p-6 sm:p-7 shadow-inner">
+                    {loading && !result ? (
+                      <div className="py-10 text-center">
+                        <Loader2 className="w-10 h-10 animate-spin text-blue-600 mx-auto mb-4" />
+                        <h3 className="text-xl font-black text-slate-900">Verifying certificate details</h3>
+                        <p className="text-slate-500 mt-2">The official certificate record will appear here once the data is confirmed.</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex items-center justify-between gap-4 pb-5 border-b border-slate-200">
+                          <div>
+                            <p className="text-xs uppercase tracking-[0.2em] text-slate-400 font-bold">SkillValix</p>
+                            <h3 className="text-2xl font-black text-slate-900 mt-1">Certificate of Completion</h3>
+                          </div>
+                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-blue-600 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+                            <Award className="w-7 h-7 text-white" />
+                          </div>
+                        </div>
+
+                        <div className="mt-6 space-y-5">
+                          <div>
+                            <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400 font-bold mb-1">Recipient</p>
+                            <p className="text-2xl font-black text-slate-900 break-words">{result?.studentName}</p>
+                          </div>
+
+                          <div>
+                            <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400 font-bold mb-1">Course</p>
+                            <p className="text-lg font-bold text-blue-700 break-words">{result?.courseTitle}</p>
+                          </div>
+
+                          <div className="grid sm:grid-cols-2 gap-4">
+                            <div className="rounded-2xl bg-white border border-slate-200 p-4">
+                              <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400 font-bold mb-1">Issue Date</p>
+                              <p className="font-semibold text-slate-800">
+                                {result?.issueDate ? new Date(result.issueDate).toLocaleDateString('en-IN', {
+                                  day: '2-digit',
+                                  month: 'long',
+                                  year: 'numeric',
+                                }) : ''}
+                              </p>
+                            </div>
+                            <div className="rounded-2xl bg-white border border-slate-200 p-4">
+                              <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400 font-bold mb-1">Certificate ID</p>
+                              <p className="font-mono text-sm font-semibold text-slate-800 break-all">{result?.certificateId}</p>
+                            </div>
+                          </div>
+
+                          <div className="rounded-2xl bg-emerald-50 border border-emerald-200 p-4 flex items-start gap-3">
+                            <CheckCircle className="w-5 h-5 mt-0.5 shrink-0 text-emerald-600" />
+                            <div>
+                              <p className="font-bold text-emerald-800">This certificate is valid.</p>
+                              <p className="text-sm text-emerald-700/80 mt-1">
+                                The certificate details match an official SkillValix record.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="mt-6 flex items-center gap-2 text-sm text-slate-500">
+                    <Sparkles className="w-4 h-4 text-amber-500" />
+                    <span>SkillValix certificates are designed to be simple to verify and easy to trust.</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         <div className="mt-12 bg-slate-900 text-white rounded-[2rem] overflow-hidden shadow-[0_30px_90px_rgba(15,23,42,0.22)]">

@@ -3,14 +3,14 @@ import { Helmet } from 'react-helmet-async';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api, useAuthStore, clearCache } from '../store/authStore';
 import { getCourseBySlug } from '../data/courseLoader';
-import { Award, Loader2, AlertCircle, Download, CreditCard, RefreshCcw, CheckCircle } from 'lucide-react';
+import { Award, Loader2, AlertCircle, Download, CreditCard, CheckCircle } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://api.skillvalix.com/api';
 
 const QuizView = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated, loading: authLoading } = useAuthStore();
+  const { isAuthenticated, loading: authLoading, user } = useAuthStore();
   const [quiz, setQuiz] = useState(null);
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -22,7 +22,7 @@ const QuizView = () => {
   const [alreadyPassed, setAlreadyPassed] = useState(false);
   const [existingCert, setExistingCert] = useState(null);
   const [paying, setPaying] = useState(false);
-  const { user } = useAuthStore();
+  const [paymentInfo, setPaymentInfo] = useState(null);
 
   useEffect(() => {
     if (authLoading) return;
@@ -30,7 +30,7 @@ const QuizView = () => {
       navigate('/login');
       return;
     }
-    
+
     const fetchQuiz = async () => {
       try {
         const localCourseData = await getCourseBySlug(slug);
@@ -45,9 +45,8 @@ const QuizView = () => {
         setQuiz(quizRes.data);
 
         try {
-          // Always fetch fresh — don't use cache here to get accurate completion status
           const certRes = await api.get('/certificates/mine');
-          const pastCert = certRes.data.find(c => 
+          const pastCert = certRes.data.find(c =>
             (c.course?._id || c.course)?.toString() === courseId?.toString()
           );
           if (pastCert) {
@@ -55,7 +54,7 @@ const QuizView = () => {
             setExistingCert(pastCert);
           }
         } catch (certErr) {
-          console.error("Could not fetch user certificates", certErr);
+          console.error('Could not fetch user certificates', certErr);
         }
       } catch {
         setError('Quiz not found or you do not have permission.');
@@ -63,6 +62,7 @@ const QuizView = () => {
         setLoading(false);
       }
     };
+
     fetchQuiz();
   }, [slug, isAuthenticated, navigate, authLoading]);
 
@@ -73,7 +73,7 @@ const QuizView = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (Object.keys(answers).length !== quiz.questions.length) {
-      alert("Please answer all questions.");
+      alert('Please answer all questions.');
       return;
     }
 
@@ -83,14 +83,12 @@ const QuizView = () => {
     try {
       const res = await api.post(`/quizzes/${course._id}/submit`, { answers: orderedAnswers });
       setResult(res.data);
-      
-      // Certificate is now returned directly from quiz submit endpoint
+
       if (res.data.passed && res.data.certificateId) {
         setGeneratedCertId(res.data.certificateId);
         clearCache('certs_mine');
       }
 
-      // Decrement attempts locally since submit was successful (it incremented on backend)
       if (!res.data.passed) {
         setQuiz(prev => ({ ...prev, attemptsUsed: (prev.attemptsUsed || 0) + 1 }));
       }
@@ -111,52 +109,59 @@ const QuizView = () => {
     try {
       const res = await api.post('/payments/razorpay-order', { courseId: course._id });
       const order = res.data;
+      setPaymentInfo(order);
 
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_your_key_id_here',
         amount: order.amount,
         currency: order.currency,
         name: 'SkillValix Certification',
-        description: `Unlock Lifetime Exam Access & Unlimited Retakes`,
+        description: order.isAdminTestMode
+          ? 'Admin Test Mode Exam Unlock'
+          : 'Unlock Lifetime Exam Access and Unlimited Retakes',
         order_id: order.id,
         handler: async function (response) {
           try {
             await api.post('/payments/razorpay-verify', {
               ...response,
-              courseId: course._id
+              courseId: course._id,
             });
-            // Update attempts locally and continue
-            setQuiz(prev => ({ 
-              ...prev, 
+            setQuiz(prev => ({
+              ...prev,
               requirePayment: false,
-              unlockedAttempts: 1000
+              unlockedAttempts: 1000,
             }));
             setError(null);
           } catch (err) {
-            alert('Verification Failed. Please contact support.');
+            alert('Verification failed. Please contact support.');
           }
         },
         prefill: {
           name: user?.name || 'Student',
-          email: user?.email || ''
+          email: user?.email || '',
         },
-        theme: { color: '#4f46e5' }
+        theme: { color: '#4f46e5' },
       };
-      
+
       const rzp = new window.Razorpay(options);
-      rzp.on('payment.failed', function (response){
-        alert('Payment Failed: ' + response.error.description);
+      rzp.on('payment.failed', function (response) {
+        alert('Payment failed: ' + response.error.description);
       });
       rzp.open();
-    } catch(err) {
+    } catch (err) {
       alert('Failed to initialize payment.');
     } finally {
       setPaying(false);
     }
   };
 
-  if (authLoading || loading) return <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>;
-  if (error) return <div className="p-20 text-center text-red-500 font-medium">{error}</div>;
+  if (authLoading || loading) {
+    return <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>;
+  }
+
+  if (error) {
+    return <div className="p-20 text-center text-red-500 font-medium">{error}</div>;
+  }
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-12">
@@ -183,28 +188,28 @@ const QuizView = () => {
           <p className="text-xl text-slate-700 mb-6 font-medium">
             You scored <span className="font-bold text-slate-900">{result.score}%</span> on the Certification Exam.
           </p>
-          
+
           {result.passed ? (
             <p className="text-slate-600 mb-8 max-w-md mx-auto">
-              You've mastered this subject. Your verifiable PDF certificate has been generated successfully.
+              You&apos;ve mastered this subject. Your verifiable PDF certificate has been generated successfully.
             </p>
           ) : (
             <p className="text-slate-600 mb-8 max-w-md mx-auto">
-              A score of {quiz.passingScore}% is required to qualify. Review the course material and reattempt the exam when ready.
+              A score of {result.passingScore || quiz.passingScore}% is required to qualify. Review the course material and reattempt the exam when ready.
             </p>
           )}
 
           <div className="flex justify-center gap-4 flex-wrap">
             {result.passed && generatedCertId && (
-              <button 
+              <button
                 onClick={() => window.open(`${API_BASE}/certificates/download/${generatedCertId}`, '_blank')}
                 className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition-colors shadow-md shadow-emerald-500/20 flex items-center gap-2"
               >
                 <Download className="w-5 h-5" /> Download Certificate
               </button>
             )}
-            
-            <button 
+
+            <button
               onClick={() => {
                 clearCache('certs_mine');
                 clearCache('courses_all');
@@ -214,9 +219,9 @@ const QuizView = () => {
             >
               Go to Dashboard
             </button>
-            
+
             {!result.passed && (
-              <button 
+              <button
                 onClick={() => { setResult(null); setAnswers({}); }}
                 className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-medium transition-colors shadow-md shadow-blue-500/20"
               >
@@ -225,7 +230,7 @@ const QuizView = () => {
             )}
           </div>
         </div>
-      ) : (alreadyPassed) ? (
+      ) : alreadyPassed ? (
         <div className="p-8 rounded-3xl border shadow-sm text-center bg-blue-50 border-blue-200">
           <div className="flex justify-center mb-6">
             <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center">
@@ -244,15 +249,15 @@ const QuizView = () => {
 
           <div className="flex justify-center gap-4 flex-wrap">
             {existingCert && (
-              <button 
+              <button
                 onClick={() => window.open(`${API_BASE}/certificates/download/${existingCert.certificateId}`, '_blank')}
                 className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition-colors shadow-md shadow-blue-500/20 flex items-center gap-2"
               >
                 <Download className="w-5 h-5" /> Download Certificate
               </button>
             )}
-            
-            <button 
+
+            <button
               onClick={() => {
                 clearCache('certs_mine');
                 clearCache('courses_all');
@@ -264,67 +269,82 @@ const QuizView = () => {
             </button>
           </div>
         </div>
-      ) : (quiz?.requirePayment) ? (
+      ) : quiz?.requirePayment ? (
         <div className="bg-white border-2 border-indigo-100 rounded-3xl max-w-md mx-auto mt-8 shadow-2xl relative overflow-hidden flex flex-col">
-          {/* Header Banner */}
           <div className="bg-gradient-to-br from-indigo-600 to-violet-700 p-8 text-center text-white relative">
             <div className="absolute top-0 right-0 bg-rose-500 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-bl-xl shadow-sm">
-                Limited Time
+              {user?.role === 'admin' ? 'Admin Test' : 'Limited Time'}
             </div>
             <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-5 backdrop-blur-sm border border-white/30 shadow-inner">
               <Award className="w-8 h-8 text-white" />
             </div>
             <h2 className="text-2xl font-extrabold mb-2 text-white">
-               Unlock {course?.title}
+              Unlock {course?.title}
             </h2>
             <p className="text-indigo-100 text-sm font-medium leading-relaxed max-w-xs mx-auto">
-               One-time fee to permanently unlock the certification exam and earn your credential.
+              {user?.role === 'admin'
+                ? 'Admin test mode: unlock this certification exam for Rs. 1 only.'
+                : 'One-time fee to permanently unlock the certification exam and earn your credential.'}
             </p>
           </div>
 
-          {/* Body Section */}
           <div className="p-8 flex flex-col items-center bg-white">
-            
-            {/* Price Box */}
             <div className="flex items-end justify-center gap-3 mb-8 w-full bg-slate-50 py-4 rounded-2xl border border-slate-100">
-              <span className="line-through text-slate-400 text-xl font-bold mb-1">₹499</span>
-              <span className="text-5xl font-black text-slate-900 tracking-tight">₹49</span>
+              {user?.role === 'admin' ? (
+                <>
+                  <span className="line-through text-slate-400 text-xl font-bold mb-1">Rs. 49</span>
+                  <span className="text-5xl font-black text-slate-900 tracking-tight">Rs. 1</span>
+                </>
+              ) : (
+                <>
+                  <span className="line-through text-slate-400 text-xl font-bold mb-1">Rs. 499</span>
+                  <span className="text-5xl font-black text-slate-900 tracking-tight">Rs. 49</span>
+                </>
+              )}
             </div>
 
-            {/* Feature List */}
+            {user?.role === 'admin' && (
+              <div className="w-full mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                Admin-only test mode is active for this course. Your passing score is 30% and your exam unlock fee is Rs. 1.
+              </div>
+            )}
+
             <div className="w-full mb-8">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">What's included</p>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">What&apos;s included</p>
               <ul className="text-sm text-slate-700 space-y-3.5 font-medium">
-                 <li className="flex items-center gap-3">
-                    <span className="bg-emerald-100 p-1.5 rounded-full text-emerald-600 shadow-sm"><CheckCircle className="w-3.5 h-3.5" /></span>
-                    Valid securely for <b>{course?.title}</b> only
-                 </li>
-                 <li className="flex items-center gap-3">
-                    <span className="bg-emerald-100 p-1.5 rounded-full text-emerald-600 shadow-sm"><CheckCircle className="w-3.5 h-3.5" /></span>
-                    Unlimited Retakes (No extra fees)
-                 </li>
-                 <li className="flex items-center gap-3">
-                    <span className="bg-emerald-100 p-1.5 rounded-full text-emerald-600 shadow-sm"><CheckCircle className="w-3.5 h-3.5" /></span>
-                    Instant Verifiable Certificate
-                 </li>
-                 <li className="flex items-center gap-3">
-                    <span className="bg-emerald-100 p-1.5 rounded-full text-emerald-600 shadow-sm"><CheckCircle className="w-3.5 h-3.5" /></span>
-                    Shareable on LinkedIn & Resumes
-                 </li>
+                <li className="flex items-center gap-3">
+                  <span className="bg-emerald-100 p-1.5 rounded-full text-emerald-600 shadow-sm"><CheckCircle className="w-3.5 h-3.5" /></span>
+                  Valid securely for <b>{course?.title}</b> only
+                </li>
+                <li className="flex items-center gap-3">
+                  <span className="bg-emerald-100 p-1.5 rounded-full text-emerald-600 shadow-sm"><CheckCircle className="w-3.5 h-3.5" /></span>
+                  Unlimited retakes with no extra fees
+                </li>
+                <li className="flex items-center gap-3">
+                  <span className="bg-emerald-100 p-1.5 rounded-full text-emerald-600 shadow-sm"><CheckCircle className="w-3.5 h-3.5" /></span>
+                  Instant verifiable certificate
+                </li>
+                <li className="flex items-center gap-3">
+                  <span className="bg-emerald-100 p-1.5 rounded-full text-emerald-600 shadow-sm"><CheckCircle className="w-3.5 h-3.5" /></span>
+                  {user?.role === 'admin' ? 'Admin-only reduced test pricing' : 'Shareable on LinkedIn and resumes'}
+                </li>
               </ul>
             </div>
 
-            {/* CTA */}
-            <button 
+            <button
               onClick={handlePayment}
               disabled={paying}
               className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-lg transition-all shadow-xl shadow-indigo-500/30 flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-70 group"
             >
               {paying ? <Loader2 className="w-6 h-6 animate-spin" /> : <CreditCard className="w-6 h-6 group-hover:scale-110 transition-transform" />}
-              <span>Pay Safely Now</span>
+              <span>
+                {user?.role === 'admin'
+                  ? `Pay Rs. ${paymentInfo?.displayAmountRupees || 1} for Test Access`
+                  : 'Pay Safely Now'}
+              </span>
             </button>
             <p className="text-[10px] text-slate-400 mt-5 font-semibold uppercase tracking-widest text-center">
-               💳 Secured by Razorpay
+              Secured by Razorpay
             </p>
           </div>
         </div>
@@ -333,10 +353,15 @@ const QuizView = () => {
           <div className="mb-8 border-b border-slate-200 pb-6 flex items-start justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold mb-2 text-slate-900">Certification Exam</h1>
-              <p className="text-slate-600 font-medium">{course?.title} • {quiz?.questions?.length} Questions • {quiz?.passingScore}% required</p>
+              <p className="text-slate-600 font-medium">{course?.title} | {quiz?.questions?.length} Questions | {quiz?.passingScore}% required</p>
+              {quiz?.isAdminTestMode && (
+                <p className="mt-2 text-sm font-semibold text-amber-700">
+                  Admin test mode: 30% passing score is active for your account only.
+                </p>
+              )}
             </div>
             <div className="px-4 py-2 bg-slate-100 rounded-lg text-sm font-bold text-slate-700 border border-slate-200 text-center">
-              Attempt<br/><span className="text-lg text-indigo-600">{quiz?.attemptsUsed + 1}</span><span className="text-slate-400">/∞</span>
+              Attempt<br /><span className="text-lg text-indigo-600">{quiz?.attemptsUsed + 1}</span><span className="text-slate-400">/∞</span>
             </div>
           </div>
 
@@ -348,12 +373,12 @@ const QuizView = () => {
                 </h3>
                 <div className="space-y-3">
                   {q.options.map((opt, oIndex) => (
-                    <label 
-                      key={oIndex} 
+                    <label
+                      key={oIndex}
                       className={`flex items-center p-4 rounded-lg cursor-pointer border transition-all ${
-                        answers[qIndex] === oIndex 
-                        ? 'border-blue-400 bg-blue-50/50 shadow-sm' 
-                        : 'border-slate-300 hover:border-blue-300 bg-white shadow-sm'
+                        answers[qIndex] === oIndex
+                          ? 'border-blue-400 bg-blue-50/50 shadow-sm'
+                          : 'border-slate-300 hover:border-blue-300 bg-white shadow-sm'
                       }`}
                       onClick={() => handleOptionSelect(qIndex, oIndex)}
                     >
@@ -371,8 +396,8 @@ const QuizView = () => {
           </div>
 
           <div className="mt-10 pt-6 border-t border-slate-200 flex justify-end">
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={submitting}
               className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-xl font-bold text-lg shadow-md shadow-blue-500/20 disabled:opacity-50 transition-all active:scale-[0.98]"
             >

@@ -1,5 +1,12 @@
 import jwt from 'jsonwebtoken';
 
+const getJwtSecret = () => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET is not configured');
+  }
+  return process.env.JWT_SECRET;
+};
+
 export const authOptions = (req, res, next) => {
   // Get token from header
   const token = req.header('Authorization')?.split(' ')[1];
@@ -11,10 +18,13 @@ export const authOptions = (req, res, next) => {
 
   // Verify token
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
+    const decoded = jwt.verify(token, getJwtSecret());
     req.user = decoded.user;
     next();
   } catch (err) {
+    if (err.message === 'JWT_SECRET is not configured') {
+      return res.status(500).json({ message: 'Authentication is not configured on the server' });
+    }
     res.status(401).json({ message: 'Token is not valid' });
   }
 };

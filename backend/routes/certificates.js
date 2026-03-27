@@ -55,9 +55,14 @@ router.post('/generate', authOptions, async (req, res) => {
     const { courseId } = req.body;
     const user = await User.findById(req.user.id);
     const resolvedCourseId = normalizeId(courseId);
-    const courseTitle = await resolveCourseTitle(resolvedCourseId, `Course ID: ${resolvedCourseId || 'Unknown'}`);
-
+    const hasCompletedCourse = (user?.completedCourses || []).some(course => normalizeId(course) === resolvedCourseId);
     let cert = await Certificate.findOne({ student: user._id, course: resolvedCourseId });
+
+    if (!hasCompletedCourse && !cert) {
+      return res.status(403).json({ message: 'Certificate can only be generated after completing the certification exam.' });
+    }
+
+    const courseTitle = await resolveCourseTitle(resolvedCourseId, `Course ID: ${resolvedCourseId || 'Unknown'}`);
     if (!cert) {
       const certId = `CERT-${uuidv4().substring(0, 8).toUpperCase()}`;
       cert = new Certificate({

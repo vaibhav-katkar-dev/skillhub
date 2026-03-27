@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { getQuizFromJSON, getCourseFromJSON } from '../utils/courseData.js';
 
 const router = express.Router();
+const ADMIN_TEST_PASSING_SCORE = 30;
 
 function normalizeId(value) {
   if (!value) return null;
@@ -33,6 +34,10 @@ router.get('/:courseId', authOptions, async (req, res) => {
     quiz.attemptsUsed = attemptRecord ? attemptRecord.attempts : 0;
     quiz.unlockedAttempts = attemptRecord ? attemptRecord.unlockedAttempts : 0;
     quiz.requirePayment = quiz.attemptsUsed >= quiz.unlockedAttempts;
+    quiz.isAdminTestMode = req.user?.role === 'admin';
+    if (quiz.isAdminTestMode) {
+      quiz.passingScore = ADMIN_TEST_PASSING_SCORE;
+    }
     
     
     // Remove correct options so students can't cheat
@@ -92,7 +97,8 @@ router.post('/:courseId/submit', authOptions, async (req, res) => {
     });
 
     const score = (correctCount / quiz.questions.length) * 100;
-    const passed = score >= quiz.passingScore;
+    const effectivePassingScore = req.user?.role === 'admin' ? ADMIN_TEST_PASSING_SCORE : quiz.passingScore;
+    const passed = score >= effectivePassingScore;
 
     let certificateId = null;
 
@@ -132,7 +138,14 @@ router.post('/:courseId/submit', authOptions, async (req, res) => {
       await User.findByIdAndUpdate(user._id, { $addToSet: { completedCourses: req.params.courseId } });
     }
 
-    res.json({ score, passed, certificateId, message: passed ? 'Passed!' : 'Failed. Try again.' });
+    res.json({
+      score,
+      passed,
+      certificateId,
+      passingScore: effectivePassingScore,
+      isAdminTestMode: req.user?.role === 'admin',
+      message: passed ? 'Passed!' : 'Failed. Try again.'
+    });
   } catch (err) {
     res.status(500).json({ message: 'Server Error', error: err.message });
   }

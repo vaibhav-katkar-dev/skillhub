@@ -11,6 +11,13 @@ import crypto from 'crypto';
 
 const router = express.Router();
 
+const getJwtSecret = () => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET is not configured');
+  }
+  return process.env.JWT_SECRET;
+};
+
 // Google OAuth client (Requires process.env.GOOGLE_CLIENT_ID)
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -50,11 +57,14 @@ router.post('/register', async (req, res) => {
     await user.save();
 
     const payload = { user: { id: user.id, role: user.role } };
-    const token = jwt.sign(payload, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '7d' });
+    const token = jwt.sign(payload, getJwtSecret(), { expiresIn: '7d' });
 
     res.json({ token });
   } catch (err) {
     console.error(err.message);
+    if (err.message === 'JWT_SECRET is not configured') {
+      return res.status(500).json({ message: 'Authentication is not configured on the server' });
+    }
     res.status(500).send('Server error');
   }
 });
@@ -74,11 +84,14 @@ router.post('/login', async (req, res) => {
     if (!isMatch) return res.status(400).json({ message: 'Invalid Credentials' });
 
     const payload = { user: { id: user.id, role: user.role } };
-    const token = jwt.sign(payload, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '7d' });
+    const token = jwt.sign(payload, getJwtSecret(), { expiresIn: '7d' });
 
     res.json({ token });
   } catch (err) {
     console.error(err.message);
+    if (err.message === 'JWT_SECRET is not configured') {
+      return res.status(500).json({ message: 'Authentication is not configured on the server' });
+    }
     res.status(500).send('Server error');
   }
 });
@@ -113,11 +126,14 @@ router.post('/google', async (req, res) => {
     }
 
     const jwtPayload = { user: { id: user.id, role: user.role } };
-    const token = jwt.sign(jwtPayload, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '7d' });
+    const token = jwt.sign(jwtPayload, getJwtSecret(), { expiresIn: '7d' });
 
     res.json({ token });
   } catch (err) {
     console.error('Google Auth Error:', err.message);
+    if (err.message === 'JWT_SECRET is not configured') {
+      return res.status(500).json({ message: 'Authentication is not configured on the server' });
+    }
     res.status(500).send('Server error during Google Authentication');
   }
 });
