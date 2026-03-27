@@ -21,8 +21,9 @@ const queuedCertificateIds = new Set();
 
 function hasStoredPdf(cert) {
   if (!cert) return false;
-  if (Object.prototype.hasOwnProperty.call(cert, 'pdfBuffer')) {
-    return Buffer.isBuffer(cert.pdfBuffer) && cert.pdfBuffer.length > 0;
+  if ('pdfBuffer' in cert) {
+    const raw = cert.pdfBuffer?.buffer || cert.pdfBuffer;
+    return Buffer.isBuffer(raw) && raw.length > 0;
   }
   return Number(cert.pdfSizeBytes || 0) > 0;
 }
@@ -443,7 +444,7 @@ router.post('/generate', authOptions, async (req, res) => {
     }
 
     await User.findByIdAndUpdate(user._id, { $addToSet: { completedCourses: resolvedCourseId } });
-    enqueueCertificatePreparation(cert.certificateId).catch(() => {});
+    enqueueCertificatePreparation(cert.certificateId).catch(() => { });
 
     res.json({
       message: 'Certificate created and queued for PDF preparation.',
@@ -553,7 +554,8 @@ router.get('/download/:certId', async (req, res) => {
       res.setHeader('Content-Type', cert.pdfMimeType || 'application/pdf');
       res.setHeader('Content-Disposition', `inline; filename=Certificate-${cert.certificateId}.pdf`);
       res.setHeader('Cache-Control', 'public, max-age=86400');
-      return res.send(cert.pdfBuffer);
+      const rawBuf = cert.pdfBuffer?.buffer || cert.pdfBuffer;
+      return res.send(rawBuf);
     }
 
     await enqueueCertificatePreparation(cert.certificateId);
@@ -563,7 +565,8 @@ router.get('/download/:certId', async (req, res) => {
       res.setHeader('Content-Type', cert.pdfMimeType || 'application/pdf');
       res.setHeader('Content-Disposition', `inline; filename=Certificate-${cert.certificateId}.pdf`);
       res.setHeader('Cache-Control', 'public, max-age=86400');
-      return res.send(cert.pdfBuffer);
+      const rawBuf = cert.pdfBuffer?.buffer || cert.pdfBuffer;
+      return res.send(rawBuf);
     }
 
     const clientPdfState = getClientPdfState(cert);
