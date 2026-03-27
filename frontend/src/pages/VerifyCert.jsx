@@ -1,8 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { api } from '../store/authStore';
-import { Search, CheckCircle, XCircle, Award, Loader2 } from 'lucide-react';
+import { getCourseList } from '../data/courseLoader';
+import {
+  Search, CheckCircle, XCircle, Award, Loader2,
+  ShieldCheck, Sparkles, ArrowRight, BookOpen, Clock, BadgeCheck
+} from 'lucide-react';
+
+const CTA_THEMES = {
+  blue: 'from-indigo-600 to-blue-700',
+  green: 'from-emerald-600 to-teal-700',
+  pink: 'from-rose-600 to-pink-700',
+  orange: 'from-amber-500 to-orange-600',
+};
 
 const VerifyCert = () => {
   const { certId: urlCertId } = useParams();
@@ -10,8 +21,14 @@ const VerifyCert = () => {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [courses, setCourses] = useState([]);
 
-  // Auto-verify if an ID was passed in the URL
+  useEffect(() => {
+    getCourseList()
+      .then(data => setCourses((data || []).slice(0, 6)))
+      .catch(() => setCourses([]));
+  }, []);
+
   useEffect(() => {
     if (urlCertId) {
       verifyCertificate(urlCertId);
@@ -41,85 +58,243 @@ const VerifyCert = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-140px)] py-12 px-4 bg-slate-50">
+    <div className="min-h-[calc(100vh-140px)] bg-[radial-gradient(circle_at_top,#e0ecff_0%,#f8fafc_35%,#f8fafc_100%)] py-12 px-4">
       <Helmet>
         <title>Verify Certificate | SkillValix</title>
         <meta name="description" content="Verify the authenticity of a SkillValix certificate using its unique ID." />
       </Helmet>
 
-      <div className="w-full max-w-2xl bg-white border border-slate-200 p-8 sm:p-12 rounded-3xl shadow-xl">
+      <div className="max-w-6xl mx-auto">
         <div className="text-center mb-10">
-          <div className="inline-flex p-4 rounded-2xl bg-blue-50 border border-blue-100 mb-6 shadow-sm">
-            <Search className="w-10 h-10 text-blue-600" />
+          <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-white/80 backdrop-blur px-4 py-1.5 text-xs font-bold uppercase tracking-[0.18em] text-indigo-700 shadow-sm">
+            <ShieldCheck className="w-4 h-4" />
+            Official Certificate Verification
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-4">Verify Certificate</h1>
-          <p className="text-slate-600 max-w-md mx-auto font-medium">
-            Enter the unique Certificate ID to verify its authenticity and check the details of the issuer and recipient.
+          <h1 className="mt-5 text-4xl sm:text-5xl font-black text-slate-900 tracking-tight">
+            Verify a SkillValix Certificate
+          </h1>
+          <p className="mt-4 text-slate-600 max-w-2xl mx-auto text-lg">
+            Confirm certificate authenticity, recipient details, and course completion from one secure verification page.
           </p>
         </div>
 
-        <form onSubmit={handleVerify} className="relative max-w-md mx-auto mb-10">
-          <input
-            type="text"
-            className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-5 py-4 text-lg text-slate-900 font-mono uppercase focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder:normal-case placeholder:text-slate-400 font-medium"
-            placeholder="e.g. CERT-1A2B3C4D"
-            value={certId}
-            onChange={(e) => setCertId(e.target.value)}
-          />
-          <button 
-            type="submit"
-            disabled={loading || !certId.trim()}
-            className="absolute right-2 top-2 bottom-2 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-400 text-white px-6 rounded-lg font-bold transition-colors flex items-center shadow-md shadow-blue-500/20 disabled:shadow-none"
-          >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Verify'}
-          </button>
-        </form>
-
-        {error && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-2xl flex flex-col items-center text-center shadow-sm">
-              <XCircle className="w-12 h-12 mb-3 text-red-500" />
-              <h3 className="text-xl font-bold mb-1">Verification Failed</h3>
-              <p className="font-medium">{error}</p>
-            </div>
-          </div>
-        )}
-
-        {result && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <div className="bg-emerald-50 border border-emerald-200 p-6 rounded-2xl text-center relative overflow-hidden shadow-sm">
-              <div className="absolute -right-6 -top-6 text-emerald-100">
-                <Award className="w-32 h-32" />
+        <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-8 items-start">
+          <div className="bg-white/90 backdrop-blur border border-slate-200 rounded-[2rem] shadow-[0_20px_70px_rgba(15,23,42,0.08)] p-6 sm:p-8">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="inline-flex p-3 rounded-2xl bg-blue-50 border border-blue-100 shadow-sm">
+                <Search className="w-7 h-7 text-blue-600" />
               </div>
-              <div className="relative z-10 flex flex-col items-center">
-                <CheckCircle className="w-12 h-12 mb-3 text-emerald-500" />
-                <h3 className="text-2xl font-bold text-emerald-800 mb-6">Certificate Verified</h3>
-                
-                <div className="w-full text-left space-y-4 bg-white p-6 rounded-xl border border-emerald-100 shadow-sm">
+              <div>
+                <h2 className="text-xl font-extrabold text-slate-900">Search Certificate ID</h2>
+                <p className="text-sm text-slate-500">Use the exact certificate code shown on the PDF.</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleVerify} className="relative mb-8">
+              <input
+                type="text"
+                className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl px-5 py-4 pr-32 text-lg text-slate-900 font-mono uppercase focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all placeholder:normal-case placeholder:text-slate-400"
+                placeholder="e.g. CERT-1A2B3C4D"
+                value={certId}
+                onChange={(e) => setCertId(e.target.value)}
+              />
+              <button
+                type="submit"
+                disabled={loading || !certId.trim()}
+                className="absolute right-2 top-2 bottom-2 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-400 text-white px-6 rounded-xl font-bold transition-colors flex items-center shadow-md shadow-blue-500/20 disabled:shadow-none"
+              >
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Verify'}
+              </button>
+            </form>
+
+            <div className="grid sm:grid-cols-3 gap-3 mb-8">
+              {[
+                { icon: ShieldCheck, title: 'Tamper Checked', text: 'Validated against official certificate records.' },
+                { icon: BadgeCheck, title: 'Trusted Data', text: 'Shows verified recipient and course details.' },
+                { icon: Award, title: 'Instant Result', text: 'Know in seconds whether a certificate is genuine.' },
+              ].map(({ icon: Icon, title, text }) => (
+                <div key={title} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <Icon className="w-5 h-5 text-indigo-600 mb-3" />
+                  <p className="font-bold text-slate-900 text-sm">{title}</p>
+                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">{text}</p>
+                </div>
+              ))}
+            </div>
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-2xl flex flex-col items-center text-center shadow-sm">
+                <XCircle className="w-12 h-12 mb-3 text-red-500" />
+                <h3 className="text-xl font-bold mb-1">Verification Failed</h3>
+                <p className="font-medium">{error}</p>
+              </div>
+            )}
+
+            {!error && !result && !loading && (
+              <div className="rounded-[1.75rem] border border-dashed border-slate-300 bg-slate-50/80 p-8 text-center">
+                <Award className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                <h3 className="text-lg font-bold text-slate-800">Enter a certificate ID to begin</h3>
+                <p className="text-slate-500 mt-2">We’ll show the verified learner, course, issue date, and certificate code here.</p>
+              </div>
+            )}
+          </div>
+
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-300/20 via-blue-300/10 to-indigo-400/20 blur-3xl rounded-[2rem]" />
+            <div className="relative bg-white border border-slate-200 rounded-[2rem] shadow-[0_24px_80px_rgba(15,23,42,0.12)] overflow-hidden">
+              <div className="h-3 bg-gradient-to-r from-emerald-400 via-blue-500 to-indigo-600" />
+              <div className="p-7 sm:p-8">
+                <div className="flex items-start justify-between gap-4 mb-8">
                   <div>
-                    <span className="block text-xs uppercase tracking-wider text-slate-500 font-bold mb-1">Recipient Name</span>
-                    <span className="text-lg font-bold text-slate-900">{result.studentName}</span>
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Verification Result</p>
+                    <h2 className="mt-2 text-2xl font-black text-slate-900">
+                      {result ? 'Certificate Authenticated' : 'Certificate Preview'}
+                    </h2>
                   </div>
-                  <div>
-                    <span className="block text-xs uppercase tracking-wider text-slate-500 font-bold mb-1">Course Details</span>
-                    <span className="text-lg font-bold text-blue-600">{result.courseTitle}</span>
+                  <div className={`rounded-2xl px-4 py-2 text-sm font-bold border ${result ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-500 border-slate-200'}`}>
+                    {result ? 'Valid' : 'Awaiting ID'}
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                </div>
+
+                <div className="rounded-[1.75rem] border border-slate-200 bg-[linear-gradient(135deg,#f8fafc_0%,#ffffff_45%,#f1f5f9_100%)] p-6 sm:p-7 shadow-inner">
+                  <div className="flex items-center justify-between gap-4 pb-5 border-b border-slate-200">
                     <div>
-                      <span className="block text-xs uppercase tracking-wider text-slate-500 font-bold mb-1">Issue Date</span>
-                      <span className="text-slate-700 font-medium">{new Date(result.issueDate).toLocaleDateString()}</span>
+                      <p className="text-xs uppercase tracking-[0.2em] text-slate-400 font-bold">SkillValix</p>
+                      <h3 className="text-2xl font-black text-slate-900 mt-1">Certificate of Completion</h3>
                     </div>
-                    <div>
-                      <span className="block text-xs uppercase tracking-wider text-slate-500 font-bold mb-1">Certificate ID</span>
-                      <span className="text-slate-700 font-mono font-medium">{result.certificateId}</span>
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-blue-600 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+                      <Award className="w-7 h-7 text-white" />
                     </div>
                   </div>
+
+                  <div className="mt-6 space-y-5">
+                    <div>
+                      <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400 font-bold mb-1">Recipient</p>
+                      <p className="text-2xl font-black text-slate-900 break-words">{result?.studentName || 'Verified Learner Name'}</p>
+                    </div>
+
+                    <div>
+                      <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400 font-bold mb-1">Course</p>
+                      <p className="text-lg font-bold text-blue-700 break-words">{result?.courseTitle || 'Your course title appears here after verification'}</p>
+                    </div>
+
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div className="rounded-2xl bg-white border border-slate-200 p-4">
+                        <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400 font-bold mb-1">Issue Date</p>
+                        <p className="font-semibold text-slate-800">
+                          {result?.issueDate ? new Date(result.issueDate).toLocaleDateString('en-IN', {
+                            day: '2-digit',
+                            month: 'long',
+                            year: 'numeric',
+                          }) : 'Day Month Year'}
+                        </p>
+                      </div>
+                      <div className="rounded-2xl bg-white border border-slate-200 p-4">
+                        <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400 font-bold mb-1">Certificate ID</p>
+                        <p className="font-mono text-sm font-semibold text-slate-800 break-all">{result?.certificateId || 'CERT-XXXXXXXX'}</p>
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl bg-emerald-50 border border-emerald-200 p-4 flex items-start gap-3">
+                      <CheckCircle className={`w-5 h-5 mt-0.5 shrink-0 ${result ? 'text-emerald-600' : 'text-emerald-400'}`} />
+                      <div>
+                        <p className="font-bold text-emerald-800">{result ? 'This certificate is valid.' : 'Verified certificates appear here.'}</p>
+                        <p className="text-sm text-emerald-700/80 mt-1">
+                          {result
+                            ? 'The certificate details match an official SkillValix record.'
+                            : 'Once a valid certificate ID is entered, this panel becomes the official authenticity record.'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex items-center gap-2 text-sm text-slate-500">
+                  <Sparkles className="w-4 h-4 text-amber-500" />
+                  <span>SkillValix certificates are designed to be simple to verify and easy to trust.</span>
                 </div>
               </div>
             </div>
           </div>
-        )}
+        </div>
 
+        <div className="mt-12 bg-slate-900 text-white rounded-[2rem] overflow-hidden shadow-[0_30px_90px_rgba(15,23,42,0.22)]">
+          <div className="p-8 sm:p-10 border-b border-white/10 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.35),transparent_35%),linear-gradient(135deg,#0f172a_0%,#172554_45%,#111827_100%)]">
+            <div className="max-w-3xl">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.18em] text-blue-100">
+                <Sparkles className="w-4 h-4 text-amber-300" />
+                Get Certified Fast
+              </div>
+              <h2 className="mt-5 text-3xl sm:text-4xl font-black leading-tight">
+                Get quickly certified in your skills with real course-based certificates
+              </h2>
+              <p className="mt-4 text-slate-300 text-lg">
+                Start a structured course, finish the lessons, pass the assessment, and earn a verifiable certificate that looks professional and checks out instantly.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Link
+                  to="/courses"
+                  className="inline-flex items-center gap-2 rounded-xl bg-white text-slate-900 px-5 py-3 font-bold hover:bg-slate-100 transition-colors"
+                >
+                  Browse All Courses
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link
+                  to="/register"
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/10 text-white px-5 py-3 font-bold hover:bg-white/15 transition-colors"
+                >
+                  Start Learning Free
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6 sm:p-8">
+            <div className="flex items-center justify-between gap-4 mb-6">
+              <div>
+                <h3 className="text-xl font-black">Popular Certification Paths</h3>
+                <p className="text-slate-400 text-sm mt-1">Choose a course and work toward a verified certificate.</p>
+              </div>
+              <Link to="/courses" className="hidden sm:inline-flex items-center gap-2 text-sm font-bold text-blue-300 hover:text-blue-200 transition-colors">
+                View all courses
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+
+            <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {courses.map(course => (
+                <Link
+                  key={course._id}
+                  to={`/courses/${course.slug}`}
+                  className="group rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all duration-300 overflow-hidden"
+                >
+                  <div className={`h-2 bg-gradient-to-r ${CTA_THEMES[course.theme] || CTA_THEMES.blue}`} />
+                  <div className="p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="w-11 h-11 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center shrink-0">
+                        <BookOpen className="w-5 h-5 text-blue-200" />
+                      </div>
+                      <div className="text-right text-xs text-slate-400 font-bold uppercase tracking-wide">
+                        Certificate Track
+                      </div>
+                    </div>
+                    <h4 className="mt-4 text-lg font-extrabold text-white leading-snug">{course.title}</h4>
+                    <p className="mt-2 text-sm text-slate-300 line-clamp-3">{course.description}</p>
+                    <div className="mt-4 flex items-center justify-between text-xs font-bold text-slate-300 border-t border-white/10 pt-4">
+                      <span className="inline-flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5" />
+                        Self-paced
+                      </span>
+                      <span className="inline-flex items-center gap-1 group-hover:gap-2 transition-all">
+                        Get Certified
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
