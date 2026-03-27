@@ -414,6 +414,22 @@ const Dashboard = () => {
     });
   }, [certs]);
 
+  // Silently fetch PDF bytes & trigger browser save/open — no tab switch
+  const triggerBlobDownload = async (certId) => {
+    const res = await api.get(`/certificates/download/${certId}`, {
+      responseType: 'blob',
+    });
+    const blob = new Blob([res.data], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Certificate-${certId}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  };
+
   const dl = async (cert) => {
     const certId = cert?.certificateId;
     if (!certId) return;
@@ -427,7 +443,7 @@ const Dashboard = () => {
           delete next[certId];
           return next;
         });
-        window.open(`${API_BASE}/certificates/download/${certId}`, '_blank');
+        await triggerBlobDownload(certId);
         return;
       }
     } catch (err) {
@@ -445,7 +461,7 @@ const Dashboard = () => {
           delete next[certId];
           return next;
         });
-        window.open(`${API_BASE}/certificates/download/${certId}`, '_blank');
+        await triggerBlobDownload(certId);
         return;
       }
 
@@ -472,6 +488,7 @@ const Dashboard = () => {
       }));
     }
   };
+
   const copy = id => {
     navigator.clipboard.writeText(`${window.location.origin}/verify/${id}`);
     setCopyMsg(id);
