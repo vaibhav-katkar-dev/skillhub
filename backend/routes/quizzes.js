@@ -10,16 +10,30 @@ const router = express.Router();
 const ADMIN_TEST_PASSING_SCORE = 30;
 
 function normalizeId(value) {
-  if (!value) return null;
-  if (typeof value === 'string') return value;
-  if (typeof value.toHexString === 'function') return value.toHexString();
-  if (typeof value === 'object') {
-    if (Object.prototype.hasOwnProperty.call(value, '_id')) return normalizeId(value._id);
-    if (typeof value.toString === 'function') {
-      const str = value.toString();
-      return str && str !== '[object Object]' ? str : null;
+  let current = value;
+  let depth = 0;
+
+  while (current && depth < 5) {
+    if (typeof current === 'string') return current;
+    if (typeof current.toHexString === 'function') return current.toHexString();
+    if (typeof current === 'object') {
+      if (
+        Object.prototype.hasOwnProperty.call(current, '_id') &&
+        current._id &&
+        current._id !== current
+      ) {
+        current = current._id;
+        depth += 1;
+        continue;
+      }
+      if (typeof current.toString === 'function') {
+        const str = current.toString();
+        return str && str !== '[object Object]' ? str : null;
+      }
     }
+    break;
   }
+
   return null;
 }
 

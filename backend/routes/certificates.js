@@ -32,16 +32,30 @@ function isPdfReady(cert) {
 }
 
 function normalizeId(value) {
-  if (!value) return null;
-  if (typeof value === 'string') return value;
-  if (typeof value.toHexString === 'function') return value.toHexString();
-  if (typeof value === 'object') {
-    if (Object.prototype.hasOwnProperty.call(value, '_id')) return normalizeId(value._id);
-    if (typeof value.toString === 'function') {
-      const str = value.toString();
-      return str && str !== '[object Object]' ? str : null;
+  let current = value;
+  let depth = 0;
+
+  while (current && depth < 5) {
+    if (typeof current === 'string') return current;
+    if (typeof current.toHexString === 'function') return current.toHexString();
+    if (typeof current === 'object') {
+      if (
+        Object.prototype.hasOwnProperty.call(current, '_id') &&
+        current._id &&
+        current._id !== current
+      ) {
+        current = current._id;
+        depth += 1;
+        continue;
+      }
+      if (typeof current.toString === 'function') {
+        const str = current.toString();
+        return str && str !== '[object Object]' ? str : null;
+      }
     }
+    break;
   }
+
   return null;
 }
 
@@ -280,8 +294,40 @@ async function waitForPreparedPdf(certificateId, timeoutMs = DOWNLOAD_WAIT_MS) {
   }
 
   return Certificate.findOne({ certificateId })
-    .select('certificateId pdfStatus pdfError')
+    .select('certificateId pdfStatus pdfSizeBytes pdfError')
     .lean();
+}
+
+function getClientPdfState(cert) {
+  if (isPdfReady(cert)) {
+    return {
+      pdfStatus: 'ready',
+      pdfReady: true,
+      retryAfterSeconds: 0,
+    };
+  }
+
+  if (cert?.pdfStatus === 'failed') {
+    return {
+      pdfStatus: 'failed',
+      pdfReady: false,
+      retryAfterSeconds: PDF_RETRY_AFTER_SECONDS,
+    };
+  }
+
+  if (cert?.pdfStatus === 'generating') {
+    return {
+      pdfStatus: 'generating',
+      pdfReady: false,
+      retryAfterSeconds: PDF_RETRY_AFTER_SECONDS,
+    };
+  }
+
+  return {
+    pdfStatus: 'queued',
+    pdfReady: false,
+    retryAfterSeconds: PDF_RETRY_AFTER_SECONDS,
+  };
 }
 
 function processPdfQueue() {
@@ -350,13 +396,15 @@ async function enqueueCertificatePreparation(certificateId) {
 }
 
 function certificateResponseShape(cert, courseTitle) {
+  const clientPdfState = getClientPdfState(cert);
   return {
     ...cert,
     course: {
       _id: normalizeId(cert.course),
       title: courseTitle,
     },
-    pdfReady: isPdfReady(cert),
+    pdfReady: clientPdfState.pdfReady,
+    pdfStatus: clientPdfState.pdfStatus,
   };
 }
 
@@ -463,14 +511,15 @@ router.post('/prepare/:certId', authOptions, async (req, res) => {
     const latest = await Certificate.findOne({ certificateId: cert.certificateId })
       .select('certificateId pdfStatus pdfSizeBytes pdfGeneratedAt pdfError')
       .lean();
+    const clientPdfState = getClientPdfState(latest);
 
     res.setHeader('Cache-Control', 'no-store');
-    res.status(isPdfReady(latest) ? 200 : 202).json({
+    res.status(clientPdfState.pdfReady ? 200 : 202).json({
       certificateId: cert.certificateId,
-      pdfStatus: latest?.pdfStatus || 'queued',
-      pdfReady: isPdfReady(latest),
+      pdfStatus: clientPdfState.pdfStatus,
+      pdfReady: clientPdfState.pdfReady,
       pdfGeneratedAt: latest?.pdfGeneratedAt || null,
-      retryAfterSeconds: isPdfReady(latest) ? 0 : PDF_RETRY_AFTER_SECONDS,
+      retryAfterSeconds: clientPdfState.retryAfterSeconds,
       pdfError: latest?.pdfError || '',
     });
   } catch (err) {
@@ -486,14 +535,15 @@ router.get('/status/:certId', async (req, res) => {
       .lean();
 
     if (!cert) return res.status(404).json({ message: 'Certificate not found.' });
+    const clientPdfState = getClientPdfState(cert);
 
     res.setHeader('Cache-Control', 'no-store');
     res.json({
       certificateId: cert.certificateId,
-      pdfStatus: cert.pdfStatus || 'pending',
-      pdfReady: isPdfReady(cert),
+      pdfStatus: clientPdfState.pdfStatus,
+      pdfReady: clientPdfState.pdfReady,
       pdfGeneratedAt: cert.pdfGeneratedAt || null,
-      retryAfterSeconds: isPdfReady(cert) ? 0 : PDF_RETRY_AFTER_SECONDS,
+      retryAfterSeconds: clientPdfState.retryAfterSeconds,
       pdfError: cert.pdfError || '',
     });
   } catch (err) {
@@ -524,13 +574,16 @@ router.get('/download/:certId', async (req, res) => {
       return res.send(cert.pdfBuffer);
     }
 
+    const clientPdfState = getClientPdfState(cert);
+
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Retry-After', String(PDF_RETRY_AFTER_SECONDS));
     return res.status(202).json({
       message: 'Certificate PDF is being prepared. Please retry shortly.',
       certificateId: cert?.certificateId || req.params.certId,
-      pdfStatus: cert?.pdfStatus || 'queued',
-      retryAfterSeconds: PDF_RETRY_AFTER_SECONDS,
+      pdfStatus: clientPdfState.pdfStatus,
+      pdfReady: clientPdfState.pdfReady,
+      retryAfterSeconds: clientPdfState.retryAfterSeconds,
       pdfError: cert?.pdfError || '',
     });
   } catch (err) {
@@ -558,8 +611,8 @@ router.get('/verify/:certId', async (req, res) => {
       courseTitle,
       issueDate: cert.issueDate,
       certificateId: cert.certificateId,
-      pdfStatus: cert.pdfStatus || 'pending',
-      pdfReady: isPdfReady(cert),
+      pdfStatus: getClientPdfState(cert).pdfStatus,
+      pdfReady: getClientPdfState(cert).pdfReady,
     });
   } catch (err) {
     console.error('[Certificates] Verify error:', err);
