@@ -39,18 +39,18 @@ function normalizeId(value) {
     if (typeof current === 'string') return current;
     if (typeof current.toHexString === 'function') return current.toHexString();
     if (typeof current === 'object') {
-      if (
-        Object.prototype.hasOwnProperty.call(current, '_id') &&
-        current._id &&
-        current._id !== current
-      ) {
+      if ('_id' in current && current._id && current._id !== current) {
         current = current._id;
         depth += 1;
         continue;
       }
       if (typeof current.toString === 'function') {
-        const str = current.toString();
-        return str && str !== '[object Object]' ? str : null;
+        try {
+          const str = current.toString();
+          return str && str !== '[object Object]' ? str : null;
+        } catch (err) {
+          return null; // Prevent stack overflows if toString fails
+        }
       }
     }
     break;
