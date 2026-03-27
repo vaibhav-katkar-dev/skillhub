@@ -8,6 +8,7 @@ import { preloadCourses } from './data/courseLoader';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import PreFooterCTA from './components/PreFooterCTA';
+import WhatsAppJoinPopup from './components/WhatsAppJoinPopup';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -78,6 +79,7 @@ function App() {
           </main>
           <PreFooterCTA />
           <Footer />
+          <WhatsAppJoinPopup />
         </div>
         <Analytics />
       </Router>

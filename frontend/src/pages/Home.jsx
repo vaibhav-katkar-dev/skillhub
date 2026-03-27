@@ -283,7 +283,7 @@ export default function Home() {
           "@type": "Organization",
           "name": "SkillValix",
           "url": "https://www.skillvalix.com",
-          "logo": "https://www.skillvalix.com/logo.png",
+          "logo": "https://www.skillvalix.com/logo.svg",
           "sameAs": [
             "https://www.linkedin.com/company/skillvalix",
             "https://twitter.com/skillvalix"

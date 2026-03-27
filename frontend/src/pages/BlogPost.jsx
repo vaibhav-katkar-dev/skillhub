@@ -6,7 +6,7 @@ import { blogPosts } from '../data/blogs';
 
 const SITE_URL = 'https://skillvalix.com';
 const SITE_NAME = 'SkillValix';
-const LOGO_URL = 'https://skillvalix.com/favicon.svg';
+const LOGO_URL = 'https://skillvalix.com/logo.svg';
 
 const BlogPost = () => {
   const { slug } = useParams();

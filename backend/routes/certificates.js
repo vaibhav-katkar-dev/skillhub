@@ -495,7 +495,7 @@ router.get('/download/:certId', async (req, res) => {
     //  3. LEFT CONTENT AREA
     // ═════════════════════════════════════════════════════════════════════════
 
-    // ── Logo icon ─────────────────────────────────────────────────────────
+    // ── Brand logo (updated to current style) ─────────────────────────────
     const LX = LEFT_PAD;
     const LY = 28;
     const LOGO_SCALE = 110 / 270;
@@ -504,24 +504,38 @@ router.get('/download/:certId', async (req, res) => {
     doc.translate(LX, LY);
     doc.scale(LOGO_SCALE);
 
-    // 1. MAIN RING
-    doc.circle(148, 138, 70).lineWidth(11).strokeColor('#5a5a5a').stroke();
+     // 1. MAIN CIRCLE + RIM
+     doc.circle(148, 138, 70).fill('#2563EB');
+     doc.circle(148, 138, 70).lineWidth(2).strokeColor('#93C5FD').stroke();
+
+     // subtle top highlight
+     doc.circle(132, 122, 20).fillOpacity(0.12).fill('#FFFFFF');
+     doc.fillOpacity(1);
 
     // 2. INNER BARS WITH CLIP
     doc.save();
     doc.circle(148, 138, 63).clip();
-    doc.roundedRect(105, 166, 17, 26, 3.5).fill('#1D4ED8');
-    doc.roundedRect(128, 150, 17, 42, 3.5).fill('#2563EB');
-    doc.roundedRect(151, 132, 17, 60, 3.5).fill('#3B82F6');
-    doc.roundedRect(174, 112, 17, 80, 3.5).fill('#16A34A');
+     doc.roundedRect(105, 166, 17, 26, 3.5).fillOpacity(0.55).fill('#FFFFFF');
+     doc.roundedRect(128, 150, 17, 42, 3.5).fillOpacity(0.72).fill('#FFFFFF');
+     doc.roundedRect(151, 132, 17, 60, 3.5).fillOpacity(0.88).fill('#FFFFFF');
+     doc.roundedRect(174, 112, 17, 80, 3.5).fillOpacity(1).fill('#FFFFFF');
+
+     // small top shine on bars
+     doc.roundedRect(105, 166, 17, 4, 2).fillOpacity(0.35).fill('#FFFFFF');
+     doc.roundedRect(128, 150, 17, 4, 2).fillOpacity(0.35).fill('#FFFFFF');
+     doc.roundedRect(151, 132, 17, 4, 2).fillOpacity(0.35).fill('#FFFFFF');
+     doc.roundedRect(174, 112, 17, 4, 2).fillOpacity(0.35).fill('#FFFFFF');
+     doc.fillOpacity(1);
     doc.restore();
 
     // 3. BASELINE
     doc.moveTo(98, 193).lineTo(198, 193)
-       .lineWidth(1.5).lineCap('round').strokeColor('#5a5a5a').stroke();
+       .lineWidth(1.5).lineCap('round').strokeColor('#FFFFFF').strokeOpacity(0.3).stroke();
+     doc.strokeOpacity(1);
 
     // 4. TICK BADGE
-    doc.circle(197, 80, 26).fill('#16A34A');
+     doc.circle(197, 80, 26).fill('#16A34A');
+     doc.circle(197, 80, 26).lineWidth(1.2).strokeColor('#86EFAC').stroke();
     doc.moveTo(183, 78).lineTo(194, 91).lineTo(213, 63)
        .lineWidth(5).lineCap('round').lineJoin('round').strokeColor('#FFFFFF').stroke();
 

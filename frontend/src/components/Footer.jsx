@@ -5,6 +5,7 @@ import {
   Github,
   Linkedin,
   Mail,
+  MessageCircle,
   GraduationCap,
   BookMarked,
   Building2,
@@ -12,6 +13,8 @@ import {
   Shield,
 } from 'lucide-react';
 import Logo from './Logo';
+
+const WHATSAPP_GROUP_LINK = 'https://chat.whatsapp.com/HxtxKbZCw39BNGzy7hXVSt?mode=gi_t';
 
 /* ─────────────── data ─────────────── */
 const NAV_COLUMNS = [
@@ -110,12 +113,23 @@ const Footer = () => {
               ))}
             </div>
 
+            {/* WhatsApp Community */}
+            <a
+              href={WHATSAPP_GROUP_LINK}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-xl border border-emerald-700/60 bg-emerald-900/30 px-4 py-2.5 text-sm font-semibold text-emerald-200 hover:bg-emerald-800/40 hover:border-emerald-600 transition-colors"
+            >
+              <MessageCircle className="w-4 h-4" />
+              Join WhatsApp Group
+            </a>
+
             {/* Newsletter */}
             <div className="rounded-xl border border-slate-700/60 bg-slate-900/60 p-5 space-y-3">
               <p className="text-xs font-semibold text-slate-300 uppercase tracking-widest">
                 Stay Updated
               </p>
-              <p className="text-xs text-slate-500">Get new courses and tips in your inbox.</p>
+              <p className="text-xs text-slate-500">Get course updates and career tips.</p>
               <div className="flex gap-2">
                 <input
                   type="email"
