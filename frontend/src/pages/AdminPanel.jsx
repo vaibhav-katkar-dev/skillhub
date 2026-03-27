@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+ï»¿import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Navigate } from 'react-router-dom';
 import { useAuthStore, api } from '../store/authStore';
@@ -252,6 +252,13 @@ const AdminPanel = () => {
                   </div>
                 )}
 
+                {!analyticsLoading && !analyticsError && !analytics && (
+                  <div className="mb-4 flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-sm">
+                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                    <span>Analytics data is not available yet. Refresh this page after the backend update is live.</span>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
                     <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Users</p>
@@ -324,13 +331,18 @@ const AdminPanel = () => {
                   {analyticsLoading && Array.from({ length: 4 }).map((_, idx) => (
                     <div key={idx} className="h-20 rounded-xl bg-slate-100 animate-pulse" />
                   ))}
+                  {!analyticsLoading && !analytics?.courseBreakdown?.length && (
+                    <div className="rounded-xl border border-dashed border-slate-200 p-4 text-sm text-slate-500">
+                      No course analytics are available yet.
+                    </div>
+                  )}
                   {!analyticsLoading && analytics?.courseBreakdown?.map((course, idx) => (
                     <div key={course.courseId || course.slug} className="rounded-xl border border-slate-200 p-4">
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <p className="text-xs font-bold uppercase tracking-wide text-slate-400">#{idx + 1}</p>
                           <p className="font-semibold text-slate-900 mt-1">{course.title}</p>
-                          <p className="text-sm text-slate-500 mt-1">{course.lessonCount} lessons • {course.hasQuiz ? 'Quiz ready' : 'Quiz missing'}</p>
+                          <p className="text-sm text-slate-500 mt-1">{course.lessonCount} lessons | {course.hasQuiz ? 'Quiz ready' : 'Quiz missing'}</p>
                         </div>
                         <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold">
                           {course.certificatesEarned} certs
@@ -348,6 +360,11 @@ const AdminPanel = () => {
                     {analyticsLoading && Array.from({ length: 4 }).map((_, idx) => (
                       <div key={idx} className="h-16 rounded-xl bg-slate-100 animate-pulse" />
                     ))}
+                    {!analyticsLoading && !analytics?.recentUsers?.length && (
+                      <div className="rounded-xl border border-dashed border-slate-200 p-4 text-sm text-slate-500">
+                        No recent users were returned for analytics yet.
+                      </div>
+                    )}
                     {!analyticsLoading && analytics?.recentUsers?.map((entry) => (
                       <div key={`${entry.email}-${entry.createdAt}`} className="rounded-xl border border-slate-200 p-4 flex items-center justify-between gap-3">
                         <div className="min-w-0">
@@ -369,12 +386,17 @@ const AdminPanel = () => {
                     {analyticsLoading && Array.from({ length: 4 }).map((_, idx) => (
                       <div key={idx} className="h-16 rounded-xl bg-slate-100 animate-pulse" />
                     ))}
+                    {!analyticsLoading && !analytics?.recentCertificates?.length && (
+                      <div className="rounded-xl border border-dashed border-slate-200 p-4 text-sm text-slate-500">
+                        No recent certificate records were returned for analytics yet.
+                      </div>
+                    )}
                     {!analyticsLoading && analytics?.recentCertificates?.map((entry) => (
                       <div key={entry.certificateId} className="rounded-xl border border-slate-200 p-4">
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
                             <p className="font-semibold text-slate-900 truncate">{entry.courseTitle}</p>
-                            <p className="text-sm text-slate-500 truncate">{entry.studentName}{entry.studentEmail ? ` • ${entry.studentEmail}` : ''}</p>
+                            <p className="text-sm text-slate-500 truncate">{entry.studentName}{entry.studentEmail ? ` | ${entry.studentEmail}` : ''}</p>
                           </div>
                           <span className="text-xs font-mono bg-slate-100 text-slate-600 px-2 py-1 rounded-lg shrink-0">{entry.certificateId}</span>
                         </div>
@@ -411,7 +433,7 @@ const AdminPanel = () => {
                       }}
                       className="w-full appearance-none bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 pr-10 text-slate-800 font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
                     >
-                      <option value="">- Choose a course -</option>
+                      <option value="">Select a course</option>
                       {courses.map(c => (
                         <option key={c._id} value={c._id}>{c.title}</option>
                       ))}
@@ -433,7 +455,7 @@ const AdminPanel = () => {
                   <p className="mt-3 text-xs text-slate-500 flex items-center gap-1.5">
                     <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
                     Selected: <span className="font-semibold text-slate-700">{selectedCourseTitle}</span>
-                    <span className="ml-1 text-slate-400">• Course ID: <code className="font-mono bg-slate-100 px-1 rounded">{selectedCourseId}</code></span>
+                    <span className="ml-1 text-slate-400">| Course ID: <code className="font-mono bg-slate-100 px-1 rounded">{selectedCourseId}</code></span>
                   </p>
                 )}
               </div>
@@ -659,3 +681,4 @@ const AdminPanel = () => {
 };
 
 export default AdminPanel;
+

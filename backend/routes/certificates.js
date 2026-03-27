@@ -15,11 +15,26 @@ const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 
-async function resolveCourseTitle(courseId) {
-  if (!courseId) return null;
-  const idStr = courseId.toString();
-  const jsonCourse = await getCourseFromJSON(idStr);
-  return jsonCourse?.title || null;
+function normalizeId(value) {
+  if (!value) return null;
+  if (typeof value === 'string') return value;
+  if (typeof value === 'object') {
+    if (value._id) return normalizeId(value._id);
+    if (typeof value.toString === 'function') {
+      const str = value.toString();
+      return str && str !== '[object Object]' ? str : null;
+    }
+  }
+  return null;
+}
+
+async function resolveCourseTitle(courseOrId, fallbackTitle = '') {
+  const idStr = normalizeId(courseOrId);
+  if (idStr) {
+    const jsonCourse = await getCourseFromJSON(idStr);
+    if (jsonCourse?.title) return jsonCourse.title;
+  }
+  return fallbackTitle || null;
 }
 
 function fitSingleLineText(doc, value, maxWidth) {
@@ -38,16 +53,24 @@ router.post('/generate', authOptions, async (req, res) => {
   try {
     const { courseId } = req.body;
     const user = await User.findById(req.user.id);
-    const jsonCourse = await getCourseFromJSON(courseId);
-    if (!jsonCourse) return res.status(404).json({ message: 'Course not found.' });
+    const resolvedCourseId = normalizeId(courseId);
+    const courseTitle = await resolveCourseTitle(resolvedCourseId, `Course ID: ${resolvedCourseId || 'Unknown'}`);
 
-    let cert = await Certificate.findOne({ student: user._id, course: courseId });
+    let cert = await Certificate.findOne({ student: user._id, course: resolvedCourseId });
     if (!cert) {
       const certId = `CERT-${uuidv4().substring(0, 8).toUpperCase()}`;
-      cert = new Certificate({ student: user._id, course: courseId, certificateId: certId });
+      cert = new Certificate({
+        student: user._id,
+        course: resolvedCourseId,
+        courseTitleSnapshot: courseTitle,
+        certificateId: certId
+      });
+      await cert.save();
+    } else if (!cert.courseTitleSnapshot && courseTitle) {
+      cert.courseTitleSnapshot = courseTitle;
       await cert.save();
     }
-    await User.findByIdAndUpdate(user._id, { $addToSet: { completedCourses: courseId } });
+    await User.findByIdAndUpdate(user._id, { $addToSet: { completedCourses: resolvedCourseId } });
     res.json({ message: 'Certificate Generated', certificateId: cert.certificateId });
   } catch (err) {
     console.error('[Certificates] Generation error:', err);
@@ -65,11 +88,11 @@ router.get('/mine', authOptions, async (req, res) => {
 
     const allJSONEntries = await getAllCoursesFromJSON();
     const enrichedCerts = certs.map(cert => {
-      const courseIdStr = cert.course?.toString();
+      const courseIdStr = normalizeId(cert.course);
       const jsonEntry = allJSONEntries.find(e => e.course._id.toString() === courseIdStr);
       return {
         ...cert,
-        course: { _id: courseIdStr, title: jsonEntry?.course?.title || 'Unknown Course' }
+        course: { _id: courseIdStr, title: jsonEntry?.course?.title || cert.courseTitleSnapshot || `Course ID: ${courseIdStr || 'Unknown'}` }
       };
     });
 
@@ -110,7 +133,7 @@ router.get('/download/:certId', async (req, res) => {
       .lean();
     if (!cert) return res.status(404).json({ message: 'Certificate not found.' });
 
-    const courseTitle = await resolveCourseTitle(cert.course);
+    const courseTitle = await resolveCourseTitle(cert.course, cert.courseTitleSnapshot);
     if (!cert.student || !courseTitle)
       return res.status(404).json({ message: 'Certificate data incomplete.' });
 
@@ -704,7 +727,7 @@ router.get('/verify/:certId', async (req, res) => {
       .lean();
     if (!cert) return res.status(404).json({ message: 'Certificate not found or invalid id' });
 
-    const courseTitle = await resolveCourseTitle(cert.course);
+    const courseTitle = await resolveCourseTitle(cert.course, cert.courseTitleSnapshot);
     if (!cert.student || !courseTitle)
       return res.status(404).json({ message: 'Certificate invalid: associated student or course not found' });
 

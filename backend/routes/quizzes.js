@@ -8,6 +8,19 @@ import { getQuizFromJSON, getCourseFromJSON } from '../utils/courseData.js';
 
 const router = express.Router();
 
+function normalizeId(value) {
+  if (!value) return null;
+  if (typeof value === 'string') return value;
+  if (typeof value === 'object') {
+    if (value._id) return normalizeId(value._id);
+    if (typeof value.toString === 'function') {
+      const str = value.toString();
+      return str && str !== '[object Object]' ? str : null;
+    }
+  }
+  return null;
+}
+
 // Get Quiz for a course by courseId (Exclude correct options for student)
 router.get('/:courseId', authOptions, async (req, res) => {
   try {
@@ -85,6 +98,8 @@ router.post('/:courseId/submit', authOptions, async (req, res) => {
     // Generate certificate if passed
     if (passed) {
       const user = await User.findById(req.user.id);
+      const jsonCourse = await getCourseFromJSON(courseIdString);
+      const courseTitleSnapshot = jsonCourse?.title || `Course ID: ${courseIdString}`;
       // Ensure we don't duplicate certificates for the same course and student
       let cert = await Certificate.findOne({ student: user._id, course: req.params.courseId });
       if (!cert) {
@@ -101,8 +116,12 @@ router.post('/:courseId/submit', authOptions, async (req, res) => {
         cert = new Certificate({
           student: user._id,
           course: req.params.courseId,
+          courseTitleSnapshot,
           certificateId: certId
         });
+        await cert.save();
+      } else if (!cert.courseTitleSnapshot && courseTitleSnapshot) {
+        cert.courseTitleSnapshot = courseTitleSnapshot;
         await cert.save();
       }
 

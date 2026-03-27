@@ -7,13 +7,32 @@ import { getAllCoursesFromJSON } from '../utils/courseData.js';
 
 const router = express.Router();
 
+function normalizeId(value) {
+  if (!value) return null;
+  if (typeof value === 'string') return value;
+  if (typeof value === 'object') {
+    if (value._id) return normalizeId(value._id);
+    if (typeof value.toString === 'function') {
+      const str = value.toString();
+      return str && str !== '[object Object]' ? str : null;
+    }
+  }
+  return null;
+}
+
 router.get('/analytics', authOptions, adminCheck, async (req, res) => {
   try {
     const allEntries = await getAllCoursesFromJSON();
     const courseEntries = allEntries.map(entry => ({
       ...entry.course,
+      normalizedId: normalizeId(entry.course?._id),
       lessonCount: Array.isArray(entry.lessons) ? entry.lessons.length : 0,
     }));
+    const courseTitleById = new Map(
+      courseEntries
+        .filter(course => course.normalizedId)
+        .map(course => [course.normalizedId, course.title])
+    );
 
     const publishedCourses = courseEntries.filter(course => course.published !== false);
 
@@ -40,6 +59,7 @@ router.get('/analytics', authOptions, adminCheck, async (req, res) => {
         .lean(),
       Certificate.find()
         .populate('student', 'name email')
+        .select('certificateId issueDate createdAt course courseTitleSnapshot student')
         .sort({ issueDate: -1, createdAt: -1 })
         .limit(6)
         .lean(),
@@ -47,11 +67,11 @@ router.get('/analytics', authOptions, adminCheck, async (req, res) => {
       User.find().select('quizAttempts completedCourses').lean(),
     ]);
 
-    const quizCourseIds = new Set(quizDocs.map(quiz => quiz.course?.toString()).filter(Boolean));
+    const quizCourseIds = new Set(quizDocs.map(quiz => normalizeId(quiz.course)).filter(Boolean));
     const certificates = await Certificate.find().select('course student issueDate certificateId').lean();
 
     const certCountByCourse = certificates.reduce((acc, cert) => {
-      const key = cert.course?.toString();
+      const key = normalizeId(cert.course);
       if (!key) return acc;
       acc[key] = (acc[key] || 0) + 1;
       return acc;
@@ -63,12 +83,12 @@ router.get('/analytics', authOptions, adminCheck, async (req, res) => {
 
     const courseBreakdown = publishedCourses
       .map(course => ({
-        courseId: course._id?.toString(),
+        courseId: course.normalizedId,
         title: course.title,
         slug: course.slug,
         lessonCount: course.lessonCount || 0,
-        hasQuiz: quizCourseIds.has(course._id?.toString()),
-        certificatesEarned: certCountByCourse[course._id?.toString()] || 0,
+        hasQuiz: quizCourseIds.has(course.normalizedId),
+        certificatesEarned: certCountByCourse[course.normalizedId] || 0,
       }))
       .sort((a, b) => b.certificatesEarned - a.certificatesEarned || a.title.localeCompare(b.title));
 
@@ -124,8 +144,7 @@ router.get('/analytics', authOptions, adminCheck, async (req, res) => {
         issueDate: cert.issueDate || cert.createdAt,
         studentName: cert.student?.name || 'Unknown User',
         studentEmail: cert.student?.email || '',
-        courseTitle:
-          courseEntries.find(course => course._id?.toString() === cert.course?.toString())?.title || 'Unknown Course',
+        courseTitle: courseTitleById.get(normalizeId(cert.course)) || cert.courseTitleSnapshot || `Course ID: ${normalizeId(cert.course) || 'Unknown'}`,
       })),
     });
   } catch (err) {
