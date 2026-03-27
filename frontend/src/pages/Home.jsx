@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import {
@@ -8,9 +8,9 @@ import {
   Target, Rocket, ChevronRight, Globe
 } from 'lucide-react';
 
-/* ─────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    DATA
-───────────────────────────────────── */
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 const STATS = [
   { value: 2800, suffix: '+', label: 'Students Enrolled', icon: Users,  color: '#6366f1', bg: '#eef2ff', border: '#c7d2fe' },
@@ -20,7 +20,7 @@ const STATS = [
 ];
 
 const HOW_IT_WORKS = [
-  { step: 1, label: '01', title: 'Pick a Course',         desc: 'Browse our growing library of structured web development courses — all completely free.',    icon: BookOpen,    accent: '#6366f1', light: '#eef2ff' },
+  { step: 1, label: '01', title: 'Pick a Course',         desc: 'Browse our growing library of structured web development courses â€” all completely free.',    icon: BookOpen,    accent: '#6366f1', light: '#eef2ff' },
   { step: 2, label: '02', title: 'Study the Lessons',     desc: 'Work through interactive, code-rich modules at your own pace. No deadlines, no pressure.',    icon: Play,        accent: '#8b5cf6', light: '#f5f3ff' },
   { step: 3, label: '03', title: 'Take the Exam',         desc: "When you're ready, sit the assessment. Questions are server-graded to keep results secure.",   icon: BrainCircuit,accent: '#a855f7', light: '#faf5ff' },
   { step: 4, label: '04', title: 'Earn Your Certificate', desc: 'Pass and instantly download your verifiable PDF certificate to share with the world.',         icon: Award,       accent: '#10b981', light: '#ecfdf5' },
@@ -29,7 +29,7 @@ const HOW_IT_WORKS = [
 const COURSES = [
   {
     slug: 'ultimate-html-masterclass',
-    title: 'HTML Masterclass',
+    title: 'HTML for Beginners',
     level: 'Beginner',
     duration: '4 hrs',
     modules: 12,
@@ -37,7 +37,7 @@ const COURSES = [
     badge: 'Most Popular',
     badgeColor: '#6366f1',
     tags: ['HTML5', 'Semantics', 'Forms', 'SEO'],
-    desc: 'A complete deep-dive into modern HTML — from document structure to semantic tags, accessibility and forms.',
+    desc: 'A complete deep-dive into modern HTML â€” from document structure to semantic tags, accessibility and forms.',
     image: 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&q=80&w=800&h=500',
     accent: '#6366f1',
     accentLight: '#eef2ff',
@@ -45,7 +45,7 @@ const COURSES = [
   },
   {
     slug: 'css-for-beginners-learn-web-styling-zero-to-pro',
-    title: 'CSS Fundamentals',
+    title: 'CSS for Beginners',
     level: 'Beginner',
     duration: '5 hrs',
     modules: 10,
@@ -53,7 +53,7 @@ const COURSES = [
     badge: 'Trending',
     badgeColor: '#0ea5e9',
     tags: ['CSS3', 'Flexbox', 'Grid', 'Animations'],
-    desc: 'Master styling from the ground up — cascade, specificity, Flexbox, Grid, and CSS animations.',
+    desc: 'Master styling from the ground up â€” cascade, specificity, Flexbox, Grid, and CSS animations.',
     image: 'https://images.unsplash.com/photo-1507721999472-8ed4421c4af2?auto=format&fit=crop&q=80&w=800&h=500',
     accent: '#0ea5e9',
     accentLight: '#f0f9ff',
@@ -61,7 +61,7 @@ const COURSES = [
   },
   {
     slug: 'ultimate-javascript-masterclass',
-    title: 'JavaScript Basics',
+    title: 'JavaScript for Beginners',
     level: 'Beginner',
     duration: '6 hrs',
     modules: 14,
@@ -69,7 +69,7 @@ const COURSES = [
     badge: 'New',
     badgeColor: '#f59e0b',
     tags: ['ES6+', 'DOM', 'Events', 'APIs'],
-    desc: 'Learn the language of the web — variables, functions, DOM manipulation, and async JavaScript.',
+    desc: 'Learn the language of the web â€” variables, functions, DOM manipulation, and async JavaScript.',
     image: 'https://images.unsplash.com/photo-1555099962-4199c345e5dd?auto=format&fit=crop&q=80&w=800&h=500',
     accent: '#f59e0b',
     accentLight: '#fffbeb',
@@ -78,7 +78,7 @@ const COURSES = [
 ];
 
 const FEATURES = [
-  { icon: BookOpen,     bg: '#eff6ff', color: '#3b82f6', title: 'Structured Learning Paths',  desc: 'Content built in clear progression — from fundamentals to advanced mastery.' },
+  { icon: BookOpen,     bg: '#eff6ff', color: '#3b82f6', title: 'Structured Learning Paths',  desc: 'Content built in clear progression â€” from fundamentals to advanced mastery.' },
   { icon: BrainCircuit, bg: '#f5f3ff', color: '#7c3aed', title: 'Interactive Exams',          desc: 'Server-graded assessments with instant feedback to solidify your understanding.' },
   { icon: Award,        bg: '#ecfdf5', color: '#059669', title: 'Verifiable Certificates',    desc: 'Pass the exam, earn a secure PDF certificate with a unique trackable ID.' },
   { icon: Code2,        bg: '#fff1f2', color: '#e11d48', title: 'Real-World Code Snippets',   desc: 'Annotated, live code examples you can copy, adapt, and run immediately.' },
@@ -93,16 +93,16 @@ const TESTIMONIALS = [
 ];
 
 const FAQS = [
-  { q: 'Is SkillValix really free?',              a: 'Yes — completely. Every course, every exam, every certificate is free. No hidden fees, no premium tiers. We believe education should be accessible to everyone.' },
+  { q: 'Is SkillValix really free?',              a: 'Yes â€” completely. Every course, every exam, every certificate is free. No hidden fees, no premium tiers. We believe education should be accessible to everyone.' },
   { q: 'How are the certificates verified?',    a: 'Each certificate has a unique ID. Anyone can visit our Verify page, enter that ID and see your full result and completion date in seconds.' },
   { q: 'Do I need prior experience to start?',  a: 'Not at all. Every course starts from zero and assumes no prior knowledge. If you can browse the web, you can start learning with us.' },
-  { q: 'Can I learn at my own pace?',           a: 'Absolutely. There are no deadlines, cohorts, or time limits. Start a lesson, pause, continue tomorrow — your progress is always saved.' },
+  { q: 'Can I learn at my own pace?',           a: 'Absolutely. There are no deadlines, cohorts, or time limits. Start a lesson, pause, continue tomorrow â€” your progress is always saved.' },
   { q: 'How difficult are the exams?',          a: "Challenging but fair. Each question links directly to lesson content, so thorough study leads to a confident pass. You can retake them too." },
 ];
 
-/* ─────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    HOOKS
-───────────────────────────────────── */
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 function useCountUp(target, duration = 2000, start = false) {
   const [count, setCount] = useState(0);
@@ -133,9 +133,9 @@ function useInView(opts = {}) {
   return [ref, inView];
 }
 
-/* ─────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    SMALL COMPONENTS
-───────────────────────────────────── */
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 function Pill({ children, color = '#6366f1', bg = '#eef2ff', border = '#c7d2fe' }) {
   return (
@@ -221,9 +221,9 @@ function FaqItem({ q, a }) {
   );
 }
 
-/* ─────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    PAGE
-───────────────────────────────────── */
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 export default function Home() {
   const [statsRef, statsInView] = useInView({ threshold: 0.2 });
@@ -231,36 +231,36 @@ export default function Home() {
   return (
     <div style={{ fontFamily: "'Inter', system-ui, sans-serif", background: '#f8faff', color: '#0f172a', overflowX: 'hidden' }}>
       <Helmet>
-        {/* ── Primary SEO ─────────────────────────────────── */}
-        <title>SkillValix — Free Online Coding Courses with Certificates | Learn HTML, CSS, JavaScript, Python & More</title>
-        <meta name="description" content="Learn to code 100% FREE — no credit card, no hidden fees, ever. SkillValix offers structured courses in HTML, CSS, JavaScript, Python, Java &amp; AI with verifiable certificates. Join 2,800+ students already building their careers online. Start today!" />
+        {/* â”€â”€ Primary SEO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        <title>SkillValix â€” Free Online Coding Courses with Certificates | Learn HTML, CSS, JavaScript, Python & More</title>
+        <meta name="description" content="Learn to code 100% FREE â€” no credit card, no hidden fees, ever. SkillValix offers structured courses in HTML, CSS, JavaScript, Python, Java &amp; AI with verifiable certificates. Join 2,800+ students already building their careers online. Start today!" />
         <meta name="keywords" content="free online coding courses, free web development course, learn HTML free, learn CSS free, learn JavaScript free, Python for beginners free, free programming courses India, coding courses with certificates, learn to code for free, web development for beginners, best free coding website, free HTML CSS JavaScript course, online learning platform India, programming certificate online free, learn AI machine learning free, free computer science courses, free tech courses 2026, programming for students free, software development course free, SkillValix, skillvalix.com" />
         <link rel="canonical" href="https://www.skillvalix.com/" />
         <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
         <meta name="author" content="SkillValix" />
         <meta name="rating" content="general" />
 
-        {/* ── Open Graph (Facebook / LinkedIn / WhatsApp) ── */}
+        {/* â”€â”€ Open Graph (Facebook / LinkedIn / WhatsApp) â”€â”€ */}
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://www.skillvalix.com/" />
         <meta property="og:site_name" content="SkillValix" />
         <meta property="og:locale" content="en_IN" />
-        <meta property="og:title" content="SkillValix — Free Coding Courses with Certificates | HTML, CSS, JS, Python, AI" />
+        <meta property="og:title" content="SkillValix â€” Free Coding Courses with Certificates | HTML, CSS, JS, Python, AI" />
         <meta property="og:description" content="Learn in-demand tech skills 100% free. SkillValix offers structured beginner-to-pro courses with real exam assessments and verifiable PDF certificates. No credit card. No paywall. Ever." />
         <meta property="og:image" content="https://www.skillvalix.com/og-home.png" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
-        <meta property="og:image:alt" content="SkillValix — Free Online Coding Courses with Certificates" />
+        <meta property="og:image:alt" content="SkillValix â€” Free Online Coding Courses with Certificates" />
 
-        {/* ── Twitter Card ─────────────────────────────────── */}
+        {/* â”€â”€ Twitter Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:site" content="@SkillValix" />
         <meta name="twitter:creator" content="@SkillValix" />
-        <meta name="twitter:title" content="SkillValix — Free Coding Courses with Certificates" />
-        <meta name="twitter:description" content="Master HTML, CSS, JavaScript, Python, Java & AI for free. Get verifiable certificates and boost your career — no credit card needed." />
+        <meta name="twitter:title" content="SkillValix â€” Free Coding Courses with Certificates" />
+        <meta name="twitter:description" content="Master HTML, CSS, JavaScript, Python, Java & AI for free. Get verifiable certificates and boost your career â€” no credit card needed." />
         <meta name="twitter:image" content="https://www.skillvalix.com/og-home.png" />
 
-        {/* ── JSON-LD: WebSite + Sitelinks Search Box ─────── */}
+        {/* â”€â”€ JSON-LD: WebSite + Sitelinks Search Box â”€â”€â”€â”€â”€â”€â”€ */}
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "WebSite",
@@ -277,7 +277,7 @@ export default function Home() {
           }
         })}</script>
 
-        {/* ── JSON-LD: Organization ────────────────────────── */}
+        {/* â”€â”€ JSON-LD: Organization â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Organization",
@@ -295,7 +295,7 @@ export default function Home() {
           }
         })}</script>
 
-        {/* ── JSON-LD: EducationalOrganization ─────────────── */}
+        {/* â”€â”€ JSON-LD: EducationalOrganization â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "EducationalOrganization",
@@ -306,17 +306,17 @@ export default function Home() {
             "@type": "OfferCatalog",
             "name": "Free Online Coding Courses",
             "itemListElement": [
-              { "@type": "Course", "name": "Ultimate HTML Masterclass", "url": "https://www.skillvalix.com/courses/ultimate-html-masterclass", "isAccessibleForFree": true },
-              { "@type": "Course", "name": "CSS for Beginners — Zero to Pro", "url": "https://www.skillvalix.com/courses/css-for-beginners-learn-web-styling-zero-to-pro", "isAccessibleForFree": true },
-              { "@type": "Course", "name": "Ultimate JavaScript Masterclass", "url": "https://www.skillvalix.com/courses/ultimate-javascript-masterclass", "isAccessibleForFree": true },
-              { "@type": "Course", "name": "Ultimate Python Masterclass", "url": "https://www.skillvalix.com/courses/ultimate-python-masterclass", "isAccessibleForFree": true },
-              { "@type": "Course", "name": "Ultimate Java Masterclass", "url": "https://www.skillvalix.com/courses/ultimate-java-masterclass", "isAccessibleForFree": true },
-              { "@type": "Course", "name": "AI & Machine Learning Fundamentals", "url": "https://www.skillvalix.com/courses/basics-of-artificial-intelligence-beginners", "isAccessibleForFree": true }
+              { "@type": "Course", "name": "HTML for Beginners: Complete HTML5 Masterclass", "url": "https://www.skillvalix.com/courses/ultimate-html-masterclass", "isAccessibleForFree": true },
+              { "@type": "Course", "name": "CSS for Beginners â€” Zero to Pro", "url": "https://www.skillvalix.com/courses/css-for-beginners-learn-web-styling-zero-to-pro", "isAccessibleForFree": true },
+              { "@type": "Course", "name": "JavaScript for Beginners: Complete JS Masterclass", "url": "https://www.skillvalix.com/courses/ultimate-javascript-masterclass", "isAccessibleForFree": true },
+              { "@type": "Course", "name": "Python for Beginners: Complete Python Programming Masterclass", "url": "https://www.skillvalix.com/courses/ultimate-python-masterclass", "isAccessibleForFree": true },
+              { "@type": "Course", "name": "Java Programming Masterclass: Beginner to Advanced", "url": "https://www.skillvalix.com/courses/ultimate-java-masterclass", "isAccessibleForFree": true },
+              { "@type": "Course", "name": "Artificial Intelligence for Beginners: AI & Machine Learning Fundamentals", "url": "https://www.skillvalix.com/courses/basics-of-artificial-intelligence-beginners", "isAccessibleForFree": true }
             ]
           }
         })}</script>
 
-        {/* ── Fonts ────────────────────────────────────────── */}
+        {/* â”€â”€ Fonts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
       </Helmet>
 
@@ -375,11 +375,11 @@ export default function Home() {
         @media(min-width:1280px) { .section-wrap { padding: 0 48px; } }
       `}</style>
 
-      {/* ══════════════════════════
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
           HERO
-      ══════════════════════════ */}
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <section style={{ position:'relative', background:'#f8faff', minHeight:'92vh', display:'flex', alignItems:'center', justifyContent:'center', paddingTop:100, paddingBottom:80, overflow:'hidden' }}>
-        {/* Ambient blobs — softer, more asymmetric */}
+        {/* Ambient blobs â€” softer, more asymmetric */}
         <div style={{ position:'absolute', width:600, height:600, borderRadius:'50%', background:'rgba(99,102,241,0.09)', filter:'blur(100px)', top:'-10%', left:'-10%', animation:'floatA 14s ease-in-out infinite', pointerEvents:'none' }} />
         <div style={{ position:'absolute', width:480, height:480, borderRadius:'50%', background:'rgba(168,85,247,0.07)', filter:'blur(100px)', bottom:'0%', right:'-8%', animation:'floatB 16s ease-in-out infinite', pointerEvents:'none' }} />
 
@@ -390,23 +390,23 @@ export default function Home() {
 
         <div className="section-wrap" style={{ position:'relative', zIndex:10, textAlign:'center' }}>
 
-          {/* Badge — feels hand-crafted, not AI */}
+          {/* Badge â€” feels hand-crafted, not AI */}
           <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:'#fff', border:'1.5px solid #e0e7ff', borderRadius:100, padding:'7px 18px', marginBottom:32, boxShadow:'0 2px 12px rgba(99,102,241,0.10)' }}>
             <span style={{ position:'relative', display:'flex', width:8, height:8 }}>
               <span style={{ position:'absolute', inset:0, borderRadius:'50%', background:'#10b981', animation:'ping 2s ease-out infinite', opacity:.7 }} />
               <span style={{ position:'relative', width:8, height:8, borderRadius:'50%', background:'#10b981', display:'block' }} />
             </span>
-            <span style={{ fontSize:12, fontWeight:700, color:'#4f46e5', letterSpacing:'0.05em' }}>Free · No sign-up fees · No paywalls</span>
+            <span style={{ fontSize:12, fontWeight:700, color:'#4f46e5', letterSpacing:'0.05em' }}>Free Â· No sign-up fees Â· No paywalls</span>
           </div>
 
-          {/* Headline — human, direct, broader scope */}
+          {/* Headline â€” human, direct, broader scope */}
           <h1 style={{ fontSize:'clamp(2.6rem,7.5vw,5rem)', fontWeight:900, lineHeight:1.05, letterSpacing:'-0.03em', marginBottom:20 }}>
             <span style={{ display:'block', color:'#0f172a' }}>Gain New Skills.</span>
             <span style={{ display:'block', color:'#0f172a' }}>Earn Credentials.</span>
             <span className="shimmer-text" style={{ display:'block' }}>Stand Out.</span>
           </h1>
 
-          {/* Subtext — genuine growth focus */}
+          {/* Subtext â€” genuine growth focus */}
           <p style={{ fontSize:'clamp(1rem,2.2vw,1.15rem)', color:'#64748b', maxWidth:520, margin:'0 auto 36px', lineHeight:1.8 }}>
             Master new abilities through our structured, 100% free learning courses. 
             Finish a module, pass the exam, and walk away with a&nbsp;
@@ -446,11 +446,11 @@ export default function Home() {
             </Link>
           </div>
 
-          {/* Social proof strip — numbers feel real */}
+          {/* Social proof strip â€” numbers feel real */}
           <div style={{ display:'flex', flexWrap:'wrap', justifyContent:'center', alignItems:'center', gap:'10px 28px' }}>
             {[
               { icon: CheckCircle2, text: '2,800+ students enrolled', color: '#10b981' },
-              { icon: Award,        text: 'Free forever — no card needed', color: '#6366f1' },
+              { icon: Award,        text: 'Free forever â€” no card needed', color: '#6366f1' },
               { icon: Star,         text: '4.9 avg course rating', color: '#f59e0b' },
             ].map(({ icon: Icon, text, color }, i) => (
               <span key={i} style={{ display:'flex', alignItems:'center', gap:6, fontSize:13, fontWeight:500, color:'#64748b' }}>
@@ -464,9 +464,9 @@ export default function Home() {
         <div style={{ position:'absolute', bottom:0, left:0, right:0, height:60, background:'linear-gradient(to bottom,transparent,#f8faff)', pointerEvents:'none' }} />
       </section>
 
-      {/* ══════════════════════════
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
           STATS
-      ══════════════════════════ */}
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <section ref={statsRef} style={{ background:'#fff', padding:'72px 0' }} className="section-divider">
         <div className="section-wrap">
           <div className="grid-4" style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:20 }}>
@@ -475,22 +475,22 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ══════════════════════════
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
           MARQUEE
-      ══════════════════════════ */}
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <div style={{ background:'#f1f5f9', borderTop:'1px solid #e2e8f0', borderBottom:'1px solid #e2e8f0', padding:'18px 0', overflow:'hidden' }}>
         <div style={{ display:'flex', width:'max-content', animation:'marqueeScroll 22s linear infinite' }}>
-          {[...Array(4)].flatMap(() => ['HTML5','✦','CSS3','✦','JavaScript','✦','React','✦','Node.js','✦','Git','✦']).map((item,i) => (
-            <span key={i} style={{ marginRight:28, fontSize:12, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em', color: item==='✦' ? '#c7d2fe' : '#94a3b8' }}>
+          {[...Array(4)].flatMap(() => ['HTML5','âœ¦','CSS3','âœ¦','JavaScript','âœ¦','React','âœ¦','Node.js','âœ¦','Git','âœ¦']).map((item,i) => (
+            <span key={i} style={{ marginRight:28, fontSize:12, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em', color: item==='âœ¦' ? '#c7d2fe' : '#94a3b8' }}>
               {item}
             </span>
           ))}
         </div>
       </div>
 
-      {/* ══════════════════════════
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
           HOW IT WORKS
-      ══════════════════════════ */}
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <section style={{ background:'#fff', padding:'96px 0' }} className="section-divider">
         <div className="section-wrap">
           <SectionHeader
@@ -547,9 +547,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ══════════════════════════
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
           COURSES
-      ══════════════════════════ */}
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <section style={{ background:'#f8faff', padding:'96px 0' }} className="section-divider">
         <div className="section-wrap">
           {/* Header row */}
@@ -662,7 +662,7 @@ export default function Home() {
                       border:`1px solid ${c.accentBorder}`,
                     }}
                   >
-                    View Course Details →
+                    View Course Details â†’
                   </div>
                 </div>
               </Link>
@@ -671,9 +671,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ══════════════════════════
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
           FEATURES
-      ══════════════════════════ */}
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <section style={{ background:'#fff', padding:'96px 0' }} className="section-divider">
         <div className="section-wrap">
           <SectionHeader
@@ -709,9 +709,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ══════════════════════════
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
           TESTIMONIALS
-      ══════════════════════════ */}
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <section style={{ background:'#f8faff', padding:'96px 0' }} className="section-divider">
         <div className="section-wrap">
           <SectionHeader
@@ -765,9 +765,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ══════════════════════════
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
           FAQ
-      ══════════════════════════ */}
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <section style={{ background:'#fff', padding:'96px 0' }} className="section-divider">
         <div style={{ maxWidth:720, margin:'0 auto', padding:'0 24px' }}>
           <SectionHeader
@@ -782,9 +782,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ══════════════════════════
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
           CTA BANNER
-      ══════════════════════════ */}
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <section style={{ position:'relative', overflow:'hidden', padding:'112px 24px', display:'flex', alignItems:'center', justifyContent:'center', minHeight:'60vh' }}>
         {/* Gradient background */}
         <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg,#312e81 0%,#4f46e5 40%,#6d28d9 70%,#312e81 100%)' }} />
@@ -853,3 +853,4 @@ export default function Home() {
     </div>
   );
 }
+

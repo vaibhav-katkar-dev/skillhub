@@ -5,53 +5,66 @@ import { useAuthStore, api } from '../store/authStore';
 import { getCourseList } from '../data/courseLoader';
 import {
   ShieldCheck, BookOpen, FileJson, Upload, CheckCircle,
-  AlertCircle, ChevronDown, Loader2, Plus, Trash2, Save,
-  ClipboardList, Edit3, RefreshCw
+  AlertCircle, ChevronDown, Loader2, Plus,
+  ClipboardList, Edit3, RefreshCw, BarChart3, Users,
+  Award, Activity, Lock, Database, Eye
 } from 'lucide-react';
 
-// ─── Quiz Template for reference ─────────────────────────────────────────────
 const QUIZ_TEMPLATE = {
   passingScore: 60,
   ribbonTheme: 'blue',
   questions: [
     {
-      questionText: "Your question here?",
-      options: ["Option A", "Option B", "Option C", "Option D"],
+      questionText: 'Your question here?',
+      options: ['Option A', 'Option B', 'Option C', 'Option D'],
       correctOptionIndex: 0
     }
   ]
 };
 
-// ─── AdminPanel ───────────────────────────────────────────────────────────────
 const AdminPanel = () => {
   const { user, isAuthenticated } = useAuthStore();
 
-  // Course list (from static file)
   const [courses, setCourses] = useState([]);
-
-  // Quiz Manager state
   const [selectedCourseId, setSelectedCourseId] = useState('');
   const [selectedCourseTitle, setSelectedCourseTitle] = useState('');
   const [quizJson, setQuizJson] = useState('');
   const [jsonError, setJsonError] = useState('');
-  const [uploadStatus, setUploadStatus] = useState(null); // null | 'loading' | 'success' | 'error'
+  const [uploadStatus, setUploadStatus] = useState(null);
   const [uploadMessage, setUploadMessage] = useState('');
   const [loadingExisting, setLoadingExisting] = useState(false);
+  const [analytics, setAnalytics] = useState(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [analyticsError, setAnalyticsError] = useState('');
+  const [tab, setTab] = useState('analytics');
 
-  // Active tab
-  const [tab, setTab] = useState('quiz'); // 'quiz' | 'guide'
-
-  // Load courses for dropdown
   useEffect(() => {
     getCourseList().then(setCourses).catch(console.error);
   }, []);
 
-  // Auth guard
+  useEffect(() => {
+    if (!isAuthenticated || user?.role !== 'admin') return;
+
+    const loadAnalytics = async () => {
+      setAnalyticsLoading(true);
+      setAnalyticsError('');
+      try {
+        const res = await api.get('/admin/analytics');
+        setAnalytics(res.data);
+      } catch (err) {
+        setAnalyticsError(err.response?.data?.message || 'Failed to load admin analytics.');
+      } finally {
+        setAnalyticsLoading(false);
+      }
+    };
+
+    loadAnalytics();
+  }, [isAuthenticated, user?.role]);
+
   if (!isAuthenticated || user?.role !== 'admin') {
     return <Navigate to="/" replace />;
   }
 
-  // ── Validate JSON input ────────────────────────────────────────────────────
   const validateJson = (raw) => {
     try {
       const parsed = JSON.parse(raw);
@@ -63,20 +76,18 @@ const AdminPanel = () => {
         if (typeof q.correctOptionIndex !== 'number') return `Question ${i + 1}: missing "correctOptionIndex"`;
         if (q.correctOptionIndex >= q.options.length) return `Question ${i + 1}: correctOptionIndex out of range`;
       }
-      return null; // valid
+      return null;
     } catch (e) {
       return 'Invalid JSON: ' + e.message;
     }
   };
 
-  // ── Load existing quiz from DB ─────────────────────────────────────────────
   const handleLoadExisting = async () => {
     if (!selectedCourseId) return;
     setLoadingExisting(true);
     try {
       const res = await api.get(`/quizzes/${selectedCourseId}`);
       const { passingScore, questions, ribbonTheme } = res.data;
-      // Re-add correctOptionIndex (admin gets it per backend route)
       setQuizJson(JSON.stringify({ passingScore, ribbonTheme: ribbonTheme || 'blue', questions }, null, 2));
       setJsonError('');
     } catch (err) {
@@ -86,7 +97,6 @@ const AdminPanel = () => {
     }
   };
 
-  // ── Handle JSON textarea change ────────────────────────────────────────────
   const handleJsonChange = (val) => {
     setQuizJson(val);
     setUploadStatus(null);
@@ -98,11 +108,16 @@ const AdminPanel = () => {
     }
   };
 
-  // ── Submit quiz to MongoDB via backend ─────────────────────────────────────
   const handleUpload = async () => {
-    if (!selectedCourseId) { setJsonError('Please select a course first.'); return; }
+    if (!selectedCourseId) {
+      setJsonError('Please select a course first.');
+      return;
+    }
     const err = validateJson(quizJson);
-    if (err) { setJsonError(err); return; }
+    if (err) {
+      setJsonError(err);
+      return;
+    }
 
     setUploadStatus('loading');
     setUploadMessage('');
@@ -110,14 +125,13 @@ const AdminPanel = () => {
       const parsed = JSON.parse(quizJson);
       await api.post(`/quizzes/${selectedCourseId}`, parsed);
       setUploadStatus('success');
-      setUploadMessage(`Quiz saved to MongoDB for "${selectedCourseTitle}" ✅`);
+      setUploadMessage(`Quiz saved to MongoDB for "${selectedCourseTitle}" successfully.`);
     } catch (err) {
       setUploadStatus('error');
       setUploadMessage(err.response?.data?.message || 'Upload failed. Is the backend running?');
     }
   };
 
-  // ── Load template into editor ──────────────────────────────────────────────
   const handleLoadTemplate = () => {
     setQuizJson(JSON.stringify(QUIZ_TEMPLATE, null, 2));
     setJsonError('');
@@ -128,13 +142,25 @@ const AdminPanel = () => {
     try { return JSON.parse(quizJson).questions?.length || 0; } catch { return 0; }
   })();
 
+  const formatDate = (value) => {
+    if (!value) return '-';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '-';
+    return date.toLocaleString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-slate-100">
       <Helmet>
         <title>Admin Panel | SkillValix</title>
       </Helmet>
 
-      {/* ── Header ── */}
       <div className="bg-gradient-to-r from-indigo-700 via-violet-700 to-purple-700 shadow-xl">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <div className="flex items-center gap-4">
@@ -143,13 +169,25 @@ const AdminPanel = () => {
             </div>
             <div>
               <h1 className="text-3xl font-extrabold text-white">Admin Panel</h1>
-              <p className="text-indigo-200 text-sm mt-0.5">Manage quizzes and course content · SkillValix</p>
+              <p className="text-indigo-200 text-sm mt-0.5">Protected admin workspace for analytics, quiz operations, and course guidance.</p>
             </div>
           </div>
 
-          {/* Tabs */}
-          <div className="flex gap-2 mt-8">
+          <div className="mt-6 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm p-4 text-sm text-indigo-50">
+            <div className="flex items-start gap-3">
+              <Lock className="w-5 h-5 text-yellow-300 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold">Security notice</p>
+                <p className="text-indigo-100/90 mt-1">
+                  Admin access is controlled only by the role stored in the database. This website does not include any option to create admins, assign admins, or promote users.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2 mt-8">
             {[
+              { key: 'analytics', label: 'Analytics', icon: BarChart3 },
               { key: 'quiz', label: 'Quiz Manager', icon: ClipboardList },
               { key: 'guide', label: 'Course Guide', icon: BookOpen },
             ].map(({ key, label, icon: Icon }) => (
@@ -171,12 +209,186 @@ const AdminPanel = () => {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+        {tab === 'analytics' && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+              {[
+                { label: 'Total Users', value: analytics?.overview?.totalUsers ?? '-', icon: Users, tone: 'from-indigo-600 to-blue-600' },
+                { label: 'Published Courses', value: analytics?.overview?.publishedCourses ?? '-', icon: BookOpen, tone: 'from-emerald-600 to-teal-600' },
+                { label: 'Certificates', value: analytics?.overview?.totalCertificates ?? '-', icon: Award, tone: 'from-amber-500 to-orange-500' },
+                { label: 'Quiz Coverage', value: analytics?.overview ? `${analytics.overview.quizCoverage}%` : '-', icon: Activity, tone: 'from-violet-600 to-fuchsia-600' },
+              ].map(({ label, value, icon: Icon, tone }) => (
+                <div key={label} className={`rounded-2xl bg-gradient-to-br ${tone} p-5 text-white shadow-lg`}>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs uppercase tracking-[0.15em] font-bold text-white/70">{label}</p>
+                    <Icon className="w-5 h-5 text-white/90" />
+                  </div>
+                  <p className="mt-4 text-4xl font-black leading-none">
+                    {analyticsLoading ? <span className="inline-block h-10 w-20 rounded-lg bg-white/20 animate-pulse" /> : value}
+                  </p>
+                </div>
+              ))}
+            </div>
 
-        {/* ═══════ QUIZ MANAGER TAB ═══════ */}
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+              <div className="xl:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                      <BarChart3 className="w-5 h-5 text-indigo-600" />
+                      Admin Dashboard Overview
+                    </h2>
+                    <p className="text-sm text-slate-500 mt-1">Live platform analytics available only to authenticated admins.</p>
+                  </div>
+                  {analytics?.generatedAt && (
+                    <span className="text-xs font-medium text-slate-400">Updated {formatDate(analytics.generatedAt)}</span>
+                  )}
+                </div>
+
+                {analyticsError && (
+                  <div className="mb-4 flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                    <span>{analyticsError}</span>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Users</p>
+                    <div className="mt-3 space-y-2 text-sm">
+                      <div className="flex items-center justify-between"><span className="text-slate-500">Students</span><span className="font-bold text-slate-900">{analytics?.overview?.totalStudents ?? '-'}</span></div>
+                      <div className="flex items-center justify-between"><span className="text-slate-500">Admins</span><span className="font-bold text-slate-900">{analytics?.overview?.totalAdmins ?? '-'}</span></div>
+                      <div className="flex items-center justify-between"><span className="text-slate-500">Certified users</span><span className="font-bold text-slate-900">{analytics?.overview?.uniqueCertifiedUsers ?? '-'}</span></div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Assessment</p>
+                    <div className="mt-3 space-y-2 text-sm">
+                      <div className="flex items-center justify-between"><span className="text-slate-500">Total quizzes</span><span className="font-bold text-slate-900">{analytics?.overview?.totalQuizzes ?? '-'}</span></div>
+                      <div className="flex items-center justify-between"><span className="text-slate-500">Attempts used</span><span className="font-bold text-slate-900">{analytics?.engagement?.totalAttemptsUsed ?? '-'}</span></div>
+                      <div className="flex items-center justify-between"><span className="text-slate-500">Attempts unlocked</span><span className="font-bold text-slate-900">{analytics?.engagement?.totalAttemptsUnlocked ?? '-'}</span></div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Completion</p>
+                    <div className="mt-3 space-y-2 text-sm">
+                      <div className="flex items-center justify-between"><span className="text-slate-500">Courses with certificates</span><span className="font-bold text-slate-900">{analytics?.overview?.courseCompletionCoverage ?? '-'}%</span></div>
+                      <div className="flex items-center justify-between"><span className="text-slate-500">Avg certs per certified user</span><span className="font-bold text-slate-900">{analytics?.engagement?.averageCertificatesPerCertifiedUser ?? '-'}</span></div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Permissions</p>
+                    <div className="mt-3 space-y-2 text-sm">
+                      <div className="flex items-center justify-between"><span className="text-slate-500">View analytics</span><span className="font-bold text-emerald-700">{analytics?.permissions?.canViewAnalytics ? 'Allowed' : 'Blocked'}</span></div>
+                      <div className="flex items-center justify-between"><span className="text-slate-500">Manage quizzes</span><span className="font-bold text-emerald-700">{analytics?.permissions?.canManageQuizzes ? 'Allowed' : 'Blocked'}</span></div>
+                      <div className="flex items-center justify-between"><span className="text-slate-500">Admin assignment</span><span className="font-bold text-slate-900">Database only</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-indigo-600" />
+                  Access Policy
+                </h2>
+                <div className="mt-5 space-y-3">
+                  {[
+                    { icon: Database, title: 'Admin role source', desc: 'Admin users are recognized from the database role field only.' },
+                    { icon: Lock, title: 'No website promotion', desc: 'There is no in-app button or form to make any user an admin.' },
+                    { icon: Eye, title: 'Permission visibility', desc: 'This page explains what admins can access without allowing privilege changes.' },
+                  ].map(({ icon: Icon, title, desc }) => (
+                    <div key={title} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-slate-900">{title}</p>
+                          <p className="text-sm text-slate-500 mt-1">{desc}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <h2 className="text-lg font-bold text-slate-900 mb-4">Top Course Analytics</h2>
+                <div className="space-y-3">
+                  {analyticsLoading && Array.from({ length: 4 }).map((_, idx) => (
+                    <div key={idx} className="h-20 rounded-xl bg-slate-100 animate-pulse" />
+                  ))}
+                  {!analyticsLoading && analytics?.courseBreakdown?.map((course, idx) => (
+                    <div key={course.courseId || course.slug} className="rounded-xl border border-slate-200 p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-xs font-bold uppercase tracking-wide text-slate-400">#{idx + 1}</p>
+                          <p className="font-semibold text-slate-900 mt-1">{course.title}</p>
+                          <p className="text-sm text-slate-500 mt-1">{course.lessonCount} lessons � {course.hasQuiz ? 'Quiz ready' : 'Quiz missing'}</p>
+                        </div>
+                        <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold">
+                          {course.certificatesEarned} certs
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                  <h2 className="text-lg font-bold text-slate-900 mb-4">Recent Users</h2>
+                  <div className="space-y-3">
+                    {analyticsLoading && Array.from({ length: 4 }).map((_, idx) => (
+                      <div key={idx} className="h-16 rounded-xl bg-slate-100 animate-pulse" />
+                    ))}
+                    {!analyticsLoading && analytics?.recentUsers?.map((entry) => (
+                      <div key={`${entry.email}-${entry.createdAt}`} className="rounded-xl border border-slate-200 p-4 flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="font-semibold text-slate-900 truncate">{entry.name}</p>
+                          <p className="text-sm text-slate-500 truncate">{entry.email}</p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className={`text-xs font-bold uppercase tracking-wide ${entry.role === 'admin' ? 'text-violet-700' : 'text-slate-500'}`}>{entry.role}</p>
+                          <p className="text-xs text-slate-400 mt-1">{formatDate(entry.createdAt)}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                  <h2 className="text-lg font-bold text-slate-900 mb-4">Recent Certificates</h2>
+                  <div className="space-y-3">
+                    {analyticsLoading && Array.from({ length: 4 }).map((_, idx) => (
+                      <div key={idx} className="h-16 rounded-xl bg-slate-100 animate-pulse" />
+                    ))}
+                    {!analyticsLoading && analytics?.recentCertificates?.map((entry) => (
+                      <div key={entry.certificateId} className="rounded-xl border border-slate-200 p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="font-semibold text-slate-900 truncate">{entry.courseTitle}</p>
+                            <p className="text-sm text-slate-500 truncate">{entry.studentName}{entry.studentEmail ? ` � ${entry.studentEmail}` : ''}</p>
+                          </div>
+                          <span className="text-xs font-mono bg-slate-100 text-slate-600 px-2 py-1 rounded-lg shrink-0">{entry.certificateId}</span>
+                        </div>
+                        <p className="text-xs text-slate-400 mt-2">{formatDate(entry.issueDate)}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         {tab === 'quiz' && (
           <div className="space-y-6">
-
-            {/* Step 1 — Select Course */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
               <div className="bg-gradient-to-r from-indigo-50 to-violet-50 px-6 py-4 border-b border-slate-100">
                 <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
@@ -199,7 +411,7 @@ const AdminPanel = () => {
                       }}
                       className="w-full appearance-none bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 pr-10 text-slate-800 font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
                     >
-                      <option value="">— Choose a course —</option>
+                      <option value="">- Choose a course -</option>
                       {courses.map(c => (
                         <option key={c._id} value={c._id}>{c.title}</option>
                       ))}
@@ -221,15 +433,14 @@ const AdminPanel = () => {
                   <p className="mt-3 text-xs text-slate-500 flex items-center gap-1.5">
                     <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
                     Selected: <span className="font-semibold text-slate-700">{selectedCourseTitle}</span>
-                    <span className="ml-1 text-slate-400">· Course ID: <code className="font-mono bg-slate-100 px-1 rounded">{selectedCourseId}</code></span>
+                    <span className="ml-1 text-slate-400">� Course ID: <code className="font-mono bg-slate-100 px-1 rounded">{selectedCourseId}</code></span>
                   </p>
                 )}
               </div>
             </div>
 
-            {/* Step 2 — Edit Quiz JSON */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-              <div className="bg-gradient-to-r from-indigo-50 to-violet-50 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+              <div className="bg-gradient-to-r from-indigo-50 to-violet-50 px-6 py-4 border-b border-slate-100 flex items-center justify-between gap-3">
                 <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
                   <span className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs flex items-center justify-center font-bold">2</span>
                   Write / Paste Quiz JSON
@@ -249,7 +460,6 @@ const AdminPanel = () => {
               </div>
 
               <div className="p-6 space-y-4">
-                {/* Format reference box */}
                 <div className="bg-slate-900 rounded-xl p-4 text-xs font-mono text-slate-300 overflow-x-auto">
                   <div className="text-slate-500 mb-2 text-xs uppercase tracking-wider font-sans font-bold">Expected JSON Format</div>
                   <pre className="whitespace-pre">{`{
@@ -265,7 +475,6 @@ const AdminPanel = () => {
 }`}</pre>
                 </div>
 
-                {/* JSON Editor */}
                 <div className="relative">
                   <textarea
                     id="quiz-json-editor"
@@ -289,7 +498,6 @@ const AdminPanel = () => {
                   )}
                 </div>
 
-                {/* JSON Error */}
                 {jsonError && (
                   <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
                     <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
@@ -299,7 +507,6 @@ const AdminPanel = () => {
               </div>
             </div>
 
-            {/* Step 3 — Upload */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
               <div className="bg-gradient-to-r from-indigo-50 to-violet-50 px-6 py-4 border-b border-slate-100">
                 <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
@@ -324,7 +531,6 @@ const AdminPanel = () => {
                   }
                 </button>
 
-                {/* Upload result */}
                 {uploadStatus === 'success' && (
                   <div className="mt-4 flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-sm font-medium">
                     <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
@@ -344,8 +550,6 @@ const AdminPanel = () => {
             </div>
           </div>
         )}
-
-        {/* ═══════ COURSE GUIDE TAB ═══════ */}
         {tab === 'guide' && (
           <div className="space-y-6">
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
@@ -374,7 +578,7 @@ const AdminPanel = () => {
                   {
                     step: '4',
                     title: 'Required fields for each lesson',
-                    desc: '_id (unique hex), course (same as course._id), title, content (HTML string), order (1, 2, 3…)',
+                    desc: '_id (unique hex), course (same as course._id), title, content (HTML string), order (1, 2, 3...)',
                   },
                   {
                     step: '5',
@@ -399,7 +603,7 @@ const AdminPanel = () => {
                 Course Entry Template
               </h2>
               <div className="bg-slate-900 rounded-xl overflow-hidden">
-                <div className="bg-slate-800 px-4 py-2 text-xs text-slate-400 font-mono">all-courses.json — new course entry</div>
+                <div className="bg-slate-800 px-4 py-2 text-xs text-slate-400 font-mono">all-courses.json - new course entry</div>
                 <pre className="p-5 text-xs font-mono text-slate-300 overflow-x-auto whitespace-pre">{`{
   "course": {
     "_id": "UNIQUE_HEX_24_CHARS",
