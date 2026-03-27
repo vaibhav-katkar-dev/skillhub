@@ -215,16 +215,18 @@ const CourseDetail = () => {
                   Ready to get{' '}
                   <span className="exam-gold-txt">certified?</span>
                 </h3>
-                <p style={{ fontSize: 14, color: '#64748b', lineHeight: 1.75, maxWidth: 400, marginBottom: 18 }}>
-                  Complete the modules above, then sit the exam. Pass once and earn your verifiable PDF certificate instantly.
+                <p style={{ fontSize: 14, color: '#64748b', lineHeight: 1.75, maxWidth: 440, marginBottom: 18 }}>
+                  All lessons are free to learn at your own pace. If you already know the skill, you can also take the exam directly and get certified quickly.
                 </p>
 
                 {/* Trust badges */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 18px' }}>
                   {[
+                    { icon: BookOpen, text: 'Lessons free to learn', color: '#2563eb' },
+                    { icon: Zap, text: 'Direct exam allowed', color: '#d97706' },
                     { icon: ShieldCheck, text: 'Tamper-proof certificate', color: '#059669' },
                     { icon: Award, text: 'Unique verification ID', color: '#7c3aed' },
-                    { icon: Zap, text: 'Instant PDF download', color: '#d97706' },
+                    { icon: Award, text: 'Instant PDF certificate', color: '#059669' },
                   ].map(({ icon: Icon, text, color }) => (
                     <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12.5, fontWeight: 500, color: '#64748b' }}>
                       <Icon style={{ width: 14, height: 14, color, flexShrink: 0 }} />

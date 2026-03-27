@@ -5,7 +5,7 @@ import { api } from '../store/authStore';
 import { getCourseList } from '../data/courseLoader';
 import {
   Search, CheckCircle, XCircle, Award, Loader2,
-  ShieldCheck, Sparkles, ArrowRight, BookOpen, Clock, BadgeCheck
+  ShieldCheck, Sparkles, ArrowRight, BookOpen, Clock, BadgeCheck, Zap
 } from 'lucide-react';
 
 const CTA_THEMES = {
@@ -133,7 +133,7 @@ const VerifyCert = () => {
               <div className="rounded-[1.75rem] border border-dashed border-slate-300 bg-slate-50/80 p-8 text-center">
                 <Award className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                 <h3 className="text-lg font-bold text-slate-800">Enter a certificate ID to begin</h3>
-                <p className="text-slate-500 mt-2">We’ll show the verified learner, course, issue date, and certificate code here.</p>
+                <p className="text-slate-500 mt-2">We&apos;ll show the verified learner, course, issue date, and certificate code here.</p>
               </div>
             )}
           </div>
@@ -228,8 +228,21 @@ const VerifyCert = () => {
                 Get quickly certified in your skills with real course-based certificates
               </h2>
               <p className="mt-4 text-slate-300 text-lg">
-                Start a structured course, finish the lessons, pass the assessment, and earn a verifiable certificate that looks professional and checks out instantly.
+                Learn every lesson for free, or move faster and take the exam directly when you already know the skill. It is built for both full learners and quick certification seekers.
               </p>
+              <div className="mt-6 grid sm:grid-cols-3 gap-3">
+                {[
+                  { icon: BookOpen, title: 'All lessons are free', text: 'Study the full course at your own pace with no paywall.' },
+                  { icon: Zap, title: 'Direct exam option', text: 'Already confident? Skip ahead and take the exam directly.' },
+                  { icon: Award, title: 'Get certified quickly', text: 'Pass the exam and earn a verified certificate fast.' },
+                ].map(({ icon: Icon, title, text }) => (
+                  <div key={title} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <Icon className="w-5 h-5 text-amber-300 mb-3" />
+                    <p className="font-bold text-white text-sm">{title}</p>
+                    <p className="text-sm text-slate-300 mt-1 leading-relaxed">{text}</p>
+                  </div>
+                ))}
+              </div>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link
                   to="/courses"
@@ -292,6 +305,17 @@ const VerifyCert = () => {
                   </div>
                 </Link>
               ))}
+            </div>
+            <div className="mt-6 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-5">
+              <div className="flex items-start gap-3">
+                <Zap className="w-5 h-5 text-emerald-300 mt-0.5 shrink-0" />
+                <div>
+                  <p className="font-bold text-white">Want a faster route?</p>
+                  <p className="text-sm text-emerald-50/85 mt-1 leading-relaxed">
+                    You do not need to complete every lesson before taking the exam. If you already know the topic, you can go straight for certification and get verified quickly.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

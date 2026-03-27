@@ -396,7 +396,7 @@ export default function Home() {
               <span style={{ position:'absolute', inset:0, borderRadius:'50%', background:'#10b981', animation:'ping 2s ease-out infinite', opacity:.7 }} />
               <span style={{ position:'relative', width:8, height:8, borderRadius:'50%', background:'#10b981', display:'block' }} />
             </span>
-            <span style={{ fontSize:12, fontWeight:700, color:'#4f46e5', letterSpacing:'0.05em' }}>Free Â· No sign-up fees Â· No paywalls</span>
+            <span style={{ fontSize:12, fontWeight:700, color:'#4f46e5', letterSpacing:'0.05em' }}>Free | No sign-up fees | No paywalls</span>
           </div>
 
           {/* Headline â€” human, direct, broader scope */}
