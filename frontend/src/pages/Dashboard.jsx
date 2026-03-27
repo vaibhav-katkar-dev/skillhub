@@ -140,7 +140,7 @@ const AvailableCard = ({ course }) => (
 /* ────────────────────────────────────────────
    Certificate Card
 ──────────────────────────────────────────── */
-const CertCard = ({ cert, onDownload, copyMsg, onCopy }) => {
+const CertCard = ({ cert, onDownload, copyMsg, onCopy, prepState }) => {
   const handleFeedPost = async (e) => {
     e.preventDefault();
     const certUrl = `${window.location.origin}/verify/${cert.certificateId}`;
@@ -211,7 +211,7 @@ const CertCard = ({ cert, onDownload, copyMsg, onCopy }) => {
               }`}
             >
               {cert.pdfReady ? <Download className="w-3.5 h-3.5" /> : <Loader2 className={`w-3.5 h-3.5 ${cert.pdfStatus === 'generating' || cert.pdfStatus === 'queued' ? 'animate-spin' : ''}`} />}
-              {cert.pdfReady ? 'Download PDF' : cert.pdfStatus === 'failed' ? 'Retry PDF' : 'Prepare PDF'}
+              {cert.pdfReady ? 'Download PDF' : prepState?.busy ? `Preparing${prepState.seconds > 0 ? ` (${prepState.seconds}s)` : ''}` : cert.pdfStatus === 'failed' ? 'Retry PDF' : 'Prepare PDF'}
             </button>
 
             <button
@@ -253,6 +253,12 @@ const CertCard = ({ cert, onDownload, copyMsg, onCopy }) => {
             </button>
           </div>
         </div>
+
+        {!cert.pdfReady && (
+          <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
+            {prepState?.message || 'Click prepare once. We will generate your PDF safely in the background, then you can download it.'}
+          </p>
+        )}
       </div>
     </div>
   );
@@ -298,6 +304,7 @@ const Dashboard = () => {
   const userData = storeUser;
   const [loading, setLoading] = useState(true);
   const [copyMsg, setCopyMsg] = useState('');
+  const [prepStates, setPrepStates] = useState({});
   const [activeTab, setActiveTab] = useState('learning'); // new tab state
   const [editingProfile, setEditingProfile] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
@@ -375,21 +382,95 @@ const Dashboard = () => {
     return () => clearInterval(intervalId);
   }, [certs, isAuthenticated]);
 
+  useEffect(() => {
+    const hasCountdown = Object.values(prepStates).some(state => state?.seconds > 0);
+    if (!hasCountdown) return undefined;
+
+    const timerId = setInterval(() => {
+      setPrepStates(prev => {
+        const next = { ...prev };
+        Object.keys(next).forEach((key) => {
+          if (next[key]?.seconds > 0) {
+            next[key] = { ...next[key], seconds: next[key].seconds - 1 };
+          }
+        });
+        return next;
+      });
+    }, 1000);
+
+    return () => clearInterval(timerId);
+  }, [prepStates]);
+
+  useEffect(() => {
+    if (!certs.length) return;
+    setPrepStates(prev => {
+      const next = { ...prev };
+      certs.forEach((cert) => {
+        if (cert.pdfReady && next[cert.certificateId]) {
+          delete next[cert.certificateId];
+        }
+      });
+      return next;
+    });
+  }, [certs]);
+
   const dl = async (cert) => {
-    if (!cert?.pdfReady) {
-      try {
-        await api.post(`/certificates/prepare/${cert.certificateId}`);
+    const certId = cert?.certificateId;
+    if (!certId) return;
+
+    try {
+      const statusRes = await api.get(`/certificates/status/${certId}`);
+      if (statusRes.data?.pdfReady) {
+        clearCache('certs_mine');
+        setPrepStates(prev => {
+          const next = { ...prev };
+          delete next[certId];
+          return next;
+        });
+        window.open(`${API_BASE}/certificates/download/${certId}`, '_blank');
+        return;
+      }
+    } catch (err) {
+      // If status check fails, fall back to prepare flow below.
+    }
+
+    try {
+      const prepareRes = await api.post(`/certificates/prepare/${certId}`);
+      if (prepareRes.data?.pdfReady) {
         clearCache('certs_mine');
         const refreshed = await api.get('/certificates/mine');
         setCerts(refreshed.data);
-        alert('Your certificate PDF is being prepared. Please wait about 10 seconds and try again.');
-      } catch (err) {
-        alert(err.response?.data?.message || 'Failed to prepare the certificate PDF.');
+        setPrepStates(prev => {
+          const next = { ...prev };
+          delete next[certId];
+          return next;
+        });
+        window.open(`${API_BASE}/certificates/download/${certId}`, '_blank');
+        return;
       }
-      return;
-    }
 
-    window.open(`${API_BASE}/certificates/download/${cert.certificateId}`, '_blank');
+      const waitSeconds = prepareRes.data?.retryAfterSeconds || 10;
+      setPrepStates(prev => ({
+        ...prev,
+        [certId]: {
+          busy: true,
+          seconds: waitSeconds,
+          message: 'Preparing your certificate PDF. Please wait a few seconds, then click download again.',
+        },
+      }));
+      clearCache('certs_mine');
+      const refreshed = await api.get('/certificates/mine');
+      setCerts(refreshed.data);
+    } catch (err) {
+      setPrepStates(prev => ({
+        ...prev,
+        [certId]: {
+          busy: false,
+          seconds: 0,
+          message: err.response?.data?.message || 'Failed to prepare the certificate PDF.',
+        },
+      }));
+    }
   };
   const copy = id => {
     navigator.clipboard.writeText(`${window.location.origin}/verify/${id}`);
@@ -700,6 +781,7 @@ const Dashboard = () => {
                       onDownload={dl}
                       copyMsg={copyMsg}
                       onCopy={copy}
+                      prepState={prepStates[cert.certificateId]}
                     />
                   ))}
                 </div>

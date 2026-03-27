@@ -12,6 +12,8 @@ const router = express.Router();
 const MAX_CONCURRENT_PDF_GENERATIONS = 1;
 const PDF_RETRY_AFTER_SECONDS = 10;
 const PDF_GENERATION_STALE_MS = 2 * 60 * 1000;
+const DOWNLOAD_WAIT_MS = 8000;
+const DOWNLOAD_WAIT_POLL_MS = 500;
 
 let activePdfGenerations = 0;
 const pdfGenerationQueue = [];
@@ -250,6 +252,26 @@ async function prepareCertificatePdf(certificateId) {
   }
 }
 
+async function waitForPreparedPdf(certificateId, timeoutMs = DOWNLOAD_WAIT_MS) {
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() < deadline) {
+    const cert = await Certificate.findOne({ certificateId })
+      .select('certificateId pdfStatus +pdfBuffer pdfMimeType pdfError')
+      .lean();
+
+    if (!cert) return null;
+    if (cert.pdfStatus === 'ready' && cert.pdfBuffer?.length) return cert;
+    if (cert.pdfStatus === 'failed') return cert;
+
+    await new Promise(resolve => setTimeout(resolve, DOWNLOAD_WAIT_POLL_MS));
+  }
+
+  return Certificate.findOne({ certificateId })
+    .select('certificateId pdfStatus pdfError')
+    .lean();
+}
+
 function processPdfQueue() {
   if (activePdfGenerations >= MAX_CONCURRENT_PDF_GENERATIONS) return;
   const nextCertificateId = pdfGenerationQueue.shift();
@@ -457,9 +479,14 @@ router.get('/download/:certId', async (req, res) => {
     }
 
     await enqueueCertificatePreparation(cert.certificateId);
-    cert = await Certificate.findOne({ certificateId: cert.certificateId })
-      .select('certificateId pdfStatus pdfError')
-      .lean();
+    cert = await waitForPreparedPdf(cert.certificateId);
+
+    if (cert?.pdfStatus === 'ready' && cert.pdfBuffer?.length) {
+      res.setHeader('Content-Type', cert.pdfMimeType || 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename=Certificate-${cert.certificateId}.pdf`);
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      return res.send(cert.pdfBuffer);
+    }
 
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Retry-After', String(PDF_RETRY_AFTER_SECONDS));
