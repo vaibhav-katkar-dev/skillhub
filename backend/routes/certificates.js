@@ -9,11 +9,11 @@ import { getCourseFromJSON, getAllCoursesFromJSON } from '../utils/courseData.js
 
 const router = express.Router();
 
-const MAX_CONCURRENT_PDF_GENERATIONS = 1;
-const PDF_RETRY_AFTER_SECONDS = 10;
+const MAX_CONCURRENT_PDF_GENERATIONS = 4;              // allow a few parallel jobs
+const PDF_RETRY_AFTER_SECONDS = 5;                     // faster client retry hint
 const PDF_GENERATION_STALE_MS = 2 * 60 * 1000;
-const DOWNLOAD_WAIT_MS = 8000;
-const DOWNLOAD_WAIT_POLL_MS = 500;
+const DOWNLOAD_WAIT_MS = 15000;                        // wait up to 15s before giving up
+const DOWNLOAD_WAIT_POLL_MS = 400;
 
 let activePdfGenerations = 0;
 const pdfGenerationQueue = [];
@@ -334,20 +334,10 @@ function processPdfQueue() {
   if (activePdfGenerations >= MAX_CONCURRENT_PDF_GENERATIONS) return;
   const nextCertificateId = pdfGenerationQueue.shift();
   if (!nextCertificateId) return;
-
   queuedCertificateIds.delete(nextCertificateId);
-  activePdfGenerations += 1;
-
-  prepareCertificatePdf(nextCertificateId)
-    .catch((err) => {
-      console.error('[Certificates] Queue generation error:', err);
-    })
-    .finally(() => {
-      activePdfGenerations -= 1;
-      if (pdfGenerationQueue.length > 0) {
-        setImmediate(processPdfQueue);
-      }
-    });
+  startCertificatePreparation(nextCertificateId).catch((err) => {
+    console.error('[Certificates] Queue generation error:', err);
+  });
 }
 
 async function startCertificatePreparation(certificateId) {
@@ -363,7 +353,8 @@ async function startCertificatePreparation(certificateId) {
 }
 
 async function enqueueCertificatePreparation(certificateId) {
-  await Certificate.updateOne(
+  // Always try immediate generation first; only queue if we hit concurrency limit
+  const queued = await Certificate.updateOne(
     {
       certificateId,
       $or: [
@@ -381,7 +372,7 @@ async function enqueueCertificatePreparation(certificateId) {
     }
   );
 
-  if (activePdfGenerations < MAX_CONCURRENT_PDF_GENERATIONS && pdfGenerationQueue.length === 0) {
+  if (activePdfGenerations < MAX_CONCURRENT_PDF_GENERATIONS) {
     queuedCertificateIds.delete(certificateId);
     return startCertificatePreparation(certificateId);
   }
