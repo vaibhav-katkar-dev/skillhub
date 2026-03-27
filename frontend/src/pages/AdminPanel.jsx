@@ -155,6 +155,12 @@ const AdminPanel = () => {
     });
   };
 
+  const formatSize = (bytes) => {
+    if (!bytes) return '0 KB';
+    if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+    return `${(bytes / 1024).toFixed(2)} KB`;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-slate-100">
       <Helmet>
@@ -403,6 +409,120 @@ const AdminPanel = () => {
                         <p className="text-xs text-slate-400 mt-2">{formatDate(entry.issueDate)}</p>
                       </div>
                     ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+              <div className="xl:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <Database className="w-5 h-5 text-indigo-600" />
+                  Hosting Capacity Report
+                </h2>
+                <p className="text-sm text-slate-500 mt-1">
+                  Practical estimate for the current Vercel + MongoDB free-tier style deployment based on this codebase and content footprint.
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5">
+                  <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Content Footprint</p>
+                    <div className="mt-3 space-y-2 text-sm">
+                      <div className="flex items-center justify-between"><span className="text-slate-500">Course JSON</span><span className="font-bold text-slate-900">{formatSize(analytics?.contentFootprint?.courseJsonBytes)}</span></div>
+                      <div className="flex items-center justify-between"><span className="text-slate-500">Courses</span><span className="font-bold text-slate-900">{analytics?.contentFootprint?.staticCourses ?? '-'}</span></div>
+                      <div className="flex items-center justify-between"><span className="text-slate-500">Lessons</span><span className="font-bold text-slate-900">{analytics?.contentFootprint?.staticLessons ?? '-'}</span></div>
+                      <div className="flex items-center justify-between"><span className="text-slate-500">Embedded JSON quizzes</span><span className="font-bold text-slate-900">{analytics?.contentFootprint?.staticEmbeddedQuizzes ?? '-'}</span></div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Concurrency Estimate</p>
+                    <div className="mt-3 space-y-2 text-sm">
+                      <div className="flex items-center justify-between gap-3"><span className="text-slate-500">Browsing visitors</span><span className="font-bold text-slate-900 text-right">{analytics?.capacityEstimate?.frontendOnlyConcurrentVisitors ?? '-'}</span></div>
+                      <div className="flex items-center justify-between gap-3"><span className="text-slate-500">Active full-stack users</span><span className="font-bold text-slate-900 text-right">{analytics?.capacityEstimate?.fullStackActiveConcurrentUsers ?? '-'}</span></div>
+                      <div className="flex items-center justify-between gap-3"><span className="text-slate-500">Short burst traffic</span><span className="font-bold text-slate-900 text-right">{analytics?.capacityEstimate?.shortBurstConcurrentUsers ?? '-'}</span></div>
+                      <div className="flex items-center justify-between gap-3"><span className="text-slate-500">Certificate jobs</span><span className="font-bold text-slate-900 text-right">{analytics?.capacityEstimate?.certificateGenerationConcurrency ?? '-'}</span></div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Platform Shape</p>
+                    <div className="mt-3 space-y-2 text-sm text-slate-600">
+                      <p><span className="font-semibold text-slate-900">Frontend:</span> {analytics?.infrastructure?.frontend?.delivery || '-'}</p>
+                      <p><span className="font-semibold text-slate-900">Backend:</span> {analytics?.infrastructure?.backend?.runtime || '-'}</p>
+                      <p><span className="font-semibold text-slate-900">Database:</span> {analytics?.infrastructure?.database?.provider || '-'}</p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Free Tier Estimate</p>
+                    <div className="mt-3 space-y-2 text-sm">
+                      <div className="flex items-center justify-between"><span className="text-slate-500">MongoDB storage</span><span className="font-bold text-slate-900">{analytics?.freeTierEstimate?.mongodbStorageMb ? `${analytics.freeTierEstimate.mongodbStorageMb} MB` : '-'}</span></div>
+                      <div className="flex items-center justify-between"><span className="text-slate-500">Approx DB ops/sec</span><span className="font-bold text-slate-900">{analytics?.freeTierEstimate?.mongodbApproxOpsPerSecond ?? '-'}</span></div>
+                    </div>
+                    <p className="text-sm text-slate-500 mt-3">
+                      {analytics?.freeTierEstimate?.mongodbLikelyFirstLimit || 'No estimate available.'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                  <p className="text-xs font-bold uppercase tracking-wide text-amber-700">Primary Bottleneck</p>
+                  <p className="mt-2 text-sm text-amber-900 font-medium">
+                    {analytics?.capacityEstimate?.practicalBottleneck || 'No bottleneck estimate available yet.'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                  <h2 className="text-lg font-bold text-slate-900 mb-4">Upgrade Order</h2>
+                  <div className="space-y-3">
+                    {analytics?.freeTierEstimate?.recommendationOrder?.length ? analytics.freeTierEstimate.recommendationOrder.map((item, idx) => (
+                      <div key={item} className="rounded-xl border border-slate-200 p-4">
+                        <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Step {idx + 1}</p>
+                        <p className="text-sm font-semibold text-slate-900 mt-1">{item}</p>
+                      </div>
+                    )) : (
+                      <div className="rounded-xl border border-dashed border-slate-200 p-4 text-sm text-slate-500">
+                        Upgrade guidance is not available yet.
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                  <h2 className="text-lg font-bold text-slate-900 mb-4">Security Review</h2>
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">Recently Fixed</p>
+                      <div className="mt-3 space-y-2">
+                        {analytics?.securityReview?.fixedRecently?.length ? analytics.securityReview.fixedRecently.map((item) => (
+                          <div key={item} className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">
+                            {item}
+                          </div>
+                        )) : (
+                          <div className="rounded-xl border border-dashed border-slate-200 p-4 text-sm text-slate-500">
+                            No recent fixes recorded.
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-wide text-amber-700">Watch List</p>
+                      <div className="mt-3 space-y-2">
+                        {analytics?.securityReview?.watchList?.length ? analytics.securityReview.watchList.map((item) => (
+                          <div key={item} className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                            {item}
+                          </div>
+                        )) : (
+                          <div className="rounded-xl border border-dashed border-slate-200 p-4 text-sm text-slate-500">
+                            No watch list items available.
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

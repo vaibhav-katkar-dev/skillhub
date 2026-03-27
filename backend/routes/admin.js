@@ -1,9 +1,10 @@
 import express from 'express';
+import fs from 'fs/promises';
 import User from '../models/User.js';
 import Quiz from '../models/Quiz.js';
 import Certificate from '../models/Certificate.js';
 import { authOptions, adminCheck } from '../middleware/auth.js';
-import { getAllCoursesFromJSON } from '../utils/courseData.js';
+import { COURSE_JSON_PATH, getAllCoursesFromJSON } from '../utils/courseData.js';
 
 const router = express.Router();
 
@@ -24,6 +25,7 @@ function normalizeId(value) {
 router.get('/analytics', authOptions, adminCheck, async (req, res) => {
   try {
     const allEntries = await getAllCoursesFromJSON();
+    const courseJsonStats = await fs.stat(COURSE_JSON_PATH).catch(() => null);
     const courseEntries = allEntries.map(entry => ({
       ...entry.course,
       normalizedId: normalizeId(entry.course?._id),
@@ -111,6 +113,15 @@ router.get('/analytics', authOptions, adminCheck, async (req, res) => {
       ? Math.round((courseBreakdown.filter(course => course.certificatesEarned > 0).length / publishedCourses.length) * 100)
       : 0;
 
+    const lessonCount = allEntries.reduce(
+      (sum, entry) => sum + (Array.isArray(entry.lessons) ? entry.lessons.length : 0),
+      0
+    );
+    const embeddedQuizCount = allEntries.reduce(
+      (sum, entry) => sum + (entry.quiz ? 1 : 0),
+      0
+    );
+
     res.json({
       generatedAt: new Date().toISOString(),
       overview: {
@@ -137,6 +148,62 @@ router.get('/analytics', authOptions, adminCheck, async (req, res) => {
         canReadCourseGuide: true,
         adminAssignment: 'database_only',
         websiteRoleElevation: false,
+      },
+      infrastructure: {
+        frontend: {
+          platform: 'Vercel',
+          delivery: 'Static Vite build served by CDN',
+          primaryPayload: 'Frontend assets plus course JSON',
+        },
+        backend: {
+          platform: 'Vercel',
+          runtime: 'Serverless Node/Express API',
+          databaseConnectionMode: 'Cached mongoose connection with pooled maxPoolSize 10',
+          heaviestEndpoints: ['certificate PDF generation', 'quiz submit', 'payment verify', 'admin analytics'],
+        },
+        database: {
+          provider: 'MongoDB Atlas',
+          tierAssumption: 'Free/shared tier baseline estimate',
+          primaryCollections: ['users', 'certificates', 'quizzes'],
+          courseContentStorage: 'Static JSON file, not MongoDB',
+        },
+      },
+      contentFootprint: {
+        courseJsonBytes: courseJsonStats?.size || 0,
+        courseJsonKb: courseJsonStats?.size ? Number((courseJsonStats.size / 1024).toFixed(2)) : 0,
+        staticCourses: allEntries.length,
+        staticLessons: lessonCount,
+        staticEmbeddedQuizzes: embeddedQuizCount,
+      },
+      capacityEstimate: {
+        frontendOnlyConcurrentVisitors: '1000+ browsing visitors',
+        fullStackActiveConcurrentUsers: '20-50 active users',
+        shortBurstConcurrentUsers: '100-300 mixed burst users',
+        certificateGenerationConcurrency: '5-15 simultaneous certificate jobs',
+        practicalBottleneck: 'MongoDB free tier throughput and serverless cold starts before frontend CDN limits',
+      },
+      freeTierEstimate: {
+        mongodbStorageMb: 512,
+        mongodbApproxOpsPerSecond: 100,
+        mongodbLikelyFirstLimit: 'throughput before storage',
+        backendNotes: 'Serverless execution is suitable for early-stage traffic but PDF generation and payment verification are the most expensive requests.',
+        recommendationOrder: [
+          'Upgrade MongoDB first when active exam traffic grows',
+          'Cache analytics and course lookups',
+          'Move certificate generation to a queued or background flow for larger volume',
+          'Upgrade Vercel plan after database bottlenecks are solved',
+        ],
+      },
+      securityReview: {
+        fixedRecently: [
+          'JWT secret fallback removed',
+          'Certificate generation restricted to completed courses',
+          'Payment verification now checks order receipt and amount',
+        ],
+        watchList: [
+          'Lesson and blog HTML rendering should stay trusted or be sanitized before rendering',
+          'Certificate PDF generation is CPU-heavy compared to normal API requests',
+        ],
       },
       courseBreakdown: courseBreakdown.slice(0, 8),
       recentUsers,

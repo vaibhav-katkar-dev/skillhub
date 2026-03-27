@@ -3,7 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const JSON_PATH = path.resolve(__dirname, '../../frontend/public/data/all-courses.json');
+export const COURSE_JSON_PATH = path.resolve(__dirname, '../../frontend/public/data/all-courses.json');
 
 /**
  * Loads all course data from the frontend's static JSON file.
@@ -12,11 +12,11 @@ const JSON_PATH = path.resolve(__dirname, '../../frontend/public/data/all-course
  */
 export async function getAllCoursesFromJSON() {
   try {
-    const data = await fs.readFile(JSON_PATH, 'utf-8');
+    const data = await fs.readFile(COURSE_JSON_PATH, 'utf-8');
     const sanitized = data.charCodeAt(0) === 0xfeff ? data.slice(1) : data;
     return JSON.parse(sanitized);
   } catch (err) {
-    console.warn(`[JSONLoader] Could not read all-courses.json at ${JSON_PATH}:`, err.message);
+    console.warn(`[JSONLoader] Could not read all-courses.json at ${COURSE_JSON_PATH}:`, err.message);
     return [];
   }
 }
