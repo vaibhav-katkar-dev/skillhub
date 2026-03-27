@@ -240,7 +240,8 @@ async function prepareCertificatePdf(certificateId) {
       day: 'numeric',
     });
 
-    const verifyUrl = `https://www.skillvalix.com/verify/${fullCert.certificateId}`;
+    const baseUrl = process.env.FRONTEND_URL || 'https://www.skillvalix.com';
+    const verifyUrl = `${baseUrl.replace(/\/$/, '')}/verify/${fullCert.certificateId}`;
     const pdfBuffer = await buildCertificatePdfBuffer({
       studentName: fullCert.student.name,
       courseTitle,
@@ -479,7 +480,7 @@ router.get('/mine', authOptions, async (req, res) => {
       }
     });
 
-    res.setHeader('Cache-Control', 'private, max-age=30');
+    res.setHeader('Cache-Control', 'no-store');
     res.json(Array.from(uniqueMap.values()));
   } catch (err) {
     console.error('[Certificates] Error fetching user certs:', err);
