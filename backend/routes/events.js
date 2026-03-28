@@ -15,7 +15,7 @@ import { authOptions, adminCheck } from '../middleware/auth.js';
 
 const router = express.Router();
 const FRONTEND_URL = () => (process.env.FRONTEND_URL || 'https://www.skillvalix.com').replace(/\/$/, '');
-const EVENT_CERT_TEMPLATE_VERSION = 3;
+const EVENT_CERT_TEMPLATE_VERSION = 4;
 
 const EVENT_CERT_WARM_CONCURRENCY = Math.max(1, Number(process.env.CERT_WARM_CONCURRENCY || 1));
 const eventCertWarmJob = {
