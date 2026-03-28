@@ -157,9 +157,14 @@ const AdminPanel = () => {
       try {
         const res = await api.get('/events/admin/certificates/warm-event-pdfs/status');
         if (!stopped) {
-          setWarmJob(res.data);
-          setWarmJobError('');
-          if (res.data?.running) {
+          const status = res.data || null;
+          setWarmJob(status);
+          if (!status?.running && (status?.totalInDb ?? 0) === 0) {
+            setWarmJobError('No event/job certificates exist yet. Generate at least one event certificate, then run fix again.');
+          } else {
+            setWarmJobError('');
+          }
+          if (status?.running) {
             timer = setTimeout(loadWarmStatus, 4000);
           }
         }
@@ -284,9 +289,6 @@ const AdminPanel = () => {
     try {
       const res = await api.post('/events/admin/certificates/warm-event-pdfs', { forceAll: true });
       setWarmJob(res.data?.job || null);
-      if ((res.data?.job?.totalInDb ?? 0) === 0) {
-        setWarmJobError('No event/job certificates exist yet. Generate at least one event certificate, then run fix again.');
-      }
     } catch (err) {
       const statusCode = err.response?.status;
       if (statusCode === 409) {
@@ -297,7 +299,11 @@ const AdminPanel = () => {
     } finally {
       try {
         const statusRes = await api.get('/events/admin/certificates/warm-event-pdfs/status');
-        setWarmJob(statusRes.data || null);
+        const status = statusRes.data || null;
+        setWarmJob(status);
+        if (!status?.running && (status?.totalInDb ?? 0) === 0) {
+          setWarmJobError('No event/job certificates exist yet. Generate at least one event certificate, then run fix again.');
+        }
       } catch {
         // Keep existing warmJob state when status fetch fails.
       }
