@@ -555,6 +555,7 @@ function buildEventCertificatePdf({ studentName, eventTitle, role, certificateId
         dividerColor = '#D8C9A2',
         issuerColor = '#8A6A2F',
         metaColor = '#7A818C',
+        trustLine = 'Verified Credential Platform  ·  Industry-Relevant Certification',
       } = {}) => {
         const dividerY = H - 44;
         const issuerY = H - 34;
@@ -587,7 +588,7 @@ function buildEventCertificatePdf({ studentName, eventTitle, role, certificateId
         doc.fontSize(6.6)
           .font('Helvetica')
           .fillColor(metaColor)
-          .text('Verified Credential Platform  ·  Industry-Relevant Certification', 0, trustY, {
+          .text(trustLine, 0, trustY, {
             width: W,
             align: 'center',
           });
@@ -659,7 +660,7 @@ function buildEventCertificatePdf({ studentName, eventTitle, role, certificateId
         doc.moveTo(CX - 205, underlineY).lineTo(CX + 205, underlineY).lineWidth(1.5).strokeColor('#CCAA52').stroke();
 
         doc.fontSize(12).font('Helvetica').fillColor(INK_MUTED)
-          .text('has successfully completed the professional job simulation', 0, underlineY + 22, { width: W, align: 'center' });
+          .text('has successfully completed a professional job simulation', 0, underlineY + 22, { width: W, align: 'center' });
 
         const eventPanelX = 120;
         const eventPanelW = W - 240;
@@ -670,14 +671,7 @@ function buildEventCertificatePdf({ studentName, eventTitle, role, certificateId
           .text(eventTitle, eventPanelX + 22, eventPanelY + 19, { width: eventPanelW - 44, align: 'center' });
 
         doc.fontSize(10).font('Helvetica').fillColor(INK_MUTED)
-          .text('in recognition of practical performance, consistent execution, and applied problem-solving.', 0, eventPanelY + 74, { width: W, align: 'center' });
-
-        doc.fontSize(9).font('Helvetica').fillColor('#6B7280');
-        const personalizedLineJob = truncateToWidth(
-          `${studentName || 'The learner'} has demonstrated readiness for ${personalizedRole}.`,
-          W - 140
-        );
-        doc.text(personalizedLineJob, 0, eventPanelY + 89, { width: W, align: 'center' });
+          .text('This certification is awarded for successfully completing a real-world job simulation, demonstrating practical expertise, problem-solving ability, and job-ready skills.', 0, eventPanelY + 74, { width: W, align: 'center' });
 
         const infoY = H - 118;
         const boxW = 206;
@@ -705,12 +699,13 @@ function buildEventCertificatePdf({ studentName, eventTitle, role, certificateId
         doc.roundedRect(qrX - 8, qrY - 8, qrSize + 16, qrSize + 36, 8).lineWidth(1).strokeColor('#E5E7EB').stroke();
         doc.image(qrBuffer, qrX, qrY, { width: qrSize, height: qrSize });
         doc.fontSize(7.2).font('Helvetica-Bold').fillColor('#6B7280')
-          .text('SCAN TO VERIFY', qrX - 8, qrY + qrSize + 13, { width: qrSize + 16, align: 'center', characterSpacing: 0.7 });
+          .text('Scan to verify certificate authenticity', qrX - 8, qrY + qrSize + 13, { width: qrSize + 16, align: 'center' });
 
         drawPremiumFooter({
           dividerColor: '#DCC99A',
           issuerColor: '#8B6A1D',
           metaColor: '#6B7280',
+          trustLine: 'Digitally verifiable credential  ·  Scan QR to validate authenticity',
         });
       } else {
         // Keep existing event-certificate design unchanged for non job-simulation events.
