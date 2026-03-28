@@ -39,14 +39,30 @@ const ALLOWED_ORIGINS = [
   'http://localhost:3000',
 ];
 
-app.use(cors({
+const corsOptions = {
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
     if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
     return callback(new Error(`CORS: origin ${origin} not allowed`));
   },
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Content-Type', 'Content-Disposition', 'Retry-After'],
   credentials: true,
-}));
+};
+
+app.use(cors(corsOptions));
+
+// Keep CORS headers explicit for allowed origins across all response paths.
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Vary', 'Origin');
+  }
+  next();
+});
 
 app.use(helmet({
   crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
@@ -103,8 +119,9 @@ async function connectToDatabase() {
   if (!cachedDb.promise) {
     cachedDb.promise = mongoose.connect(MONGO_URI, {
       maxPoolSize: 10,
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 15000,
       socketTimeoutMS: 45000,
+      family: 4,
       bufferCommands: false,
     }).then((m) => {
       console.log('[Database] Connected to MongoDB');

@@ -711,7 +711,9 @@ router.get('/download/:certId', async (req, res) => {
     if (isPdfReady(cert)) {
       res.setHeader('Content-Type', cert.pdfMimeType || 'application/pdf');
       res.setHeader('Content-Disposition', `inline; filename=Certificate-${cert.certificateId}.pdf`);
-      res.setHeader('Cache-Control', 'public, max-age=86400');
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
       const rawBuf = cert.pdfBuffer?.buffer || cert.pdfBuffer;
       return res.send(rawBuf);
     }
@@ -722,7 +724,9 @@ router.get('/download/:certId', async (req, res) => {
     if (isPdfReady(cert)) {
       res.setHeader('Content-Type', cert.pdfMimeType || 'application/pdf');
       res.setHeader('Content-Disposition', `inline; filename=Certificate-${cert.certificateId}.pdf`);
-      res.setHeader('Cache-Control', 'public, max-age=86400');
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
       const rawBuf = cert.pdfBuffer?.buffer || cert.pdfBuffer;
       return res.send(rawBuf);
     }
