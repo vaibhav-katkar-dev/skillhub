@@ -143,9 +143,7 @@ const AvailableCard = ({ course }) => (
 const CertCard = ({ cert, onDownload, copyMsg, onCopy, prepState }) => {
   const handleFeedPost = async (e) => {
     e.preventDefault();
-    const certUrl = cert.isEvent 
-      ? `${window.location.origin}/verify-event/${cert.certificateId}`
-      : `${window.location.origin}/verify/${cert.certificateId}`;
+    const certUrl = `${window.location.origin}/verify/${cert.certificateId}`;
     const courseTitle = cert.course?.title || 'Certification';
     
     // Best approach for mobile: Native web share API
@@ -242,7 +240,7 @@ const CertCard = ({ cert, onDownload, copyMsg, onCopy, prepState }) => {
           {/* Row 2: LinkedIn Actions */}
           <div className="flex gap-2">
             <a
-              href={`https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&name=${encodeURIComponent(cert.course?.title || 'Certification')}&organizationName=SkillValix&certId=${cert.certificateId}&certUrl=${encodeURIComponent(cert.isEvent ? `${window.location.origin}/verify-event/${cert.certificateId}` : `${window.location.origin}/verify/${cert.certificateId}`)}`}
+              href={`https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&name=${encodeURIComponent(cert.course?.title || 'Certification')}&organizationName=SkillValix&certId=${cert.certificateId}&certUrl=${encodeURIComponent(`${window.location.origin}/verify/${cert.certificateId}`)}`}
               target="_blank" rel="noopener noreferrer"
               title="Add certification to your LinkedIn Profile"
               className="flex-1 bg-white border border-[#0A66C2]/30 hover:bg-[#0A66C2]/5 text-[#0A66C2] text-xs font-bold py-2.5 px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-[.98]"
@@ -511,8 +509,7 @@ const Dashboard = () => {
   };
 
   const copy = (cert) => {
-    const isEvent = cert.isEvent;
-    const url = isEvent ? `${window.location.origin}/verify-event/${cert.certificateId}` : `${window.location.origin}/verify/${cert.certificateId}`;
+    const url = `${window.location.origin}/verify/${cert.certificateId}`;
     navigator.clipboard.writeText(url);
     setCopyMsg(cert.certificateId);
     setTimeout(() => setCopyMsg(''), 2000);

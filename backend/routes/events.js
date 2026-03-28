@@ -951,7 +951,7 @@ router.post('/certificates/generate', authOptions, async (req, res) => {
 
     // Generate PDF immediately
     const issueDate = new Date(cert.issueDate).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
-    const verifyUrl = `${FRONTEND_URL()}/verify-event/${cert.certificateId}`;
+    const verifyUrl = `${FRONTEND_URL()}/verify/${cert.certificateId}`;
 
     try {
       const pdfBuffer = await buildEventCertificatePdf({
@@ -998,7 +998,7 @@ router.get('/certificates/download/:certId', async (req, res) => {
 
     // Regenerate on the fly
     const issueDate = new Date(cert.issueDate).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
-    const verifyUrl = `${FRONTEND_URL()}/verify-event/${cert.certificateId}`;
+    const verifyUrl = `${FRONTEND_URL()}/verify/${cert.certificateId}`;
     const pdfBuffer = await buildEventCertificatePdf({
       studentName: cert.student?.name, eventTitle: cert.eventTitle, role: cert.role,
       certificateId: cert.certificateId, issueDate, eventType: cert.eventType, verifyUrl,

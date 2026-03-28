@@ -8,6 +8,12 @@ import {
   ShieldCheck, Sparkles, ArrowRight, BookOpen, Clock, BadgeCheck, Zap
 } from 'lucide-react';
 
+const EVENT_TYPE_LABEL = {
+  'job-simulation': 'Job Simulation',
+  hackathon: 'Hackathon',
+  internship: 'Internship',
+};
+
 const CTA_THEMES = {
   blue: 'from-indigo-600 to-blue-700',
   green: 'from-emerald-600 to-teal-700',
@@ -43,8 +49,18 @@ const VerifyCert = () => {
     setResult(null);
 
     try {
-      const res = await api.get(`/certificates/verify/${idToVerify.trim()}`);
-      setResult(res.data);
+      const certKey = idToVerify.trim();
+
+      try {
+        const res = await api.get(`/certificates/verify/${certKey}`);
+        setResult({ ...res.data, source: 'course' });
+        return;
+      } catch (courseErr) {
+        if (courseErr?.response?.status !== 404) throw courseErr;
+      }
+
+      const eventRes = await api.get(`/events/certificates/verify/${certKey}`);
+      setResult({ ...eventRes.data, source: 'event' });
     } catch (err) {
       setError(err.response?.data?.message || 'Certificate not found or invalid.');
     } finally {
@@ -176,14 +192,35 @@ const VerifyCert = () => {
                         </div>
 
                         <div className="mt-6 space-y-5">
+                          <div className="rounded-2xl bg-slate-50 border border-slate-200 p-3">
+                            <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400 font-bold">Certificate Type</p>
+                            <p className="text-sm font-bold text-slate-800 mt-1">
+                              {result?.source === 'event'
+                                ? EVENT_TYPE_LABEL[result?.eventType] || 'Event Certificate'
+                                : 'Course Certificate'}
+                            </p>
+                          </div>
+
                           <div>
                             <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400 font-bold mb-1">Recipient</p>
                             <p className="text-2xl font-black text-slate-900 break-words">{result?.studentName}</p>
                           </div>
 
                           <div>
-                            <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400 font-bold mb-1">Course</p>
-                            <p className="text-lg font-bold text-blue-700 break-words">{result?.courseTitle}</p>
+                            <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400 font-bold mb-1">Programme</p>
+                            <p className="text-lg font-bold text-blue-700 break-words">{result?.courseTitle || result?.eventTitle}</p>
+                          </div>
+
+                          {result?.role && (
+                            <div>
+                              <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400 font-bold mb-1">Role</p>
+                              <p className="text-base font-bold text-slate-800 break-words">{result.role}</p>
+                            </div>
+                          )}
+
+                          <div>
+                            <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400 font-bold mb-1">Credential Authority</p>
+                            <p className="text-sm font-semibold text-slate-700">SkillValix Verified Credential Platform</p>
                           </div>
 
                           <div className="grid sm:grid-cols-2 gap-4">
