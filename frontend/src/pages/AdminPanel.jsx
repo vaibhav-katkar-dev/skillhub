@@ -282,8 +282,11 @@ const AdminPanel = () => {
     setWarmJobLoading(true);
     setWarmJobError('');
     try {
-      const res = await api.post('/events/admin/certificates/warm-event-pdfs');
+      const res = await api.post('/events/admin/certificates/warm-event-pdfs', { forceAll: true });
       setWarmJob(res.data?.job || null);
+      if ((res.data?.job?.totalInDb ?? 0) === 0) {
+        setWarmJobError('No event/job certificates exist yet. Generate at least one event certificate, then run fix again.');
+      }
     } catch (err) {
       const statusCode = err.response?.status;
       if (statusCode === 409) {
@@ -384,6 +387,11 @@ const AdminPanel = () => {
                 <div className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2"><span className="text-slate-500">Progress</span><div className="font-bold text-slate-900 mt-0.5">{warmJob?.processed ?? 0}/{warmJob?.total ?? 0}</div></div>
                 <div className="rounded-lg border border-slate-200 bg-emerald-50 px-2.5 py-2"><span className="text-slate-500">Success</span><div className="font-bold text-emerald-700 mt-0.5">{warmJob?.success ?? 0}</div></div>
                 <div className="rounded-lg border border-slate-200 bg-rose-50 px-2.5 py-2"><span className="text-slate-500">Failed</span><div className="font-bold text-rose-700 mt-0.5">{warmJob?.failed ?? 0}</div></div>
+              </div>
+
+              <div className="mt-2 grid grid-cols-2 gap-2 text-[11px]">
+                <div className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2"><span className="text-slate-500">Mode</span><div className="font-bold text-slate-900 mt-0.5">{warmJob?.mode || 'stale-only'}</div></div>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2"><span className="text-slate-500">In DB</span><div className="font-bold text-slate-900 mt-0.5">{warmJob?.totalInDb ?? 0}</div></div>
               </div>
             </div>
           </div>

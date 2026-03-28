@@ -23,6 +23,8 @@ const eventCertWarmJob = {
   startedAt: null,
   finishedAt: null,
   requestedBy: null,
+  mode: 'stale-only',
+  totalInDb: 0,
   total: 0,
   processed: 0,
   success: 0,
@@ -32,6 +34,7 @@ const eventCertWarmJob = {
 };
 
 function resetEventCertWarmJobMeta() {
+  eventCertWarmJob.totalInDb = 0;
   eventCertWarmJob.total = 0;
   eventCertWarmJob.processed = 0;
   eventCertWarmJob.success = 0;
@@ -79,30 +82,45 @@ async function regenerateEventCertificate(certDoc) {
   );
 }
 
-async function runEventCertWarmJob(requestedBy) {
+async function runEventCertWarmJob(requestedBy, options = {}) {
   if (eventCertWarmJob.running) return;
+
+  const forceAll = options?.forceAll === true;
 
   eventCertWarmJob.running = true;
   eventCertWarmJob.startedAt = new Date();
   eventCertWarmJob.finishedAt = null;
   eventCertWarmJob.requestedBy = requestedBy || 'admin';
+  eventCertWarmJob.mode = forceAll ? 'force-all' : 'stale-only';
   resetEventCertWarmJobMeta();
 
   try {
-    const staleCerts = await EventCertificate.find({
+    const staleFilter = {
       $or: [
         { pdfTemplateVersion: { $exists: false } },
         { pdfTemplateVersion: { $lt: EVENT_CERT_TEMPLATE_VERSION } },
         { pdfStatus: { $ne: 'ready' } },
       ],
-    })
+    };
+
+    eventCertWarmJob.totalInDb = await EventCertificate.countDocuments({});
+
+    let selectedCerts = await EventCertificate.find(forceAll ? {} : staleFilter)
       .populate('student', 'name')
       .select('certificateId eventType eventTitle role issueDate student')
       .lean();
 
-    eventCertWarmJob.total = staleCerts.length;
+    if (!forceAll && selectedCerts.length === 0 && eventCertWarmJob.totalInDb > 0) {
+      eventCertWarmJob.mode = 'auto-fallback-all';
+      selectedCerts = await EventCertificate.find({})
+        .populate('student', 'name')
+        .select('certificateId eventType eventTitle role issueDate student')
+        .lean();
+    }
 
-    const groups = chunkArray(staleCerts, EVENT_CERT_WARM_CONCURRENCY);
+    eventCertWarmJob.total = selectedCerts.length;
+
+    const groups = chunkArray(selectedCerts, EVENT_CERT_WARM_CONCURRENCY);
     for (const group of groups) {
       await Promise.all(
         group.map(async (certDoc) => {
@@ -268,7 +286,8 @@ router.post('/admin/certificates/warm-event-pdfs', authOptions, adminCheck, asyn
     }
 
     const requestedBy = req.user?.id || 'admin';
-    await runEventCertWarmJob(requestedBy);
+    const forceAll = req.body?.forceAll !== false;
+    await runEventCertWarmJob(requestedBy, { forceAll });
 
     return res.json({
       message: 'Warm job completed.',
@@ -287,6 +306,8 @@ router.get('/admin/certificates/warm-event-pdfs/status', authOptions, adminCheck
       startedAt: eventCertWarmJob.startedAt,
       finishedAt: eventCertWarmJob.finishedAt,
       requestedBy: eventCertWarmJob.requestedBy,
+      mode: eventCertWarmJob.mode,
+      totalInDb: eventCertWarmJob.totalInDb,
       total: eventCertWarmJob.total,
       processed: eventCertWarmJob.processed,
       success: eventCertWarmJob.success,
