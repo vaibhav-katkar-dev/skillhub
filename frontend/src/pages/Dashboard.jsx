@@ -422,9 +422,12 @@ const Dashboard = () => {
 
   // Silently fetch PDF bytes & trigger browser save/open — no tab switch
   const triggerBlobDownload = async (cert) => {
-    const endpoint = cert.isEvent ? `/events/certificates/download/${cert.certificateId}` : `/certificates/download/${cert.certificateId}`;
+    const endpoint = cert.isEvent
+      ? `/events/certificates/download/${cert.certificateId}?v=${Date.now()}`
+      : `/certificates/download/${cert.certificateId}`;
     const res = await api.get(endpoint, {
       responseType: 'blob',
+      headers: cert.isEvent ? { 'Cache-Control': 'no-cache', Pragma: 'no-cache' } : undefined,
     });
     const blob = new Blob([res.data], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob);

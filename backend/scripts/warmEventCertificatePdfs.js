@@ -5,7 +5,7 @@ import EventCertificate from '../models/EventCertificate.js';
 dotenv.config();
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/skillvalix';
-const TARGET_TEMPLATE_VERSION = Number(process.env.EVENT_CERT_TEMPLATE_VERSION || 2);
+const TARGET_TEMPLATE_VERSION = Number(process.env.EVENT_CERT_TEMPLATE_VERSION || 3);
 const API_BASE = (process.env.INTERNAL_API_BASE || 'http://localhost:5000/api/events').replace(/\/$/, '');
 const CONCURRENCY = Number(process.env.CERT_WARM_CONCURRENCY || 2);
 

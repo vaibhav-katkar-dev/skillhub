@@ -233,7 +233,10 @@ export default function JobSimulation() {
 
     setDownloading(true);
     try {
-      const res = await apiClient.get(`/events/certificates/download/${certId}`, { responseType: 'blob' });
+      const res = await apiClient.get(`/events/certificates/download/${certId}?v=${Date.now()}`, {
+        responseType: 'blob',
+        headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
+      });
       const blob = new Blob([res.data], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement('a');

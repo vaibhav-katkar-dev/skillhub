@@ -15,7 +15,7 @@ import { authOptions, adminCheck } from '../middleware/auth.js';
 
 const router = express.Router();
 const FRONTEND_URL = () => (process.env.FRONTEND_URL || 'https://www.skillvalix.com').replace(/\/$/, '');
-const EVENT_CERT_TEMPLATE_VERSION = 2;
+const EVENT_CERT_TEMPLATE_VERSION = 3;
 
 const EVENT_CERT_WARM_CONCURRENCY = Math.max(1, Number(process.env.CERT_WARM_CONCURRENCY || 1));
 const eventCertWarmJob = {
@@ -268,20 +268,11 @@ router.post('/admin/certificates/warm-event-pdfs', authOptions, adminCheck, asyn
     }
 
     const requestedBy = req.user?.id || 'admin';
-    setImmediate(() => {
-      runEventCertWarmJob(requestedBy).catch((err) => {
-        console.error('[Events] Warm job crashed:', err);
-      });
-    });
+    await runEventCertWarmJob(requestedBy);
 
     return res.json({
-      message: 'Warm job started.',
-      job: {
-        ...eventCertWarmJob,
-        running: true,
-        startedAt: new Date(),
-        requestedBy,
-      },
+      message: 'Warm job completed.',
+      job: eventCertWarmJob,
     });
   } catch (err) {
     console.error('[Events] Start warm job error:', err);
@@ -1160,6 +1151,8 @@ router.get('/certificates/download/:certId', async (req, res) => {
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `inline; filename=EventCertificate-${cert.certificateId}.pdf`);
       res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
       return res.send(rawBuf);
     }
 
@@ -1183,6 +1176,8 @@ router.get('/certificates/download/:certId', async (req, res) => {
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `inline; filename=EventCertificate-${cert.certificateId}.pdf`);
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     return res.send(pdfBuffer);
   } catch (err) {
     console.error('[Events] Download cert error:', err);
