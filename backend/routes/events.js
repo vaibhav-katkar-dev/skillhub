@@ -720,16 +720,19 @@ function buildEventCertificatePdf({ studentName, eventTitle, role, certificateId
         metaColor = '#7A818C',
         trustLine = 'Verified Credential Platform  ·  Industry-Relevant Certification',
       } = {}) => {
-        const dividerY = H - 44;
-        const issuerY = H - 34;
-        const urlY = H - 24;
-        const trustY = H - 14;
+        const dividerY = H - 56;
+        const issuerY = H - 44;
+        const urlY = H - 31;
+        const trustY = H - 19;
 
         doc.moveTo(80, dividerY)
           .lineTo(W - 80, dividerY)
           .lineWidth(0.7)
           .strokeColor(dividerColor)
           .stroke();
+
+        doc.save();
+        doc.fillOpacity(0.8);
 
         doc.fontSize(7.1)
           .font('Helvetica-Bold')
@@ -755,6 +758,8 @@ function buildEventCertificatePdf({ studentName, eventTitle, role, certificateId
             width: W,
             align: 'center',
           });
+
+        doc.restore();
       };
 
       const truncateToWidth = (text, maxWidth, suffix = '...') => {
@@ -808,37 +813,56 @@ function buildEventCertificatePdf({ studentName, eventTitle, role, certificateId
         }
 
         doc.fontSize(14).font('Helvetica-Bold').fillColor(GOLD_DARK)
-          .text('CERTIFICATE OF ACHIEVEMENT', 0, 112, { width: W, align: 'center', characterSpacing: 3.5 });
+          .text('CERTIFICATE OF ACHIEVEMENT', 0, 122, { width: W, align: 'center', characterSpacing: 2.6 });
 
         doc.fontSize(12).font('Helvetica').fillColor(INK_MUTED)
           .text('This certifies that', 0, 158, { width: W, align: 'center' });
 
         const learnerName = String(studentName || 'Learner').toUpperCase();
         let nameSize = 43;
-        doc.font('Helvetica-Bold');
+        doc.font('Helvetica');
         while (nameSize > 21 && doc.fontSize(nameSize).widthOfString(learnerName) > W - 220) nameSize -= 1;
-        doc.fontSize(nameSize).fillColor(INK).text(learnerName, 0, 182, { width: W, align: 'center' });
+        doc.fontSize(nameSize).fillColor(INK).text(learnerName, 0, 192, { width: W, align: 'center' });
 
-        const underlineY = 182 + nameSize + 12;
-        doc.moveTo(CX - 205, underlineY).lineTo(CX + 205, underlineY).lineWidth(1.5).strokeColor('#CCAA52').stroke();
+        const underlineY = 192 + nameSize + 18;
+        doc.moveTo(CX - 205, underlineY).lineTo(CX + 205, underlineY).lineWidth(1.4).strokeColor('#CCAA52').stroke();
 
         doc.fontSize(12).font('Helvetica').fillColor(INK_MUTED)
           .text('has successfully completed a professional job simulation', 0, underlineY + 22, { width: W, align: 'center' });
 
         const eventPanelX = 120;
         const eventPanelW = W - 240;
-        const eventPanelY = underlineY + 52;
-        doc.roundedRect(eventPanelX, eventPanelY, eventPanelW, 64, 10).fill(PANEL);
-        doc.roundedRect(eventPanelX, eventPanelY, eventPanelW, 64, 10).lineWidth(1).strokeColor('#EAD6A8').stroke();
-        doc.fontSize(23).font('Helvetica-Bold').fillColor('#1F2937')
-          .text(eventTitle, eventPanelX + 22, eventPanelY + 19, { width: eventPanelW - 44, align: 'center' });
+        const eventPanelY = underlineY + 64;
+        const eventPanelH = 72;
+        doc.roundedRect(eventPanelX, eventPanelY, eventPanelW, eventPanelH, 10).fill(PANEL);
+        doc.roundedRect(eventPanelX, eventPanelY, eventPanelW, eventPanelH, 10).lineWidth(1).strokeColor('#EAD6A8').stroke();
+        doc.fontSize(25).font('Helvetica-Bold').fillColor('#1F2937')
+          .text(eventTitle, eventPanelX + 22, eventPanelY + 22, {
+            width: eventPanelW - 44,
+            align: 'center',
+            characterSpacing: 0.3,
+          });
 
-        doc.fontSize(10).font('Helvetica').fillColor(INK_MUTED)
-          .text('This certification is awarded for successfully completing a real-world job simulation, demonstrating practical expertise, problem-solving ability, and job-ready skills.', 0, eventPanelY + 74, { width: W, align: 'center' });
+        const descY = eventPanelY + eventPanelH + 14;
+        const descWidth = Math.round((W - 56) * 0.7);
+        const descX = (W - descWidth) / 2;
+        const description = 'This certification is awarded for successfully completing a real-world job simulation, demonstrating practical expertise, problem-solving ability, and job-ready skills.';
+        doc.fontSize(9).font('Helvetica').fillColor(INK_MUTED)
+          .text(description, descX, descY, {
+            width: descWidth,
+            align: 'center',
+            lineGap: 4,
+          });
 
-        const infoY = H - 118;
+        const descHeight = doc.heightOfString(description, {
+          width: descWidth,
+          align: 'center',
+          lineGap: 4,
+        });
+
+        const infoY = Math.min(H - 160, Math.round(descY + descHeight + 18));
         const boxW = 206;
-        const boxH = 74;
+        const boxH = 78;
         const gap = 22;
         const startX = (W - (boxW * 3 + gap * 2)) / 2;
 
@@ -846,9 +870,9 @@ function buildEventCertificatePdf({ studentName, eventTitle, role, certificateId
           doc.roundedRect(x, infoY, boxW, boxH, 8).fill('#FFFDF8');
           doc.roundedRect(x, infoY, boxW, boxH, 8).lineWidth(1).strokeColor('#E7D2A1').stroke();
           doc.fontSize(7.5).font('Helvetica-Bold').fillColor('#8B6A1D')
-            .text(label, x + 14, infoY + 15, { characterSpacing: 1.2 });
-          doc.fontSize(11).font('Helvetica-Bold').fillColor('#1F2937')
-            .text(value, x + 14, infoY + 37, { width: boxW - 28, lineBreak: false });
+            .text(label, x + 16, infoY + 16, { characterSpacing: 2.2 });
+          doc.fontSize(12).font('Helvetica-Bold').fillColor('#1F2937')
+            .text(value, x + 16, infoY + 43, { width: boxW - 32, lineBreak: false });
         };
 
         drawInfo(startX, 'CERTIFICATE ID', certificateId);
@@ -861,8 +885,8 @@ function buildEventCertificatePdf({ studentName, eventTitle, role, certificateId
         doc.roundedRect(qrX - 8, qrY - 8, qrSize + 16, qrSize + 36, 8).fill('#FFFFFF');
         doc.roundedRect(qrX - 8, qrY - 8, qrSize + 16, qrSize + 36, 8).lineWidth(1).strokeColor('#E5E7EB').stroke();
         doc.image(qrBuffer, qrX, qrY, { width: qrSize, height: qrSize });
-        doc.fontSize(7.2).font('Helvetica-Bold').fillColor('#6B7280')
-          .text('Scan to verify certificate authenticity', qrX - 8, qrY + qrSize + 13, { width: qrSize + 16, align: 'center' });
+        doc.fontSize(6.2).font('Helvetica-Bold').fillColor('#6B7280')
+          .text('Scan to verify certificate authenticity', qrX - 8, qrY + qrSize + 19, { width: qrSize + 16, align: 'center' });
 
         drawPremiumFooter({
           dividerColor: '#DCC99A',

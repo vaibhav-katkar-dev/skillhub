@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import {
@@ -13,10 +13,10 @@ import {
 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 const STATS = [
-  { value: 2800, suffix: '+', label: 'Students Enrolled', icon: Users,  color: '#6366f1', bg: '#eef2ff', border: '#c7d2fe' },
-  { value: 12,   suffix: '+', label: 'Course Modules',    icon: Layers, color: '#8b5cf6', bg: '#f5f3ff', border: '#ddd6fe' },
-  { value: 98,   suffix: '%', label: 'Completion Rate',   icon: Trophy, color: '#0ea5e9', bg: '#f0f9ff', border: '#bae6fd' },
-  { value: 100,  suffix: '%', label: 'Free to Learn',     icon: Zap,    color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
+  { value: 2800, suffix: '+', label: 'Students',   icon: Users,  color: '#6366f1', bg: '#eef2ff', border: '#c7d2fe' },
+  { value: 12,   suffix: '+', label: 'Modules',    icon: Layers, color: '#8b5cf6', bg: '#f5f3ff', border: '#ddd6fe' },
+  { value: 98,   suffix: '%', label: 'Completion', icon: Trophy, color: '#0ea5e9', bg: '#f0f9ff', border: '#bae6fd' },
+  { value: 100,  suffix: '%', label: 'Free Access',icon: Zap,    color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
 ];
 
 const HOW_IT_WORKS = [
@@ -129,7 +129,7 @@ function useInView(opts = {}) {
     }, opts);
     if (ref.current) obs.observe(ref.current);
     return () => obs.disconnect();
-  }, []);
+  }, [opts]);
   return [ref, inView];
 }
 
@@ -164,24 +164,27 @@ function StatCard({ s, start }) {
       background: '#fff',
       border: `1.5px solid ${s.border}`,
       borderRadius: 20,
-      padding: '28px 24px',
+      padding: '12px 14px',
       display: 'flex',
-      flexDirection: 'column',
+      flexDirection: 'row',
       alignItems: 'center',
-      textAlign: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      textAlign: 'left',
       boxShadow: `0 4px 24px ${s.color}18`,
       transition: 'transform .3s ease, box-shadow .3s ease',
     }}
     onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = `0 12px 32px ${s.color}28`; }}
     onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = `0 4px 24px ${s.color}18`; }}
     >
-      <div style={{ width: 52, height: 52, borderRadius: 14, background: s.bg, border: `1.5px solid ${s.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
-        <s.icon size={22} style={{ color: s.color }} />
+      <div style={{ width: 34, height: 34, borderRadius: 10, background: s.bg, border: `1.5px solid ${s.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <s.icon size={15} style={{ color: s.color }} />
       </div>
-      <div style={{ fontSize: 38, fontWeight: 900, color: s.color, lineHeight: 1, letterSpacing: '-0.02em' }}>
-        {count}<span style={{ fontSize: 22, fontWeight: 700, opacity: 0.6 }}>{s.suffix}</span>
+      <div style={{ display: 'inline-flex', alignItems: 'baseline', justifyContent: 'center', gap: 2, whiteSpace: 'nowrap', fontSize: 'clamp(0.95rem,3.6vw,1.1rem)', fontWeight: 800, color: '#334155', lineHeight: 1.1 }}>
+        <span style={{ color: s.color, fontWeight: 900 }}>{count}</span>
+        <span style={{ color: s.color, fontWeight: 800, opacity: 0.85 }}>{s.suffix}</span>
+        <span style={{ fontSize: '0.78em', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{s.label}</span>
       </div>
-      <div style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: 8 }}>{s.label}</div>
     </div>
   );
 }
@@ -226,10 +229,11 @@ function FaqItem({ q, a }) {
 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 export default function Home() {
-  const [statsRef, statsInView] = useInView({ threshold: 0.2 });
+  const statsObserverOpts = useMemo(() => ({ threshold: 0.2 }), []);
+  const [statsRef, statsInView] = useInView(statsObserverOpts);
 
   return (
-    <div style={{ fontFamily: "'Inter', system-ui, sans-serif", background: '#f8faff', color: '#0f172a', overflowX: 'hidden' }}>
+    <div style={{ fontFamily: "'Inter', system-ui, sans-serif", background: 'linear-gradient(180deg,#f5f7ff 0%, #f3fae9 34%, #ffffff 100%)', color: '#0f172a', overflowX: 'hidden' }}>
       <Helmet>
         {/* â”€â”€ Primary SEO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <title>SkillValix - Free Online Coding Courses with Certificates | Learn HTML, CSS, JavaScript, Python and More</title>
@@ -360,12 +364,28 @@ export default function Home() {
         .step-card:hover { border-color: var(--step-accent) !important; box-shadow: 0 8px 32px rgba(0,0,0,0.08) !important; }
         .ping-ring::before { content:''; display:block; position:absolute; inset:0; border-radius:50%; background:inherit; animation: ping 2s ease-out infinite; }
         .trust-item { display:flex; align-items:center; gap:8px; font-size:14px; font-weight:500; color:#475569; }
+        .stats-track {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 12px;
+        }
+        .stats-item {
+          min-width: 0;
+        }
 
         @media (min-width:768px) {
           .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
           .grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:28px; }
           .grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; }
           .grid-2-3 { display:grid; grid-template-columns:repeat(2,1fr); gap:24px; }
+          .stats-track {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 20px;
+          }
+          .stats-item {
+            min-width: 0;
+          }
         }
         @media (min-width:1024px) {
           .grid-2-3 { grid-template-columns:repeat(3,1fr); }
@@ -378,10 +398,11 @@ export default function Home() {
       {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
           HERO
       â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
-      <section style={{ position:'relative', background:'#f8faff', minHeight:'92vh', display:'flex', alignItems:'center', justifyContent:'center', paddingTop:100, paddingBottom:80, overflow:'hidden' }}>
+      <section style={{ position:'relative', background:'linear-gradient(160deg,#eef2ff 0%, #f4f7ff 44%, #fafcff 100%)', minHeight:'92vh', display:'flex', alignItems:'center', justifyContent:'center', paddingTop:100, paddingBottom:80, overflow:'hidden' }}>
         {/* Ambient blobs â€” softer, more asymmetric */}
-        <div style={{ position:'absolute', width:600, height:600, borderRadius:'50%', background:'rgba(99,102,241,0.09)', filter:'blur(100px)', top:'-10%', left:'-10%', animation:'floatA 14s ease-in-out infinite', pointerEvents:'none' }} />
-        <div style={{ position:'absolute', width:480, height:480, borderRadius:'50%', background:'rgba(168,85,247,0.07)', filter:'blur(100px)', bottom:'0%', right:'-8%', animation:'floatB 16s ease-in-out infinite', pointerEvents:'none' }} />
+        <div style={{ position:'absolute', width:620, height:620, borderRadius:'50%', background:'rgba(79,70,229,0.10)', filter:'blur(110px)', top:'-14%', left:'-12%', animation:'floatA 14s ease-in-out infinite', pointerEvents:'none' }} />
+        <div style={{ position:'absolute', width:520, height:520, borderRadius:'50%', background:'rgba(124,58,237,0.08)', filter:'blur(110px)', bottom:'-6%', right:'-10%', animation:'floatB 16s ease-in-out infinite', pointerEvents:'none' }} />
+        <div style={{ position:'absolute', inset:0, background:'radial-gradient(60% 46% at 50% 0%, rgba(30,41,59,0.10) 0%, rgba(255,255,255,0) 78%)', pointerEvents:'none' }} />
 
         {/* Grid */}
         <div className="hero-grid" style={{ position:'absolute', inset:0, pointerEvents:'none' }} />
@@ -447,14 +468,14 @@ export default function Home() {
           </div>
 
           {/* Social proof strip â€” numbers feel real */}
-          <div style={{ display:'flex', flexWrap:'wrap', justifyContent:'center', alignItems:'center', gap:'10px 28px' }}>
+          <div style={{ display:'flex', flexWrap:'wrap', justifyContent:'center', alignItems:'center', gap:'8px 22px' }}>
             {[
               { icon: CheckCircle2, text: '2,800+ students enrolled', color: '#10b981' },
               { icon: Award,        text: 'Free forever - no card needed', color: '#6366f1' },
               { icon: Star,         text: '4.9 avg course rating', color: '#f59e0b' },
             ].map(({ icon: Icon, text, color }, i) => (
-              <span key={i} style={{ display:'flex', alignItems:'center', gap:6, fontSize:13, fontWeight:500, color:'#64748b' }}>
-                <Icon size={15} style={{ color, flexShrink:0 }} />{text}
+              <span key={i} style={{ display:'flex', alignItems:'center', gap:6, fontSize:12, fontWeight:600, color:'#64748b', whiteSpace: 'nowrap' }}>
+                {React.createElement(Icon, { size: 15, style: { color, flexShrink: 0 } })}{text}
               </span>
             ))}
           </div>
@@ -469,8 +490,12 @@ export default function Home() {
       â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <section ref={statsRef} style={{ background:'#fff', padding:'72px 0' }} className="section-divider">
         <div className="section-wrap">
-          <div className="grid-4" style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:20 }}>
-            {STATS.map(s => <StatCard key={s.label} s={s} start={statsInView} />)}
+          <div className="stats-track">
+            {STATS.map(s => (
+              <div key={s.label} className="stats-item">
+                <StatCard s={s} start={statsInView} />
+              </div>
+            ))}
           </div>
         </div>
       </section>

@@ -336,7 +336,7 @@ const AdminPanel = () => {
                     : 'bg-white/15 text-white hover:bg-white/25 border border-white/20'
                 }`}
               >
-                <Icon className="w-4 h-4" />
+                {React.createElement(Icon, { className: 'w-4 h-4' })}
                 {label}
               </button>
             ))}
@@ -438,7 +438,7 @@ const AdminPanel = () => {
                 <div key={label} className={`rounded-2xl bg-gradient-to-br ${tone} p-5 text-white shadow-lg`}>
                   <div className="flex items-center justify-between">
                     <p className="text-xs uppercase tracking-[0.15em] font-bold text-white/70">{label}</p>
-                    <Icon className="w-5 h-5 text-white/90" />
+                    {React.createElement(Icon, { className: 'w-5 h-5 text-white/90' })}
                   </div>
                   <p className="mt-4 text-4xl font-black leading-none">
                     {analyticsLoading ? <span className="inline-block h-10 w-20 rounded-lg bg-white/20 animate-pulse" /> : value}
@@ -528,7 +528,7 @@ const AdminPanel = () => {
                     <div key={title} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                       <div className="flex items-start gap-3">
                         <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
-                          <Icon className="w-5 h-5" />
+                          {React.createElement(Icon, { className: 'w-5 h-5' })}
                         </div>
                         <div>
                           <p className="font-semibold text-slate-900">{title}</p>
