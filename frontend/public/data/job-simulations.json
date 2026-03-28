@@ -12,6 +12,7 @@
     "certCost": 99,
     "color": "from-blue-600 to-cyan-500",
     "icon": "Laptop",
+    "image": "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80",
     "description": "Experience real-world frontend tasks like building responsive UIs, debugging components, and implementing API integrations.",
     "about": "Get a taste of what it means to work as a Frontend Developer at a fast-growing tech startup. You'll work through real tasks similar to those given to junior developers on their first week.",
     "tasks": [
@@ -64,6 +65,7 @@
     "certCost": 99,
     "color": "from-violet-600 to-purple-500",
     "icon": "BarChart3",
+    "image": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80",
     "description": "Analyze real datasets, create visualizations, write SQL queries, and present your insights just like a real data analyst.",
     "about": "Experience a real data analyst workflow: cleaning messy data, exploring datasets, creating dashboards, and communicating insights.",
     "tasks": [
@@ -118,6 +120,7 @@
     "certCost": 99,
     "color": "from-pink-600 to-rose-500",
     "icon": "Palette",
+    "image": "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&q=80",
     "description": "Design user flows, create wireframes, build Figma prototypes and conduct usability analysis for a real product.",
     "about": "Step into the shoes of a UX designer at a product startup. You'll go from user research to polished Figma prototypes.",
     "tasks": [
@@ -161,6 +164,7 @@
     "certCost": 99,
     "color": "from-emerald-600 to-teal-500",
     "icon": "Settings",
+    "image": "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=80",
     "description": "Build REST APIs, implement JWT authentication, connect databases, and write unit tests in a guided workspace.",
     "about": "Build real backend systems used in production apps. This simulation covers API design, authentication, database operations, and testing.",
     "tasks": [

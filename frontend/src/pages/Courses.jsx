@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   BookOpen, Clock, Loader2,
   ArrowRight, Sparkles, GraduationCap, Star,
-  Search, Filter, X
+  Search, Filter, X, BriefcaseBusiness
 } from 'lucide-react';
 import { getCourseList, preloadCourses } from '../data/courseLoader';
 
@@ -57,14 +57,17 @@ const Skeleton = () => (
   </div>
 );
 
-const ALL_CATEGORIES = ['All', 'HTML', 'CSS', 'JavaScript', 'Python', 'Java', 'AI / ML', 'Job Simulation', 'Other'];
+const ALL_CATEGORIES = ['All', 'HTML', 'CSS', 'JavaScript', 'Python', 'Java', 'AI / ML', 'Other'];
 
 const Courses = () => {
   const [courses, setCourses]     = useState([]);
   const [loading, setLoading]     = useState(true);
   const [search, setSearch]       = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
+  const [viewMode, setViewMode]   = useState('courses'); // 'courses' | 'simulations'
   const navigate = useNavigate();
+
+  const isSims = viewMode === 'simulations';
 
   useEffect(() => {
     (async () => {
@@ -86,8 +89,8 @@ const Courses = () => {
   }, []);
 
   const filtered = useMemo(() => {
-    let list = courses;
-    if (activeCategory !== 'All') {
+    let list = courses.filter(c => (isSims ? c.isJobSimulation : !c.isJobSimulation));
+    if (!isSims && activeCategory !== 'All') {
       list = list.filter(c => getCourseCategory(c) === activeCategory);
     }
     if (search.trim()) {
@@ -98,7 +101,7 @@ const Courses = () => {
       );
     }
     return list;
-  }, [courses, search, activeCategory]);
+  }, [courses, search, activeCategory, isSims]);
 
   const clearFilters = () => { setSearch(''); setActiveCategory('All'); };
 
@@ -128,22 +131,45 @@ const Courses = () => {
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-tight mb-4">
             Explore All{' '}
             <span className="relative inline-block">
-              <span className="text-cyan-300">Courses</span>
+              <span className="text-cyan-300">{isSims ? 'Job Simulations' : 'Courses'}</span>
               <svg className="absolute -bottom-1 left-0 w-full" viewBox="0 0 200 8" fill="none">
                 <path d="M2 6 Q100 2 198 6" stroke="#67e8f9" strokeWidth="2.5" strokeLinecap="round" opacity="0.7"/>
               </svg>
             </span>
           </h1>
           <p className="text-indigo-100 text-lg font-medium max-w-2xl mb-7">
-            Industry-leading curriculum designed to take you from absolute beginner to professional. All courses are <span className="text-white font-bold underline decoration-cyan-400">100% free</span>.
+            {isSims 
+              ? <>Experience real-world task modules and earn a verified certificate. Complete real tasks to <span className="text-white font-bold underline decoration-cyan-400">stand out</span>.</>
+              : <>Industry-leading curriculum designed to take you from absolute beginner to professional. All courses are <span className="text-white font-bold underline decoration-cyan-400">100% free</span>.</>}
           </p>
+
+          <div className="flex bg-white/10 p-1.5 rounded-2xl backdrop-blur-sm border border-white/20 w-fit mb-4">
+            <button
+              onClick={() => { setViewMode('courses'); clearFilters(); }}
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 ${
+                !isSims ? 'bg-white text-indigo-700 shadow-md' : 'text-white hover:bg-white/10'
+              }`}
+            >
+              <GraduationCap className={`w-4 h-4 ${!isSims ? 'text-indigo-600' : 'text-indigo-200'}`} />
+              Free Courses
+            </button>
+            <button
+              onClick={() => { setViewMode('simulations'); clearFilters(); }}
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 ${
+                 isSims ? 'bg-white text-indigo-700 shadow-md' : 'text-white hover:bg-white/10'
+              }`}
+            >
+              <BriefcaseBusiness className={`w-4 h-4 ${isSims ? 'text-indigo-600' : 'text-indigo-200'}`} />
+              Job Simulations
+            </button>
+          </div>
 
           {/* Stats row */}
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2">
               <Sparkles className="w-4 h-4 text-yellow-300" />
               <span className="text-white text-sm font-bold">
-                {loading ? '...' : `${courses.length} Courses`}
+                {loading ? '...' : `${courses.filter(c => (isSims ? c.isJobSimulation : !c.isJobSimulation)).length} ${isSims ? 'Simulations' : 'Courses'}`}
               </span>
             </div>
             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2">
@@ -180,41 +206,45 @@ const Courses = () => {
               )}
             </div>
 
-            {/* Category Select */}
-            <div className="relative">
-              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-              <select
-                id="course-category"
-                value={activeCategory}
-                onChange={e => setActiveCategory(e.target.value)}
-                className="w-full sm:w-auto appearance-none pl-9 pr-10 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition cursor-pointer"
-              >
-                {ALL_CATEGORIES.map(cat => (
-                  <option key={cat} value={cat}>{cat === 'All' ? 'All Categories' : cat}</option>
-                ))}
-              </select>
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+            {/* Category Select (Hide if sim) */}
+            {!isSims && (
+              <div className="relative">
+                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                <select
+                  id="course-category"
+                  value={activeCategory}
+                  onChange={e => setActiveCategory(e.target.value)}
+                  className="w-full sm:w-auto appearance-none pl-9 pr-10 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition cursor-pointer"
+                >
+                  {ALL_CATEGORIES.map(cat => (
+                    <option key={cat} value={cat}>{cat === 'All' ? 'All Categories' : cat}</option>
+                  ))}
+                </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
-          {/* Category Pills */}
-          <div className="flex overflow-x-auto hide-scrollbar gap-2 mt-3 pb-1">
-            {ALL_CATEGORIES.map(cat => (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className={`whitespace-nowrap px-3 py-1 rounded-full text-xs font-semibold transition-all duration-200 border ${
-                  activeCategory === cat
-                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
-                    : 'bg-white text-slate-500 border-slate-200 hover:border-indigo-300 hover:text-indigo-600'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
+          {/* Category Pills (Hide if sim) */}
+          {!isSims && (
+            <div className="flex overflow-x-auto hide-scrollbar gap-2 mt-3 pb-1">
+              {ALL_CATEGORIES.map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => setActiveCategory(cat)}
+                  className={`whitespace-nowrap px-3 py-1 rounded-full text-xs font-semibold transition-all duration-200 border ${
+                    activeCategory === cat
+                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                      : 'bg-white text-slate-500 border-slate-200 hover:border-indigo-300 hover:text-indigo-600'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -316,10 +346,10 @@ const Courses = () => {
                     {/* Footer */}
                     <div className="flex items-center justify-between border-t border-slate-100 pt-3 mt-auto">
                       <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400">
-                        <Clock className="w-3.5 h-3.5" /> Self-paced
+                        <Clock className="w-3.5 h-3.5" /> {isSims ? course.duration || 'Self-paced' : 'Self-paced'}
                       </span>
                       <span className={`inline-flex items-center gap-1 text-xs font-bold ${t.link} group-hover:gap-2 transition-all duration-200`}>
-                        View Course <ArrowRight className="w-3.5 h-3.5" />
+                        View {isSims ? 'Simulation' : 'Course'} <ArrowRight className="w-3.5 h-3.5" />
                       </span>
                     </div>
                   </div>
