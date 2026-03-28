@@ -856,19 +856,19 @@ function buildEventCertificatePdf({ studentName, eventTitle, role, certificateId
           .text('SKILLVALIX PROFESSIONAL ACHIEVEMENT', 0, currentY + 15, { width: W, align: 'center', characterSpacing: 2.3 });
         
         currentY += 44; // Bottom of band
-        currentY += 16 * pxToPt; // STEP 2: Header -> Title gap (16px)
+        currentY += 10;
 
         // Title
         doc.fontSize(14).font('Helvetica-Bold').fillColor(GOLD_DARK)
           .text('CERTIFICATE OF ACHIEVEMENT', 0, currentY, { width: W, align: 'center', characterSpacing: 2.6 });
         
-        currentY += 14 + (12 * pxToPt); // STEP 2: Title -> "This certifies that" (12px)
+        currentY += 10;
 
         // "This certifies that"
         doc.fontSize(12).font('Helvetica').fillColor(INK_MUTED)
           .text('This certifies that', 0, currentY, { width: W, align: 'center' });
         
-        currentY += 12 + (10 * pxToPt); // STEP 2: Label -> Name (10px)
+        currentY += 8;
 
         // Learner Name
         const learnerName = String(studentName || 'Learner').toUpperCase();
@@ -877,27 +877,27 @@ function buildEventCertificatePdf({ studentName, eventTitle, role, certificateId
         while (nameSize > 21 && doc.fontSize(nameSize).widthOfString(learnerName) > W - 220) nameSize -= 1;
         doc.fontSize(nameSize).fillColor(INK).text(learnerName, 0, currentY, { width: W, align: 'center' });
         
-        const underlineY = currentY + nameSize + (6 * pxToPt); // STEP 2: Name -> underline (6px)
+        const underlineY = currentY + nameSize + 4;
         doc.moveTo(CX - 205, underlineY).lineTo(CX + 205, underlineY).lineWidth(1.4).strokeColor('#CCAA52').stroke();
         
-        currentY = underlineY + (12 * pxToPt); // STEP 2: Underline -> subtitle (12px)
+        currentY = underlineY + 8;
 
         // Subtitle
         doc.fontSize(12).font('Helvetica').fillColor(INK_MUTED)
           .text('has successfully completed a professional job simulation', 0, currentY, { width: W, align: 'center' });
         
-        currentY += 14 + (16 * pxToPt); // STEP 2: Subtitle -> course box (16px)
+        currentY += 12;
 
         // Course Box (STEP 4)
         const eventPanelW = W - 240;
         const eventPanelX = (W - eventPanelW) / 2;
         const eventPanelY = currentY;
-        const eventPanelH = 72;
+        const eventPanelH = 70;
         doc.roundedRect(eventPanelX, eventPanelY, eventPanelW, eventPanelH, 10).fill(PANEL);
         doc.roundedRect(eventPanelX, eventPanelY, eventPanelW, eventPanelH, 10).lineWidth(1).strokeColor('#EAD6A8').stroke();
 
         const eventTitleWidth = eventPanelW - 44;
-        const eventTitleOpts = { width: eventTitleWidth, align: 'center', lineGap: 1, characterSpacing: 0.25 };
+        const eventTitleOpts = { width: eventTitleWidth, align: 'center', lineGap: 0.6, characterSpacing: 0.2 };
         let eventTitleSize = 25;
         doc.font('Helvetica-Bold');
         while (eventTitleSize > 16 && doc.fontSize(eventTitleSize).heightOfString(String(eventTitle || ''), eventTitleOpts) > eventPanelH - 20) {
@@ -909,31 +909,41 @@ function buildEventCertificatePdf({ studentName, eventTitle, role, certificateId
         const eventTitleY = eventPanelY + (eventPanelH - eventTitleHeight) / 2;
         doc.fillColor('#1F2937').text(safeEventTitle, eventPanelX + 22, eventTitleY, eventTitleOpts);
 
-        currentY = eventPanelY + eventPanelH + (14 * pxToPt); // STEP 2: Course box -> description (14px)
+        currentY = eventPanelY + eventPanelH + 10;
 
         // Description (STEP 3)
         const descWidth = Math.round(W * 0.7); // 70% width
         const descX = (W - descWidth) / 2;
         const description = 'This certification is awarded for successfully completing a real-world job simulation, demonstrating practical expertise, problem-solving ability, and job-ready skills.';
         doc.fontSize(9).font('Helvetica').fillColor(INK_MUTED)
-          .text(description, descX, currentY, { width: descWidth, align: 'center', lineGap: 4 });
+          .text(description, descX, currentY, { width: descWidth, align: 'center', lineGap: 3 });
 
-        const descHeight = doc.heightOfString(description, { width: descWidth, align: 'center', lineGap: 4 });
-        currentY += descHeight + (20 * pxToPt); // STEP 2: Description -> info cards (20px)
+        const descHeight = doc.heightOfString(description, { width: descWidth, align: 'center', lineGap: 3 });
+        currentY += descHeight + 12;
 
         // Info Cards (STEP 5)
         const boxW = 206;
-        const boxH = 78;
+        const boxH = 74;
         const gap = 22;
         const startX = (W - (boxW * 3 + gap * 2)) / 2;
 
         const drawInfo = (x, label, value) => {
           doc.roundedRect(x, currentY, boxW, boxH, 8).fill('#FFFDF8');
           doc.roundedRect(x, currentY, boxW, boxH, 8).lineWidth(1).strokeColor('#E7D2A1').stroke();
-          doc.fontSize(7.5).font('Helvetica-Bold').fillColor('#8B6A1D')
-            .text(String(label || '').toUpperCase(), x + 16, currentY + 16, { characterSpacing: 2.2, lineBreak: false });
+          const fitLabel = fitSingleLineText({
+            text: String(label || '').toUpperCase(),
+            maxWidth: boxW - 32,
+            maxSize: 7.5,
+            minSize: 6.2,
+            font: 'Helvetica-Bold',
+          });
+
+          const labelY = currentY + 14 + (7.5 - fitLabel.size) * 0.6;
+          doc.fontSize(fitLabel.size).font('Helvetica-Bold').fillColor('#8B6A1D')
+            .text(fitLabel.text, x + 16, labelY, { width: boxW - 32, characterSpacing: 1.8, lineBreak: false });
+
           const fitValue = fitSingleLineText({ text: String(value || '-'), maxWidth: boxW - 32, maxSize: 12, minSize: 9, font: 'Helvetica-Bold' });
-          const valueY = currentY + 44 + (12 - fitValue.size) * 0.8;
+          const valueY = currentY + 41 + (12 - fitValue.size) * 0.8;
           doc.fontSize(fitValue.size).font('Helvetica-Bold').fillColor('#1F2937')
             .text(fitValue.text, x + 16, valueY, { width: boxW - 32, lineBreak: false });
         };
@@ -945,12 +955,12 @@ function buildEventCertificatePdf({ studentName, eventTitle, role, certificateId
         // QR Code Section (STEP 6: Top-Right)
         const qrSize = 78;
         const qrX = W - qrSize - 44; // Equal margin from right
-        const qrY = 86; // Equal margin from top (matches design balancing)
+        const qrY = 84;
         doc.roundedRect(qrX - 8, qrY - 8, qrSize + 16, qrSize + 36, 8).fill('#FFFFFF');
         doc.roundedRect(qrX - 8, qrY - 8, qrSize + 16, qrSize + 36, 8).lineWidth(1).strokeColor('#E5E7EB').stroke();
         doc.image(qrBuffer, qrX, qrY, { width: qrSize, height: qrSize });
         doc.fontSize(6.2).font('Helvetica-Bold').fillColor('#6B7280')
-          .text('Scan to verify authenticity', qrX - 8, qrY + qrSize + 22, { width: qrSize + 16, align: 'center' }); // 8px spacing added
+          .text('Scan to verify authenticity', qrX - 8, qrY + qrSize + 15, { width: qrSize + 16, align: 'center' });
 
         drawPremiumFooter({
           dividerColor: '#DCC99A',
