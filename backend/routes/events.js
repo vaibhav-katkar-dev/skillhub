@@ -786,6 +786,38 @@ function buildEventCertificatePdf({ studentName, eventTitle, role, certificateId
         const BG = '#FBF7EE';
         const PANEL = '#FFFDF7';
 
+        const fitSingleLineText = ({ text, maxWidth, maxSize, minSize, font = 'Helvetica-Bold' }) => {
+          const raw = String(text || '').trim() || '-';
+          let size = maxSize;
+          doc.font(font);
+          while (size > minSize) {
+            doc.fontSize(size);
+            if (doc.widthOfString(raw) <= maxWidth) {
+              return { text: raw, size };
+            }
+            size -= 0.5;
+          }
+
+          doc.fontSize(minSize);
+          return {
+            text: truncateToWidth(raw, maxWidth),
+            size: minSize,
+          };
+        };
+
+        const clampTextToHeight = (text, options, maxHeight) => {
+          let safe = String(text || '').trim() || '-';
+          if (doc.heightOfString(safe, options) <= maxHeight) return safe;
+
+          while (safe.length > 3) {
+            safe = safe.slice(0, -1).trimEnd();
+            const candidate = `${safe}...`;
+            if (doc.heightOfString(candidate, options) <= maxHeight) return candidate;
+          }
+
+          return '...';
+        };
+
         doc.rect(0, 0, W, H).fill(BG);
 
         const glow = doc.radialGradient(CX, H / 2, 40, CX, H / 2, 430);
@@ -836,12 +868,30 @@ function buildEventCertificatePdf({ studentName, eventTitle, role, certificateId
         const eventPanelH = 72;
         doc.roundedRect(eventPanelX, eventPanelY, eventPanelW, eventPanelH, 10).fill(PANEL);
         doc.roundedRect(eventPanelX, eventPanelY, eventPanelW, eventPanelH, 10).lineWidth(1).strokeColor('#EAD6A8').stroke();
-        doc.fontSize(25).font('Helvetica-Bold').fillColor('#1F2937')
-          .text(eventTitle, eventPanelX + 22, eventPanelY + 22, {
-            width: eventPanelW - 44,
-            align: 'center',
-            characterSpacing: 0.3,
-          });
+
+        const eventTitleWidth = eventPanelW - 44;
+        const eventTitleOpts = {
+          width: eventTitleWidth,
+          align: 'center',
+          lineGap: 1,
+          characterSpacing: 0.25,
+        };
+
+        let eventTitleSize = 25;
+        doc.font('Helvetica-Bold');
+        while (
+          eventTitleSize > 16
+          && doc.fontSize(eventTitleSize).heightOfString(String(eventTitle || ''), eventTitleOpts) > eventPanelH - 20
+        ) {
+          eventTitleSize -= 1;
+        }
+
+        doc.fontSize(eventTitleSize);
+        const safeEventTitle = clampTextToHeight(String(eventTitle || ''), eventTitleOpts, eventPanelH - 20);
+        const eventTitleHeight = doc.heightOfString(safeEventTitle, eventTitleOpts);
+        const eventTitleY = eventPanelY + Math.max(10, (eventPanelH - eventTitleHeight) / 2);
+
+        doc.fillColor('#1F2937').text(safeEventTitle, eventPanelX + 22, eventTitleY, eventTitleOpts);
 
         const descY = eventPanelY + eventPanelH + 14;
         const descWidth = Math.round((W - 56) * 0.7);
@@ -869,10 +919,22 @@ function buildEventCertificatePdf({ studentName, eventTitle, role, certificateId
         const drawInfo = (x, label, value) => {
           doc.roundedRect(x, infoY, boxW, boxH, 8).fill('#FFFDF8');
           doc.roundedRect(x, infoY, boxW, boxH, 8).lineWidth(1).strokeColor('#E7D2A1').stroke();
+
+          const labelText = truncateToWidth(String(label || ''), boxW - 32, '');
           doc.fontSize(7.5).font('Helvetica-Bold').fillColor('#8B6A1D')
-            .text(label, x + 16, infoY + 16, { characterSpacing: 2.2 });
-          doc.fontSize(12).font('Helvetica-Bold').fillColor('#1F2937')
-            .text(value, x + 16, infoY + 43, { width: boxW - 32, lineBreak: false });
+            .text(labelText, x + 16, infoY + 16, { characterSpacing: 2.2, lineBreak: false });
+
+          const fitValue = fitSingleLineText({
+            text: String(value || '-'),
+            maxWidth: boxW - 32,
+            maxSize: 12,
+            minSize: 9,
+            font: 'Helvetica-Bold',
+          });
+
+          const valueY = infoY + 44 + (12 - fitValue.size) * 0.8;
+          doc.fontSize(fitValue.size).font('Helvetica-Bold').fillColor('#1F2937')
+            .text(fitValue.text, x + 16, valueY, { width: boxW - 32, lineBreak: false });
         };
 
         drawInfo(startX, 'CERTIFICATE ID', certificateId);
