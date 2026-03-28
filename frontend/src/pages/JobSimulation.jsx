@@ -30,6 +30,19 @@ const ICON_MAP = {
   Settings
 };
 
+const prettyDomain = (domain) => {
+  if (!domain) return '';
+  return domain.replace(/^www\./i, '');
+};
+
+const getPlaceholder = (task) => {
+  if (!Array.isArray(task?.acceptedDomains) || task.acceptedDomains.length === 0) {
+    return `Paste project URL (${task.type} link)...`;
+  }
+  const sample = task.acceptedDomains.slice(0, 2).map(prettyDomain).join(' or ');
+  return `Paste public URL (${sample})`;
+};
+
 const apiClient = axios.create({ baseURL: API_BASE });
 
 apiClient.interceptors.request.use((cfg) => {
@@ -135,7 +148,10 @@ export default function JobSimulation() {
     }
   };
 
-  const allTasksCompleted = sim.tasks.every(t => taskStatus[t.num] === 'completed');
+  const totalTasks = sim.tasks.length;
+  const completedCount = sim.tasks.filter(t => taskStatus[t.num] === 'completed').length;
+  const minRequired = Math.max(1, Math.ceil(totalTasks * 0.6));
+  const canUnlockCertificate = completedCount >= minRequired;
 
   const loadRazorpay = () =>
     new Promise((resolve) => {
@@ -289,6 +305,20 @@ export default function JobSimulation() {
                 Role: <strong>{sim.role}</strong>
               </span>
             </div>
+
+            {Array.isArray(sim.modules) && sim.modules.length > 0 && (
+              <div className="mt-6 rounded-2xl border border-white/15 bg-white/5 p-4">
+                <p className="text-xs uppercase tracking-widest text-slate-300 font-bold mb-2">Simulation Modules</p>
+                <ul className="space-y-1.5">
+                  {sim.modules.map((module, idx) => (
+                    <li key={`${module}-${idx}`} className="text-sm text-slate-200 flex items-start gap-2">
+                      <span className="mt-0.5 text-cyan-300 font-bold">{idx + 1}.</span>
+                      <span>{module}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
           <div className="w-full md:w-80 bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-sm flex flex-col gap-4">
@@ -320,6 +350,10 @@ export default function JobSimulation() {
                   <CheckCircle2 className="w-4 h-4 text-emerald-300" aria-hidden="true" />
                   Supported
                 </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span>Pass requirement</span>
+                <span className="font-bold text-white">{minRequired}/{totalTasks} tasks</span>
               </div>
             </div>
 
@@ -356,15 +390,15 @@ export default function JobSimulation() {
             ) : (
               <button
                 onClick={handleGetCertificate}
-                disabled={paying || !allTasksCompleted}
+                  disabled={paying || !canUnlockCertificate}
                 className={`w-full py-3 rounded-xl font-bold text-sm transition-all active:scale-95 disabled:opacity-60 ${
-                  allTasksCompleted 
+                  canUnlockCertificate
                     ? `bg-gradient-to-r ${sim.color} text-white hover:opacity-90` 
                     : 'bg-white/10 text-slate-400 cursor-not-allowed'
                 }`}
               >
-                {!allTasksCompleted 
-                  ? 'Complete all tasks to unlock' 
+                {!canUnlockCertificate
+                  ? `Complete ${minRequired} tasks to unlock (${completedCount}/${totalTasks})`
                   : paying 
                     ? 'Processing...' 
                     : `Get Certificate for INR ${sim.certCost}`}
@@ -407,6 +441,28 @@ export default function JobSimulation() {
                       Estimated: {task.time}
                     </div>
 
+                    {task.deliverable && (
+                      <div className="mt-3 rounded-xl border border-sky-100 bg-sky-50 px-3 py-2 text-xs text-sky-900">
+                        <span className="font-bold">Deliverable:</span> {task.deliverable}
+                      </div>
+                    )}
+
+                    {Array.isArray(task.acceptedDomains) && task.acceptedDomains.length > 0 && (
+                      <div className="mt-3">
+                        <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500 mb-2">Accepted Platforms</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {task.acceptedDomains.map((domain) => (
+                            <span
+                              key={domain}
+                              className="rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600"
+                            >
+                              {prettyDomain(domain)}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     <div className="mt-5 pt-5 border-t border-slate-100">
                       {taskStatus[task.num] === 'completed' ? (
                         <div className="flex items-center gap-2 text-emerald-600 font-bold bg-emerald-50 px-4 py-3 rounded-xl border border-emerald-100">
@@ -423,8 +479,8 @@ export default function JobSimulation() {
                           <div className="flex flex-col sm:flex-row gap-3">
                             <div className="flex-1 relative">
                               <input
-                                type="text"
-                                placeholder={`Paste project URL (${task.type} tool link)...`}
+                                type="url"
+                                placeholder={getPlaceholder(task)}
                                 value={submissions[task.num] || ''}
                                 onChange={e => {
                                   setSubmissions(p => ({ ...p, [task.num]: e.target.value }));

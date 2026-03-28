@@ -45,6 +45,31 @@ function isPdfLink(url) {
   return /\.pdf(\?|#|$)/i.test(url);
 }
 
+function normalizeDomainList(values = []) {
+  return Array.from(
+    new Set(
+      values
+        .map((value) => String(value || '').trim().toLowerCase())
+        .filter(Boolean)
+    )
+  );
+}
+
+function getTaskDomainsFromSimData(simId, taskNum) {
+  try {
+    const simsPath = path.resolve(process.cwd(), 'frontend/public/data/job-simulations.json');
+    const raw = fs.readFileSync(simsPath, 'utf-8');
+    const simulations = JSON.parse(raw);
+    const sim = simulations.find((item) => item.id === simId || item.slug === simId);
+    if (!sim || !Array.isArray(sim.tasks)) return [];
+    const task = sim.tasks.find((item) => Number(item.num) === Number(taskNum));
+    if (!task) return [];
+    return normalizeDomainList(task.acceptedDomains || []);
+  } catch {
+    return [];
+  }
+}
+
 // ─── PUBLIC: List visible hackathons ────────────────────────────────────────
 router.get('/hackathons', async (req, res) => {
   try {
@@ -717,9 +742,14 @@ router.post('/certificates/razorpay-order', authOptions, async (req, res) => {
         
         // SECURITY LOOPHOLE: Prevent users from buying a certificate without finishing tasks
         const progress = await SimulationProgress.findOne({ user: req.user.id, simulationId: matchedSim.id });
-        const allCompleted = matchedSim.tasks.every(t => progress?.completedTasks?.includes(t.num));
-        if (!allCompleted && user.role !== 'admin') {
-          return res.status(400).json({ message: 'You must complete and get all tasks accepted before paying for a certificate.' });
+        const totalTasks = Array.isArray(matchedSim.tasks) ? matchedSim.tasks.length : 0;
+        const minRequired = Math.max(1, Math.ceil(totalTasks * 0.6));
+        const completedCount = matchedSim.tasks.filter(t => progress?.completedTasks?.includes(t.num)).length;
+
+        if (completedCount < minRequired && user.role !== 'admin') {
+          return res.status(400).json({
+            message: `Complete at least ${minRequired} out of ${totalTasks} tasks before paying for a certificate.`,
+          });
         }
 
         if (matchedSim.certCost) basePrice = matchedSim.certCost;
@@ -944,6 +974,10 @@ router.post('/simulations/validate-task', authOptions, async (req, res) => {
     }
 
     const host = parsedUrl.host.toLowerCase();
+    const numericTaskNum = Number(taskNum);
+    if (!Number.isFinite(numericTaskNum)) {
+      return res.status(400).json({ valid: false, message: 'Invalid task number.' });
+    }
 
     // Map domains by type for realism
     const EXPECTED_DOMAINS = {
@@ -956,9 +990,15 @@ router.post('/simulations/validate-task', authOptions, async (req, res) => {
       'Analysis': ['github.com', 'kaggle.com', 'colab.research.google.com', 'drive.google.com', 'docs.google.com', 'notion.so'],
       'Visualization': ['tableau.com', 'github.com', 'kaggle.com', 'docs.google.com', 'drive.google.com'],
       'Communication': ['docs.google.com', 'notion.so', 'drive.google.com', 'medium.com', 'linkedin.com'],
+      'API Design': ['swagger.io', 'postman.com', 'github.com', 'gitlab.com', 'drive.google.com', 'docs.google.com'],
+      'Debugging': ['github.com', 'gitlab.com', 'codesandbox.io', 'stackblitz.com', 'replit.com', 'drive.google.com'],
     };
 
-    const allowed = EXPECTED_DOMAINS[taskType] || [];
+    const domainsFromTask = getTaskDomainsFromSimData(simId, numericTaskNum);
+    const allowed = domainsFromTask.length > 0
+      ? domainsFromTask
+      : normalizeDomainList(EXPECTED_DOMAINS[taskType] || []);
+
     if (allowed.length > 0) {
       const isAllowed = allowed.some(d => host === d || host.endsWith('.' + d));
       if (!isAllowed) {
@@ -969,7 +1009,7 @@ router.post('/simulations/validate-task', authOptions, async (req, res) => {
       }
     }
 
-    // Attempt a lightweight ping
+    // Attempt a lightweight ping (best effort only)
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 4000);
@@ -990,17 +1030,19 @@ router.post('/simulations/validate-task', authOptions, async (req, res) => {
         clearTimeout(timeoutId2);
 
         if (!getFallback.ok && getFallback.status !== 403 && getFallback.status !== 405) {
-           return res.status(400).json({ valid: false, message: 'Link returned an error. Ensure the repository or file is public.' });
+          // Keep this non-blocking; some valid platforms throttle probe requests.
+          console.warn('[Events] Link probe failed but accepted by domain rules:', url, getFallback.status);
         }
       }
     } catch (fetchErr) {
-       return res.status(400).json({ valid: false, message: 'Could not access the link. Please check if the URL is correct and public.' });
+      // Non-blocking fallback: domain check already passed.
+      console.warn('[Events] Link probe skipped due to network/platform restrictions:', url, fetchErr?.message);
     }
 
     // Save to Progress DB
     await SimulationProgress.findOneAndUpdate(
       { user: req.user.id, simulationId: simId },
-      { $addToSet: { completedTasks: taskNum } },
+      { $addToSet: { completedTasks: numericTaskNum } },
       { upsert: true, new: true }
     );
 

@@ -105,6 +105,28 @@ const Courses = () => {
 
   const clearFilters = () => { setSearch(''); setActiveCategory('All'); };
 
+  const heroTheme = isSims
+    ? {
+        gradient: 'from-slate-950 via-indigo-950 to-cyan-900',
+        blobA: 'bg-indigo-300/20',
+        blobB: 'bg-cyan-300/20',
+        accent: 'text-cyan-200',
+        stroke: '#67e8f9',
+        copy: 'text-slate-100/90',
+        icon: 'text-cyan-200',
+        underline: 'decoration-cyan-300',
+      }
+    : {
+        gradient: 'from-slate-950 via-emerald-900 to-teal-900',
+        blobA: 'bg-emerald-300/20',
+        blobB: 'bg-teal-300/20',
+        accent: 'text-emerald-200',
+        stroke: '#6ee7b7',
+        copy: 'text-emerald-100/90',
+        icon: 'text-emerald-200',
+        underline: 'decoration-emerald-300',
+      };
+
   return (
     <div className="min-h-screen bg-slate-50">
       <Helmet>
@@ -113,34 +135,34 @@ const Courses = () => {
       </Helmet>
 
       {/* ── HERO ── */}
-      <div className="relative bg-gradient-to-br from-indigo-700 via-blue-700 to-cyan-700 overflow-hidden">
+      <div className={`relative bg-gradient-to-br ${heroTheme.gradient} overflow-hidden`}>
         {/* dot grid */}
         <div className="absolute inset-0 opacity-[0.07]"
           style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '26px 26px' }} />
         {/* blobs */}
-        <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-blue-400/20 blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-16 -left-16 w-72 h-72 rounded-full bg-cyan-400/20 blur-3xl pointer-events-none" />
+        <div className={`absolute -top-24 -right-24 w-96 h-96 rounded-full ${heroTheme.blobA} blur-3xl pointer-events-none`} />
+        <div className={`absolute -bottom-16 -left-16 w-72 h-72 rounded-full ${heroTheme.blobB} blur-3xl pointer-events-none`} />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 pb-32 relative z-10">
           {/* label */}
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5 mb-5">
-            <GraduationCap className="w-4 h-4 text-cyan-300" />
+            <GraduationCap className={`w-4 h-4 ${heroTheme.icon}`} />
             <span className="text-white/80 text-xs font-bold uppercase tracking-widest">SkillValix Library</span>
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-tight mb-4">
             Explore All{' '}
             <span className="relative inline-block">
-              <span className="text-cyan-300">{isSims ? 'Job Simulations' : 'Courses'}</span>
+              <span className={heroTheme.accent}>{isSims ? 'Job Simulations' : 'Courses'}</span>
               <svg className="absolute -bottom-1 left-0 w-full" viewBox="0 0 200 8" fill="none">
-                <path d="M2 6 Q100 2 198 6" stroke="#67e8f9" strokeWidth="2.5" strokeLinecap="round" opacity="0.7"/>
+                <path d="M2 6 Q100 2 198 6" stroke={heroTheme.stroke} strokeWidth="2.5" strokeLinecap="round" opacity="0.7"/>
               </svg>
             </span>
           </h1>
-          <p className="text-indigo-100 text-lg font-medium max-w-2xl mb-7">
+          <p className={`${heroTheme.copy} text-lg font-medium max-w-2xl mb-7`}>
             {isSims 
-              ? <>Experience real-world task modules and earn a verified certificate. Complete real tasks to <span className="text-white font-bold underline decoration-cyan-400">stand out</span>.</>
-              : <>Industry-leading curriculum designed to take you from absolute beginner to professional. All courses are <span className="text-white font-bold underline decoration-cyan-400">100% free</span>.</>}
+              ? <>Experience real-world task modules and earn a verified certificate. Complete real tasks to <span className={`text-white font-bold underline ${heroTheme.underline}`}>stand out</span>.</>
+              : <>Industry-leading curriculum designed to take you from absolute beginner to professional. All courses are <span className={`text-white font-bold underline ${heroTheme.underline}`}>100% free</span>.</>}
           </p>
 
           <div className="flex bg-white/10 p-1.5 rounded-2xl backdrop-blur-sm border border-white/20 w-fit mb-4">
