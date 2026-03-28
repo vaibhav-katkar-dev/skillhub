@@ -17,6 +17,124 @@ const router = express.Router();
 const FRONTEND_URL = () => (process.env.FRONTEND_URL || 'https://www.skillvalix.com').replace(/\/$/, '');
 const EVENT_CERT_TEMPLATE_VERSION = 2;
 
+const EVENT_CERT_WARM_CONCURRENCY = Math.max(1, Number(process.env.CERT_WARM_CONCURRENCY || 1));
+const eventCertWarmJob = {
+  running: false,
+  startedAt: null,
+  finishedAt: null,
+  requestedBy: null,
+  total: 0,
+  processed: 0,
+  success: 0,
+  failed: 0,
+  currentCertificateId: '',
+  lastError: '',
+};
+
+function resetEventCertWarmJobMeta() {
+  eventCertWarmJob.total = 0;
+  eventCertWarmJob.processed = 0;
+  eventCertWarmJob.success = 0;
+  eventCertWarmJob.failed = 0;
+  eventCertWarmJob.currentCertificateId = '';
+  eventCertWarmJob.lastError = '';
+}
+
+function chunkArray(values = [], size = 1) {
+  const chunks = [];
+  for (let i = 0; i < values.length; i += size) chunks.push(values.slice(i, i + size));
+  return chunks;
+}
+
+async function regenerateEventCertificate(certDoc) {
+  const issueDate = new Date(certDoc.issueDate || Date.now()).toLocaleDateString('en-IN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+  const verifyUrl = `${FRONTEND_URL()}/verify/${certDoc.certificateId}`;
+
+  const pdfBuffer = await buildEventCertificatePdf({
+    studentName: certDoc.student?.name,
+    eventTitle: certDoc.eventTitle,
+    role: certDoc.role,
+    certificateId: certDoc.certificateId,
+    issueDate,
+    eventType: certDoc.eventType,
+    verifyUrl,
+  });
+
+  await EventCertificate.updateOne(
+    { _id: certDoc._id },
+    {
+      $set: {
+        pdfStatus: 'ready',
+        pdfBuffer,
+        pdfSizeBytes: pdfBuffer.length,
+        pdfGeneratedAt: new Date(),
+        pdfTemplateVersion: EVENT_CERT_TEMPLATE_VERSION,
+        pdfError: '',
+      },
+    }
+  );
+}
+
+async function runEventCertWarmJob(requestedBy) {
+  if (eventCertWarmJob.running) return;
+
+  eventCertWarmJob.running = true;
+  eventCertWarmJob.startedAt = new Date();
+  eventCertWarmJob.finishedAt = null;
+  eventCertWarmJob.requestedBy = requestedBy || 'admin';
+  resetEventCertWarmJobMeta();
+
+  try {
+    const staleCerts = await EventCertificate.find({
+      $or: [
+        { pdfTemplateVersion: { $exists: false } },
+        { pdfTemplateVersion: { $lt: EVENT_CERT_TEMPLATE_VERSION } },
+        { pdfStatus: { $ne: 'ready' } },
+      ],
+    })
+      .populate('student', 'name')
+      .select('certificateId eventType eventTitle role issueDate student')
+      .lean();
+
+    eventCertWarmJob.total = staleCerts.length;
+
+    const groups = chunkArray(staleCerts, EVENT_CERT_WARM_CONCURRENCY);
+    for (const group of groups) {
+      await Promise.all(
+        group.map(async (certDoc) => {
+          eventCertWarmJob.currentCertificateId = certDoc.certificateId;
+          try {
+            if (!certDoc?.student?.name) {
+              throw new Error('Missing student reference');
+            }
+            await regenerateEventCertificate(certDoc);
+            eventCertWarmJob.success += 1;
+          } catch (err) {
+            eventCertWarmJob.failed += 1;
+            eventCertWarmJob.lastError = `${certDoc.certificateId}: ${err.message}`;
+            await EventCertificate.updateOne(
+              { _id: certDoc._id },
+              { $set: { pdfStatus: 'failed', pdfError: err.message || 'Warm job regeneration failed' } }
+            );
+          } finally {
+            eventCertWarmJob.processed += 1;
+          }
+        })
+      );
+    }
+  } catch (err) {
+    eventCertWarmJob.lastError = err.message || 'Warm job failed unexpectedly';
+  } finally {
+    eventCertWarmJob.running = false;
+    eventCertWarmJob.currentCertificateId = '';
+    eventCertWarmJob.finishedAt = new Date();
+  }
+}
+
 function normalizeEmailList(emailList = []) {
   const normalized = emailList
     .map((value) => String(value || '').trim().toLowerCase())
@@ -136,6 +254,60 @@ router.get('/admin/hackathons', authOptions, adminCheck, async (req, res) => {
     res.json(hackathons);
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ─── ADMIN: Warm / regenerate stale event certificate PDFs ─────────────────
+router.post('/admin/certificates/warm-event-pdfs', authOptions, adminCheck, async (req, res) => {
+  try {
+    if (eventCertWarmJob.running) {
+      return res.status(409).json({
+        message: 'Warm job is already running.',
+        job: eventCertWarmJob,
+      });
+    }
+
+    const requestedBy = req.user?.id || 'admin';
+    setImmediate(() => {
+      runEventCertWarmJob(requestedBy).catch((err) => {
+        console.error('[Events] Warm job crashed:', err);
+      });
+    });
+
+    return res.json({
+      message: 'Warm job started.',
+      job: {
+        ...eventCertWarmJob,
+        running: true,
+        startedAt: new Date(),
+        requestedBy,
+      },
+    });
+  } catch (err) {
+    console.error('[Events] Start warm job error:', err);
+    return res.status(500).json({ message: 'Server error starting warm job.' });
+  }
+});
+
+router.get('/admin/certificates/warm-event-pdfs/status', authOptions, adminCheck, async (req, res) => {
+  try {
+    res.json({
+      running: eventCertWarmJob.running,
+      startedAt: eventCertWarmJob.startedAt,
+      finishedAt: eventCertWarmJob.finishedAt,
+      requestedBy: eventCertWarmJob.requestedBy,
+      total: eventCertWarmJob.total,
+      processed: eventCertWarmJob.processed,
+      success: eventCertWarmJob.success,
+      failed: eventCertWarmJob.failed,
+      currentCertificateId: eventCertWarmJob.currentCertificateId,
+      lastError: eventCertWarmJob.lastError,
+      concurrency: EVENT_CERT_WARM_CONCURRENCY,
+      templateVersion: EVENT_CERT_TEMPLATE_VERSION,
+    });
+  } catch (err) {
+    console.error('[Events] Warm job status error:', err);
+    res.status(500).json({ message: 'Server error fetching warm job status.' });
   }
 });
 

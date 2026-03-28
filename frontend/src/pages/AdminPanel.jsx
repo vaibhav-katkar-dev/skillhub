@@ -71,6 +71,9 @@ const AdminPanel = () => {
   const [hackMsg, setHackMsg] = useState('');
   const [registrationsByHack, setRegistrationsByHack] = useState({});
   const [loadingRegistrationsFor, setLoadingRegistrationsFor] = useState('');
+  const [warmJob, setWarmJob] = useState(null);
+  const [warmJobLoading, setWarmJobLoading] = useState(false);
+  const [warmJobError, setWarmJobError] = useState('');
 
   useEffect(() => {
     getCourseList().then(setCourses).catch(console.error);
@@ -143,6 +146,36 @@ const AdminPanel = () => {
 
     loadAnalytics();
   }, [isAuthenticated, user?.role]);
+
+  useEffect(() => {
+    if (tab !== 'analytics' || !isAuthenticated || user?.role !== 'admin') return;
+
+    let stopped = false;
+    let timer = null;
+
+    const loadWarmStatus = async () => {
+      try {
+        const res = await api.get('/events/admin/certificates/warm-event-pdfs/status');
+        if (!stopped) {
+          setWarmJob(res.data);
+          setWarmJobError('');
+          if (res.data?.running) {
+            timer = setTimeout(loadWarmStatus, 4000);
+          }
+        }
+      } catch (err) {
+        if (!stopped) {
+          setWarmJobError(err.response?.data?.message || 'Failed to load warm job status.');
+        }
+      }
+    };
+
+    loadWarmStatus();
+    return () => {
+      stopped = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [tab, isAuthenticated, user?.role]);
 
   if (!isAuthenticated || user?.role !== 'admin') {
     return <Navigate to="/" replace />;
@@ -244,6 +277,19 @@ const AdminPanel = () => {
     return `${(bytes / 1024).toFixed(2)} KB`;
   };
 
+  const startWarmCertificates = async () => {
+    setWarmJobLoading(true);
+    setWarmJobError('');
+    try {
+      const res = await api.post('/events/admin/certificates/warm-event-pdfs');
+      setWarmJob(res.data?.job || null);
+    } catch (err) {
+      setWarmJobError(err.response?.data?.message || 'Failed to start warm job.');
+    } finally {
+      setWarmJobLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-slate-100">
       <Helmet>
@@ -301,6 +347,53 @@ const AdminPanel = () => {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
         {tab === 'analytics' && (
           <div className="space-y-6">
+            <div className="bg-white rounded-2xl border-2 border-indigo-200 shadow-sm p-6">
+              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                <div>
+                  <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
+                    <ShieldCheck className="w-5 h-5 text-indigo-600" />
+                    Certificate Maintenance (Admin Only)
+                  </h2>
+                  <p className="text-sm text-slate-600 mt-2">
+                    Use this to regenerate stale event/job certificate PDFs with the latest design template.
+                  </p>
+                  <div className="mt-3 rounded-xl bg-indigo-50 border border-indigo-200 p-3 text-xs text-indigo-900 space-y-1">
+                    <p><strong>What it fixes:</strong> old downloaded certificate design, stale PDF buffers.</p>
+                    <p><strong>Safe behavior:</strong> only stale certificates are processed, with throttled concurrency.</p>
+                    <p><strong>Security:</strong> available only to authenticated admins.</p>
+                  </div>
+                </div>
+
+                <div className="min-w-[240px]">
+                  <button
+                    onClick={startWarmCertificates}
+                    disabled={warmJobLoading || warmJob?.running}
+                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-sm font-bold shadow"
+                  >
+                    {warmJobLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                    {warmJob?.running ? 'Fix Running...' : 'Fix Certificates Now'}
+                  </button>
+
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2"><span className="text-slate-500">Status</span><div className="font-bold text-slate-900 mt-0.5">{warmJob?.running ? 'Running' : 'Idle'}</div></div>
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2"><span className="text-slate-500">Progress</span><div className="font-bold text-slate-900 mt-0.5">{warmJob?.processed ?? 0}/{warmJob?.total ?? 0}</div></div>
+                    <div className="rounded-lg border border-slate-200 bg-emerald-50 px-2.5 py-2"><span className="text-slate-500">Success</span><div className="font-bold text-emerald-700 mt-0.5">{warmJob?.success ?? 0}</div></div>
+                    <div className="rounded-lg border border-slate-200 bg-rose-50 px-2.5 py-2"><span className="text-slate-500">Failed</span><div className="font-bold text-rose-700 mt-0.5">{warmJob?.failed ?? 0}</div></div>
+                  </div>
+                </div>
+              </div>
+
+              {warmJob?.currentCertificateId && (
+                <p className="mt-3 text-xs text-slate-600">Current certificate: <span className="font-mono">{warmJob.currentCertificateId}</span></p>
+              )}
+              {warmJob?.lastError && (
+                <p className="mt-2 text-xs text-rose-700">Last error: {warmJob.lastError}</p>
+              )}
+              {warmJobError && (
+                <p className="mt-2 text-xs text-rose-700">{warmJobError}</p>
+              )}
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
               {[
                 { label: 'Total Users', value: analytics?.overview?.totalUsers ?? '-', icon: Users, tone: 'from-indigo-600 to-blue-600' },
@@ -470,6 +563,43 @@ const AdminPanel = () => {
                       <div className="flex items-center justify-between"><span className="text-slate-500">Avg PDF size</span><span className="font-bold text-slate-900">{analytics?.certificatePipeline?.averagePdfKb ? `${analytics.certificatePipeline.averagePdfKb} KB` : '-'}</span></div>
                       <div className="flex items-center justify-between"><span className="text-slate-500">Total cached size</span><span className="font-bold text-slate-900">{formatSize(analytics?.certificatePipeline?.totalCachedPdfBytes)}</span></div>
                     </div>
+                  </div>
+
+                  <div className="mt-4 rounded-2xl bg-indigo-50 border border-indigo-200 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wide text-indigo-700">One-Click Fix</p>
+                        <p className="text-sm text-indigo-900 mt-1">Regenerate stale event certificate PDFs with latest template safely.</p>
+                      </div>
+                      <button
+                        onClick={startWarmCertificates}
+                        disabled={warmJobLoading || warmJob?.running}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-xs font-bold"
+                      >
+                        {warmJobLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                        {warmJob?.running ? 'Running...' : 'Fix Certificates Now'}
+                      </button>
+                    </div>
+
+                    {warmJobError && (
+                      <div className="mt-3 text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">
+                        {warmJobError}
+                      </div>
+                    )}
+
+                    <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                      <div className="rounded-lg bg-white border border-indigo-100 px-3 py-2"><span className="text-slate-500">Status</span><div className="font-bold text-slate-900 mt-0.5">{warmJob?.running ? 'Running' : 'Idle'}</div></div>
+                      <div className="rounded-lg bg-white border border-indigo-100 px-3 py-2"><span className="text-slate-500">Processed</span><div className="font-bold text-slate-900 mt-0.5">{warmJob?.processed ?? 0}/{warmJob?.total ?? 0}</div></div>
+                      <div className="rounded-lg bg-white border border-indigo-100 px-3 py-2"><span className="text-slate-500">Success</span><div className="font-bold text-emerald-700 mt-0.5">{warmJob?.success ?? 0}</div></div>
+                      <div className="rounded-lg bg-white border border-indigo-100 px-3 py-2"><span className="text-slate-500">Failed</span><div className="font-bold text-rose-700 mt-0.5">{warmJob?.failed ?? 0}</div></div>
+                    </div>
+
+                    {warmJob?.currentCertificateId && (
+                      <p className="mt-2 text-[11px] text-slate-600">Current: <span className="font-mono">{warmJob.currentCertificateId}</span></p>
+                    )}
+                    {warmJob?.lastError && (
+                      <p className="mt-2 text-[11px] text-rose-700">Last error: {warmJob.lastError}</p>
+                    )}
                   </div>
                 </div>
 
