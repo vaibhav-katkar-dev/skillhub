@@ -714,337 +714,306 @@ router.put('/admin/hackathons/:id/registrations/:registrationId', authOptions, a
 // ─── PDF Builder: Event Certificate (job simulation has premium achievement look) ─────
 function buildEventCertificatePdf({ studentName, eventTitle, role, certificateId, issueDate, eventType, verifyUrl }) {
   return new Promise(async (resolve, reject) => {
+    /**
+ * SkillValix — Professional Certificate PDF Builder (v5)
+ *
+ * Drop-in replacement for the existing buildEventCertificatePdf function.
+ * Uses PDFKit (already installed in the project) + qrcode.
+ *
+ * Key improvements over v4:
+ *  - Richer gold gradient system with shimmer effect
+ *  - Refined typography hierarchy and tighter vertical rhythm
+ *  - Decorative corner rosette marks
+ *  - Elegant watermark monogram behind the name
+ *  - Subtle grain/texture overlay via repeating micro-dots
+ *  - Improved QR panel with gold border
+ *  - Smoother info-card layout with icon-like labels
+ *  - Consistent padding constants for easy tweaking
+ *  - Non-job-simulation path also fully modernised
+ */
+
+
+
+// ─── Shared palette ──────────────────────────────────────────────────────────
+const P = {
+  // Backgrounds
+  pageBg:      '#FDFAF3',
+  panelBg:     '#FFFEF9',
+  // Gold tones
+  goldDeep:    '#6B4C0A',
+  goldDark:    '#8B6012',
+  gold:        '#C9911F',
+  goldMid:     '#D4A827',
+  goldLight:   '#E8C96A',
+  goldPale:    '#F5E4A8',
+  goldFaint:   '#FAF3D8',
+  // Text
+  inkDark:     '#0F1923',
+  inkMid:      '#2D3748',
+  inkMuted:    '#64748B',
+  inkLight:    '#94A3B8',
+  // Blue (for non-job-sim variant)
+  blueDark:    '#1E3A8A',
+  blueMid:     '#2563EB',
+  blueLight:   '#BFDBFE',
+};
+
+// ─── Layout constants (A4 landscape = 841.89 × 595.28 pt) ───────────────────
+const MARGIN_OUTER   = 18;   // outer border inset
+const MARGIN_INNER   = 30;   // inner border inset
+const BAND_H         = 46;   // gold header band height
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+/** Return a linear gradient spanning the full width of the doc. */
+function hGrad(doc, stops) {
+  const W = doc.page.width;
+  const g = doc.linearGradient(0, 0, W, 0);
+  stops.forEach(([pos, color]) => g.stop(pos, color));
+  return g;
+}
+
+/** Clip text that overflows maxWidth, appending suffix. */
+function clipText(doc, text, maxWidth, suffix = '…') {
+  const raw = String(text || '').trim();
+  if (!raw) return '';
+  if (doc.widthOfString(raw) <= maxWidth) return raw;
+  const sw = doc.widthOfString(suffix);
+  let out = '';
+  for (const ch of raw) {
+    if (doc.widthOfString(out + ch) + sw > maxWidth) break;
+    out += ch;
+  }
+  return out.trimEnd() + suffix;
+}
+
+/** Shrink font until text fits maxWidth; never below minPt. */
+function fitFontSize(doc, text, { font = 'Helvetica-Bold', maxPt, minPt, maxWidth }) {
+  doc.font(font);
+  let size = maxPt;
+  while (size > minPt) {
+    doc.fontSize(size);
+    if (doc.widthOfString(String(text)) <= maxWidth) return size;
+    size -= 0.5;
+  }
+  return minPt;
+}
+
+/** Shrink font until text fits within maxHeight; never below minPt. */
+function fitFontSizeH(doc, text, opts, { maxPt, minPt }) {
+  let size = maxPt;
+  while (size > minPt) {
+    doc.fontSize(size);
+    if (doc.heightOfString(text, opts) <= opts.maxHeight) return size;
+    size -= 0.5;
+  }
+  return minPt;
+}
+
+/**
+ * Draw four decorative corner rosettes (cross + diamond).
+ * Placed at each corner inside the inner border.
+ */
+function drawCornerOrnaments(doc, color = P.goldMid) {
+  const W = doc.page.width;
+  const H = doc.page.height;
+  const inset = MARGIN_INNER + 8;
+  const size  = 9;
+  const corners = [
+    [inset, inset],
+    [W - inset, inset],
+    [inset, H - inset],
+    [W - inset, H - inset],
+  ];
+
+  doc.save();
+  doc.strokeColor(color).lineWidth(0.8);
+
+  corners.forEach(([cx, cy]) => {
+    // Cross arms
+    doc.moveTo(cx - size, cy).lineTo(cx + size, cy).stroke();
+    doc.moveTo(cx, cy - size).lineTo(cx, cy + size).stroke();
+    // Diamond
+    const d = size * 0.55;
+    doc.moveTo(cx, cy - d)
+       .lineTo(cx + d, cy)
+       .lineTo(cx, cy + d)
+       .lineTo(cx - d, cy)
+       .closePath()
+       .stroke();
+    // Centre dot
+    doc.circle(cx, cy, 1.8).fill(color);
+  });
+
+  doc.restore();
+}
+
+/**
+ * Repeating micro-dot texture overlay — gives a subtle premium paper feel.
+ * Very low opacity; drawn as tiny circles on a grid.
+ */
+function drawGrainOverlay(doc) {
+  const W = doc.page.width;
+  const H = doc.page.height;
+  doc.save();
+  doc.fillOpacity(0.018).fillColor(P.goldDark);
+  const step = 9;
+  for (let x = MARGIN_INNER + 4; x < W - MARGIN_INNER; x += step) {
+    for (let y = MARGIN_INNER + 4; y < H - MARGIN_INNER; y += step) {
+      doc.circle(x, y, 0.55).fill();
+    }
+  }
+  doc.restore();
+}
+
+/**
+ * Central watermark monogram "SV" printed at very low opacity
+ * behind the name area.
+ */
+function drawWatermark(doc) {
+  const W = doc.page.width;
+  const H = doc.page.height;
+  doc.save();
+  doc.fillOpacity(0.032).fillColor(P.goldMid)
+     .font('Helvetica-Bold').fontSize(220)
+     .text('SV', 0, H / 2 - 130, { width: W, align: 'center', lineBreak: false });
+  doc.restore();
+}
+
+/**
+ * Standard premium footer (shared by both certificate variants).
+ */
+function drawFooter(doc, opts = {}) {
+  const W = doc.page.width;
+  const H = doc.page.height;
+  const {
+    dividerColor = P.goldLight,
+    issuerColor  = P.goldDark,
+    metaColor    = P.inkMuted,
+    trustLine    = 'Digitally Verifiable Credential  ·  Scan QR to Validate Authenticity',
+  } = opts;
+
+  const divY   = H - 52;
+  const issueY = H - 41;
+  const urlY   = H - 29;
+  const trustY = H - 18;
+
+  doc.save().fillOpacity(0.85);
+
+  doc.moveTo(90, divY).lineTo(W - 90, divY)
+     .lineWidth(0.6).strokeColor(dividerColor).stroke();
+
+  doc.fontSize(6.8).font('Helvetica-Bold').fillColor(issuerColor)
+     .text('ISSUED BY SKILLVALIX', 0, issueY, { width: W, align: 'center', characterSpacing: 2.2 });
+
+  doc.fontSize(7).font('Helvetica').fillColor(metaColor)
+     .text('www.skillvalix.com', 0, urlY, { width: W, align: 'center' });
+
+  doc.fontSize(6.4).font('Helvetica').fillColor(metaColor)
+     .text(trustLine, 0, trustY, { width: W, align: 'center' });
+
+  doc.restore();
+}
+
+/**
+ * Draw a single info card (Certificate ID / Issued On / Role).
+ */
+function drawInfoCard(doc, { x, y, w, h, label, value, radius = 9 }) {
+  // Card background
+  doc.roundedRect(x, y, w, h, radius).fill(P.panelBg);
+
+  // Gold-tinted top stripe
+  const stripe = doc.linearGradient(x, y, x + w, y);
+  stripe.stop(0, P.goldPale).stop(1, P.goldFaint);
+  doc.roundedRect(x, y, w, 18, radius).fill(stripe);
+  // Re-cover bottom-round corners of the stripe so it's flat at the bottom
+  doc.rect(x, y + 9, w, 9).fill(P.goldPale);
+
+  // Card border
+  doc.roundedRect(x, y, w, h, radius)
+     .lineWidth(0.9).strokeColor(P.goldLight).stroke();
+
+  const padX = 18;
+
+  // Label
+    const labelMaxW = w - padX * 2;
+    const safeLabel = clipText(doc.font('Helvetica-Bold').fontSize(6.6), String(label).toUpperCase(), labelMaxW);
+    doc.fillColor(P.goldDark)
+       .text(safeLabel, x + padX, y + 6,
+         { width: labelMaxW, characterSpacing: 1.2, lineBreak: false });
+
+  // Separator
+  doc.moveTo(x + padX, y + 20).lineTo(x + w - padX, y + 20)
+     .lineWidth(0.4).strokeColor(P.goldLight).stroke();
+
+  // Value — auto-shrink
+  const maxValW = w - padX * 2;
+  const valSize = fitFontSize(doc, value, {
+    font: 'Helvetica-Bold', maxPt: 12.5, minPt: 8, maxWidth: maxValW,
+  });
+  const safeVal = clipText(doc.fontSize(valSize), value, maxValW);
+  const valY = y + 24 + (h - 44 - valSize) / 2;
+
+  doc.font('Helvetica-Bold').fontSize(valSize)
+     .fillColor(P.inkDark)
+     .text(safeVal, x + padX, valY, { width: maxValW, lineBreak: false });
+}
+
+// ─── Main exported function ───────────────────────────────────────────────────
+
+/**
+ * Builds and returns a PDF buffer for an event certificate.
+ *
+ * @param {object} params
+ * @param {string} params.studentName
+ * @param {string} params.eventTitle
+ * @param {string} params.role
+ * @param {string} params.certificateId
+ * @param {string} params.issueDate        — pre-formatted, e.g. "28 March 2026"
+ * @param {string} params.eventType        — "job-simulation" | anything else
+ * @param {string} params.verifyUrl        — full URL for QR code
+ * @returns {Promise<Buffer>}
+ */
+ function buildEventCertificatePdf({
+  studentName,
+  eventTitle,
+  role,
+  certificateId,
+  issueDate,
+  eventType,
+  verifyUrl,
+}) {
+  return new Promise(async (resolve, reject) => {
     const doc = new PDFDocument({ layout: 'landscape', size: 'A4', margin: 0 });
     const chunks = [];
-    doc.on('data', chunk => chunks.push(chunk));
-    doc.on('end', () => resolve(Buffer.concat(chunks)));
+    doc.on('data',  (c) => chunks.push(c));
+    doc.on('end',   ()  => resolve(Buffer.concat(chunks)));
     doc.on('error', reject);
 
     try {
-      const qrBuffer = await QRCode.toBuffer(verifyUrl, {
-        errorCorrectionLevel: 'H', width: 200, margin: 1,
-        color: { dark: '#0F172A', light: '#FFFFFF' },
+      // ── QR code ────────────────────────────────────────────────────────────
+      const qrBuf = await QRCode.toBuffer(verifyUrl, {
+        errorCorrectionLevel: 'H',
+        width: 220,
+        margin: 1,
+        color: { dark: '#0F1923', light: '#FFFFFF' },
       });
 
-      const W = doc.page.width;
-      const H = doc.page.height;
+      const W  = doc.page.width;   // 841.89
+      const H  = doc.page.height;  // 595.28
       const CX = W / 2;
-      const isJobSimulation = String(eventType || '').toLowerCase() === 'job-simulation';
-      const normalizedRole = String(role || '').trim();
-      const personalizedRole = normalizedRole && normalizedRole.toLowerCase() !== 'participant'
-        ? normalizedRole
-        : 'the selected role';
 
-      const drawPremiumFooter = ({
-        dividerColor = '#D8C9A2',
-        issuerColor = '#8A6A2F',
-        metaColor = '#7A818C',
-        trustLine = 'Verified Credential Platform  ·  Industry-Relevant Certification',
-      } = {}) => {
-        const dividerY = H - 56;
-        const issuerY = H - 44;
-        const urlY = H - 31;
-        const trustY = H - 19;
+      const isJobSim = String(eventType || '').toLowerCase() === 'job-simulation';
 
-        doc.moveTo(80, dividerY)
-          .lineTo(W - 80, dividerY)
-          .lineWidth(0.7)
-          .strokeColor(dividerColor)
-          .stroke();
-
-        doc.save();
-        doc.fillOpacity(0.8);
-
-        doc.fontSize(7.1)
-          .font('Helvetica-Bold')
-          .fillColor(issuerColor)
-          .text('ISSUED BY SKILLVALIX', 0, issuerY, {
-            width: W,
-            align: 'center',
-            characterSpacing: 2,
-          });
-
-        doc.fontSize(7.2)
-          .font('Helvetica')
-          .fillColor(metaColor)
-          .text('www.skillvalix.com', 0, urlY, {
-            width: W,
-            align: 'center',
-          });
-
-        doc.fontSize(6.6)
-          .font('Helvetica')
-          .fillColor(metaColor)
-          .text(trustLine, 0, trustY, {
-            width: W,
-            align: 'center',
-          });
-
-        doc.restore();
-      };
-
-      const truncateToWidth = (text, maxWidth, suffix = '...') => {
-        const raw = String(text || '').trim();
-        if (!raw) return '';
-        if (doc.widthOfString(raw) <= maxWidth) return raw;
-
-        const suffixWidth = doc.widthOfString(suffix);
-        let fitted = '';
-        for (const ch of raw) {
-          const next = fitted + ch;
-          if (doc.widthOfString(next) + suffixWidth > maxWidth) break;
-          fitted = next;
-        }
-        return `${fitted.trimEnd()}${suffix}`;
-      };
-
-    if (isJobSimulation) {
-        const INK = '#111827';
-        const INK_MUTED = '#4B5563';
-        const GOLD_DARK = '#7C5A06';
-        const GOLD = '#D4A327';
-        const GOLD_LIGHT = '#F3D37A';
-        const BG = '#FBF7EE';
-        const PANEL = '#FFFDF7';
-
-        const pxToPt = 0.75; // Convert 96dpi pixels to 72dpi points
-
-        const fitSingleLineText = ({ text, maxWidth, maxSize, minSize, font = 'Helvetica-Bold' }) => {
-          const raw = String(text || '').trim() || '-';
-          let size = maxSize;
-          doc.font(font);
-          while (size > minSize) {
-            doc.fontSize(size);
-            if (doc.widthOfString(raw) <= maxWidth) return { text: raw, size };
-            size -= 0.5;
-          }
-          doc.fontSize(minSize);
-          return { text: truncateToWidth(raw, maxWidth), size: minSize };
-        };
-
-        const clampTextToHeight = (text, options, maxHeight) => {
-          let safe = String(text || '').trim() || '-';
-          if (doc.heightOfString(safe, options) <= maxHeight) return safe;
-          while (safe.length > 3) {
-            safe = safe.slice(0, -1).trimEnd();
-            const candidate = `${safe}...`;
-            if (doc.heightOfString(candidate, options) <= maxHeight) return candidate;
-          }
-          return '...';
-        };
-
-        // BACKGROUND
-        doc.rect(0, 0, W, H).fill(BG);
-        const glow = doc.radialGradient(CX, H / 2, 40, CX, H / 2, 430);
-        glow.stop(0, '#FFFFFF');
-        glow.stop(1, BG);
-        doc.rect(0, 0, W, H).fill(glow);
-
-        // BORDERS
-        doc.rect(16, 16, W - 32, H - 32).lineWidth(2).strokeColor(GOLD).stroke();
-        doc.rect(28, 28, W - 56, H - 56).lineWidth(0.8).strokeColor('#E4C98B').stroke();
-
-        let currentY = 28;
-
-        // Band Header
-        const bandGrad = doc.linearGradient(0, 0, W, 0);
-        bandGrad.stop(0, GOLD_DARK);
-        bandGrad.stop(0.5, GOLD);
-        bandGrad.stop(1, GOLD_DARK);
-        doc.rect(28, currentY, W - 56, 44).fill(bandGrad);
-        doc.fontSize(11).font('Helvetica-Bold').fillColor('#FFF8E6')
-          .text('SKILLVALIX PROFESSIONAL ACHIEVEMENT', 0, currentY + 15, { width: W, align: 'center', characterSpacing: 2.3 });
-        
-        currentY += 44; // Bottom of band
-        currentY += 10;
-
-        // Title
-        doc.fontSize(14).font('Helvetica-Bold').fillColor(GOLD_DARK)
-          .text('CERTIFICATE OF ACHIEVEMENT', 0, currentY, { width: W, align: 'center', characterSpacing: 2.6 });
-        
-        currentY += 10;
-
-        // "This certifies that"
-        doc.fontSize(12).font('Helvetica').fillColor(INK_MUTED)
-          .text('This certifies that', 0, currentY, { width: W, align: 'center' });
-        
-        currentY += 8;
-
-        // Learner Name
-        const learnerName = String(studentName || 'Learner').toUpperCase();
-        let nameSize = 43;
-        doc.font('Helvetica');
-        while (nameSize > 21 && doc.fontSize(nameSize).widthOfString(learnerName) > W - 220) nameSize -= 1;
-        doc.fontSize(nameSize).fillColor(INK).text(learnerName, 0, currentY, { width: W, align: 'center' });
-        
-        const underlineY = currentY + nameSize + 4;
-        doc.moveTo(CX - 205, underlineY).lineTo(CX + 205, underlineY).lineWidth(1.4).strokeColor('#CCAA52').stroke();
-        
-        currentY = underlineY + 8;
-
-        // Subtitle
-        doc.fontSize(12).font('Helvetica').fillColor(INK_MUTED)
-          .text('has successfully completed a professional job simulation', 0, currentY, { width: W, align: 'center' });
-        
-        currentY += 12;
-
-        // Course Box (STEP 4)
-        const eventPanelW = W - 240;
-        const eventPanelX = (W - eventPanelW) / 2;
-        const eventPanelY = currentY;
-        const eventPanelH = 70;
-        doc.roundedRect(eventPanelX, eventPanelY, eventPanelW, eventPanelH, 10).fill(PANEL);
-        doc.roundedRect(eventPanelX, eventPanelY, eventPanelW, eventPanelH, 10).lineWidth(1).strokeColor('#EAD6A8').stroke();
-
-        const eventTitleWidth = eventPanelW - 44;
-        const eventTitleOpts = { width: eventTitleWidth, align: 'center', lineGap: 0.6, characterSpacing: 0.2 };
-        let eventTitleSize = 25;
-        doc.font('Helvetica-Bold');
-        while (eventTitleSize > 16 && doc.fontSize(eventTitleSize).heightOfString(String(eventTitle || ''), eventTitleOpts) > eventPanelH - 20) {
-          eventTitleSize -= 1;
-        }
-        doc.fontSize(eventTitleSize);
-        const safeEventTitle = clampTextToHeight(String(eventTitle || ''), eventTitleOpts, eventPanelH - 20);
-        const eventTitleHeight = doc.heightOfString(safeEventTitle, eventTitleOpts);
-        const eventTitleY = eventPanelY + (eventPanelH - eventTitleHeight) / 2;
-        doc.fillColor('#1F2937').text(safeEventTitle, eventPanelX + 22, eventTitleY, eventTitleOpts);
-
-        currentY = eventPanelY + eventPanelH + 10;
-
-        // Description (STEP 3)
-        const descWidth = Math.round(W * 0.7); // 70% width
-        const descX = (W - descWidth) / 2;
-        const description = 'This certification is awarded for successfully completing a real-world job simulation, demonstrating practical expertise, problem-solving ability, and job-ready skills.';
-        doc.fontSize(9).font('Helvetica').fillColor(INK_MUTED)
-          .text(description, descX, currentY, { width: descWidth, align: 'center', lineGap: 3 });
-
-        const descHeight = doc.heightOfString(description, { width: descWidth, align: 'center', lineGap: 3 });
-        currentY += descHeight + 12;
-
-        // Info Cards (STEP 5)
-        const boxW = 206;
-        const boxH = 74;
-        const gap = 22;
-        const startX = (W - (boxW * 3 + gap * 2)) / 2;
-
-        const drawInfo = (x, label, value) => {
-          doc.roundedRect(x, currentY, boxW, boxH, 8).fill('#FFFDF8');
-          doc.roundedRect(x, currentY, boxW, boxH, 8).lineWidth(1).strokeColor('#E7D2A1').stroke();
-          const fitLabel = fitSingleLineText({
-            text: String(label || '').toUpperCase(),
-            maxWidth: boxW - 32,
-            maxSize: 7.5,
-            minSize: 6.2,
-            font: 'Helvetica-Bold',
-          });
-
-          const labelY = currentY + 14 + (7.5 - fitLabel.size) * 0.6;
-          doc.fontSize(fitLabel.size).font('Helvetica-Bold').fillColor('#8B6A1D')
-            .text(fitLabel.text, x + 16, labelY, { width: boxW - 32, characterSpacing: 1.8, lineBreak: false });
-
-          const fitValue = fitSingleLineText({ text: String(value || '-'), maxWidth: boxW - 32, maxSize: 12, minSize: 9, font: 'Helvetica-Bold' });
-          const valueY = currentY + 41 + (12 - fitValue.size) * 0.8;
-          doc.fontSize(fitValue.size).font('Helvetica-Bold').fillColor('#1F2937')
-            .text(fitValue.text, x + 16, valueY, { width: boxW - 32, lineBreak: false });
-        };
-
-        drawInfo(startX, 'CERTIFICATE ID', certificateId);
-        drawInfo(startX + boxW + gap, 'ISSUED ON', issueDate);
-        drawInfo(startX + (boxW + gap) * 2, 'ROLE', role || 'Participant');
-
-        // QR Code Section (STEP 6: Top-Right)
-        const qrSize = 78;
-        const qrX = W - qrSize - 44; // Equal margin from right
-        const qrY = 84;
-        doc.roundedRect(qrX - 8, qrY - 8, qrSize + 16, qrSize + 36, 8).fill('#FFFFFF');
-        doc.roundedRect(qrX - 8, qrY - 8, qrSize + 16, qrSize + 36, 8).lineWidth(1).strokeColor('#E5E7EB').stroke();
-        doc.image(qrBuffer, qrX, qrY, { width: qrSize, height: qrSize });
-        doc.fontSize(6.2).font('Helvetica-Bold').fillColor('#6B7280')
-          .text('Scan to verify authenticity', qrX - 8, qrY + qrSize + 15, { width: qrSize + 16, align: 'center' });
-
-        drawPremiumFooter({
-          dividerColor: '#DCC99A',
-          issuerColor: '#8B6A1D',
-          metaColor: '#6B7280',
-          trustLine: 'Digitally verifiable credential  ·  Scan QR to validate authenticity',
+      if (isJobSim) {
+        await buildJobSimCertificate(doc, {
+          W, H, CX, qrBuf,
+          studentName, eventTitle, role, certificateId, issueDate,
         });
       } else {
-        // Keep existing event-certificate design unchanged for non job-simulation events.
-        const BG_LIGHT = '#F8FAFC';
-        const TEXT_DARK = '#0F172A';
-        const TEXT_MUTED = '#64748B';
-        const ACCENT_BLUE = '#3B82F6';
-
-        doc.rect(0, 0, W, H).fill(BG_LIGHT);
-
-        const headerGrad = doc.linearGradient(0, 0, W, 0);
-        headerGrad.stop(0, '#4338CA');
-        headerGrad.stop(1, '#6D28D9');
-        doc.rect(0, 0, W, 140).fill(headerGrad);
-
-        doc.fontSize(32).font('Helvetica-Bold').fillColor('#FFFFFF').text('SkillValix', 48, 48, { lineBreak: false });
-        doc.fontSize(12).font('Helvetica').fillColor('#E2E8F0').text('Verified Certificate of Completion', 48, 88, { lineBreak: false });
-
-        doc.rect(20, 20, W - 40, H - 40).lineWidth(1).strokeColor('#E2E8F0').stroke();
-
-        doc.fontSize(14).font('Helvetica-Bold').fillColor(TEXT_DARK)
-          .text('CERTIFICATE OF COMPLETION', 0, 185, { width: W, align: 'center', characterSpacing: 4 });
-
-        doc.fontSize(12).font('Helvetica').fillColor(TEXT_MUTED)
-          .text('This is proudly presented to', 0, 240, { width: W, align: 'center' });
-
-        let nameSize = 44;
-        const upperName = String(studentName || 'Learner').toUpperCase();
-        doc.font('Helvetica-Bold');
-        while (nameSize > 20 && doc.fontSize(nameSize).widthOfString(upperName) > 520) nameSize -= 2;
-        doc.fontSize(nameSize).fillColor(TEXT_DARK).text(upperName, 0, 275, { width: W, align: 'center' });
-
-        doc.moveTo(CX - 160, 275 + nameSize + 12).lineTo(CX + 160, 275 + nameSize + 12).lineWidth(1.5).strokeColor(ACCENT_BLUE).stroke();
-
-        doc.fontSize(12).font('Helvetica').fillColor(TEXT_MUTED)
-          .text('for successfully completing the event', 0, 370, { width: W, align: 'center' });
-
-        doc.fontSize(22).font('Helvetica-Bold').fillColor(ACCENT_BLUE)
-          .text(eventTitle, 60, 405, { width: W - 120, align: 'center' });
-
-        doc.fontSize(9.5).font('Helvetica').fillColor(TEXT_MUTED)
-          .text('This certificate is issued as a verifiable record of practical performance, consistency, and applied outcomes.', 0, 465, { width: W, align: 'center' });
-
-        doc.fontSize(8.8).font('Helvetica').fillColor('#6B7280');
-        const personalizedLineDefault = truncateToWidth(
-          `${studentName || 'The learner'} has demonstrated readiness for ${personalizedRole} in an industry-aligned environment.`,
-          W - 140
-        );
-        doc.text(personalizedLineDefault, 0, 481, { width: W, align: 'center' });
-
-        const QR_SIZE = 100;
-        const QR_X = W - QR_SIZE - 76;
-        const QR_Y = 230;
-
-        doc.roundedRect(QR_X - 12, QR_Y - 12, QR_SIZE + 24, QR_SIZE + 50, 12).fill('#FFFFFF');
-        doc.roundedRect(QR_X - 12, QR_Y - 12, QR_SIZE + 24, QR_SIZE + 50, 12).lineWidth(1).strokeColor('#F1F5F9').stroke();
-        doc.image(qrBuffer, QR_X, QR_Y, { width: QR_SIZE, height: QR_SIZE });
-        doc.fontSize(8).font('Helvetica-Bold').fillColor(TEXT_MUTED).text('SCAN TO VERIFY', QR_X, QR_Y + QR_SIZE + 18, { width: QR_SIZE, align: 'center' });
-
-        const BOX_Y = H - 110;
-        const BOX_W = 210;
-        const BOX_H = 70;
-
-        const drawBox = (x, label, val) => {
-          doc.roundedRect(x, BOX_Y, BOX_W, BOX_H, 10).fill('#FFFFFF');
-          doc.roundedRect(x, BOX_Y, BOX_W, BOX_H, 10).lineWidth(1).strokeColor('#E2E8F0').stroke();
-          doc.fontSize(7).font('Helvetica-Bold').fillColor(TEXT_MUTED).text(label, x + 18, BOX_Y + 18, { characterSpacing: 1.5 });
-          doc.fontSize(12).font('Helvetica-Bold').fillColor(TEXT_DARK).text(val, x + 18, BOX_Y + 38);
-        };
-
-        drawBox(48, 'CERTIFICATE ID', certificateId);
-        drawBox(CX - (BOX_W / 2), 'ISSUED ON', issueDate);
-        drawBox(W - BOX_W - 48, 'ROLE', role || 'Participant');
-
-        drawPremiumFooter({
-          dividerColor: '#D6C8A7',
-          issuerColor: '#8A6A2F',
-          metaColor: '#6B7280',
+        await buildGenericCertificate(doc, {
+          W, H, CX, qrBuf,
+          studentName, eventTitle, role, certificateId, issueDate,
         });
       }
 
@@ -1053,6 +1022,331 @@ function buildEventCertificatePdf({ studentName, eventTitle, role, certificateId
       doc.destroy();
       reject(err);
     }
+  });
+}
+
+// ─── Job Simulation Certificate ───────────────────────────────────────────────
+
+async function buildJobSimCertificate(doc, {
+  W, H, CX, qrBuf, studentName, eventTitle, role, certificateId, issueDate,
+}) {
+  // ── 1. Page background with warm radial centre-glow ──────────────────────
+  doc.rect(0, 0, W, H).fill(P.pageBg);
+
+  const radGlow = doc.radialGradient(CX, H * 0.48, 20, CX, H * 0.48, 390);
+  radGlow.stop(0, '#FFFFFF').stop(0.6, '#FDFAF2').stop(1, P.pageBg);
+  doc.rect(0, 0, W, H).fill(radGlow);
+
+  // ── 2. Grain texture ──────────────────────────────────────────────────────
+  drawGrainOverlay(doc);
+
+  // ── 3. Watermark monogram ─────────────────────────────────────────────────
+  drawWatermark(doc);
+
+  // ── 4. Borders: outer (thick gold) + inner (hairline) ────────────────────
+  const outerGrad = hGrad(doc, [[0, P.goldDark], [0.25, P.goldMid], [0.5, P.goldLight], [0.75, P.goldMid], [1, P.goldDark]]);
+  doc.rect(MARGIN_OUTER, MARGIN_OUTER, W - MARGIN_OUTER * 2, H - MARGIN_OUTER * 2)
+     .lineWidth(2.5).strokeColor(outerGrad).stroke();
+
+  doc.rect(MARGIN_INNER, MARGIN_INNER, W - MARGIN_INNER * 2, H - MARGIN_INNER * 2)
+     .lineWidth(0.7).strokeColor(P.goldPale).stroke();
+
+  // ── 5. Corner ornaments ───────────────────────────────────────────────────
+  drawCornerOrnaments(doc);
+
+  // ── 6. Header band ───────────────────────────────────────────────────────
+  const BAND_Y = MARGIN_INNER;
+  const bandGrad = hGrad(doc, [[0, P.goldDeep], [0.15, P.goldDark], [0.5, P.goldMid], [0.85, P.goldDark], [1, P.goldDeep]]);
+  doc.rect(MARGIN_INNER, BAND_Y, W - MARGIN_INNER * 2, BAND_H).fill(bandGrad);
+
+  // Gold shimmer line at top of band
+  doc.moveTo(MARGIN_INNER, BAND_Y + 2).lineTo(W - MARGIN_INNER, BAND_Y + 2)
+     .lineWidth(0.5).strokeColor('#F0D98A').stroke();
+  // Bottom edge highlight
+  doc.moveTo(MARGIN_INNER, BAND_Y + BAND_H - 1).lineTo(W - MARGIN_INNER, BAND_Y + BAND_H - 1)
+     .lineWidth(0.5).strokeColor(P.goldDeep).stroke();
+
+  doc.fontSize(10.2).font('Helvetica-Bold').fillColor('#FFF8E0')
+     .text('SKILLVALIX  ·  PROFESSIONAL ACHIEVEMENT', 0, BAND_Y + 16,
+           { width: W, align: 'center', characterSpacing: 3.2 });
+
+  // ── 7. Layout anchor ─────────────────────────────────────────────────────
+  let curY = BAND_Y + BAND_H + 14;
+
+  // ── 8. Certificate title ─────────────────────────────────────────────────
+  doc.fontSize(13.5).font('Helvetica-Bold').fillColor(P.goldDeep)
+     .text('CERTIFICATE OF ACHIEVEMENT', 0, curY,
+           { width: W, align: 'center', characterSpacing: 3 });
+  curY += 22;
+
+  // Thin gold divider
+  const divHalf = 130;
+  doc.moveTo(CX - divHalf, curY).lineTo(CX + divHalf, curY)
+     .lineWidth(0.5).strokeColor(P.goldLight).stroke();
+  curY += 10;
+
+  // ── 9. "This certifies that" ─────────────────────────────────────────────
+  doc.fontSize(10.5).font('Helvetica').fillColor(P.inkMuted)
+     .text('This certifies that', 0, curY, { width: W, align: 'center' });
+  curY += 15;
+
+  // ── 10. Learner name (auto-size) ─────────────────────────────────────────
+  const nameMaxW = W - 230; // leave room for QR on the right
+  const rawName  = String(studentName || 'Learner').toUpperCase();
+  const nameSize = fitFontSize(doc, rawName, {
+    font: 'Helvetica-Bold', maxPt: 46, minPt: 22, maxWidth: nameMaxW,
+  });
+  const safeName = clipText(doc.font('Helvetica-Bold').fontSize(nameSize), rawName, nameMaxW);
+  doc.font('Helvetica-Bold').fontSize(nameSize).fillColor(P.inkDark)
+     .text(safeName, (W - nameMaxW) / 2, curY, { width: nameMaxW, align: 'center', lineBreak: false });
+
+  const underY = curY + nameSize + 5;
+  // Double underline (thick + thin)
+  doc.moveTo(CX - 220, underY).lineTo(CX + 220, underY)
+     .lineWidth(1.6).strokeColor(P.goldMid).stroke();
+  doc.moveTo(CX - 220, underY + 3.5).lineTo(CX + 220, underY + 3.5)
+     .lineWidth(0.4).strokeColor(P.goldPale).stroke();
+
+  curY = underY + 13;
+
+  // ── 11. Subtitle ─────────────────────────────────────────────────────────
+  doc.fontSize(10.8).font('Helvetica').fillColor(P.inkMuted)
+     .text('has successfully completed the professional job simulation', 0, curY,
+           { width: W, align: 'center' });
+  curY += 18;
+
+  // ── 12. Event title panel ─────────────────────────────────────────────────
+  const ET_W  = W - 250;
+  const ET_X  = (W - ET_W) / 2;
+  const ET_PAD_X = 24;
+  const ET_PAD_Y = 10;
+  const textW = ET_W - ET_PAD_X * 2;
+
+  // Measure title text to determine panel height
+  let etSize = 22;
+  const etTextOpts = { width: textW, align: 'center', lineGap: 1 };
+  etSize = fitFontSizeH(doc.font('Helvetica-Bold'), String(eventTitle || ''), { ...etTextOpts, maxHeight: 44 }, { maxPt: 22, minPt: 14 });
+  const etText   = String(eventTitle || '').trim() || 'Job Simulation';
+  const etH      = doc.fontSize(etSize).heightOfString(etText, etTextOpts) + ET_PAD_Y * 2;
+  const ET_Y     = curY;
+
+  // Panel shadow (offset fill)
+  doc.roundedRect(ET_X + 3, ET_Y + 3, ET_W, etH, 11).fill('#E8D9A0').fillOpacity(0.35);
+  doc.fillOpacity(1);
+
+  // Panel bg + border
+  doc.roundedRect(ET_X, ET_Y, ET_W, etH, 11).fill(P.panelBg);
+  const panelBorder = hGrad(doc, [[0, P.goldPale], [0.5, P.goldLight], [1, P.goldPale]]);
+  doc.roundedRect(ET_X, ET_Y, ET_W, etH, 11)
+     .lineWidth(1.1).strokeColor(panelBorder).stroke();
+
+  // Left + right gold bars inside panel
+  doc.rect(ET_X + 8, ET_Y + 8, 3, Math.max(8, etH - 16)).fill(P.goldMid);
+  doc.rect(ET_X + ET_W - 11, ET_Y + 8, 3, Math.max(8, etH - 16)).fill(P.goldMid);
+
+  doc.font('Helvetica-Bold').fontSize(etSize).fillColor(P.inkDark)
+     .text(etText, ET_X + ET_PAD_X, ET_Y + ET_PAD_Y, etTextOpts);
+
+  curY = ET_Y + etH + 8;
+
+  // ── 13. Description line ─────────────────────────────────────────────────
+    const descText = 'Awarded for practical expertise, structured problem-solving, and job-ready skills in a real-world simulation.';
+    const descW = Math.round(W * 0.63);
+    const descX = (W - descW) / 2;
+    const safeDesc = clipText(doc.font('Helvetica').fontSize(8.3), descText, descW);
+    doc.fillColor(P.inkMuted)
+      .text(safeDesc, descX, curY, { width: descW, align: 'center', lineBreak: false });
+
+    curY += 18;
+
+  // ── 14. Info cards (Certificate ID / Issued On / Role) ──────────────────
+  const CARD_W   = 198;
+  const CARD_H   = 68;
+  const CARD_GAP = 20;
+  const totalCardsW = CARD_W * 3 + CARD_GAP * 2;
+  const cardsX  = (W - totalCardsW) / 2;
+  const cardsY  = Math.max(curY, H - 140);
+
+  [
+    { label: 'Certificate ID', value: certificateId },
+    { label: 'Issued On',      value: issueDate      },
+    { label: 'Role',           value: role || 'Participant' },
+  ].forEach((card, i) => {
+    drawInfoCard(doc, {
+      x: cardsX + i * (CARD_W + CARD_GAP),
+      y: cardsY,
+      w: CARD_W,
+      h: CARD_H,
+      label: card.label,
+      value: card.value,
+    });
+  });
+
+  // ── 15. QR panel (top-right) ─────────────────────────────────────────────
+  const QR_SIZE  = 80;
+  const QR_PAD   = 10;
+  const QR_TOTAL = QR_SIZE + QR_PAD * 2;
+  const QR_LABEL_H = 28;
+  const QR_BOX_H = QR_TOTAL + QR_LABEL_H;
+  const QR_BOX_W = QR_TOTAL + 6;
+  const QR_X = W - MARGIN_INNER - QR_BOX_W - 8;
+  const QR_Y = BAND_Y + BAND_H + 14;
+
+  // QR card shadow
+  doc.roundedRect(QR_X + 2, QR_Y + 2, QR_BOX_W, QR_BOX_H, 10).fill('#D4BE88').fillOpacity(0.22);
+  doc.fillOpacity(1);
+
+  doc.roundedRect(QR_X, QR_Y, QR_BOX_W, QR_BOX_H, 10).fill('#FFFFFF');
+  const qrBorder = hGrad(doc, [[0, P.goldPale], [0.5, P.goldLight], [1, P.goldPale]]);
+  doc.roundedRect(QR_X, QR_Y, QR_BOX_W, QR_BOX_H, 10)
+     .lineWidth(1).strokeColor(qrBorder).stroke();
+
+  // Gold bar at top of QR panel
+  const qrBandGrad = hGrad(doc, [[0, P.goldDark], [0.5, P.goldMid], [1, P.goldDark]]);
+  doc.roundedRect(QR_X, QR_Y, QR_BOX_W, 16, 10).fill(qrBandGrad);
+  doc.rect(QR_X, QR_Y + 8, QR_BOX_W, 8).fill(qrBandGrad); // flatten bottom rounds
+  doc.fontSize(5.5).font('Helvetica-Bold').fillColor('#FFF8E0')
+     .text('VERIFY', QR_X, QR_Y + 5, { width: QR_BOX_W, align: 'center', characterSpacing: 1.5 });
+
+  doc.image(qrBuf, QR_X + QR_PAD + 3, QR_Y + 18, { width: QR_SIZE, height: QR_SIZE });
+
+  doc.fontSize(6).font('Helvetica').fillColor(P.inkMuted)
+     .text('Scan to verify', QR_X, QR_Y + 20 + QR_SIZE + 4, { width: QR_BOX_W, align: 'center' });
+  doc.fontSize(5.5).font('Helvetica').fillColor(P.goldDark)
+     .text('authenticity', QR_X, QR_Y + 30 + QR_SIZE + 4, { width: QR_BOX_W, align: 'center' });
+
+  // ── 16. Footer ────────────────────────────────────────────────────────────
+  drawFooter(doc, {
+    dividerColor: P.goldLight,
+    issuerColor:  P.goldDark,
+    metaColor:    P.inkMuted,
+    trustLine:    'Digitally Verifiable Credential  ·  Scan QR to Validate Authenticity',
+  });
+}
+
+// ─── Generic / Event Certificate ─────────────────────────────────────────────
+
+async function buildGenericCertificate(doc, {
+  W, H, CX, qrBuf, studentName, eventTitle, role, certificateId, issueDate,
+}) {
+  // Background
+  doc.rect(0, 0, W, H).fill('#F8FAFC');
+
+  // Header band (blue gradient)
+  const headerGrad = hGrad(doc, [[0, P.blueDark], [0.5, P.blueMid], [1, P.blueDark]]);
+  doc.rect(0, 0, W, 130).fill(headerGrad);
+
+  // Shimmer line in header
+  doc.moveTo(0, 2).lineTo(W, 2).lineWidth(1).strokeColor('#93C5FD').stroke();
+
+  // Brand name
+  doc.fontSize(30).font('Helvetica-Bold').fillColor('#FFFFFF')
+     .text('SkillValix', 50, 44, { lineBreak: false });
+
+  // Tagline
+  doc.fontSize(11).font('Helvetica').fillColor(P.blueLight)
+     .text('Verified Certificate of Completion', 50, 84, { lineBreak: false });
+
+  // Outer border
+  doc.rect(18, 18, W - 36, H - 36).lineWidth(1).strokeColor('#CBD5E1').stroke();
+
+  // Grain
+  drawGrainOverlay(doc);
+
+  let curY = 160;
+
+  // Certificate title
+  doc.fontSize(13).font('Helvetica-Bold').fillColor('#0F172A')
+     .text('CERTIFICATE OF COMPLETION', 0, curY,
+           { width: W, align: 'center', characterSpacing: 3.5 });
+  curY += 30;
+
+  // Divider
+  const blueDivGrad = doc.linearGradient(CX - 120, 0, CX + 120, 0);
+  blueDivGrad.stop(0, 'transparent').stop(0.3, P.blueMid).stop(0.7, P.blueMid).stop(1, 'transparent');
+  doc.moveTo(CX - 120, curY).lineTo(CX + 120, curY).lineWidth(1.2).strokeColor(P.blueMid).stroke();
+  curY += 14;
+
+  // Intro
+  doc.fontSize(11).font('Helvetica').fillColor('#64748B')
+     .text('This is proudly presented to', 0, curY, { width: W, align: 'center' });
+  curY += 18;
+
+  // Name
+  const nameMaxW = W - 200;
+  const rawName  = String(studentName || 'Learner').toUpperCase();
+  const nameSize = fitFontSize(doc, rawName, {
+    font: 'Helvetica-Bold', maxPt: 44, minPt: 20, maxWidth: nameMaxW,
+  });
+  doc.font('Helvetica-Bold').fontSize(nameSize).fillColor('#0F172A')
+     .text(rawName, 0, curY, { width: W, align: 'center', lineBreak: false });
+
+  const underY = curY + nameSize + 6;
+  doc.moveTo(CX - 180, underY).lineTo(CX + 180, underY)
+     .lineWidth(1.4).strokeColor(P.blueMid).stroke();
+  curY = underY + 14;
+
+  // Body
+  doc.fontSize(11).font('Helvetica').fillColor('#64748B')
+     .text('for successfully completing the event', 0, curY, { width: W, align: 'center' });
+  curY += 18;
+
+  doc.fontSize(22).font('Helvetica-Bold').fillColor(P.blueMid)
+     .text(String(eventTitle || ''), 60, curY, { width: W - 120, align: 'center' });
+  const evH = doc.heightOfString(String(eventTitle || ''), { width: W - 120, align: 'center' });
+  curY += evH + 14;
+
+  doc.fontSize(9).font('Helvetica').fillColor('#64748B')
+     .text('This certificate is a verifiable record of practical performance, consistency, and applied outcomes.', 0, curY, { width: W, align: 'center' });
+  curY += 22;
+
+  // Info cards
+  const CARD_W   = 200;
+  const CARD_H   = 68;
+  const CARD_GAP = 20;
+  const totalW   = CARD_W * 3 + CARD_GAP * 2;
+  const startX   = (W - totalW) / 2;
+  const cardsY   = H - CARD_H - 60;
+
+  [
+    { label: 'Certificate ID', value: certificateId },
+    { label: 'Issued On',      value: issueDate      },
+    { label: 'Role',           value: role || 'Participant' },
+  ].forEach((card, i) => {
+    drawInfoCard(doc, {
+      x: startX + i * (CARD_W + CARD_GAP),
+      y: cardsY,
+      w: CARD_W,
+      h: CARD_H,
+      label: card.label,
+      value: card.value,
+    });
+  });
+
+  // QR panel
+  const QR_SIZE   = 96;
+  const QR_PAD    = 10;
+  const QR_BOX_W  = QR_SIZE + QR_PAD * 2 + 4;
+  const QR_BOX_H  = QR_SIZE + QR_PAD * 2 + 30;
+  const QR_X      = W - QR_BOX_W - 54;
+  const QR_Y      = 150;
+
+  doc.roundedRect(QR_X, QR_Y, QR_BOX_W, QR_BOX_H, 12).fill('#FFFFFF');
+  doc.roundedRect(QR_X, QR_Y, QR_BOX_W, QR_BOX_H, 12)
+     .lineWidth(1).strokeColor('#E2E8F0').stroke();
+  doc.image(qrBuf, QR_X + QR_PAD, QR_Y + QR_PAD, { width: QR_SIZE, height: QR_SIZE });
+  doc.fontSize(7.2).font('Helvetica-Bold').fillColor('#94A3B8')
+     .text('SCAN TO VERIFY', QR_X, QR_Y + QR_PAD * 2 + QR_SIZE + 6,
+           { width: QR_BOX_W, align: 'center' });
+
+  // Footer
+  drawFooter(doc, {
+    dividerColor: '#CBD5E1',
+    issuerColor:  P.blueDark,
+    metaColor:    '#64748B',
+    trustLine:    'Verified Credential Platform  ·  Industry-Relevant Certification',
+  });
+}
   });
 }
 
