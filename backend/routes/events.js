@@ -15,6 +15,7 @@ import { authOptions, adminCheck } from '../middleware/auth.js';
 
 const router = express.Router();
 const FRONTEND_URL = () => (process.env.FRONTEND_URL || 'https://www.skillvalix.com').replace(/\/$/, '');
+const EVENT_CERT_TEMPLATE_VERSION = 2;
 
 function normalizeEmailList(emailList = []) {
   const normalized = emailList
@@ -943,7 +944,8 @@ router.post('/certificates/generate', authOptions, async (req, res) => {
       eventTitle: verifiedTitle, 
       role: verifiedRole, 
       certificateId: certId, 
-      paymentId: razorpay_payment_id 
+      paymentId: razorpay_payment_id,
+      pdfTemplateVersion: EVENT_CERT_TEMPLATE_VERSION,
     });
     await cert.save();
 
@@ -957,7 +959,14 @@ router.post('/certificates/generate', authOptions, async (req, res) => {
         certificateId: cert.certificateId, issueDate, eventType: cert.eventType, verifyUrl,
       });
       await EventCertificate.updateOne({ _id: cert._id }, {
-        $set: { pdfStatus: 'ready', pdfBuffer, pdfSizeBytes: pdfBuffer.length, pdfGeneratedAt: new Date(), pdfError: '' }
+        $set: {
+          pdfStatus: 'ready',
+          pdfBuffer,
+          pdfSizeBytes: pdfBuffer.length,
+          pdfGeneratedAt: new Date(),
+          pdfTemplateVersion: EVENT_CERT_TEMPLATE_VERSION,
+          pdfError: '',
+        }
       });
     } catch (pdfErr) {
       console.error('[Events] PDF build error:', pdfErr.message);
@@ -977,11 +986,13 @@ router.get('/certificates/download/:certId', async (req, res) => {
       .populate('student', 'name').select('+pdfBuffer').lean();
     if (!cert) return res.status(404).json({ message: 'Certificate not found.' });
 
-    if (cert.pdfStatus === 'ready') {
+    const hasLatestTemplate = Number(cert.pdfTemplateVersion || 0) >= EVENT_CERT_TEMPLATE_VERSION;
+
+    if (cert.pdfStatus === 'ready' && hasLatestTemplate) {
       const rawBuf = cert.pdfBuffer?.buffer || cert.pdfBuffer;
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `inline; filename=EventCertificate-${cert.certificateId}.pdf`);
-      res.setHeader('Cache-Control', 'public, max-age=86400');
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
       return res.send(rawBuf);
     }
 
@@ -993,11 +1004,18 @@ router.get('/certificates/download/:certId', async (req, res) => {
       certificateId: cert.certificateId, issueDate, eventType: cert.eventType, verifyUrl,
     });
     await EventCertificate.updateOne({ _id: cert._id }, {
-      $set: { pdfStatus: 'ready', pdfBuffer, pdfSizeBytes: pdfBuffer.length, pdfGeneratedAt: new Date(), pdfError: '' }
+      $set: {
+        pdfStatus: 'ready',
+        pdfBuffer,
+        pdfSizeBytes: pdfBuffer.length,
+        pdfGeneratedAt: new Date(),
+        pdfTemplateVersion: EVENT_CERT_TEMPLATE_VERSION,
+        pdfError: '',
+      }
     });
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `inline; filename=EventCertificate-${cert.certificateId}.pdf`);
-    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
     return res.send(pdfBuffer);
   } catch (err) {
     console.error('[Events] Download cert error:', err);

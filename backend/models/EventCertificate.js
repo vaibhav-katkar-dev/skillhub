@@ -12,6 +12,7 @@ const eventCertificateSchema = new mongoose.Schema({
   pdfMimeType:     { type: String, default: 'application/pdf' },
   pdfSizeBytes:    { type: Number, default: 0 },
   pdfStatus:       { type: String, enum: ['pending','generating','ready','failed'], default: 'pending' },
+  pdfTemplateVersion: { type: Number, default: 1 },
   pdfGeneratedAt:  { type: Date },
   pdfError:        { type: String, default: '' },
 }, { timestamps: true });
