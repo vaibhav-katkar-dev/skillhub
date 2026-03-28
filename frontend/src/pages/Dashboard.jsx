@@ -143,8 +143,10 @@ const AvailableCard = ({ course }) => (
 const CertCard = ({ cert, onDownload, copyMsg, onCopy, prepState }) => {
   const handleFeedPost = async (e) => {
     e.preventDefault();
-    const certUrl = `${window.location.origin}/verify/${cert.certificateId}`;
-    const courseTitle = cert.course?.title || 'Web Development';
+    const certUrl = cert.isEvent 
+      ? `${window.location.origin}/verify-event/${cert.certificateId}`
+      : `${window.location.origin}/verify/${cert.certificateId}`;
+    const courseTitle = cert.course?.title || 'Certification';
     
     // Best approach for mobile: Native web share API
     // Opens native iOS/Android share sheet which properly hooks into installed social apps like LinkedIn
@@ -215,7 +217,7 @@ const CertCard = ({ cert, onDownload, copyMsg, onCopy, prepState }) => {
             </button>
 
             <button
-              onClick={() => onCopy(cert.certificateId)}
+              onClick={() => onCopy(cert)}
               title="Copy verification link"
               className={`flex-shrink-0 px-4 border rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold transition-all duration-300 ${
                 copyMsg === cert.certificateId
@@ -234,7 +236,7 @@ const CertCard = ({ cert, onDownload, copyMsg, onCopy, prepState }) => {
           {/* Row 2: LinkedIn Actions */}
           <div className="flex gap-2">
             <a
-              href={`https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&name=${encodeURIComponent(cert.course?.title || 'Certification')}&organizationName=SkillValix&certId=${cert.certificateId}&certUrl=${encodeURIComponent(`${window.location.origin}/verify/${cert.certificateId}`)}`}
+              href={`https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&name=${encodeURIComponent(cert.course?.title || 'Certification')}&organizationName=SkillValix&certId=${cert.certificateId}&certUrl=${encodeURIComponent(cert.isEvent ? `${window.location.origin}/verify-event/${cert.certificateId}` : `${window.location.origin}/verify/${cert.certificateId}`)}`}
               target="_blank" rel="noopener noreferrer"
               title="Add certification to your LinkedIn Profile"
               className="flex-1 bg-white border border-[#0A66C2]/30 hover:bg-[#0A66C2]/5 text-[#0A66C2] text-xs font-bold py-2.5 px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-[.98]"
@@ -415,15 +417,16 @@ const Dashboard = () => {
   }, [certs]);
 
   // Silently fetch PDF bytes & trigger browser save/open — no tab switch
-  const triggerBlobDownload = async (certId) => {
-    const res = await api.get(`/certificates/download/${certId}`, {
+  const triggerBlobDownload = async (cert) => {
+    const endpoint = cert.isEvent ? `/events/certificates/download/${cert.certificateId}` : `/certificates/download/${cert.certificateId}`;
+    const res = await api.get(endpoint, {
       responseType: 'blob',
     });
     const blob = new Blob([res.data], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Certificate-${certId}.pdf`;
+    a.download = `${cert.isEvent ? 'EventBase' : 'Certificate'}-${cert.certificateId}.pdf`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -434,6 +437,18 @@ const Dashboard = () => {
     const certId = cert?.certificateId;
     if (!certId) return;
 
+    if (cert.isEvent) {
+      setPrepStates(prev => ({ ...prev, [certId]: { busy: true, seconds: 0, message: 'Downloading...' } }));
+      try {
+        await triggerBlobDownload(cert);
+      } catch (e) {
+        setPrepStates(prev => ({ ...prev, [certId]: { busy: false, seconds: 0, message: 'Failed to download.' } }));
+      } finally {
+        setPrepStates(prev => { const next = { ...prev }; delete next[certId]; return next; });
+      }
+      return;
+    }
+
     try {
       const statusRes = await api.get(`/certificates/status/${certId}`);
       if (statusRes.data?.pdfReady) {
@@ -443,7 +458,7 @@ const Dashboard = () => {
           delete next[certId];
           return next;
         });
-        await triggerBlobDownload(certId);
+        await triggerBlobDownload(cert);
         return;
       }
     } catch (err) {
@@ -461,7 +476,7 @@ const Dashboard = () => {
           delete next[certId];
           return next;
         });
-        await triggerBlobDownload(certId);
+        await triggerBlobDownload(cert);
         return;
       }
 
@@ -489,9 +504,11 @@ const Dashboard = () => {
     }
   };
 
-  const copy = id => {
-    navigator.clipboard.writeText(`${window.location.origin}/verify/${id}`);
-    setCopyMsg(id);
+  const copy = (cert) => {
+    const isEvent = cert.isEvent;
+    const url = isEvent ? `${window.location.origin}/verify-event/${cert.certificateId}` : `${window.location.origin}/verify/${cert.certificateId}`;
+    navigator.clipboard.writeText(url);
+    setCopyMsg(cert.certificateId);
     setTimeout(() => setCopyMsg(''), 2000);
   };
 

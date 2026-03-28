@@ -3,6 +3,7 @@ import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
 import User from '../models/User.js';
 import Certificate from '../models/Certificate.js';
+import EventCertificate from '../models/EventCertificate.js';
 import { v4 as uuidv4 } from 'uuid';
 import { authOptions } from '../middleware/auth.js';
 import { getCourseFromJSON, getAllCoursesFromJSON } from '../utils/courseData.js';
@@ -621,8 +622,25 @@ router.get('/mine', authOptions, async (req, res) => {
       }
     });
 
+    const stdUniqueCerts = Array.from(uniqueMap.values());
+
+    const eventCerts = await EventCertificate.find({ student: req.user.id })
+      .select('student eventType eventTitle role certificateId issueDate createdAt')
+      .sort({ issueDate: -1 })
+      .lean();
+
+    const formattedEventCerts = eventCerts.map(cert => ({
+      ...cert,
+      isEvent: true,
+      course: { title: cert.eventTitle },
+      pdfReady: true,
+      pdfStatus: 'ready'
+    }));
+
+    const allCerts = [...stdUniqueCerts, ...formattedEventCerts].sort((a,b) => new Date(b.issueDate) - new Date(a.issueDate));
+
     res.setHeader('Cache-Control', 'no-store');
-    res.json(Array.from(uniqueMap.values()));
+    res.json(allCerts);
   } catch (err) {
     console.error('[Certificates] Error fetching user certs:', err);
     res.status(500).json({ message: 'Server Error' });

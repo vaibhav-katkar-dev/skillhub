@@ -218,7 +218,7 @@ export default function PublicProfile() {
                     <span className="text-xs font-semibold text-slate-400">
                       {cert.issueDate ? new Date(cert.issueDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '—'}
                     </span>
-                    <Link to={`/verify/${cert.certificateId}`} className="text-xs font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-0.5 group/btn">
+                    <Link to={cert.isEvent ? `/verify-event/${cert.certificateId}` : `/verify/${cert.certificateId}`} className="text-xs font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-0.5 group/btn">
                       Verify <ChevronRight className="w-3.5 h-3.5 group-hover/btn:translate-x-0.5 transition-transform" />
                     </Link>
                   </div>

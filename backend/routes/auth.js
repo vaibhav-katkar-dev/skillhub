@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import Certificate from '../models/Certificate.js';
+import EventCertificate from '../models/EventCertificate.js';
 import { authOptions } from '../middleware/auth.js';
 import { OAuth2Client } from 'google-auth-library';
 import nodemailer from 'nodemailer';
@@ -238,7 +239,16 @@ router.get('/public/:id', async (req, res) => {
     
     // Courses are in JSON, we can't populate them in MongoDB. Return raw certs.
     // Make sure we select the necessary fields
-    const certs = await Certificate.find({ student: user._id });
+    const stdCerts = await Certificate.find({ student: user._id }).lean();
+    const eventCertsRaw = await EventCertificate.find({ student: user._id }).lean();
+    
+    const eventCerts = eventCertsRaw.map(c => ({
+      ...c,
+      isEvent: true,
+      course: { title: c.eventTitle }
+    }));
+    
+    const allCerts = [...stdCerts, ...eventCerts].sort((a,b) => new Date(b.issueDate) - new Date(a.issueDate));
     
     res.json({
       name: user.name,
@@ -249,7 +259,7 @@ router.get('/public/:id', async (req, res) => {
       portfolio: user.portfolio,
       username: user.username,
       openToWork: user.openToWork,
-      certificates: certs
+      certificates: allCerts
     });
   } catch (err) {
     console.error('Public Profile Error:', err);
