@@ -77,10 +77,16 @@ export default function JobSimulation() {
         })
         .catch(err => console.error(err));
         
-      try {
-        const saved = localStorage.getItem(`skx_sim_tasks_${user?._id || user?.id}_${sim.id}`);
-        if(saved) setTaskStatus(JSON.parse(saved));
-      } catch(e) {}
+      // Fetch DB progress instead of just relying on local storage
+      apiClient.get(`/events/simulations/progress/${sim.id}`)
+        .then(res => {
+          const completedMap = {};
+          res.data.completedTasks?.forEach(num => {
+            completedMap[num] = 'completed';
+          });
+          setTaskStatus(p => ({ ...p, ...completedMap }));
+        })
+        .catch(err => console.error('[Progress] Fetch failed:', err));
     }
   }, [isAuthenticated, sim, user]);
 
@@ -115,15 +121,14 @@ export default function JobSimulation() {
     setTaskErrors(p => ({ ...p, [taskNum]: '' }));
     
     try {
-      await apiClient.post('/events/simulations/validate-task', { url, taskType });
-      
-      setTaskStatus(p => {
-        const next = { ...p, [taskNum]: 'completed' };
-        try {
-          localStorage.setItem(`skx_sim_tasks_${user?._id || user?.id}_${sim.id}`, JSON.stringify(next));
-        } catch(e) {}
-        return next;
+      await apiClient.post('/events/simulations/validate-task', { 
+        url, 
+        taskType,
+        simId: sim.id,
+        taskNum
       });
+      
+      setTaskStatus(p => ({ ...p, [taskNum]: 'completed' }));
     } catch (error) {
       setTaskStatus(p => ({ ...p, [taskNum]: 'pending' }));
       setTaskErrors(p => ({ ...p, [taskNum]: error.response?.data?.message || 'Validation failed. Ensure your URL is valid and public.' }));
@@ -161,6 +166,8 @@ export default function JobSimulation() {
     try {
       const orderRes = await apiClient.post('/events/certificates/razorpay-order', {
         eventTitle: sim.title,
+        eventType: 'job-simulation',
+        role: sim.role,
       });
       const order = orderRes.data;
 

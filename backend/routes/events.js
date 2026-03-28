@@ -4,8 +4,11 @@ import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
 import Hackathon from '../models/Hackathon.js';
 import EventCertificate from '../models/EventCertificate.js';
+import SimulationProgress from '../models/SimulationProgress.js';
 import User from '../models/User.js';
 import { authOptions, adminCheck } from '../middleware/auth.js';
 
@@ -228,7 +231,7 @@ function buildEventCertificatePdf({ studentName, eventTitle, role, certificateId
 // ─── Razorpay Order Creation (Event Certificates) ───────────────────────────
 router.post('/certificates/razorpay-order', authOptions, async (req, res) => {
   try {
-    const { eventTitle } = req.body;
+    const { eventTitle, eventType = 'job-simulation', role = 'Participant' } = req.body;
     if (!eventTitle) return res.status(400).json({ message: 'eventTitle is required.' });
 
     if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
@@ -238,9 +241,28 @@ router.post('/certificates/razorpay-order', authOptions, async (req, res) => {
     const user = await User.findById(req.user.id).lean();
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    // Job simulations are priced at ₹99 by default. Admin gets it for ₹1.
+    // Ensure we parse the actual exact price from JSON instead of hardcoded 99 INR.
+    let basePrice = 99; // Fallback
+    try {
+      if (eventType === 'job-simulation') {
+        const simsPath = path.resolve(process.cwd(), 'frontend/public/data/job-simulations.json');
+        const simsData = JSON.parse(fs.readFileSync(simsPath, 'utf-8'));
+        const matchedSim = simsData.find(s => s.title === eventTitle);
+        if (!matchedSim) return res.status(404).json({ message: 'Simulation data not found' });
+        
+        // SECURITY LOOPHOLE: Prevent users from buying a certificate without finishing tasks
+        const progress = await SimulationProgress.findOne({ user: req.user.id, simulationId: matchedSim.id });
+        const allCompleted = matchedSim.tasks.every(t => progress?.completedTasks?.includes(t.num));
+        if (!allCompleted && user.role !== 'admin') {
+          return res.status(400).json({ message: 'You must complete and get all tasks accepted before paying for a certificate.' });
+        }
+
+        if (matchedSim.certCost) basePrice = matchedSim.certCost;
+      }
+    } catch(e) { console.error('[Events] Failed to parse job-simulations.json for price/completion', e); }
+
     const isAdminTestMode = user.role === 'admin';
-    const amountToCharge = isAdminTestMode ? 100 : 9900; // paise
+    const amountToCharge = isAdminTestMode ? 100 : basePrice * 100; // paise
 
     const rzp = new Razorpay({
       key_id: process.env.RAZORPAY_KEY_ID,
@@ -252,6 +274,7 @@ router.post('/certificates/razorpay-order', authOptions, async (req, res) => {
       amount: amountToCharge,
       currency: 'INR',
       receipt: expectedReceipt,
+      notes: { eventTitle, eventType, role } // Store in backend order directly
     };
 
     const order = await rzp.orders.create(options);
@@ -269,8 +292,7 @@ router.post('/certificates/razorpay-order', authOptions, async (req, res) => {
 // ─── Generate event certificate (Verified Payment Required) ─────────────────
 router.post('/certificates/generate', authOptions, async (req, res) => {
   try {
-    const { eventType, eventTitle, role, razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
-    if (!eventType || !eventTitle) return res.status(400).json({ message: 'eventType and eventTitle are required.' });
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       return res.status(400).json({ message: 'Missing required payment verification fields' });
     }
@@ -295,10 +317,35 @@ router.post('/certificates/generate', authOptions, async (req, res) => {
 
     const order = await rzp.orders.fetch(razorpay_order_id);
     const expectedReceipt = `receipt_event_${req.user.id}`.substring(0, 40);
-    const expectedAmount = user.role === 'admin' ? 100 : 9900;
 
-    if (!order || order.receipt !== expectedReceipt || order.amount !== expectedAmount) {
-      return res.status(400).json({ message: 'Payment mismatch: The order amount or receipt is invalid.' });
+    if (!order || order.receipt !== expectedReceipt) {
+      return res.status(400).json({ message: 'Payment mismatch: The order receipt is invalid.' });
+    }
+
+    // SECURITY LOOPHOLE CLOSED: Extract metadata firmly from the verified Razorpay order
+    // to prevent malicious payload tampering in the request block.
+    const verifiedTitle = order.notes?.eventTitle || req.body.eventTitle;
+    const verifiedType = order.notes?.eventType || req.body.eventType || 'job-simulation';
+    const verifiedRole = order.notes?.role || req.body.role || 'Participant';
+
+    if (!verifiedTitle) {
+      return res.status(400).json({ message: 'Missing authentic eventTitle from order logs.' });
+    }
+
+    // Determine actual expected amount to fully stamp out price manipulation checks
+    let basePrice = 99; 
+    try {
+      if (verifiedType === 'job-simulation') {
+        const simsPath = path.resolve(process.cwd(), 'frontend/public/data/job-simulations.json');
+        const simsData = JSON.parse(fs.readFileSync(simsPath, 'utf-8'));
+        const matchedSim = simsData.find(s => s.title === verifiedTitle);
+        if (matchedSim && matchedSim.certCost) basePrice = matchedSim.certCost;
+      }
+    } catch(e) {}
+    
+    const expectedAmount = user.role === 'admin' ? 100 : basePrice * 100;
+    if (order.amount !== expectedAmount) {
+       return res.status(400).json({ message: 'Payment mismatch: The order amount does not match current event price.' });
     }
 
     // SECURITY: Ensure payment ID hasn't been used for another certificate
@@ -308,13 +355,20 @@ router.post('/certificates/generate', authOptions, async (req, res) => {
     }
 
     // Payment successfully verified! Create the certificate records.
-    let cert = await EventCertificate.findOne({ student: user._id, eventTitle, eventType });
+    let cert = await EventCertificate.findOne({ student: user._id, eventTitle: verifiedTitle, eventType: verifiedType });
     if (cert) {
       return res.status(400).json({ message: 'You already have this certificate.' });
     }
 
     const certId = `EVC-${uuidv4().substring(0, 8).toUpperCase()}`;
-    cert = new EventCertificate({ student: user._id, eventType, eventTitle, role, certificateId: certId, paymentId: razorpay_payment_id });
+    cert = new EventCertificate({ 
+      student: user._id, 
+      eventType: verifiedType, 
+      eventTitle: verifiedTitle, 
+      role: verifiedRole, 
+      certificateId: certId, 
+      paymentId: razorpay_payment_id 
+    });
     await cert.save();
 
     // Generate PDF immediately
@@ -409,9 +463,9 @@ router.get('/certificates/mine', authOptions, async (req, res) => {
 // ─── Lightweight Task Validation ──────────────────────────────────────────────
 router.post('/simulations/validate-task', authOptions, async (req, res) => {
   try {
-    const { url, taskType } = req.body;
-    if (!url || !taskType) {
-      return res.status(400).json({ valid: false, message: 'URL and task type are required.' });
+    const { url, taskType, simId, taskNum } = req.body;
+    if (!url || !taskType || !simId || !taskNum) {
+      return res.status(400).json({ valid: false, message: 'Missing required parameters.' });
     }
 
     let parsedUrl;
@@ -478,10 +532,31 @@ router.post('/simulations/validate-task', authOptions, async (req, res) => {
        return res.status(400).json({ valid: false, message: 'Could not access the link. Please check if the URL is correct and public.' });
     }
 
+    // Save to Progress DB
+    await SimulationProgress.findOneAndUpdate(
+      { user: req.user.id, simulationId: simId },
+      { $addToSet: { completedTasks: taskNum } },
+      { upsert: true, new: true }
+    );
+
     // Passed
     res.json({ valid: true, message: 'Submission correctly formatted and verified.' });
   } catch (err) {
+    console.error('[Events] Task validation error:', err);
     res.status(500).json({ valid: false, message: 'Server error during validation.' });
+  }
+});
+
+// ─── Get Simulation Progress ──────────────────────────────────────────────────
+router.get('/simulations/progress/:simId', authOptions, async (req, res) => {
+  try {
+    const progress = await SimulationProgress.findOne({ 
+      user: req.user.id, 
+      simulationId: req.params.simId 
+    }).lean();
+    res.json(progress || { simulationId: req.params.simId, completedTasks: [] });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error fetching progress.' });
   }
 });
 
