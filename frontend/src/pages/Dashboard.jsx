@@ -648,14 +648,14 @@ const Dashboard = () => {
                 countCls="bg-emerald-100 text-emerald-700"
               />
               {loading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,320px))] justify-center gap-4">
                   <Sk cls="h-36" /><Sk cls="h-36" />
                 </div>
               ) : completed.length === 0 ? (
                 <Empty icon={Sparkles} title="No completed courses yet"
                   sub="Pass a quiz to earn your first certificate!" />
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,320px))] justify-center gap-4">
                   {completed.map(c => (
                     <CompletedCard key={c._id} course={c} cert={certMap[c._id.toString()]} onDownload={dl} />
                   ))}
@@ -672,13 +672,13 @@ const Dashboard = () => {
                 countCls="bg-indigo-100 text-indigo-700"
               />
               {loading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,320px))] justify-center gap-4">
                   <Sk cls="h-24" /><Sk cls="h-24" /><Sk cls="h-24" />
                 </div>
               ) : available.length === 0 ? (
                 <Empty icon={Trophy} title="🎉 All courses completed!" sub="You're a SkillValix champion." />
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,320px))] justify-center gap-4">
                   {available.map(c => <AvailableCard key={c._id} course={c} />)}
                 </div>
               )}

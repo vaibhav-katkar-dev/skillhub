@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import axios from 'axios';
 import {
   ArrowRight,
   CheckCircle2,
@@ -11,10 +10,7 @@ import {
   Star,
   Trophy,
 } from 'lucide-react';
-
-const API = import.meta.env.VITE_API_URL || '/api';
-
-
+import { api } from '../store/authStore';
 
 const STATUS_STYLE = {
   upcoming: { bg: 'bg-amber-100', text: 'text-amber-700', label: 'Upcoming', icon: Clock3 },
@@ -27,11 +23,17 @@ export default function Events() {
   const [loadingHacks, setLoadingHacks] = useState(true);
 
   useEffect(() => {
-    axios
-      .get(`${API}/events/hackathons`)
-      .then((r) => setHackathons(r.data))
-      .catch(() => setHackathons([]))
-      .finally(() => setLoadingHacks(false));
+    (async () => {
+      setLoadingHacks(true);
+      try {
+        const r = await api.get('/events/hackathons');
+        setHackathons(r.data || []);
+      } catch {
+        setHackathons([]);
+      } finally {
+        setLoadingHacks(false);
+      }
+    })();
   }, []);
 
   return (
@@ -40,7 +42,7 @@ export default function Events() {
         <title>Events - SkillValix</title>
         <meta
           name="description"
-          content="Join job simulations, hackathons and virtual internships on SkillValix. Get industry-recognized certificates for INR 99."
+          content="Explore SkillValix hackathons, open detailed event pages, register teams, and submit solutions from one in-platform workflow."
         />
       </Helmet>
 
@@ -60,16 +62,14 @@ export default function Events() {
             Experience Real Work.
             <br />
             <span className="bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
-              Earn Proof of It.
+              Build. Submit. Get Recognized.
             </span>
           </h1>
           <p className="text-lg text-slate-300 max-w-2xl mx-auto">
-            Job simulations, hackathons and virtual internships designed to give you hands-on experience that employers actually value.
+            Open each hackathon for full details, team registration, secure payment, and submission workflow.
           </p>
         </div>
       </section>
-
-
 
       <section className="py-20 px-6 bg-white">
         <div className="max-w-7xl mx-auto">
@@ -79,14 +79,14 @@ export default function Events() {
               <h2 className="text-3xl font-black text-slate-900">Hackathons</h2>
             </div>
             <p className="text-slate-500 max-w-xl ml-12">
-              Compete. Build. Win. Hackathons curated by the SkillValix team and open to all students.
+              Click any hackathon card to view complete details and register your team on a dedicated page.
             </p>
           </div>
 
           {loadingHacks ? (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3].map((item) => (
-                <div key={item} className="rounded-2xl border border-slate-100 bg-slate-50 h-64 animate-pulse" />
+                <div key={item} className="rounded-2xl border border-slate-100 bg-slate-50 h-72 animate-pulse" />
               ))}
             </div>
           ) : hackathons.length === 0 ? (
@@ -104,7 +104,7 @@ export default function Events() {
                 return (
                   <div
                     key={hack._id}
-                    className="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col"
+                    className="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col"
                   >
                     {hack.image ? (
                       <img src={hack.image} alt={hack.title} className="w-full h-40 object-cover" />
@@ -142,30 +142,15 @@ export default function Events() {
                         </div>
                       )}
 
-                      {hack.prizes?.length > 0 && (
-                        <div className="flex gap-2 mb-4">
-                          {hack.prizes.slice(0, 3).map((prize, index) => (
-                            <div key={index} className="flex-1 text-center bg-amber-50 border border-amber-100 rounded-lg py-1.5">
-                              <div className="text-xs font-bold text-amber-700">{prize.rank}</div>
-                              <div className="text-sm font-black text-amber-900">{prize.amount}</div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {hack.registrationLink && hack.status !== 'ended' && (
-                        <a
-                          href={hack.registrationLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block text-center py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-bold hover:opacity-90 transition-opacity"
-                        >
-                          <span className="inline-flex items-center gap-2">
-                            {hack.status === 'live' ? 'Join Now' : 'Register Free'}
-                            <ArrowRight className="w-4 h-4" aria-hidden="true" />
-                          </span>
-                        </a>
-                      )}
+                      <Link
+                        to={`/events/hackathon/${hack._id}`}
+                        className="block text-center py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-bold hover:opacity-90 transition-opacity"
+                      >
+                        <span className="inline-flex items-center gap-2">
+                          View Details & Register
+                          <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                        </span>
+                      </Link>
                     </div>
                   </div>
                 );
@@ -180,7 +165,7 @@ export default function Events() {
           <h2 className="text-3xl font-black mb-3">Ready to prove your skills?</h2>
           <p className="text-indigo-200 mb-8">Complete a job simulation, earn your certificate, and stand out to recruiters.</p>
           <Link
-            to="/events/job-simulation/frontend-developer"
+            to="/job-simulation/frontend-developer"
             className="inline-block px-8 py-3 rounded-xl bg-white text-indigo-700 font-bold text-sm hover:bg-indigo-50 transition-colors shadow-lg"
           >
             <span className="inline-flex items-center gap-2">

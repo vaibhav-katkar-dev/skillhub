@@ -41,9 +41,36 @@ const AdminPanel = () => {
   // Hackathon manager state
   const [hacks, setHacks] = useState([]);
   const [hacksLoading, setHacksLoading] = useState(false);
-  const [hackForm, setHackForm] = useState({ title: '', tagline: '', description: '', theme: '', status: 'upcoming', registrationLink: '', image: '', tags: '', visible: false, featured: false });
+  const [hackForm, setHackForm] = useState({
+    title: '',
+    tagline: '',
+    description: '',
+    theme: '',
+    status: 'upcoming',
+    image: '',
+    tags: '',
+    visible: false,
+    featured: false,
+    teamMin: 1,
+    teamMax: 4,
+    paymentEnabled: false,
+    paymentAmountInr: 0,
+    paymentDescription: 'Hackathon registration fee',
+    acceptsDriveLink: true,
+    acceptsPdfLink: true,
+    submissionInstructions: '',
+    maxSubmissionsPerTeam: 3,
+    rules: '',
+    judgingCriteria: '',
+    prizes: '',
+    faqs: '',
+    accentColor: '#4F46E5',
+  });
+  const [editingHackId, setEditingHackId] = useState('');
   const [hackSaving, setHackSaving] = useState(false);
   const [hackMsg, setHackMsg] = useState('');
+  const [registrationsByHack, setRegistrationsByHack] = useState({});
+  const [loadingRegistrationsFor, setLoadingRegistrationsFor] = useState('');
 
   useEffect(() => {
     getCourseList().then(setCourses).catch(console.error);
@@ -53,6 +80,47 @@ const AdminPanel = () => {
     setHacksLoading(true);
     try { const r = await api.get('/events/admin/hackathons'); setHacks(r.data); } catch { setHacks([]); }
     finally { setHacksLoading(false); }
+  };
+
+  const loadRegistrations = async (hackId) => {
+    setLoadingRegistrationsFor(hackId);
+    try {
+      const r = await api.get(`/events/admin/hackathons/${hackId}/registrations`);
+      setRegistrationsByHack((prev) => ({ ...prev, [hackId]: r.data || [] }));
+    } catch {
+      setRegistrationsByHack((prev) => ({ ...prev, [hackId]: [] }));
+    } finally {
+      setLoadingRegistrationsFor('');
+    }
+  };
+
+  const resetHackForm = () => {
+    setHackForm({
+      title: '',
+      tagline: '',
+      description: '',
+      theme: '',
+      status: 'upcoming',
+      image: '',
+      tags: '',
+      visible: false,
+      featured: false,
+      teamMin: 1,
+      teamMax: 4,
+      paymentEnabled: false,
+      paymentAmountInr: 0,
+      paymentDescription: 'Hackathon registration fee',
+      acceptsDriveLink: true,
+      acceptsPdfLink: true,
+      submissionInstructions: '',
+      maxSubmissionsPerTeam: 3,
+      rules: '',
+      judgingCriteria: '',
+      prizes: '',
+      faqs: '',
+      accentColor: '#4F46E5',
+    });
+    setEditingHackId('');
   };
 
   useEffect(() => { if (tab === 'hackathons') loadHacks(); }, [tab]);
@@ -776,88 +844,312 @@ const AdminPanel = () => {
         )}
         {tab === 'hackathons' && (
           <div className="space-y-6">
-            {/* Create hackathon form */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-              <h2 className="text-lg font-bold text-slate-900 mb-5 flex items-center gap-2"><Award className="w-5 h-5 text-amber-500" /> Post a Hackathon</h2>
+              <h2 className="text-lg font-bold text-slate-900 mb-5 flex items-center gap-2"><Award className="w-5 h-5 text-amber-500" /> {editingHackId ? 'Edit Hackathon' : 'Post a Hackathon'} (Full Dynamic Control)</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {[['title','Title *'],['tagline','Tagline'],['theme','Theme (e.g. AI/ML)'],['registrationLink','Registration Link'],['image','Banner Image URL'],['tags','Tags (comma-separated)']].map(([key, label]) => (
+                {[['title', 'Title *'], ['tagline', 'Tagline'], ['theme', 'Theme'], ['image', 'Banner Image URL'], ['tags', 'Tags (comma-separated)'], ['accentColor', 'Accent Color (hex)']].map(([key, label]) => (
                   <div key={key}>
                     <label className="block text-xs font-semibold text-slate-500 mb-1">{label}</label>
-                    <input value={hackForm[key]} onChange={e => setHackForm(p => ({ ...p, [key]: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+                    <input value={hackForm[key]} onChange={e => setHackForm(p => ({ ...p, [key]: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" />
                   </div>
                 ))}
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-semibold text-slate-500 mb-1">Description *</label>
-                  <textarea value={hackForm.description} onChange={e => setHackForm(p => ({ ...p, description: e.target.value }))} rows={3} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
-                </div>
+
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 mb-1">Status</label>
-                  <select value={hackForm.status} onChange={e => setHackForm(p => ({ ...p, status: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none">
+                  <select value={hackForm.status} onChange={e => setHackForm(p => ({ ...p, status: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
                     <option value="upcoming">Upcoming</option>
                     <option value="live">Live</option>
                     <option value="ended">Ended</option>
                   </select>
                 </div>
-                <div className="flex items-center gap-6 mt-4">
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 mb-1">Team Min</label>
+                    <input type="number" min="1" value={hackForm.teamMin} onChange={e => setHackForm(p => ({ ...p, teamMin: Number(e.target.value || 1) }))} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 mb-1">Team Max</label>
+                    <input type="number" min="1" value={hackForm.teamMax} onChange={e => setHackForm(p => ({ ...p, teamMax: Number(e.target.value || 1) }))} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" />
+                  </div>
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">Description *</label>
+                  <textarea value={hackForm.description} onChange={e => setHackForm(p => ({ ...p, description: e.target.value }))} rows={3} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" />
+                </div>
+
+                <div className="sm:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50">
+                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
+                    <input type="checkbox" checked={hackForm.paymentEnabled} onChange={e => setHackForm(p => ({ ...p, paymentEnabled: e.target.checked }))} className="rounded" />
+                    Enable Payment
+                  </label>
+                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
+                    <input type="checkbox" checked={hackForm.acceptsDriveLink} onChange={e => setHackForm(p => ({ ...p, acceptsDriveLink: e.target.checked }))} className="rounded" />
+                    Accept Google Drive links
+                  </label>
+                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
+                    <input type="checkbox" checked={hackForm.acceptsPdfLink} onChange={e => setHackForm(p => ({ ...p, acceptsPdfLink: e.target.checked }))} className="rounded" />
+                    Accept direct PDF links
+                  </label>
                   <label className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
                     <input type="checkbox" checked={hackForm.visible} onChange={e => setHackForm(p => ({ ...p, visible: e.target.checked }))} className="rounded" />
                     Visible to public
                   </label>
-                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
+                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer md:col-span-2">
                     <input type="checkbox" checked={hackForm.featured} onChange={e => setHackForm(p => ({ ...p, featured: e.target.checked }))} className="rounded" />
-                    Featured
+                    Featured card
                   </label>
                 </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">Payment Amount (INR)</label>
+                  <input type="number" min="0" value={hackForm.paymentAmountInr} onChange={e => setHackForm(p => ({ ...p, paymentAmountInr: Number(e.target.value || 0) }))} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">Max Submissions / Team</label>
+                  <input type="number" min="1" value={hackForm.maxSubmissionsPerTeam} onChange={e => setHackForm(p => ({ ...p, maxSubmissionsPerTeam: Number(e.target.value || 1) }))} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">Payment Description</label>
+                  <input value={hackForm.paymentDescription} onChange={e => setHackForm(p => ({ ...p, paymentDescription: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">Submission Instructions</label>
+                  <textarea value={hackForm.submissionInstructions} onChange={e => setHackForm(p => ({ ...p, submissionInstructions: e.target.value }))} rows={2} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">Rules (one per line)</label>
+                  <textarea value={hackForm.rules} onChange={e => setHackForm(p => ({ ...p, rules: e.target.value }))} rows={3} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">Judging Criteria (one per line)</label>
+                  <textarea value={hackForm.judgingCriteria} onChange={e => setHackForm(p => ({ ...p, judgingCriteria: e.target.value }))} rows={3} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">Prizes (one per line in format: Rank | Amount)</label>
+                  <textarea value={hackForm.prizes} onChange={e => setHackForm(p => ({ ...p, prizes: e.target.value }))} rows={3} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" placeholder="1st | INR 50,000\n2nd | INR 25,000" />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">FAQs (one per line in format: Question | Answer)</label>
+                  <textarea value={hackForm.faqs} onChange={e => setHackForm(p => ({ ...p, faqs: e.target.value }))} rows={4} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" placeholder="Who can join? | Any registered student\nCan solo join? | Yes, if team min is 1" />
+                </div>
               </div>
+
               {hackMsg && <div className={`mt-4 p-3 rounded-xl text-sm font-medium ${hackMsg.startsWith('✅') ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>{hackMsg}</div>}
+
               <button
                 onClick={async () => {
-                  if (!hackForm.title || !hackForm.description) { setHackMsg('❌ Title and description are required.'); return; }
-                  setHackSaving(true); setHackMsg('');
+                  if (!hackForm.title || !hackForm.description) {
+                    setHackMsg('❌ Title and description are required.');
+                    return;
+                  }
+                  if (hackForm.teamMin > hackForm.teamMax) {
+                    setHackMsg('❌ Team min cannot be greater than team max.');
+                    return;
+                  }
+
+                  setHackSaving(true);
+                  setHackMsg('');
                   try {
-                    const payload = { ...hackForm, tags: hackForm.tags.split(',').map(t => t.trim()).filter(Boolean) };
-                    await api.post('/events/hackathons', payload);
-                    setHackMsg('✅ Hackathon posted successfully!');
-                    setHackForm({ title: '', tagline: '', description: '', theme: '', status: 'upcoming', registrationLink: '', image: '', tags: '', visible: false, featured: false });
+                    const prizes = hackForm.prizes
+                      .split('\n')
+                      .map((line) => line.trim())
+                      .filter(Boolean)
+                      .map((line) => {
+                        const [rank, amount] = line.split('|').map((part) => (part || '').trim());
+                        return { rank: rank || 'Prize', amount: amount || '' };
+                      })
+                      .filter((item) => item.amount);
+
+                    const faqs = hackForm.faqs
+                      .split('\n')
+                      .map((line) => line.trim())
+                      .filter(Boolean)
+                      .map((line) => {
+                        const [question, answer] = line.split('|').map((part) => (part || '').trim());
+                        return { question, answer };
+                      })
+                      .filter((item) => item.question && item.answer);
+
+                    const payload = {
+                      title: hackForm.title,
+                      tagline: hackForm.tagline,
+                      description: hackForm.description,
+                      theme: hackForm.theme,
+                      status: hackForm.status,
+                      image: hackForm.image,
+                      tags: hackForm.tags.split(',').map(t => t.trim()).filter(Boolean),
+                      visible: hackForm.visible,
+                      featured: hackForm.featured,
+                      prizes,
+                      teamConfig: {
+                        minMembers: Number(hackForm.teamMin),
+                        maxMembers: Number(hackForm.teamMax),
+                        requireExistingUsers: true,
+                      },
+                      paymentConfig: {
+                        enabled: Boolean(hackForm.paymentEnabled),
+                        amountInr: Number(hackForm.paymentAmountInr || 0),
+                        description: hackForm.paymentDescription,
+                      },
+                      submissionConfig: {
+                        acceptsDriveLink: Boolean(hackForm.acceptsDriveLink),
+                        acceptsPdfLink: Boolean(hackForm.acceptsPdfLink),
+                        instructions: hackForm.submissionInstructions,
+                        maxSubmissionsPerTeam: Number(hackForm.maxSubmissionsPerTeam || 3),
+                      },
+                      contentConfig: {
+                        rules: hackForm.rules.split('\n').map(x => x.trim()).filter(Boolean),
+                        judgingCriteria: hackForm.judgingCriteria.split('\n').map(x => x.trim()).filter(Boolean),
+                        faqs,
+                      },
+                      styleConfig: {
+                        accentColor: hackForm.accentColor || '#4F46E5',
+                        cardStyle: 'modern',
+                        bannerStyle: 'gradient',
+                      },
+                    };
+
+                    if (editingHackId) {
+                      await api.put(`/events/hackathons/${editingHackId}`, payload);
+                      setHackMsg('✅ Hackathon updated successfully!');
+                    } else {
+                      await api.post('/events/hackathons', payload);
+                      setHackMsg('✅ Hackathon posted successfully!');
+                    }
+                    resetHackForm();
                     loadHacks();
-                  } catch (e) { setHackMsg('❌ ' + (e.response?.data?.message || 'Failed to save.')); }
-                  finally { setHackSaving(false); }
+                  } catch (e) {
+                    setHackMsg('❌ ' + (e.response?.data?.message || 'Failed to save.'));
+                  } finally {
+                    setHackSaving(false);
+                  }
                 }}
                 disabled={hackSaving}
                 className="mt-5 px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-sm hover:opacity-90 transition disabled:opacity-60"
               >
-                {hackSaving ? 'Saving…' : '🚀 Post Hackathon'}
+                {hackSaving ? 'Saving…' : editingHackId ? '💾 Update Hackathon' : '🚀 Post Hackathon'}
               </button>
+              {editingHackId && (
+                <button
+                  onClick={() => { resetHackForm(); setHackMsg(''); }}
+                  className="mt-3 ml-3 px-6 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold text-sm hover:bg-slate-200 transition"
+                >
+                  Cancel Edit
+                </button>
+              )}
             </div>
 
-            {/* Existing hackathons list */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-              <h2 className="text-lg font-bold text-slate-900 mb-5">All Hackathons</h2>
+              <h2 className="text-lg font-bold text-slate-900 mb-5">All Hackathons + Team Registrations</h2>
               {hacksLoading ? (
-                <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-20 rounded-xl bg-slate-100 animate-pulse" />)}</div>
+                <div className="space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-20 rounded-xl bg-slate-100 animate-pulse" />)}</div>
               ) : hacks.length === 0 ? (
                 <p className="text-slate-400 text-sm">No hackathons created yet.</p>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {hacks.map(h => (
-                    <div key={h._id} className="rounded-xl border border-slate-200 p-4 flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-bold text-slate-900">{h.title}</span>
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${h.status === 'live' ? 'bg-emerald-100 text-emerald-700' : h.status === 'ended' ? 'bg-slate-100 text-slate-500' : 'bg-amber-100 text-amber-700'}`}>{h.status}</span>
-                          {h.visible ? <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Visible</span> : <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-400">Hidden</span>}
-                          {h.featured && <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">⭐ Featured</span>}
+                    <div key={h._id} className="rounded-xl border border-slate-200 p-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-bold text-slate-900">{h.title}</span>
+                            <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${h.status === 'live' ? 'bg-emerald-100 text-emerald-700' : h.status === 'ended' ? 'bg-slate-100 text-slate-500' : 'bg-amber-100 text-amber-700'}`}>{h.status}</span>
+                            {h.visible ? <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Visible</span> : <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-400">Hidden</span>}
+                            {h.featured && <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Featured</span>}
+                          </div>
+                          <p className="text-sm text-slate-500 mt-1">{h.description}</p>
+                          <p className="text-xs text-slate-400 mt-2">
+                            Team: {h.teamConfig?.minMembers || 1}-{h.teamConfig?.maxMembers || 4} | Payment: {h.paymentConfig?.enabled ? `INR ${h.paymentConfig?.amountInr || 0}` : 'Free'}
+                          </p>
                         </div>
-                        <p className="text-sm text-slate-500 mt-1 truncate">{h.description}</p>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button
+                            onClick={() => {
+                              setEditingHackId(h._id);
+                              setHackForm({
+                                title: h.title || '',
+                                tagline: h.tagline || '',
+                                description: h.description || '',
+                                theme: h.theme || '',
+                                status: h.status || 'upcoming',
+                                image: h.image || '',
+                                tags: (h.tags || []).join(', '),
+                                visible: Boolean(h.visible),
+                                featured: Boolean(h.featured),
+                                teamMin: Number(h.teamConfig?.minMembers || 1),
+                                teamMax: Number(h.teamConfig?.maxMembers || 4),
+                                paymentEnabled: Boolean(h.paymentConfig?.enabled),
+                                paymentAmountInr: Number(h.paymentConfig?.amountInr || 0),
+                                paymentDescription: h.paymentConfig?.description || 'Hackathon registration fee',
+                                acceptsDriveLink: Boolean(h.submissionConfig?.acceptsDriveLink),
+                                acceptsPdfLink: Boolean(h.submissionConfig?.acceptsPdfLink),
+                                submissionInstructions: h.submissionConfig?.instructions || '',
+                                maxSubmissionsPerTeam: Number(h.submissionConfig?.maxSubmissionsPerTeam || 3),
+                                rules: (h.contentConfig?.rules || []).join('\n'),
+                                judgingCriteria: (h.contentConfig?.judgingCriteria || []).join('\n'),
+                                prizes: (h.prizes || []).map((p) => `${p.rank || 'Prize'} | ${p.amount || ''}`).join('\n'),
+                                faqs: (h.contentConfig?.faqs || []).map((f) => `${f.question || ''} | ${f.answer || ''}`).join('\n'),
+                                accentColor: h.styleConfig?.accentColor || '#4F46E5',
+                              });
+                              setHackMsg('📝 Edit mode enabled. Update fields and click "Update Hackathon".');
+                              window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
+                            className="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-100 text-amber-700 hover:bg-amber-200 transition"
+                          >
+                            Edit
+                          </button>
+                          <button onClick={async () => { await api.put(`/events/hackathons/${h._id}`, { visible: !h.visible }); loadHacks(); }} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${h.visible ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}>
+                            {h.visible ? 'Hide' : 'Show'}
+                          </button>
+                          <button onClick={() => loadRegistrations(h._id)} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition">
+                            Teams
+                          </button>
+                          <button onClick={async () => { if (!confirm('Delete this hackathon?')) return; await api.delete(`/events/hackathons/${h._id}`); loadHacks(); }} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-red-600 hover:bg-red-100 transition">
+                            Delete
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <button onClick={async () => { await api.put(`/events/hackathons/${h._id}`, { visible: !h.visible }); loadHacks(); }} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${h.visible ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}>
-                          {h.visible ? 'Hide' : 'Show'}
-                        </button>
-                        <button onClick={async () => { if (!confirm('Delete this hackathon?')) return; await api.delete(`/events/hackathons/${h._id}`); loadHacks(); }} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-red-600 hover:bg-red-100 transition">
-                          Delete
-                        </button>
-                      </div>
+
+                      {loadingRegistrationsFor === h._id && <div className="mt-3 text-xs text-slate-500">Loading team registrations...</div>}
+
+                      {Array.isArray(registrationsByHack[h._id]) && registrationsByHack[h._id].length > 0 && (
+                        <div className="mt-4 space-y-2">
+                          {registrationsByHack[h._id].map(reg => (
+                            <div key={reg._id} className="rounded-lg border border-slate-200 p-3 bg-slate-50">
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="min-w-0">
+                                  <p className="text-sm font-bold text-slate-900">{reg.teamName}</p>
+                                  <p className="text-xs text-slate-500">Leader: {reg.leader?.name} ({reg.leader?.email})</p>
+                                  <p className="text-xs text-slate-500">Members: {(reg.members || []).map(m => m.email).join(', ')}</p>
+                                  <p className="text-xs text-slate-500">Payment: {reg.payment?.status || 'not_required'} | Submissions: {reg.submissions?.length || 0}</p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <select
+                                    value={reg.status}
+                                    onChange={async (e) => {
+                                      await api.put(`/events/admin/hackathons/${h._id}/registrations/${reg._id}`, {
+                                        status: e.target.value,
+                                        adminRemarks: reg.adminRemarks || '',
+                                      });
+                                      loadRegistrations(h._id);
+                                    }}
+                                    className="px-2 py-1 rounded border border-slate-200 text-xs"
+                                  >
+                                    {['registered', 'payment_pending', 'submitted', 'under_review', 'approved', 'rejected'].map(s => <option key={s} value={s}>{s}</option>)}
+                                  </select>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {Array.isArray(registrationsByHack[h._id]) && registrationsByHack[h._id].length === 0 && loadingRegistrationsFor !== h._id && (
+                        <div className="mt-3 text-xs text-slate-500">No team registrations yet.</div>
+                      )}
                     </div>
                   ))}
                 </div>

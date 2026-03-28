@@ -7,6 +7,7 @@ import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import Hackathon from '../models/Hackathon.js';
+import HackathonRegistration from '../models/HackathonRegistration.js';
 import EventCertificate from '../models/EventCertificate.js';
 import SimulationProgress from '../models/SimulationProgress.js';
 import User from '../models/User.js';
@@ -14,6 +15,35 @@ import { authOptions, adminCheck } from '../middleware/auth.js';
 
 const router = express.Router();
 const FRONTEND_URL = () => (process.env.FRONTEND_URL || 'https://www.skillvalix.com').replace(/\/$/, '');
+
+function normalizeEmailList(emailList = []) {
+  const normalized = emailList
+    .map((value) => String(value || '').trim().toLowerCase())
+    .filter(Boolean);
+  return Array.from(new Set(normalized));
+}
+
+function isHttpUrl(value) {
+  try {
+    const parsed = new URL(String(value || ''));
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+function isDriveLink(url) {
+  try {
+    const parsed = new URL(url);
+    return parsed.hostname.includes('drive.google.com');
+  } catch {
+    return false;
+  }
+}
+
+function isPdfLink(url) {
+  return /\.pdf(\?|#|$)/i.test(url);
+}
 
 // ─── PUBLIC: List visible hackathons ────────────────────────────────────────
 router.get('/hackathons', async (req, res) => {
@@ -83,7 +113,395 @@ router.get('/admin/hackathons', authOptions, adminCheck, async (req, res) => {
   }
 });
 
-// ─── PDF Builder: Event Certificate (different design) ───────────────────────
+// ─── USER: List my hackathon registrations ─────────────────────────────────
+router.get('/hackathons/my-registrations', authOptions, async (req, res) => {
+  try {
+    const registrations = await HackathonRegistration.find({
+      'members.user': req.user.id,
+    })
+      .populate('hackathon', 'title status visible paymentConfig submissionConfig')
+      .populate('members.user', 'name email')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const visibleOrMine = registrations.filter((reg) => reg.hackathon);
+    res.json(visibleOrMine);
+  } catch (err) {
+    console.error('[Events] My registrations error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ─── USER: Register team to a hackathon (members must be existing users) ───
+router.post('/hackathons/:id/register', authOptions, async (req, res) => {
+  try {
+    const { teamName, memberEmails = [] } = req.body;
+    if (!teamName || String(teamName).trim().length < 3) {
+      return res.status(400).json({ message: 'Team name must be at least 3 characters.' });
+    }
+
+    const hackathon = await Hackathon.findById(req.params.id).lean();
+    if (!hackathon || !hackathon.visible) {
+      return res.status(404).json({ message: 'Hackathon not found.' });
+    }
+    if (hackathon.status === 'ended') {
+      return res.status(400).json({ message: 'Registrations are closed for this hackathon.' });
+    }
+
+    const leader = await User.findById(req.user.id).select('_id name email').lean();
+    if (!leader?.email) return res.status(404).json({ message: 'User not found.' });
+
+    const uniqueEmails = normalizeEmailList([leader.email, ...memberEmails]);
+    const minMembers = Math.max(1, Number(hackathon?.teamConfig?.minMembers || 1));
+    const maxMembers = Math.max(minMembers, Number(hackathon?.teamConfig?.maxMembers || 4));
+
+    if (uniqueEmails.length < minMembers || uniqueEmails.length > maxMembers) {
+      return res.status(400).json({
+        message: `Team size must be between ${minMembers} and ${maxMembers} members.`,
+      });
+    }
+
+    const users = await User.find({ email: { $in: uniqueEmails } }).select('_id name email').lean();
+    const foundEmails = new Set(users.map((u) => String(u.email).trim().toLowerCase()));
+    const missing = uniqueEmails.filter((email) => !foundEmails.has(email));
+    if (missing.length > 0) {
+      return res.status(400).json({
+        message: 'All team members must already be registered users.',
+        missingEmails: missing,
+      });
+    }
+
+    const memberIds = users.map((u) => u._id);
+
+    const alreadyInAnotherTeam = await HackathonRegistration.findOne({
+      hackathon: hackathon._id,
+      'members.user': { $in: memberIds },
+      leader: { $ne: leader._id },
+    }).lean();
+
+    if (alreadyInAnotherTeam) {
+      return res.status(400).json({ message: 'One or more members are already part of another team in this hackathon.' });
+    }
+
+    const existingLeaderTeam = await HackathonRegistration.findOne({
+      hackathon: hackathon._id,
+      leader: leader._id,
+    });
+    if (existingLeaderTeam) {
+      return res.status(400).json({ message: 'You have already registered a team for this hackathon.' });
+    }
+
+    const paymentEnabled = Boolean(hackathon?.paymentConfig?.enabled && Number(hackathon?.paymentConfig?.amountInr || 0) > 0);
+    const paymentAmountInr = paymentEnabled ? Number(hackathon.paymentConfig.amountInr) : 0;
+
+    const registration = new HackathonRegistration({
+      hackathon: hackathon._id,
+      teamName: String(teamName).trim(),
+      leader: leader._id,
+      members: users.map((u) => ({
+        user: u._id,
+        name: u.name,
+        email: String(u.email).trim().toLowerCase(),
+      })),
+      status: paymentEnabled ? 'payment_pending' : 'registered',
+      payment: {
+        required: paymentEnabled,
+        amountInr: paymentAmountInr,
+        status: paymentEnabled ? 'pending' : 'not_required',
+      },
+    });
+    await registration.save();
+
+    const populated = await HackathonRegistration.findById(registration._id)
+      .populate('members.user', 'name email')
+      .lean();
+
+    res.status(201).json({
+      message: paymentEnabled
+        ? 'Team registered. Complete payment to unlock submissions.'
+        : 'Team registered successfully.',
+      registration: populated,
+    });
+  } catch (err) {
+    console.error('[Events] Hackathon registration error:', err);
+    if (err?.code === 11000) {
+      return res.status(400).json({ message: 'Team name already exists for this hackathon.' });
+    }
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ─── USER: Create payment order for hackathon registration ──────────────────
+router.post('/hackathons/:id/razorpay-order', authOptions, async (req, res) => {
+  try {
+    const { registrationId } = req.body;
+    if (!registrationId) return res.status(400).json({ message: 'registrationId is required.' });
+
+    const registration = await HackathonRegistration.findOne({
+      _id: registrationId,
+      hackathon: req.params.id,
+      leader: req.user.id,
+    })
+      .populate('hackathon', 'title paymentConfig')
+      .lean();
+
+    if (!registration || !registration.hackathon) {
+      return res.status(404).json({ message: 'Registration not found.' });
+    }
+    if (!registration.payment?.required) {
+      return res.status(400).json({ message: 'Payment is not required for this hackathon.' });
+    }
+    if (registration.payment?.status === 'paid') {
+      return res.status(400).json({ message: 'Registration is already paid.' });
+    }
+
+    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+      return res.status(500).json({ message: 'Razorpay keys not configured' });
+    }
+
+    const amountInr = Number(registration.payment.amountInr || registration.hackathon.paymentConfig?.amountInr || 0);
+    if (amountInr <= 0) {
+      return res.status(400).json({ message: 'Invalid registration amount.' });
+    }
+
+    const rzp = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    });
+
+    const receipt = `hack_${registration._id}`.substring(0, 40);
+    const order = await rzp.orders.create({
+      amount: amountInr * 100,
+      currency: 'INR',
+      receipt,
+      notes: {
+        hackathonId: String(req.params.id),
+        registrationId: String(registration._id),
+        leaderId: String(req.user.id),
+        teamName: registration.teamName,
+      },
+    });
+
+    await HackathonRegistration.updateOne(
+      { _id: registration._id },
+      {
+        $set: {
+          'payment.razorpayOrderId': order.id,
+          status: 'payment_pending',
+          'payment.status': 'pending',
+        },
+      }
+    );
+
+    res.json({
+      ...order,
+      displayAmountRupees: amountInr,
+      title: registration.hackathon.title,
+      description: registration.hackathon.paymentConfig?.description || 'Hackathon registration fee',
+    });
+  } catch (err) {
+    console.error('[Events] Hackathon order error:', err);
+    res.status(500).json({ message: 'Error creating payment order.' });
+  }
+});
+
+// ─── USER: Verify payment for hackathon registration ────────────────────────
+router.post('/hackathons/:id/payment/verify', authOptions, async (req, res) => {
+  try {
+    const {
+      registrationId,
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+    } = req.body;
+
+    if (!registrationId || !razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({ message: 'Missing payment verification fields.' });
+    }
+
+    const body = `${razorpay_order_id}|${razorpay_payment_id}`;
+    const expectedSignature = crypto
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .update(body)
+      .digest('hex');
+
+    if (expectedSignature !== razorpay_signature) {
+      return res.status(400).json({ message: 'Invalid payment signature.' });
+    }
+
+    const registration = await HackathonRegistration.findOne({
+      _id: registrationId,
+      hackathon: req.params.id,
+      leader: req.user.id,
+    }).lean();
+
+    if (!registration) return res.status(404).json({ message: 'Registration not found.' });
+    if (!registration.payment?.required) return res.status(400).json({ message: 'Payment not required for this registration.' });
+    if (registration.payment?.status === 'paid') return res.status(400).json({ message: 'Payment already verified.' });
+
+    const paymentUsed = await HackathonRegistration.findOne({ 'payment.razorpayPaymentId': razorpay_payment_id }).lean();
+    if (paymentUsed) {
+      return res.status(400).json({ message: 'This payment has already been used.' });
+    }
+
+    await HackathonRegistration.updateOne(
+      { _id: registration._id },
+      {
+        $set: {
+          status: 'registered',
+          'payment.status': 'paid',
+          'payment.razorpayOrderId': razorpay_order_id,
+          'payment.razorpayPaymentId': razorpay_payment_id,
+          'payment.paidAt': new Date(),
+        },
+      }
+    );
+
+    res.json({ message: 'Payment verified. You can now submit your solution.' });
+  } catch (err) {
+    console.error('[Events] Hackathon payment verify error:', err);
+    res.status(500).json({ message: 'Server error verifying payment.' });
+  }
+});
+
+// ─── USER: Submit hackathon solution ────────────────────────────────────────
+router.post('/hackathons/:id/submit', authOptions, async (req, res) => {
+  try {
+    const { registrationId, submissionLink, note = '' } = req.body;
+    if (!registrationId || !submissionLink) {
+      return res.status(400).json({ message: 'registrationId and submissionLink are required.' });
+    }
+
+    if (!isHttpUrl(submissionLink)) {
+      return res.status(400).json({ message: 'Submission link must be a valid public URL.' });
+    }
+
+    const registration = await HackathonRegistration.findOne({
+      _id: registrationId,
+      hackathon: req.params.id,
+      'members.user': req.user.id,
+    })
+      .populate('hackathon', 'submissionConfig paymentConfig')
+      .lean();
+
+    if (!registration || !registration.hackathon) {
+      return res.status(404).json({ message: 'Team registration not found.' });
+    }
+
+    if (registration.payment?.required && registration.payment?.status !== 'paid') {
+      return res.status(400).json({ message: 'Please complete payment before submission.' });
+    }
+
+    const maxSubmissions = Number(registration.hackathon.submissionConfig?.maxSubmissionsPerTeam || 3);
+    if ((registration.submissions || []).length >= maxSubmissions) {
+      return res.status(400).json({ message: `Submission limit reached (${maxSubmissions}).` });
+    }
+
+    const acceptsDriveLink = Boolean(registration.hackathon.submissionConfig?.acceptsDriveLink);
+    const acceptsPdfLink = Boolean(registration.hackathon.submissionConfig?.acceptsPdfLink);
+    const isDrive = isDriveLink(submissionLink);
+    const isPdf = isPdfLink(submissionLink);
+
+    const allowedByType = (acceptsDriveLink && isDrive) || (acceptsPdfLink && isPdf) || (acceptsDriveLink && acceptsPdfLink);
+    if (!allowedByType) {
+      return res.status(400).json({
+        message: 'Invalid submission link type for this hackathon. Check admin submission instructions.',
+      });
+    }
+
+    await HackathonRegistration.updateOne(
+      { _id: registrationId },
+      {
+        $set: {
+          status: 'submitted',
+          latestSubmissionAt: new Date(),
+        },
+        $push: {
+          submissions: {
+            link: String(submissionLink).trim(),
+            note: String(note || '').trim(),
+            submittedBy: req.user.id,
+            submittedAt: new Date(),
+          },
+        },
+      }
+    );
+
+    const updated = await HackathonRegistration.findById(registrationId)
+      .populate('members.user', 'name email')
+      .lean();
+
+    res.json({ message: 'Submission received successfully.', registration: updated });
+  } catch (err) {
+    console.error('[Events] Hackathon submit error:', err);
+    res.status(500).json({ message: 'Server error while submitting.' });
+  }
+});
+
+// ─── USER: Get my team for a specific hackathon ─────────────────────────────
+router.get('/hackathons/:id/my-team', authOptions, async (req, res) => {
+  try {
+    const registration = await HackathonRegistration.findOne({
+      hackathon: req.params.id,
+      'members.user': req.user.id,
+    })
+      .populate('hackathon', 'title paymentConfig submissionConfig')
+      .populate('members.user', 'name email')
+      .lean();
+
+    if (!registration) return res.status(404).json({ message: 'No team registration found.' });
+    res.json(registration);
+  } catch (err) {
+    console.error('[Events] My team fetch error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ─── ADMIN: List registrations of a hackathon ───────────────────────────────
+router.get('/admin/hackathons/:id/registrations', authOptions, adminCheck, async (req, res) => {
+  try {
+    const list = await HackathonRegistration.find({ hackathon: req.params.id })
+      .populate('leader', 'name email')
+      .populate('members.user', 'name email')
+      .sort({ createdAt: -1 })
+      .lean();
+    res.json(list);
+  } catch (err) {
+    console.error('[Events] Admin registrations list error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ─── ADMIN: Update registration status / remarks ─────────────────────────────
+router.put('/admin/hackathons/:id/registrations/:registrationId', authOptions, adminCheck, async (req, res) => {
+  try {
+    const { status, adminRemarks = '' } = req.body;
+    const allowedStatus = ['registered', 'payment_pending', 'submitted', 'under_review', 'approved', 'rejected'];
+    if (status && !allowedStatus.includes(status)) {
+      return res.status(400).json({ message: 'Invalid status value.' });
+    }
+
+    const updates = { adminRemarks: String(adminRemarks || '').trim() };
+    if (status) updates.status = status;
+
+    const updated = await HackathonRegistration.findOneAndUpdate(
+      { _id: req.params.registrationId, hackathon: req.params.id },
+      { $set: updates },
+      { new: true }
+    )
+      .populate('leader', 'name email')
+      .populate('members.user', 'name email')
+      .lean();
+
+    if (!updated) return res.status(404).json({ message: 'Registration not found.' });
+    res.json(updated);
+  } catch (err) {
+    console.error('[Events] Admin registration update error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ─── PDF Builder: Event Certificate (job simulation has premium achievement look) ─────
 function buildEventCertificatePdf({ studentName, eventTitle, role, certificateId, issueDate, eventType, verifyUrl }) {
   return new Promise(async (resolve, reject) => {
     const doc = new PDFDocument({ layout: 'landscape', size: 'A4', margin: 0 });
@@ -98,87 +516,174 @@ function buildEventCertificatePdf({ studentName, eventTitle, role, certificateId
         color: { dark: '#0F172A', light: '#FFFFFF' },
       });
 
-      const W = doc.page.width, H = doc.page.height;
+      const W = doc.page.width;
+      const H = doc.page.height;
       const CX = W / 2;
+      const isJobSimulation = String(eventType || '').toLowerCase() === 'job-simulation';
 
-      // ── Colors & Branding ──────────────────────────────────────────────
-      const PRIMARY = '#4F46E5'; 
-      const BG_LIGHT = '#F8FAFC';
-      const TEXT_DARK = '#0F172A';
-      const TEXT_MUTED = '#64748B';
-      const ACCENT_BLUE = '#3B82F6';
+      if (isJobSimulation) {
+        const INK = '#111827';
+        const INK_MUTED = '#4B5563';
+        const GOLD_DARK = '#7C5A06';
+        const GOLD = '#D4A327';
+        const GOLD_LIGHT = '#F3D37A';
+        const BG = '#FBF7EE';
+        const PANEL = '#FFFDF7';
 
-      // ── 1. Background & Header ──────────────────────────────────────────
-      doc.rect(0, 0, W, H).fill(BG_LIGHT);
+        doc.rect(0, 0, W, H).fill(BG);
 
-      // Top Gradient Header
-      const headerGrad = doc.linearGradient(0, 0, W, 0);
-      headerGrad.stop(0, '#4338CA'); 
-      headerGrad.stop(1, '#6D28D9');
-      doc.rect(0, 0, W, 140).fill(headerGrad);
+        const glow = doc.radialGradient(CX, H / 2, 40, CX, H / 2, 430);
+        glow.stop(0, '#FFFFFF');
+        glow.stop(1, BG);
+        doc.rect(0, 0, W, H).fill(glow);
 
-      doc.fontSize(32).font('Helvetica-Bold').fillColor('#FFFFFF').text('SkillValix', 48, 48, { lineBreak: false });
-      doc.fontSize(12).font('Helvetica').fillColor('#E2E8F0').text('Verified Certificate of Completion', 48, 88, { lineBreak: false });
+        doc.rect(16, 16, W - 32, H - 32).lineWidth(2).strokeColor(GOLD).stroke();
+        doc.rect(28, 28, W - 56, H - 56).lineWidth(0.8).strokeColor('#E4C98B').stroke();
 
-      // ── 2. Border & Frame ───────────────────────────────────────────────
-      doc.rect(20, 20, W - 40, H - 40).lineWidth(1).strokeColor('#E2E8F0').stroke();
+        const bandGrad = doc.linearGradient(0, 0, W, 0);
+        bandGrad.stop(0, GOLD_DARK);
+        bandGrad.stop(0.5, GOLD);
+        bandGrad.stop(1, GOLD_DARK);
+        doc.rect(28, 28, W - 56, 44).fill(bandGrad);
+        doc.fontSize(11).font('Helvetica-Bold').fillColor('#FFF8E6')
+          .text('SKILLVALIX PROFESSIONAL ACHIEVEMENT', 0, 43, { width: W, align: 'center', characterSpacing: 2.3 });
 
-      // ── 3. Main Certificate Text ────────────────────────────────────────
-      doc.fontSize(14).font('Helvetica-Bold').fillColor(TEXT_DARK)
-        .text('CERTIFICATE OF COMPLETION', 0, 185, { width: W, align: 'center', characterSpacing: 4 });
+        // Accent laurels (simple vector motif)
+        const laurelY = 128;
+        for (let i = 0; i < 6; i += 1) {
+          const dx = i * 12;
+          doc.ellipse(CX - 190 - dx, laurelY + (i % 2 ? 8 : 0), 7, 3).fill('#D7B35D');
+          doc.ellipse(CX + 190 + dx, laurelY + (i % 2 ? 8 : 0), 7, 3).fill('#D7B35D');
+        }
 
-      doc.fontSize(12).font('Helvetica').fillColor(TEXT_MUTED)
-        .text('This is proudly presented to', 0, 240, { width: W, align: 'center' });
+        doc.fontSize(14).font('Helvetica-Bold').fillColor(GOLD_DARK)
+          .text('CERTIFICATE OF ACHIEVEMENT', 0, 112, { width: W, align: 'center', characterSpacing: 3.5 });
 
-      // Student Name
-      let nameSize = 44;
-      const upperName = String(studentName || 'Learner').toUpperCase();
-      doc.font('Helvetica-Bold');
-      while (nameSize > 20 && doc.fontSize(nameSize).widthOfString(upperName) > 520) nameSize -= 2;
-      doc.fontSize(nameSize).fillColor(TEXT_DARK).text(upperName, 0, 275, { width: W, align: 'center' });
+        doc.fontSize(12).font('Helvetica').fillColor(INK_MUTED)
+          .text('This certifies that', 0, 158, { width: W, align: 'center' });
 
-      // Divider Line
-      doc.moveTo(CX - 160, 275 + nameSize + 12).lineTo(CX + 160, 275 + nameSize + 12).lineWidth(1.5).strokeColor(ACCENT_BLUE).stroke();
+        const learnerName = String(studentName || 'Learner').toUpperCase();
+        let nameSize = 43;
+        doc.font('Helvetica-Bold');
+        while (nameSize > 21 && doc.fontSize(nameSize).widthOfString(learnerName) > W - 220) nameSize -= 1;
+        doc.fontSize(nameSize).fillColor(INK).text(learnerName, 0, 182, { width: W, align: 'center' });
 
-      // Course Info
-      doc.fontSize(12).font('Helvetica').fillColor(TEXT_MUTED)
-        .text('for successfully completing the job simulation', 0, 370, { width: W, align: 'center' });
+        const underlineY = 182 + nameSize + 12;
+        doc.moveTo(CX - 205, underlineY).lineTo(CX + 205, underlineY).lineWidth(1.5).strokeColor('#CCAA52').stroke();
 
-      doc.fontSize(22).font('Helvetica-Bold').fillColor(ACCENT_BLUE)
-        .text(eventTitle, 60, 405, { width: W - 120, align: 'center' });
+        doc.fontSize(12).font('Helvetica').fillColor(INK_MUTED)
+          .text('has successfully completed the professional job simulation', 0, underlineY + 22, { width: W, align: 'center' });
 
-      doc.fontSize(9.5).font('Helvetica').fillColor(TEXT_MUTED)
-        .text('This certificate is issued as a verifiable record of professional skill demonstration on SkillValix.', 0, 465, { width: W, align: 'center' });
+        const eventPanelX = 120;
+        const eventPanelW = W - 240;
+        const eventPanelY = underlineY + 52;
+        doc.roundedRect(eventPanelX, eventPanelY, eventPanelW, 64, 10).fill(PANEL);
+        doc.roundedRect(eventPanelX, eventPanelY, eventPanelW, 64, 10).lineWidth(1).strokeColor('#EAD6A8').stroke();
+        doc.fontSize(23).font('Helvetica-Bold').fillColor('#1F2937')
+          .text(eventTitle, eventPanelX + 22, eventPanelY + 19, { width: eventPanelW - 44, align: 'center' });
 
-      // ── 4. QR Code Container (Right) ────────────────────────────────────
-      const QR_SIZE = 100;
-      const QR_X = W - QR_SIZE - 76;
-      const QR_Y = 230;
+        doc.fontSize(10).font('Helvetica').fillColor(INK_MUTED)
+          .text('in recognition of practical performance, consistency, and role readiness.', 0, eventPanelY + 76, { width: W, align: 'center' });
 
-      doc.roundedRect(QR_X - 12, QR_Y - 12, QR_SIZE + 24, QR_SIZE + 50, 12).fill('#FFFFFF');
-      doc.roundedRect(QR_X - 12, QR_Y - 12, QR_SIZE + 24, QR_SIZE + 50, 12).lineWidth(1).strokeColor('#F1F5F9').stroke();
-      doc.image(qrBuffer, QR_X, QR_Y, { width: QR_SIZE, height: QR_SIZE });
-      doc.fontSize(8).font('Helvetica-Bold').fillColor(TEXT_MUTED).text('SCAN TO VERIFY', QR_X, QR_Y + QR_SIZE + 18, { width: QR_SIZE, align: 'center' });
+        const infoY = H - 118;
+        const boxW = 206;
+        const boxH = 74;
+        const gap = 22;
+        const startX = (W - (boxW * 3 + gap * 2)) / 2;
 
-      // ── 5. Information Boxes (Bottom) ───────────────────────────────────
-      const BOX_Y = H - 110;
-      const BOX_W = 210;
-      const BOX_H = 70;
+        const drawInfo = (x, label, value) => {
+          doc.roundedRect(x, infoY, boxW, boxH, 8).fill('#FFFDF8');
+          doc.roundedRect(x, infoY, boxW, boxH, 8).lineWidth(1).strokeColor('#E7D2A1').stroke();
+          doc.fontSize(7.5).font('Helvetica-Bold').fillColor('#8B6A1D')
+            .text(label, x + 14, infoY + 15, { characterSpacing: 1.2 });
+          doc.fontSize(11).font('Helvetica-Bold').fillColor('#1F2937')
+            .text(value, x + 14, infoY + 37, { width: boxW - 28, lineBreak: false });
+        };
 
-      const drawBox = (x, label, val) => {
-        doc.roundedRect(x, BOX_Y, BOX_W, BOX_H, 10).fill('#FFFFFF');
-        doc.roundedRect(x, BOX_Y, BOX_W, BOX_H, 10).lineWidth(1).strokeColor('#E2E8F0').stroke();
-        doc.fontSize(7).font('Helvetica-Bold').fillColor(TEXT_MUTED).text(label, x + 18, BOX_Y + 18, { characterSpacing: 1.5 });
-        doc.fontSize(12).font('Helvetica-Bold').fillColor(TEXT_DARK).text(val, x + 18, BOX_Y + 38);
-      };
+        drawInfo(startX, 'CERTIFICATE ID', certificateId);
+        drawInfo(startX + boxW + gap, 'ISSUED ON', issueDate);
+        drawInfo(startX + (boxW + gap) * 2, 'ROLE', role || 'Participant');
 
-      drawBox(48, 'CERTIFICATE ID', certificateId);
-      drawBox(CX - (BOX_W / 2), 'ISSUED ON', issueDate);
-      drawBox(W - BOX_W - 48, 'ISSUED BY', 'SkillValix');
+        const qrSize = 78;
+        const qrX = W - qrSize - 52;
+        const qrY = 86;
+        doc.roundedRect(qrX - 8, qrY - 8, qrSize + 16, qrSize + 36, 8).fill('#FFFFFF');
+        doc.roundedRect(qrX - 8, qrY - 8, qrSize + 16, qrSize + 36, 8).lineWidth(1).strokeColor('#E5E7EB').stroke();
+        doc.image(qrBuffer, qrX, qrY, { width: qrSize, height: qrSize });
+        doc.fontSize(7.2).font('Helvetica-Bold').fillColor('#6B7280')
+          .text('SCAN TO VERIFY', qrX - 8, qrY + qrSize + 13, { width: qrSize + 16, align: 'center', characterSpacing: 0.7 });
 
-      // ── 6. Bottom Legal Line ────────────────────────────────────────────
-      doc.fontSize(8).font('Helvetica').fillColor('#94A3B8')
-        .text('Issued by SkillValix · skillvalix.com', 48, H - 30);
+        doc.fontSize(8.5).font('Helvetica').fillColor('#8B6A1D')
+          .text('Issued by SkillValix · skillvalix.com', 0, H - 28, { width: W, align: 'center' });
+      } else {
+        // Keep existing event-certificate design unchanged for non job-simulation events.
+        const BG_LIGHT = '#F8FAFC';
+        const TEXT_DARK = '#0F172A';
+        const TEXT_MUTED = '#64748B';
+        const ACCENT_BLUE = '#3B82F6';
+
+        doc.rect(0, 0, W, H).fill(BG_LIGHT);
+
+        const headerGrad = doc.linearGradient(0, 0, W, 0);
+        headerGrad.stop(0, '#4338CA');
+        headerGrad.stop(1, '#6D28D9');
+        doc.rect(0, 0, W, 140).fill(headerGrad);
+
+        doc.fontSize(32).font('Helvetica-Bold').fillColor('#FFFFFF').text('SkillValix', 48, 48, { lineBreak: false });
+        doc.fontSize(12).font('Helvetica').fillColor('#E2E8F0').text('Verified Certificate of Completion', 48, 88, { lineBreak: false });
+
+        doc.rect(20, 20, W - 40, H - 40).lineWidth(1).strokeColor('#E2E8F0').stroke();
+
+        doc.fontSize(14).font('Helvetica-Bold').fillColor(TEXT_DARK)
+          .text('CERTIFICATE OF COMPLETION', 0, 185, { width: W, align: 'center', characterSpacing: 4 });
+
+        doc.fontSize(12).font('Helvetica').fillColor(TEXT_MUTED)
+          .text('This is proudly presented to', 0, 240, { width: W, align: 'center' });
+
+        let nameSize = 44;
+        const upperName = String(studentName || 'Learner').toUpperCase();
+        doc.font('Helvetica-Bold');
+        while (nameSize > 20 && doc.fontSize(nameSize).widthOfString(upperName) > 520) nameSize -= 2;
+        doc.fontSize(nameSize).fillColor(TEXT_DARK).text(upperName, 0, 275, { width: W, align: 'center' });
+
+        doc.moveTo(CX - 160, 275 + nameSize + 12).lineTo(CX + 160, 275 + nameSize + 12).lineWidth(1.5).strokeColor(ACCENT_BLUE).stroke();
+
+        doc.fontSize(12).font('Helvetica').fillColor(TEXT_MUTED)
+          .text('for successfully completing the event', 0, 370, { width: W, align: 'center' });
+
+        doc.fontSize(22).font('Helvetica-Bold').fillColor(ACCENT_BLUE)
+          .text(eventTitle, 60, 405, { width: W - 120, align: 'center' });
+
+        doc.fontSize(9.5).font('Helvetica').fillColor(TEXT_MUTED)
+          .text('This certificate is issued as a verifiable record of professional skill demonstration on SkillValix.', 0, 465, { width: W, align: 'center' });
+
+        const QR_SIZE = 100;
+        const QR_X = W - QR_SIZE - 76;
+        const QR_Y = 230;
+
+        doc.roundedRect(QR_X - 12, QR_Y - 12, QR_SIZE + 24, QR_SIZE + 50, 12).fill('#FFFFFF');
+        doc.roundedRect(QR_X - 12, QR_Y - 12, QR_SIZE + 24, QR_SIZE + 50, 12).lineWidth(1).strokeColor('#F1F5F9').stroke();
+        doc.image(qrBuffer, QR_X, QR_Y, { width: QR_SIZE, height: QR_SIZE });
+        doc.fontSize(8).font('Helvetica-Bold').fillColor(TEXT_MUTED).text('SCAN TO VERIFY', QR_X, QR_Y + QR_SIZE + 18, { width: QR_SIZE, align: 'center' });
+
+        const BOX_Y = H - 110;
+        const BOX_W = 210;
+        const BOX_H = 70;
+
+        const drawBox = (x, label, val) => {
+          doc.roundedRect(x, BOX_Y, BOX_W, BOX_H, 10).fill('#FFFFFF');
+          doc.roundedRect(x, BOX_Y, BOX_W, BOX_H, 10).lineWidth(1).strokeColor('#E2E8F0').stroke();
+          doc.fontSize(7).font('Helvetica-Bold').fillColor(TEXT_MUTED).text(label, x + 18, BOX_Y + 18, { characterSpacing: 1.5 });
+          doc.fontSize(12).font('Helvetica-Bold').fillColor(TEXT_DARK).text(val, x + 18, BOX_Y + 38);
+        };
+
+        drawBox(48, 'CERTIFICATE ID', certificateId);
+        drawBox(CX - (BOX_W / 2), 'ISSUED ON', issueDate);
+        drawBox(W - BOX_W - 48, 'ISSUED BY', 'SkillValix');
+
+        doc.fontSize(8).font('Helvetica').fillColor('#94A3B8')
+          .text('Issued by SkillValix · skillvalix.com', 48, H - 30);
+      }
 
       doc.end();
     } catch (err) {

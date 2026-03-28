@@ -287,7 +287,7 @@ const Courses = () => {
               return (
                 <div
                   key={course._id}
-                  onClick={() => navigate(course.isJobSimulation ? `/events/job-simulation/${course.slug}` : `/courses/${course.slug}`)}
+                  onClick={() => navigate(course.isJobSimulation ? `/job-simulation/${course.slug}` : `/courses/${course.slug}`)}
                   className="group relative bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 cursor-pointer flex flex-col"
                 >
                   {/* ── Image banner (if image set) ── */}

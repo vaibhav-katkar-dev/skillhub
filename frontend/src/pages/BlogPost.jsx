@@ -229,7 +229,7 @@ const BlogPost = () => {
                 to={`/courses/${post.relatedCourse.slug}`}
                 className="block w-full text-center bg-white text-blue-700 hover:bg-slate-50 font-bold py-3 px-4 rounded-xl transition-colors shadow-md"
               >
-                View Full Course <ArrowRight className="inline w-4 h-4 ml-1 -mt-0.5" />
+                View Free Course <ArrowRight className="inline w-4 h-4 ml-1 -mt-0.5" />
               </Link>
             </div>
           )}
@@ -264,7 +264,7 @@ const BlogPost = () => {
       {(() => {
         // Priority: same-category first, then fill with any other posts
         const sameCat = blogPosts.filter(p => p.id !== post.id && p.category === post.category);
-        const others  = blogPosts.filter(p => p.id !== post.id && p.category !== post.category);
+        const others = blogPosts.filter(p => p.id !== post.id && p.category !== post.category);
         const suggested = [...sameCat, ...others].slice(0, 3);
         if (suggested.length === 0) return null;
 

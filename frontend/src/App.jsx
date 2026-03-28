@@ -30,6 +30,7 @@ import TermsOfService from './pages/TermsOfService';
 import RefundPolicy from './pages/RefundPolicy';
 import CookiePolicy from './pages/CookiePolicy';
 import Events from './pages/Events';
+import HackathonDetail from './pages/HackathonDetail';
 import JobSimulation from './pages/JobSimulation';
 import VerifyEventCert from './pages/VerifyEventCert';
 
@@ -75,6 +76,8 @@ function App() {
               <Route path="/blog" element={<Blog />} />
               <Route path="/blog/:slug" element={<BlogPost />} />
               <Route path="/events" element={<Events />} />
+              <Route path="/events/hackathon/:id" element={<HackathonDetail />} />
+              <Route path="/job-simulation/:id" element={<JobSimulation />} />
               <Route path="/events/job-simulation/:id" element={<JobSimulation />} />
               <Route path="/verify-event/:certId" element={<VerifyEventCert />} />
               <Route path="/verify-event" element={<VerifyEventCert />} />
