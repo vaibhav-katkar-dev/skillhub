@@ -4,6 +4,10 @@ import axios from 'axios';
 // ─── Axios instance ────────────────────────────────────────
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'https://api.skillvalix.com/api',
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+  }
 });
 
 // Attach token to every request
