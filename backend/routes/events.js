@@ -301,13 +301,21 @@ router.post('/certificates/generate', authOptions, async (req, res) => {
       return res.status(400).json({ message: 'Payment mismatch: The order amount or receipt is invalid.' });
     }
 
+    // SECURITY: Ensure payment ID hasn't been used for another certificate
+    const paymentUsed = await EventCertificate.findOne({ paymentId: razorpay_payment_id });
+    if (paymentUsed) {
+      return res.status(400).json({ message: 'This payment has already been redeemed.' });
+    }
+
     // Payment successfully verified! Create the certificate records.
     let cert = await EventCertificate.findOne({ student: user._id, eventTitle, eventType });
-    if (!cert) {
-      const certId = `EVC-${uuidv4().substring(0, 8).toUpperCase()}`;
-      cert = new EventCertificate({ student: user._id, eventType, eventTitle, role, certificateId: certId, paymentId: razorpay_payment_id });
-      await cert.save();
+    if (cert) {
+      return res.status(400).json({ message: 'You already have this certificate.' });
     }
+
+    const certId = `EVC-${uuidv4().substring(0, 8).toUpperCase()}`;
+    cert = new EventCertificate({ student: user._id, eventType, eventTitle, role, certificateId: certId, paymentId: razorpay_payment_id });
+    await cert.save();
 
     // Generate PDF immediately
     const issueDate = new Date(cert.issueDate).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });

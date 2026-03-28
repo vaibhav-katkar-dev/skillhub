@@ -27,6 +27,7 @@ const CATEGORY_KEYWORDS = {
 };
 
 function getCourseCategory(course) {
+  if (course.isJobSimulation) return 'Job Simulation';
   const title = (course.title || '').toLowerCase();
   for (const [cat, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
     if (keywords.some(k => title.includes(k))) return cat;
@@ -56,7 +57,7 @@ const Skeleton = () => (
   </div>
 );
 
-const ALL_CATEGORIES = ['All', 'HTML', 'CSS', 'JavaScript', 'Python', 'Java', 'AI / ML', 'Other'];
+const ALL_CATEGORIES = ['All', 'HTML', 'CSS', 'JavaScript', 'Python', 'Java', 'AI / ML', 'Job Simulation', 'Other'];
 
 const Courses = () => {
   const [courses, setCourses]     = useState([]);
@@ -68,8 +69,14 @@ const Courses = () => {
   useEffect(() => {
     (async () => {
       try {
-        const data = await getCourseList();
-        setCourses(data);
+        const [courseData, simResponse] = await Promise.all([
+          getCourseList(),
+          fetch('/data/job-simulations.json')
+        ]);
+        const simsData = await simResponse.json();
+        // job simulations have `id`, we should emulate course ids `_id: sim.id` so mapping works cleanly
+        const mappedSims = simsData.map(s => ({ ...s, _id: s.id, isJobSimulation: true }));
+        setCourses([...courseData, ...mappedSims]);
       } catch (err) {
         console.error(err);
       } finally {
@@ -250,7 +257,7 @@ const Courses = () => {
               return (
                 <div
                   key={course._id}
-                  onClick={() => navigate(`/courses/${course.slug}`)}
+                  onClick={() => navigate(course.isJobSimulation ? `/events/job-simulation/${course.slug}` : `/courses/${course.slug}`)}
                   className="group relative bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 cursor-pointer flex flex-col"
                 >
                   {/* ── Image banner (if image set) ── */}

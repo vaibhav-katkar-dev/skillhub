@@ -4,80 +4,17 @@ import { Helmet } from 'react-helmet-async';
 import axios from 'axios';
 import {
   ArrowRight,
-  BarChart3,
-  BriefcaseBusiness,
   CheckCircle2,
   CircleDot,
-  ClipboardList,
   Clock3,
-  Laptop,
-  Palette,
   Rocket,
-  Settings,
   Star,
   Trophy,
 } from 'lucide-react';
 
 const API = import.meta.env.VITE_API_URL || '/api';
 
-const JOB_SIMULATIONS = [
-  {
-    id: 'frontend-developer',
-    title: 'Frontend Developer Job Simulation',
-    company: 'SkillValix Labs',
-    role: 'Frontend Developer Intern',
-    duration: '4-6 hours',
-    tasks: 4,
-    skills: ['React', 'CSS', 'HTML', 'JavaScript'],
-    level: 'Beginner',
-    certCost: 99,
-    color: 'from-blue-600 to-cyan-500',
-    icon: Laptop,
-    description: 'Experience real-world frontend tasks like building responsive UIs, debugging components, and implementing API integrations.',
-  },
-  {
-    id: 'data-analyst',
-    title: 'Data Analyst Job Simulation',
-    company: 'SkillValix Labs',
-    role: 'Data Analyst Intern',
-    duration: '4-6 hours',
-    tasks: 4,
-    skills: ['Python', 'Pandas', 'Excel', 'Data Viz'],
-    level: 'Beginner',
-    certCost: 99,
-    color: 'from-violet-600 to-purple-500',
-    icon: BarChart3,
-    description: 'Analyze real datasets, create visualizations, write SQL queries, and present your insights just like a real data analyst.',
-  },
-  {
-    id: 'ui-ux-designer',
-    title: 'UI/UX Designer Job Simulation',
-    company: 'SkillValix Labs',
-    role: 'UI/UX Design Intern',
-    duration: '3-5 hours',
-    tasks: 3,
-    skills: ['Figma', 'Design Thinking', 'Wireframing'],
-    level: 'Beginner',
-    certCost: 99,
-    color: 'from-pink-600 to-rose-500',
-    icon: Palette,
-    description: 'Design user flows, create wireframes, build Figma prototypes and conduct usability analysis for a real product.',
-  },
-  {
-    id: 'backend-developer',
-    title: 'Backend Developer Job Simulation',
-    company: 'SkillValix Labs',
-    role: 'Backend Developer Intern',
-    duration: '5-7 hours',
-    tasks: 4,
-    skills: ['Node.js', 'REST APIs', 'MongoDB', 'Auth'],
-    level: 'Intermediate',
-    certCost: 99,
-    color: 'from-emerald-600 to-teal-500',
-    icon: Settings,
-    description: 'Build REST APIs, implement JWT authentication, connect databases, and write unit tests in a guided workspace.',
-  },
-];
+
 
 const STATUS_STYLE = {
   upcoming: { bg: 'bg-amber-100', text: 'text-amber-700', label: 'Upcoming', icon: Clock3 },
@@ -132,84 +69,7 @@ export default function Events() {
         </div>
       </section>
 
-      <section className="py-20 px-6 bg-slate-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="mb-12">
-            <div className="flex items-center gap-3 mb-3">
-              <BriefcaseBusiness className="w-8 h-8 text-indigo-600" aria-hidden="true" />
-              <h2 className="text-3xl font-black text-slate-900">Job Simulations</h2>
-            </div>
-            <p className="text-slate-500 max-w-xl ml-12">
-              Complete real-world task modules and earn a verified certificate for just{' '}
-              <span className="font-bold text-indigo-600">INR 99</span>.
-            </p>
-          </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {JOB_SIMULATIONS.map((sim) => {
-              const SimIcon = sim.icon;
-
-              return (
-                <Link
-                  key={sim.id}
-                  to={`/events/job-simulation/${sim.id}`}
-                  className="group relative bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col"
-                >
-                  <div className={`h-2 w-full bg-gradient-to-r ${sim.color}`} />
-
-                  <div className="p-6 flex flex-col flex-1">
-                    <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-700">
-                      <SimIcon className="w-6 h-6" aria-hidden="true" />
-                    </div>
-                    <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{sim.company}</div>
-                    <h3 className="text-base font-bold text-slate-900 mb-2 leading-snug">{sim.title}</h3>
-                    <p className="text-sm text-slate-500 mb-4 flex-1">{sim.description}</p>
-
-                    <div className="flex flex-wrap gap-1 mb-4">
-                      {sim.skills.map((skill) => (
-                        <span key={skill} className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs font-medium">
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-
-                    <div className="flex items-center justify-between text-xs text-slate-400 mb-4">
-                      <span className="inline-flex items-center gap-1">
-                        <Clock3 className="w-3.5 h-3.5" aria-hidden="true" />
-                        {sim.duration}
-                      </span>
-                      <span className="inline-flex items-center gap-1">
-                        <ClipboardList className="w-3.5 h-3.5" aria-hidden="true" />
-                        {sim.tasks} tasks
-                      </span>
-                      <span
-                        className={`px-2 py-0.5 rounded-full font-semibold ${
-                          sim.level === 'Intermediate' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
-                        }`}
-                      >
-                        {sim.level}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-xs text-slate-400">Certificate</div>
-                        <div className="text-lg font-black text-indigo-600">INR {sim.certCost}</div>
-                      </div>
-                      <span className={`px-4 py-2 rounded-lg text-sm font-bold text-white bg-gradient-to-r ${sim.color} group-hover:opacity-90 transition-opacity`}>
-                        <span className="inline-flex items-center gap-1">
-                          Start
-                          <ArrowRight className="w-4 h-4" aria-hidden="true" />
-                        </span>
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      </section>
 
       <section className="py-20 px-6 bg-white">
         <div className="max-w-7xl mx-auto">

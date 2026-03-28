@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useAuthStore } from '../store/authStore';
@@ -23,206 +23,11 @@ import {
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
-const SIMULATIONS = {
-  'frontend-developer': {
-    id: 'frontend-developer',
-    title: 'Frontend Developer Job Simulation',
-    company: 'SkillValix Labs',
-    role: 'Frontend Developer Intern',
-    duration: '4-6 hours',
-    skills: ['React', 'CSS', 'HTML', 'JavaScript'],
-    level: 'Beginner',
-    certCost: 99,
-    color: 'from-blue-600 to-cyan-500',
-    icon: Laptop,
-    about:
-      "Get a taste of what it means to work as a Frontend Developer at a fast-growing tech startup. You'll work through real tasks similar to those given to junior developers on their first week.",
-    tasks: [
-      {
-        num: 1,
-        title: 'Build a Responsive Navbar',
-        description:
-          'Create a fully responsive navigation bar using HTML and CSS. It must work on mobile, tablet, and desktop. Include a hamburger menu for mobile.',
-        time: '45 min',
-        type: 'Coding',
-      },
-      {
-        num: 2,
-        title: 'React Component Architecture',
-        description:
-          'Build a reusable card component in React. Accept props for title, description, image, and a CTA button. Style it with CSS modules.',
-        time: '60 min',
-        type: 'Coding',
-      },
-      {
-        num: 3,
-        title: 'API Integration',
-        description:
-          'Fetch data from a public REST API (JSONPlaceholder) and display a paginated list of users. Handle loading, error, and empty states.',
-        time: '60 min',
-        type: 'Coding',
-      },
-      {
-        num: 4,
-        title: 'Bug Hunt & Debugging',
-        description:
-          'You are given a broken React app with 5 intentional bugs. Find and fix all bugs. Write a short explanation of what each bug was and how you fixed it.',
-        time: '45 min',
-        type: 'Analysis',
-      },
-    ],
-    faq: [
-      { q: 'Is this a live interview?', a: 'No. This is a self-paced simulation. Complete tasks at your own speed within the time estimates.' },
-      { q: 'Do I need to submit code?', a: 'Tasks are designed for self-assessment. Follow each task guide, complete it, and then proceed to the next.' },
-      { q: 'What do I get for INR 99?', a: 'A verified PDF certificate issued by SkillValix with your name, role, and a QR code to verify authenticity.' },
-      { q: 'Is the certificate recognized?', a: 'The certificate is issued by SkillValix, an MSME-registered ed-tech company. You can share it on LinkedIn.' },
-    ],
-  },
-  'data-analyst': {
-    id: 'data-analyst',
-    title: 'Data Analyst Job Simulation',
-    company: 'SkillValix Labs',
-    role: 'Data Analyst Intern',
-    duration: '4-6 hours',
-    skills: ['Python', 'Pandas', 'Excel', 'Data Viz'],
-    level: 'Beginner',
-    certCost: 99,
-    color: 'from-violet-600 to-purple-500',
-    icon: BarChart3,
-    about:
-      'Experience a real data analyst workflow: cleaning messy data, exploring datasets, creating dashboards, and communicating insights.',
-    tasks: [
-      {
-        num: 1,
-        title: 'Data Cleaning with Pandas',
-        description:
-          "You're given a CSV with missing values, duplicates, and inconsistent formatting. Clean the dataset and export a clean version.",
-        time: '60 min',
-        type: 'Data',
-      },
-      {
-        num: 2,
-        title: 'Exploratory Data Analysis (EDA)',
-        description: 'Analyze the clean dataset. Find the top 5 insights. Use descriptive statistics and correlation analysis.',
-        time: '60 min',
-        type: 'Analysis',
-      },
-      {
-        num: 3,
-        title: 'Data Visualization',
-        description:
-          'Create 4 meaningful charts using matplotlib/seaborn or Excel: a bar chart, line trend, scatter plot, and heatmap.',
-        time: '45 min',
-        type: 'Visualization',
-      },
-      {
-        num: 4,
-        title: 'Executive Summary',
-        description:
-          'Write a one-page executive summary of your analysis. Highlight key findings, anomalies, and business recommendations.',
-        time: '30 min',
-        type: 'Communication',
-      },
-    ],
-    faq: [
-      {
-        q: 'What tools do I need?',
-        a: 'Python 3 with pandas, matplotlib, and seaborn. Or you can use Excel or Google Sheets for the visualization task.',
-      },
-      { q: 'Is this a test?', a: "No. This is a guided self-paced experience. There is no automated grader. It's about your learning." },
-      { q: 'What do I get for INR 99?', a: 'A verified, downloadable PDF certificate issued by SkillValix with your name and role.' },
-    ],
-  },
-  'ui-ux-designer': {
-    id: 'ui-ux-designer',
-    title: 'UI/UX Designer Job Simulation',
-    company: 'SkillValix Labs',
-    role: 'UI/UX Design Intern',
-    duration: '3-5 hours',
-    skills: ['Figma', 'Design Thinking', 'Wireframing'],
-    level: 'Beginner',
-    certCost: 99,
-    color: 'from-pink-600 to-rose-500',
-    icon: Palette,
-    about:
-      "Step into the shoes of a UX designer at a product startup. You'll go from user research to polished Figma prototypes.",
-    tasks: [
-      {
-        num: 1,
-        title: 'User Research & Personas',
-        description: 'Define 2 user personas for a food delivery app. Include goals, pain points, and tech comfort level.',
-        time: '45 min',
-        type: 'Research',
-      },
-      {
-        num: 2,
-        title: 'Wireframing',
-        description: 'Create low-fidelity wireframes for 4 key screens of the app: Home, Search, Order Detail, and Checkout.',
-        time: '60 min',
-        type: 'Design',
-      },
-      {
-        num: 3,
-        title: 'High-Fidelity Prototype',
-        description:
-          'Build a clickable high-fidelity prototype in Figma using a consistent design system (colors, typography, components).',
-        time: '90 min',
-        type: 'Design',
-      },
-    ],
-    faq: [
-      { q: 'Do I need Figma experience?', a: 'Basic Figma knowledge is helpful but not required. The task guides walk you through what to deliver.' },
-      { q: 'What do I get for INR 99?', a: 'A verified PDF certificate with your name and the role "UI/UX Design Intern".' },
-    ],
-  },
-  'backend-developer': {
-    id: 'backend-developer',
-    title: 'Backend Developer Job Simulation',
-    company: 'SkillValix Labs',
-    role: 'Backend Developer Intern',
-    duration: '5-7 hours',
-    skills: ['Node.js', 'REST APIs', 'MongoDB', 'Auth'],
-    level: 'Intermediate',
-    certCost: 99,
-    color: 'from-emerald-600 to-teal-500',
-    icon: Settings,
-    about: 'Build real backend systems used in production apps. This simulation covers API design, authentication, database operations, and testing.',
-    tasks: [
-      {
-        num: 1,
-        title: 'Design a REST API',
-        description:
-          'Design and document a REST API for a task-management app. Define all endpoints, request bodies, and response schemas using OpenAPI (Swagger).',
-        time: '60 min',
-        type: 'Design',
-      },
-      {
-        num: 2,
-        title: 'Build & Implement the API',
-        description: 'Implement the API in Node.js + Express. Connect it to MongoDB using Mongoose. Implement CRUD for tasks and users.',
-        time: '90 min',
-        type: 'Coding',
-      },
-      {
-        num: 3,
-        title: 'JWT Authentication',
-        description: 'Add JWT-based authentication. Implement register, login, and a protected route. Hash passwords with bcrypt.',
-        time: '60 min',
-        type: 'Security',
-      },
-      {
-        num: 4,
-        title: 'Unit Tests',
-        description: 'Write unit tests for at least 3 API endpoints using Jest + Supertest. Aim for happy path and at least 1 edge case per endpoint.',
-        time: '60 min',
-        type: 'Testing',
-      },
-    ],
-    faq: [
-      { q: 'What tech stack is required?', a: 'Node.js, Express, MongoDB. The tasks also mention JWT and Jest which are standard in the ecosystem.' },
-      { q: 'What do I get for INR 99?', a: 'A verified, downloadable PDF certificate with QR code verification.' },
-    ],
-  },
+const ICON_MAP = {
+  Laptop,
+  BarChart3,
+  Palette,
+  Settings
 };
 
 const apiClient = axios.create({ baseURL: API_BASE });
@@ -237,11 +42,46 @@ export default function JobSimulation() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuthStore();
-  const sim = SIMULATIONS[id];
+  
+  const [sim, setSim] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
   const [certId, setCertId] = useState(null);
   const [downloading, setDownloading] = useState(false);
   const [err, setErr] = useState('');
+
+  useEffect(() => {
+    fetch('/data/job-simulations.json')
+      .then(r => r.json())
+      .then(data => {
+        const found = data.find(item => item.id === id);
+        setSim(found);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [id]);
+
+  useEffect(() => {
+    if (isAuthenticated && sim) {
+      apiClient.get('/certificates/mine')
+        .then(res => {
+          const existing = res.data.find(c => c.isEvent && c.eventType === 'job-simulation' && c.eventTitle === sim.title);
+          if (existing) {
+            setCertId(existing.certificateId);
+          }
+        })
+        .catch(err => console.error(err));
+    }
+  }, [isAuthenticated, sim]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center text-slate-500 gap-4">
+        <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-sm font-semibold">Loading Simulation...</p>
+      </div>
+    );
+  }
 
   if (!sim) {
     return (
@@ -255,7 +95,7 @@ export default function JobSimulation() {
     );
   }
 
-  const SimIcon = sim.icon;
+  const SimIcon = ICON_MAP[sim.icon] || Laptop;
 
   const loadRazorpay = () =>
     new Promise((resolve) => {
