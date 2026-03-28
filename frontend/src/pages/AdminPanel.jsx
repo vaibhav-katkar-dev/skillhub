@@ -148,7 +148,7 @@ const AdminPanel = () => {
   }, [isAuthenticated, user?.role]);
 
   useEffect(() => {
-    if (tab !== 'analytics' || !isAuthenticated || user?.role !== 'admin') return;
+    if (!isAuthenticated || user?.role !== 'admin') return;
 
     let stopped = false;
     let timer = null;
@@ -175,7 +175,7 @@ const AdminPanel = () => {
       stopped = true;
       if (timer) clearTimeout(timer);
     };
-  }, [tab, isAuthenticated, user?.role]);
+  }, [isAuthenticated, user?.role]);
 
   if (!isAuthenticated || user?.role !== 'admin') {
     return <Navigate to="/" replace />;
@@ -345,6 +345,40 @@ const AdminPanel = () => {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+        <div className="bg-white rounded-2xl border-2 border-indigo-200 shadow-sm p-6">
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-indigo-600" />
+                Certificate Maintenance (Admin Only)
+              </h2>
+              <p className="text-sm text-slate-600 mt-2">
+                One-click fix for stale event/job certificate PDFs. Visible on all admin tabs.
+              </p>
+            </div>
+
+            <div className="min-w-[240px]">
+              <button
+                onClick={startWarmCertificates}
+                disabled={warmJobLoading || warmJob?.running}
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-sm font-bold shadow"
+              >
+                {warmJobLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                {warmJob?.running ? 'Fix Running...' : 'Fix Certificates Now'}
+              </button>
+
+              <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                <div className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2"><span className="text-slate-500">Status</span><div className="font-bold text-slate-900 mt-0.5">{warmJob?.running ? 'Running' : 'Idle'}</div></div>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2"><span className="text-slate-500">Progress</span><div className="font-bold text-slate-900 mt-0.5">{warmJob?.processed ?? 0}/{warmJob?.total ?? 0}</div></div>
+              </div>
+            </div>
+          </div>
+
+          {warmJobError && (
+            <p className="mt-2 text-xs text-rose-700">{warmJobError}</p>
+          )}
+        </div>
+
         {tab === 'analytics' && (
           <div className="space-y-6">
             <div className="bg-white rounded-2xl border-2 border-indigo-200 shadow-sm p-6">
