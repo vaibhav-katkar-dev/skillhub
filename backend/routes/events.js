@@ -287,10 +287,14 @@ router.post('/admin/certificates/warm-event-pdfs', authOptions, adminCheck, asyn
 
     const requestedBy = req.user?.id || 'admin';
     const forceAll = req.body?.forceAll !== false;
-    await runEventCertWarmJob(requestedBy, { forceAll });
+    // Run in background so admin API responds instantly and UI can poll status.
+    runEventCertWarmJob(requestedBy, { forceAll }).catch((err) => {
+      console.error('[Events] Warm job background error:', err);
+      eventCertWarmJob.lastError = err.message || 'Warm job background execution failed';
+    });
 
-    return res.json({
-      message: 'Warm job completed.',
+    return res.status(202).json({
+      message: 'Warm job started.',
       job: eventCertWarmJob,
     });
   } catch (err) {
