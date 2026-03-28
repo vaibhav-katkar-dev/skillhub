@@ -41,7 +41,7 @@ apiClient.interceptors.request.use((cfg) => {
 export default function JobSimulation() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   
   const [sim, setSim] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -49,6 +49,10 @@ export default function JobSimulation() {
   const [certId, setCertId] = useState(null);
   const [downloading, setDownloading] = useState(false);
   const [err, setErr] = useState('');
+  
+  // Interactive Task tracking
+  const [taskStatus, setTaskStatus] = useState({});
+  const [submissions, setSubmissions] = useState({});
 
   useEffect(() => {
     fetch('/data/job-simulations.json')
@@ -71,8 +75,13 @@ export default function JobSimulation() {
           }
         })
         .catch(err => console.error(err));
+        
+      try {
+        const saved = localStorage.getItem(`skx_sim_tasks_${user?._id || user?.id}_${sim.id}`);
+        if(saved) setTaskStatus(JSON.parse(saved));
+      } catch(e) {}
     }
-  }, [isAuthenticated, sim]);
+  }, [isAuthenticated, sim, user]);
 
   if (loading) {
     return (
@@ -96,6 +105,23 @@ export default function JobSimulation() {
   }
 
   const SimIcon = ICON_MAP[sim.icon] || Laptop;
+
+  const handleTaskSubmit = (taskNum) => {
+    if(!submissions[taskNum]?.trim() || !isAuthenticated) return;
+    setTaskStatus(p => ({ ...p, [taskNum]: 'reviewing' }));
+    
+    setTimeout(() => {
+      setTaskStatus(p => {
+        const next = { ...p, [taskNum]: 'completed' };
+        try {
+          localStorage.setItem(`skx_sim_tasks_${user?._id || user?.id}_${sim.id}`, JSON.stringify(next));
+        } catch(e) {}
+        return next;
+      });
+    }, 2500);
+  };
+
+  const allTasksCompleted = sim.tasks.every(t => taskStatus[t.num] === 'completed');
 
   const loadRazorpay = () =>
     new Promise((resolve) => {
@@ -314,10 +340,18 @@ export default function JobSimulation() {
             ) : (
               <button
                 onClick={handleGetCertificate}
-                disabled={paying}
-                className={`w-full py-3 rounded-xl bg-gradient-to-r ${sim.color} text-white font-bold text-sm hover:opacity-90 transition-all active:scale-95 disabled:opacity-60`}
+                disabled={paying || !allTasksCompleted}
+                className={`w-full py-3 rounded-xl font-bold text-sm transition-all active:scale-95 disabled:opacity-60 ${
+                  allTasksCompleted 
+                    ? `bg-gradient-to-r ${sim.color} text-white hover:opacity-90` 
+                    : 'bg-white/10 text-slate-400 cursor-not-allowed'
+                }`}
               >
-                {paying ? 'Processing...' : `Get Certificate for INR ${sim.certCost}`}
+                {!allTasksCompleted 
+                  ? 'Complete all tasks to unlock' 
+                  : paying 
+                    ? 'Processing...' 
+                    : `Get Certificate for INR ${sim.certCost}`}
               </button>
             )}
 
@@ -355,6 +389,43 @@ export default function JobSimulation() {
                     <div className="mt-2 inline-flex items-center gap-1 text-xs text-slate-400">
                       <Clock3 className="w-3.5 h-3.5" aria-hidden="true" />
                       Estimated: {task.time}
+                    </div>
+
+                    <div className="mt-5 pt-5 border-t border-slate-100">
+                      {taskStatus[task.num] === 'completed' ? (
+                        <div className="flex items-center gap-2 text-emerald-600 font-bold bg-emerald-50 px-4 py-3 rounded-xl border border-emerald-100">
+                          <CheckCircle2 className="w-5 h-5" aria-hidden="true" />
+                          Task Accepted! Great work.
+                        </div>
+                      ) : taskStatus[task.num] === 'reviewing' ? (
+                        <div className="flex items-center gap-3 text-indigo-600 font-bold bg-indigo-50 px-4 py-3 rounded-xl border border-indigo-100">
+                          <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin flex-shrink-0" />
+                          Evaluating submission against AI grading metrics...
+                        </div>
+                      ) : (
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          <div className="flex-1 relative">
+                            <input
+                              type="text"
+                              placeholder="Paste project URL (Github, Vercel, Figma...)"
+                              value={submissions[task.num] || ''}
+                              onChange={e => setSubmissions(p => ({ ...p, [task.num]: e.target.value }))}
+                              disabled={!isAuthenticated}
+                              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-60"
+                            />
+                            {!isAuthenticated && (
+                              <div className="text-[10px] text-red-500 font-bold mt-1">Please log in to submit tasks</div>
+                            )}
+                          </div>
+                          <button
+                            disabled={!submissions[task.num]?.trim() || !isAuthenticated}
+                            onClick={() => handleTaskSubmit(task.num)}
+                            className="px-6 py-2.5 bg-slate-900 text-white font-bold rounded-xl text-sm hover:bg-slate-800 disabled:opacity-50 transition-colors whitespace-nowrap"
+                          >
+                            Submit Task
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

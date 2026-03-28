@@ -176,29 +176,43 @@ const CertCard = ({ cert, onDownload, copyMsg, onCopy, prepState }) => {
     window.open(linkedinUrl, 'linkedin-share', `width=${width},height=${height},top=${top},left=${left},noopener,noreferrer`);
   };
 
+  const isEvent = cert.isEvent;
+  const isJobSim = isEvent && cert.eventType === 'job-simulation';
+  
+  // Dynamic Styles
+  const cardBgCls = isJobSim ? "bg-slate-900 border-slate-800" : "bg-white border-slate-100";
+  const topGrad = isJobSim ? "from-emerald-400 via-teal-500 to-cyan-500" : "from-amber-400 via-orange-400 to-rose-400";
+  const IconBg = isJobSim ? "from-emerald-400 to-teal-500 shadow-teal-500/40" : "from-amber-400 to-orange-500 shadow-amber-300/40";
+  const titleCls = isJobSim ? "text-white" : "text-slate-900";
+  const dateCls = isJobSim ? "text-teal-400" : "text-amber-400";
+  const boxBgCls = isJobSim ? "bg-slate-800 border-slate-700" : "bg-slate-50 border-slate-100";
+  const boxTextCls = isJobSim ? "text-slate-300" : "text-slate-600";
+  const primaryBtn = isJobSim ? (cert.pdfReady ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-amber-500 hover:bg-amber-400 text-white') : (cert.pdfReady ? 'bg-slate-900 hover:bg-slate-800 text-white' : 'bg-amber-500 hover:bg-amber-400 text-white');
+  const copyBtnBg = isJobSim ? (copyMsg === cert.certificateId ? 'bg-emerald-900/40 border-emerald-500/50 text-emerald-400 scale-[0.98]' : 'bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-300') : (copyMsg === cert.certificateId ? 'bg-emerald-50 border-emerald-300 text-emerald-600 scale-[0.98]' : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-600');
+
   return (
-    <div className="group bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-      <div className="h-2 bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400" />
+    <div className={`group ${cardBgCls} rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300`}>
+      <div className={`h-2 bg-gradient-to-r ${topGrad}`} />
       <div className="p-5">
         <div className="flex items-start gap-3 mb-4">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center flex-shrink-0 shadow-lg shadow-amber-300/40">
+          <div className={`w-10 h-10 rounded-2xl bg-gradient-to-br flex items-center justify-center flex-shrink-0 shadow-lg ${IconBg}`}>
             <Award className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-extrabold text-slate-900 text-sm leading-tight line-clamp-2">
+            <h3 className={`font-extrabold ${titleCls} text-sm leading-tight line-clamp-2`}>
               {cert.course?.title || 'Certificate Course'}
             </h3>
             <p className="text-[10px] text-slate-400 font-medium mt-0.5 flex items-center gap-1">
-              <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />
+              <Star className={`w-2.5 h-2.5 ${dateCls} fill-current`} />
               {new Date(cert.issueDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
             </p>
           </div>
         </div>
 
         {/* ID chip */}
-        <div className="bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 mb-4">
+        <div className={`${boxBgCls} rounded-xl px-3 py-2 mb-4`}>
           <p className="text-[10px] text-slate-400 font-medium mb-0.5">Certificate ID</p>
-          <p className="text-xs font-mono font-bold text-slate-600 truncate select-all">{cert.certificateId}</p>
+          <p className={`text-xs font-mono font-bold ${boxTextCls} truncate select-all`}>{cert.certificateId}</p>
         </div>
 
         <div className="flex flex-col gap-2">
@@ -206,11 +220,7 @@ const CertCard = ({ cert, onDownload, copyMsg, onCopy, prepState }) => {
           <div className="flex gap-2">
             <button
               onClick={() => onDownload(cert)}
-              className={`flex-1 relative overflow-hidden text-white text-xs font-bold py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-[.98] ${
-                cert.pdfReady
-                  ? 'bg-slate-900 hover:bg-slate-800'
-                  : 'bg-amber-500 hover:bg-amber-400'
-              }`}
+              className={`flex-1 relative overflow-hidden text-xs font-bold py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-[.98] ${primaryBtn}`}
             >
               {cert.pdfReady ? <Download className="w-3.5 h-3.5" /> : <Loader2 className={`w-3.5 h-3.5 ${cert.pdfStatus === 'generating' || cert.pdfStatus === 'queued' ? 'animate-spin' : ''}`} />}
               {cert.pdfReady ? 'Download PDF' : prepState?.busy ? `Preparing${prepState.seconds > 0 ? ` (${prepState.seconds}s)` : ''}` : cert.pdfStatus === 'failed' ? 'Retry PDF' : 'Prepare PDF'}
@@ -219,11 +229,7 @@ const CertCard = ({ cert, onDownload, copyMsg, onCopy, prepState }) => {
             <button
               onClick={() => onCopy(cert)}
               title="Copy verification link"
-              className={`flex-shrink-0 px-4 border rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold transition-all duration-300 ${
-                copyMsg === cert.certificateId
-                  ? 'bg-emerald-50 border-emerald-300 text-emerald-600 scale-[0.98]'
-                  : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-600'
-              }`}
+              className={`flex-shrink-0 px-4 border rounded-xl flex items-center justify-center gap-1.5 text-xs font-bold transition-all duration-300 ${copyBtnBg}`}
             >
               {copyMsg === cert.certificateId ? (
                 <><CheckCircle className="w-3.5 h-3.5" /> Copied</>
