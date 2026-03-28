@@ -545,6 +545,67 @@ function buildEventCertificatePdf({ studentName, eventTitle, role, certificateId
       const H = doc.page.height;
       const CX = W / 2;
       const isJobSimulation = String(eventType || '').toLowerCase() === 'job-simulation';
+      const normalizedRole = String(role || '').trim();
+      const personalizedRole = normalizedRole && normalizedRole.toLowerCase() !== 'participant'
+        ? normalizedRole
+        : 'the selected role';
+
+      const drawPremiumFooter = ({
+        dividerColor = '#D8C9A2',
+        issuerColor = '#8A6A2F',
+        metaColor = '#7A818C',
+      } = {}) => {
+        const dividerY = H - 44;
+        const issuerY = H - 34;
+        const urlY = H - 24;
+        const trustY = H - 14;
+
+        doc.moveTo(80, dividerY)
+          .lineTo(W - 80, dividerY)
+          .lineWidth(0.7)
+          .strokeColor(dividerColor)
+          .stroke();
+
+        doc.fontSize(7.1)
+          .font('Helvetica-Bold')
+          .fillColor(issuerColor)
+          .text('ISSUED BY SKILLVALIX', 0, issuerY, {
+            width: W,
+            align: 'center',
+            characterSpacing: 2,
+          });
+
+        doc.fontSize(7.2)
+          .font('Helvetica')
+          .fillColor(metaColor)
+          .text('www.skillvalix.com', 0, urlY, {
+            width: W,
+            align: 'center',
+          });
+
+        doc.fontSize(6.6)
+          .font('Helvetica')
+          .fillColor(metaColor)
+          .text('Verified Credential Platform  ·  Industry-Relevant Certification', 0, trustY, {
+            width: W,
+            align: 'center',
+          });
+      };
+
+      const truncateToWidth = (text, maxWidth, suffix = '...') => {
+        const raw = String(text || '').trim();
+        if (!raw) return '';
+        if (doc.widthOfString(raw) <= maxWidth) return raw;
+
+        const suffixWidth = doc.widthOfString(suffix);
+        let fitted = '';
+        for (const ch of raw) {
+          const next = fitted + ch;
+          if (doc.widthOfString(next) + suffixWidth > maxWidth) break;
+          fitted = next;
+        }
+        return `${fitted.trimEnd()}${suffix}`;
+      };
 
       if (isJobSimulation) {
         const INK = '#111827';
@@ -608,7 +669,14 @@ function buildEventCertificatePdf({ studentName, eventTitle, role, certificateId
           .text(eventTitle, eventPanelX + 22, eventPanelY + 19, { width: eventPanelW - 44, align: 'center' });
 
         doc.fontSize(10).font('Helvetica').fillColor(INK_MUTED)
-          .text('in recognition of practical performance, consistency, and role readiness.', 0, eventPanelY + 76, { width: W, align: 'center' });
+          .text('in recognition of practical performance, consistent execution, and applied problem-solving.', 0, eventPanelY + 74, { width: W, align: 'center' });
+
+        doc.fontSize(9).font('Helvetica').fillColor('#6B7280');
+        const personalizedLineJob = truncateToWidth(
+          `${studentName || 'The learner'} has demonstrated readiness for ${personalizedRole}.`,
+          W - 140
+        );
+        doc.text(personalizedLineJob, 0, eventPanelY + 89, { width: W, align: 'center' });
 
         const infoY = H - 118;
         const boxW = 206;
@@ -638,8 +706,11 @@ function buildEventCertificatePdf({ studentName, eventTitle, role, certificateId
         doc.fontSize(7.2).font('Helvetica-Bold').fillColor('#6B7280')
           .text('SCAN TO VERIFY', qrX - 8, qrY + qrSize + 13, { width: qrSize + 16, align: 'center', characterSpacing: 0.7 });
 
-        doc.fontSize(8.5).font('Helvetica').fillColor('#8B6A1D')
-          .text('Issued by SkillValix · skillvalix.com', 0, H - 28, { width: W, align: 'center' });
+        drawPremiumFooter({
+          dividerColor: '#DCC99A',
+          issuerColor: '#8B6A1D',
+          metaColor: '#6B7280',
+        });
       } else {
         // Keep existing event-certificate design unchanged for non job-simulation events.
         const BG_LIGHT = '#F8FAFC';
@@ -680,7 +751,14 @@ function buildEventCertificatePdf({ studentName, eventTitle, role, certificateId
           .text(eventTitle, 60, 405, { width: W - 120, align: 'center' });
 
         doc.fontSize(9.5).font('Helvetica').fillColor(TEXT_MUTED)
-          .text('This certificate is issued as a verifiable record of professional skill demonstration on SkillValix.', 0, 465, { width: W, align: 'center' });
+          .text('This certificate is issued as a verifiable record of practical performance, consistency, and applied outcomes.', 0, 465, { width: W, align: 'center' });
+
+        doc.fontSize(8.8).font('Helvetica').fillColor('#6B7280');
+        const personalizedLineDefault = truncateToWidth(
+          `${studentName || 'The learner'} has demonstrated readiness for ${personalizedRole} in an industry-aligned environment.`,
+          W - 140
+        );
+        doc.text(personalizedLineDefault, 0, 481, { width: W, align: 'center' });
 
         const QR_SIZE = 100;
         const QR_X = W - QR_SIZE - 76;
@@ -704,10 +782,13 @@ function buildEventCertificatePdf({ studentName, eventTitle, role, certificateId
 
         drawBox(48, 'CERTIFICATE ID', certificateId);
         drawBox(CX - (BOX_W / 2), 'ISSUED ON', issueDate);
-        drawBox(W - BOX_W - 48, 'ISSUED BY', 'SkillValix');
+        drawBox(W - BOX_W - 48, 'ROLE', role || 'Participant');
 
-        doc.fontSize(8).font('Helvetica').fillColor('#94A3B8')
-          .text('Issued by SkillValix · skillvalix.com', 48, H - 30);
+        drawPremiumFooter({
+          dividerColor: '#D6C8A7',
+          issuerColor: '#8A6A2F',
+          metaColor: '#6B7280',
+        });
       }
 
       doc.end();
