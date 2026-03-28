@@ -94,131 +94,91 @@ function buildEventCertificatePdf({ studentName, eventTitle, role, certificateId
 
     try {
       const qrBuffer = await QRCode.toBuffer(verifyUrl, {
-        errorCorrectionLevel: 'H', width: 180, margin: 1,
+        errorCorrectionLevel: 'H', width: 200, margin: 1,
         color: { dark: '#0F172A', light: '#FFFFFF' },
       });
 
       const W = doc.page.width, H = doc.page.height;
+      const CX = W / 2;
 
-      // ── Background ──────────────────────────────────────────────────────
-      doc.rect(0, 0, W, H).fill('#0F172A');          // Dark navy
+      // ── Colors & Branding ──────────────────────────────────────────────
+      const PRIMARY = '#4F46E5'; 
+      const BG_LIGHT = '#F8FAFC';
+      const TEXT_DARK = '#0F172A';
+      const TEXT_MUTED = '#64748B';
+      const ACCENT_BLUE = '#3B82F6';
 
-      // Gradient top band
-      const topGrad = doc.linearGradient(0, 0, W, 0);
-      topGrad.stop(0, '#4F46E5'); topGrad.stop(0.5, '#7C3AED'); topGrad.stop(1, '#4F46E5');
-      doc.rect(0, 0, W, 8).fill(topGrad);
+      // ── 1. Background & Header ──────────────────────────────────────────
+      doc.rect(0, 0, W, H).fill(BG_LIGHT);
 
-      // Bottom accent line
-      const botGrad = doc.linearGradient(0, 0, W, 0);
-      botGrad.stop(0, '#10B981'); botGrad.stop(0.5, '#3B82F6'); botGrad.stop(1, '#10B981');
-      doc.rect(0, H - 8, W, 8).fill(botGrad);
+      // Top Gradient Header
+      const headerGrad = doc.linearGradient(0, 0, W, 0);
+      headerGrad.stop(0, '#4338CA'); 
+      headerGrad.stop(1, '#6D28D9');
+      doc.rect(0, 0, W, 140).fill(headerGrad);
 
-      // Subtle grid pattern
-      doc.save();
-      doc.rect(0, 0, W, H).clip();
-      for (let x = 0; x < W; x += 48) {
-        doc.moveTo(x, 0).lineTo(x, H).lineWidth(0.3).strokeColor('#1E293B').stroke();
-      }
-      for (let y = 0; y < H; y += 48) {
-        doc.moveTo(0, y).lineTo(W, y).lineWidth(0.3).strokeColor('#1E293B').stroke();
-      }
-      doc.restore();
+      doc.fontSize(32).font('Helvetica-Bold').fillColor('#FFFFFF').text('SkillValix', 48, 48, { lineBreak: false });
+      doc.fontSize(12).font('Helvetica').fillColor('#E2E8F0').text('Verified Certificate of Completion', 48, 88, { lineBreak: false });
 
-      // Glowing circle accent (top-right)
-      doc.circle(W - 80, 80, 160).fillOpacity(0.04).fill('#7C3AED'); doc.fillOpacity(1);
-      doc.circle(W - 80, 80, 100).fillOpacity(0.06).fill('#4F46E5'); doc.fillOpacity(1);
+      // ── 2. Border & Frame ───────────────────────────────────────────────
+      doc.rect(20, 20, W - 40, H - 40).lineWidth(1).strokeColor('#E2E8F0').stroke();
 
-      // ── Border frame ────────────────────────────────────────────────────
-      doc.roundedRect(16, 16, W - 32, H - 32, 8).lineWidth(1).strokeColor('#1E3A8A').stroke();
-      doc.roundedRect(20, 20, W - 40, H - 40, 6).lineWidth(0.5).strokeColor('#334155').stroke();
+      // ── 3. Main Certificate Text ────────────────────────────────────────
+      doc.fontSize(14).font('Helvetica-Bold').fillColor(TEXT_DARK)
+        .text('CERTIFICATE OF COMPLETION', 0, 185, { width: W, align: 'center', characterSpacing: 4 });
 
-      // ── Event type badge (top-left) ─────────────────────────────────────
-      const badgeLabel = eventType === 'job-simulation' ? 'JOB SIMULATION' : eventType === 'hackathon' ? 'HACKATHON' : 'INTERNSHIP';
-      const badgeColor = eventType === 'job-simulation' ? '#10B981' : eventType === 'hackathon' ? '#F59E0B' : '#3B82F6';
-      doc.roundedRect(40, 36, 160, 26, 13).fill(badgeColor);
-      doc.fontSize(9).font('Helvetica-Bold').fillColor('#FFFFFF').text(badgeLabel, 40, 43, { width: 160, align: 'center', characterSpacing: 2, lineBreak: false });
+      doc.fontSize(12).font('Helvetica').fillColor(TEXT_MUTED)
+        .text('This is proudly presented to', 0, 240, { width: W, align: 'center' });
 
-      // ── SkillValix wordmark ─────────────────────────────────────────────
-      doc.fontSize(13).font('Helvetica-Bold').fillColor('#94A3B8').text('Skill', W - 185, 36, { lineBreak: false, continued: true, characterSpacing: -0.3 }).fillColor('#4F46E5').text('Valix', { lineBreak: false });
-      doc.fontSize(7.5).font('Helvetica').fillColor('#475569').text('LEARN · VALIDATE · GROW', W - 185, 52, { width: 160, align: 'right', characterSpacing: 1, lineBreak: false });
-
-      // ── Main content area ────────────────────────────────────────────────
-      const CX = W / 2;   // center X
-      const MAIN_TOP = 95;
-
-      // "CERTIFICATE OF" label
-      doc.fontSize(10).font('Helvetica-Bold').fillColor('#64748B')
-        .text('CERTIFICATE OF', CX - 200, MAIN_TOP, { width: 400, align: 'center', characterSpacing: 4, lineBreak: false });
-
-      // Event type large heading
-      const headLabel = eventType === 'job-simulation' ? 'COMPLETION' : eventType === 'hackathon' ? 'PARTICIPATION' : 'COMPLETION';
-      doc.fontSize(42).font('Helvetica-Bold').fillColor('#F8FAFC')
-        .text(headLabel, CX - 200, MAIN_TOP + 14, { width: 400, align: 'center', lineBreak: false });
-
-      // Decorative divider
-      const divY = MAIN_TOP + 68;
-      const gradDiv = doc.linearGradient(CX - 180, divY, CX + 180, divY);
-      gradDiv.stop(0, '#0F172A'); gradDiv.stop(0.3, badgeColor); gradDiv.stop(0.7, '#4F46E5'); gradDiv.stop(1, '#0F172A');
-      doc.moveTo(CX - 180, divY).lineTo(CX + 180, divY).lineWidth(2).strokeColor(badgeColor).stroke();
-
-      // "Awarded to"
-      doc.fontSize(12).font('Helvetica').fillColor('#94A3B8')
-        .text('Proudly awarded to', CX - 200, divY + 18, { width: 400, align: 'center', lineBreak: false });
-
-      // Student name
-      let namePt = 34;
+      // Student Name
+      let nameSize = 44;
+      const upperName = String(studentName || 'Learner').toUpperCase();
       doc.font('Helvetica-Bold');
-      while (namePt > 18 && doc.fontSize(namePt).widthOfString(String(studentName || '').toUpperCase()) > 420) namePt -= 1;
-      doc.fontSize(namePt).font('Helvetica-Bold').fillColor('#FFFFFF')
-        .text(String(studentName || 'Learner').toUpperCase(), CX - 210, divY + 42, { width: 420, align: 'center', lineBreak: false });
+      while (nameSize > 20 && doc.fontSize(nameSize).widthOfString(upperName) > 520) nameSize -= 2;
+      doc.fontSize(nameSize).fillColor(TEXT_DARK).text(upperName, 0, 275, { width: W, align: 'center' });
 
-      // Name underline
-      const nameW = Math.min(doc.fontSize(namePt).widthOfString(String(studentName || 'Learner').toUpperCase()), 380);
-      const nameLine = divY + 42 + namePt + 6;
-      const gradLine = doc.linearGradient(CX - nameW/2, nameLine, CX + nameW/2, nameLine);
-      gradLine.stop(0, '#0F172A'); gradLine.stop(0.2, badgeColor); gradLine.stop(0.8, '#4F46E5'); gradLine.stop(1, '#0F172A');
-      doc.moveTo(CX - nameW/2, nameLine).lineTo(CX + nameW/2, nameLine).lineWidth(2.5).strokeColor(badgeColor).stroke();
+      // Divider Line
+      doc.moveTo(CX - 160, 275 + nameSize + 12).lineTo(CX + 160, 275 + nameSize + 12).lineWidth(1.5).strokeColor(ACCENT_BLUE).stroke();
 
-      // Role line
-      if (role) {
-        doc.fontSize(13).font('Helvetica-Bold').fillColor(badgeColor)
-          .text(`as ${role}`, CX - 200, nameLine + 14, { width: 400, align: 'center', lineBreak: false });
-      }
+      // Course Info
+      doc.fontSize(12).font('Helvetica').fillColor(TEXT_MUTED)
+        .text('for successfully completing the job simulation', 0, 370, { width: W, align: 'center' });
 
-      // "for completing" + event title
-      const forY = nameLine + (role ? 38 : 18);
-      doc.fontSize(12).font('Helvetica').fillColor('#64748B')
-        .text('for successfully completing', CX - 220, forY, { width: 440, align: 'center', lineBreak: false });
-      doc.fontSize(16).font('Helvetica-Bold').fillColor('#E2E8F0')
-        .text(eventTitle, CX - 220, forY + 20, { width: 440, align: 'center', lineBreak: false });
+      doc.fontSize(22).font('Helvetica-Bold').fillColor(ACCENT_BLUE)
+        .text(eventTitle, 60, 405, { width: W - 120, align: 'center' });
 
-      // ── Bottom row ────────────────────────────────────────────────────────
-      const BOT_Y = H - 100;
+      doc.fontSize(9.5).font('Helvetica').fillColor(TEXT_MUTED)
+        .text('This certificate is issued as a verifiable record of professional skill demonstration on SkillValix.', 0, 465, { width: W, align: 'center' });
 
-      // Left: Cert ID
-      doc.roundedRect(40, BOT_Y, 200, 56, 6).fill('#1E293B');
-      doc.roundedRect(40, BOT_Y, 200, 56, 6).lineWidth(0.5).strokeColor('#334155').stroke();
-      doc.fontSize(7).font('Helvetica-Bold').fillColor('#64748B').text('CERTIFICATE ID', 52, BOT_Y + 10, { characterSpacing: 1.5, lineBreak: false });
-      doc.fontSize(12).font('Helvetica-Bold').fillColor('#E2E8F0').text(certificateId, 52, BOT_Y + 26, { lineBreak: false });
+      // ── 4. QR Code Container (Right) ────────────────────────────────────
+      const QR_SIZE = 100;
+      const QR_X = W - QR_SIZE - 76;
+      const QR_Y = 230;
 
-      // Center: Issued date
-      doc.roundedRect(CX - 100, BOT_Y, 200, 56, 6).fill('#1E293B');
-      doc.roundedRect(CX - 100, BOT_Y, 200, 56, 6).lineWidth(0.5).strokeColor('#334155').stroke();
-      doc.fontSize(7).font('Helvetica-Bold').fillColor('#64748B').text('DATE OF ISSUE', CX - 88, BOT_Y + 10, { characterSpacing: 1.5, lineBreak: false });
-      doc.fontSize(12).font('Helvetica-Bold').fillColor('#E2E8F0').text(issueDate, CX - 88, BOT_Y + 26, { lineBreak: false });
+      doc.roundedRect(QR_X - 12, QR_Y - 12, QR_SIZE + 24, QR_SIZE + 50, 12).fill('#FFFFFF');
+      doc.roundedRect(QR_X - 12, QR_Y - 12, QR_SIZE + 24, QR_SIZE + 50, 12).lineWidth(1).strokeColor('#F1F5F9').stroke();
+      doc.image(qrBuffer, QR_X, QR_Y, { width: QR_SIZE, height: QR_SIZE });
+      doc.fontSize(8).font('Helvetica-Bold').fillColor(TEXT_MUTED).text('SCAN TO VERIFY', QR_X, QR_Y + QR_SIZE + 18, { width: QR_SIZE, align: 'center' });
 
-      // Right: QR
-      const QR_X = W - 130, QR_Y = BOT_Y - 2;
-      doc.roundedRect(QR_X - 10, QR_Y - 8, 96, 96, 6).fill('#1E293B');
-      doc.roundedRect(QR_X - 10, QR_Y - 8, 96, 96, 6).lineWidth(0.5).strokeColor('#334155').stroke();
-      doc.image(qrBuffer, QR_X, QR_Y, { width: 72, height: 72 });
-      doc.fontSize(6.5).font('Helvetica-Bold').fillColor('#64748B').text('SCAN TO VERIFY', QR_X - 8, QR_Y + 76, { width: 92, align: 'center', characterSpacing: 1, lineBreak: false });
+      // ── 5. Information Boxes (Bottom) ───────────────────────────────────
+      const BOX_Y = H - 110;
+      const BOX_W = 210;
+      const BOX_H = 70;
 
-      // Issuer line
-      doc.fontSize(8).font('Helvetica').fillColor('#334155')
-        .text('Issued by SkillValix · MSME Registered', 40, H - 28, { lineBreak: false });
-      doc.fontSize(8).font('Helvetica').fillColor('#334155')
-        .text('skillvalix.com', W - 140, H - 28, { width: 120, align: 'right', lineBreak: false });
+      const drawBox = (x, label, val) => {
+        doc.roundedRect(x, BOX_Y, BOX_W, BOX_H, 10).fill('#FFFFFF');
+        doc.roundedRect(x, BOX_Y, BOX_W, BOX_H, 10).lineWidth(1).strokeColor('#E2E8F0').stroke();
+        doc.fontSize(7).font('Helvetica-Bold').fillColor(TEXT_MUTED).text(label, x + 18, BOX_Y + 18, { characterSpacing: 1.5 });
+        doc.fontSize(12).font('Helvetica-Bold').fillColor(TEXT_DARK).text(val, x + 18, BOX_Y + 38);
+      };
+
+      drawBox(48, 'CERTIFICATE ID', certificateId);
+      drawBox(CX - (BOX_W / 2), 'ISSUED ON', issueDate);
+      drawBox(W - BOX_W - 48, 'ISSUED BY', 'SkillValix');
+
+      // ── 6. Bottom Legal Line ────────────────────────────────────────────
+      doc.fontSize(8).font('Helvetica').fillColor('#94A3B8')
+        .text('Issued by SkillValix · skillvalix.com', 48, H - 30);
 
       doc.end();
     } catch (err) {
