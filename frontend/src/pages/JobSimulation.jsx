@@ -53,6 +53,7 @@ export default function JobSimulation() {
   // Interactive Task tracking
   const [taskStatus, setTaskStatus] = useState({});
   const [submissions, setSubmissions] = useState({});
+  const [taskErrors, setTaskErrors] = useState({});
 
   useEffect(() => {
     fetch('/data/job-simulations.json')
@@ -106,11 +107,16 @@ export default function JobSimulation() {
 
   const SimIcon = ICON_MAP[sim.icon] || Laptop;
 
-  const handleTaskSubmit = (taskNum) => {
-    if(!submissions[taskNum]?.trim() || !isAuthenticated) return;
-    setTaskStatus(p => ({ ...p, [taskNum]: 'reviewing' }));
+  const handleTaskSubmit = async (taskNum, taskType) => {
+    const url = submissions[taskNum]?.trim();
+    if (!url || !isAuthenticated) return;
     
-    setTimeout(() => {
+    setTaskStatus(p => ({ ...p, [taskNum]: 'reviewing' }));
+    setTaskErrors(p => ({ ...p, [taskNum]: '' }));
+    
+    try {
+      await apiClient.post('/events/simulations/validate-task', { url, taskType });
+      
       setTaskStatus(p => {
         const next = { ...p, [taskNum]: 'completed' };
         try {
@@ -118,7 +124,10 @@ export default function JobSimulation() {
         } catch(e) {}
         return next;
       });
-    }, 2500);
+    } catch (error) {
+      setTaskStatus(p => ({ ...p, [taskNum]: 'pending' }));
+      setTaskErrors(p => ({ ...p, [taskNum]: error.response?.data?.message || 'Validation failed. Ensure your URL is valid and public.' }));
+    }
   };
 
   const allTasksCompleted = sim.tasks.every(t => taskStatus[t.num] === 'completed');
@@ -403,27 +412,37 @@ export default function JobSimulation() {
                           Evaluating submission against AI grading metrics...
                         </div>
                       ) : (
-                        <div className="flex flex-col sm:flex-row gap-3">
-                          <div className="flex-1 relative">
-                            <input
-                              type="text"
-                              placeholder="Paste project URL (Github, Vercel, Figma...)"
-                              value={submissions[task.num] || ''}
-                              onChange={e => setSubmissions(p => ({ ...p, [task.num]: e.target.value }))}
-                              disabled={!isAuthenticated}
-                              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-60"
-                            />
-                            {!isAuthenticated && (
-                              <div className="text-[10px] text-red-500 font-bold mt-1">Please log in to submit tasks</div>
-                            )}
+                        <div className="flex flex-col gap-2">
+                          <div className="flex flex-col sm:flex-row gap-3">
+                            <div className="flex-1 relative">
+                              <input
+                                type="text"
+                                placeholder={`Paste project URL (${task.type} tool link)...`}
+                                value={submissions[task.num] || ''}
+                                onChange={e => {
+                                  setSubmissions(p => ({ ...p, [task.num]: e.target.value }));
+                                  setTaskErrors(p => ({ ...p, [task.num]: '' }));
+                                }}
+                                disabled={!isAuthenticated}
+                                className={`w-full bg-slate-50 border ${taskErrors[task.num] ? 'border-red-300 ring-1 ring-red-300' : 'border-slate-200'} rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-60`}
+                              />
+                              {!isAuthenticated && (
+                                <div className="text-[10px] text-red-500 font-bold mt-1">Please log in to submit tasks</div>
+                              )}
+                            </div>
+                            <button
+                              disabled={!submissions[task.num]?.trim() || !isAuthenticated}
+                              onClick={() => handleTaskSubmit(task.num, task.type)}
+                              className="px-6 py-2.5 bg-slate-900 text-white font-bold rounded-xl text-sm hover:bg-slate-800 disabled:opacity-50 transition-colors whitespace-nowrap"
+                            >
+                              Submit Task
+                            </button>
                           </div>
-                          <button
-                            disabled={!submissions[task.num]?.trim() || !isAuthenticated}
-                            onClick={() => handleTaskSubmit(task.num)}
-                            className="px-6 py-2.5 bg-slate-900 text-white font-bold rounded-xl text-sm hover:bg-slate-800 disabled:opacity-50 transition-colors whitespace-nowrap"
-                          >
-                            Submit Task
-                          </button>
+                          {taskErrors[task.num] && (
+                            <div className="text-xs font-bold text-red-500 px-1 mt-1">
+                              {taskErrors[task.num]}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>

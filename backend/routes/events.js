@@ -406,4 +406,83 @@ router.get('/certificates/mine', authOptions, async (req, res) => {
   }
 });
 
+// ─── Lightweight Task Validation ──────────────────────────────────────────────
+router.post('/simulations/validate-task', authOptions, async (req, res) => {
+  try {
+    const { url, taskType } = req.body;
+    if (!url || !taskType) {
+      return res.status(400).json({ valid: false, message: 'URL and task type are required.' });
+    }
+
+    let parsedUrl;
+    try {
+      parsedUrl = new URL(url);
+      if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+        throw new Error();
+      }
+    } catch {
+      return res.status(400).json({ valid: false, message: 'Invalid format. Please submit a valid http:// or https:// link.' });
+    }
+
+    const host = parsedUrl.host.toLowerCase();
+
+    // Map domains by type for realism
+    const EXPECTED_DOMAINS = {
+      'Coding': ['github.com', 'codesandbox.io', 'codepen.io', 'vercel.app', 'netlify.app', 'gitlab.com', 'replit.com', 'drive.google.com'],
+      'Security': ['github.com', 'gitlab.com', 'drive.google.com'],
+      'Testing': ['github.com', 'gitlab.com', 'drive.google.com'],
+      'Design': ['figma.com', 'invisionapp.com', 'dribbble.com', 'behance.net', 'canva.com', 'drive.google.com'],
+      'Research': ['docs.google.com', 'notion.so', 'drive.google.com', 'medium.com', 'figma.com'],
+      'Data': ['github.com', 'kaggle.com', 'colab.research.google.com', 'drive.google.com', 'tableau.com'],
+      'Analysis': ['github.com', 'kaggle.com', 'colab.research.google.com', 'drive.google.com', 'docs.google.com', 'notion.so'],
+      'Visualization': ['tableau.com', 'github.com', 'kaggle.com', 'docs.google.com', 'drive.google.com'],
+      'Communication': ['docs.google.com', 'notion.so', 'drive.google.com', 'medium.com', 'linkedin.com'],
+    };
+
+    const allowed = EXPECTED_DOMAINS[taskType] || [];
+    if (allowed.length > 0) {
+      const isAllowed = allowed.some(d => host === d || host.endsWith('.' + d));
+      if (!isAllowed) {
+        return res.status(400).json({
+          valid: false,
+          message: `For a ${taskType} task, we expect a link from recognized platforms like ${allowed.slice(0, 3).join(', ')}.`,
+        });
+      }
+    }
+
+    // Attempt a lightweight ping
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4000);
+      const fetchOpts = { 
+        method: 'HEAD', 
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+        signal: controller.signal 
+      };
+
+      const response = await fetch(url, fetchOpts); 
+      clearTimeout(timeoutId);
+
+      if (!response.ok && response.status !== 403 && response.status !== 405) {
+        // Fallback to GET if HEAD was blocked by server
+        const controller2 = new AbortController();
+        const timeoutId2 = setTimeout(() => controller2.abort(), 4000);
+        const getFallback = await fetch(url, { ...fetchOpts, method: 'GET', signal: controller2.signal });
+        clearTimeout(timeoutId2);
+
+        if (!getFallback.ok && getFallback.status !== 403 && getFallback.status !== 405) {
+           return res.status(400).json({ valid: false, message: 'Link returned an error. Ensure the repository or file is public.' });
+        }
+      }
+    } catch (fetchErr) {
+       return res.status(400).json({ valid: false, message: 'Could not access the link. Please check if the URL is correct and public.' });
+    }
+
+    // Passed
+    res.json({ valid: true, message: 'Submission correctly formatted and verified.' });
+  } catch (err) {
+    res.status(500).json({ valid: false, message: 'Server error during validation.' });
+  }
+});
+
 export default router;
