@@ -52,6 +52,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+app.options('/api/*', cors(corsOptions));
 
 // Keep CORS headers explicit for allowed origins across all response paths.
 app.use((req, res, next) => {
