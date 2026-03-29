@@ -9,7 +9,7 @@ import {
   Download, CheckCircle, Award, Share2, BookOpen,
   ArrowRight, Loader2, Trophy, GraduationCap, Medal,
   Sparkles, Clock, Star, Linkedin, Github, FileText, Globe,
-  User, Settings, Briefcase, X, Save
+  User, Settings, Briefcase, X, Save, UserRound
 } from 'lucide-react';
 
 /* ────────────────────────────────────────────
