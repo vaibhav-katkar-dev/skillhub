@@ -1545,9 +1545,7 @@ router.get('/certificates/download/:certId', async (req, res) => {
 
     if (cert.pdfStatus === 'ready' && hasLatestTemplate) {
       // Robustly pull buffer from Mongoose model
-      const rawBuf = (cert.pdfBuffer && cert.pdfBuffer.buffer) 
-        ? Buffer.from(cert.pdfBuffer.buffer)
-        : cert.pdfBuffer;
+      const rawBuf = cert.pdfBuffer?.buffer || cert.pdfBuffer;
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `inline; filename=EventCertificate-${cert.certificateId}.pdf`);
       res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
@@ -1588,7 +1586,6 @@ router.get('/certificates/download/:certId', async (req, res) => {
 // ─── Verify event certificate (public) ───────────────────────────────────────
 router.get('/certificates/verify/:certId', async (req, res) => {
   try {
-    applyEventDownloadCors(req, res);
     const cert = await EventCertificate.findOne({ certificateId: req.params.certId })
       .populate('student', 'name').lean();
     if (!cert) return res.status(404).json({ message: 'Certificate not found.' });

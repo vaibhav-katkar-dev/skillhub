@@ -254,8 +254,9 @@ export default function JobSimulation() {
       if (elapsed < 3000) {
         await new Promise(resolve => setTimeout(resolve, 3000 - elapsed));
       }
-    } catch {
-      setErr('Download failed. Please try again or check your connection.');
+    } catch (e) {
+      const status = e.response ? `HTTP ${e.response.status}` : 'Network/CORS Error';
+      setErr(`Download failed (${status}): ${e.message}. Please try again.`);
     } finally {
       setDownloading(false);
     }
