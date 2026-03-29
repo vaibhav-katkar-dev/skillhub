@@ -315,12 +315,13 @@ const Dashboard = () => {
   const [editingProfile, setEditingProfile] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileData, setProfileData] = useState({
-    github: '', linkedin: '', resume: '', portfolio: '', username: '', openToWork: false
+    name: '', github: '', linkedin: '', resume: '', portfolio: '', username: '', openToWork: false
   });
 
   useEffect(() => {
     if (userData) {
       setProfileData({
+        name: userData.name || '',
         github: userData.github || '',
         linkedin: userData.linkedin || '',
         resume: userData.resume || '',
@@ -709,6 +710,11 @@ const Dashboard = () => {
                 <div className="bg-white border rounded-2xl p-5 shadow-sm transition-all duration-300">
                   {editingProfile ? (
                     <div className="space-y-4">
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1.5"><UserRound className="w-3 h-3"/> Full Name</label>
+                        <input type="text" value={profileData.name} onChange={e => setProfileData({...profileData, name: e.target.value})} placeholder="John Doe" className="w-full text-sm px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
+                        <p className="text-[11px] text-slate-400 mt-1">This name is used on newly generated certificates.</p>
+                      </div>
                       <div>
                         <label className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1.5"><Github className="w-3 h-3"/> GitHub Username / Link</label>
                         <input type="text" value={profileData.github} onChange={e => setProfileData({...profileData, github: e.target.value})} placeholder="github.com/myname" className="w-full text-sm px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />

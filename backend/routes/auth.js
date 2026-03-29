@@ -271,9 +271,19 @@ router.get('/public/:id', async (req, res) => {
 // ── Update Profile ────────────────────────────────────────────────────────
 router.put('/profile', authOptions, async (req, res) => {
   try {
-    const { github, linkedin, resume, portfolio, username, openToWork } = req.body;
+    const { name, github, linkedin, resume, portfolio, username, openToWork } = req.body;
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const normalizedName = typeof name === 'string' ? name.trim().replace(/\s+/g, ' ') : undefined;
+    let nameChanged = false;
+    if (normalizedName !== undefined && normalizedName !== (user.name || '')) {
+      if (!normalizedName) {
+        return res.status(400).json({ message: 'Name cannot be empty.' });
+      }
+      user.name = normalizedName;
+      nameChanged = true;
+    }
 
     if (username !== undefined && username !== (user.username || '')) {
       const formattedUsername = username.toLowerCase().replace(/[^a-z0-9-]/g, '');
@@ -297,6 +307,34 @@ router.put('/profile', authOptions, async (req, res) => {
     if (openToWork !== undefined) user.openToWork = openToWork;
 
     await user.save();
+
+    if (nameChanged) {
+      await Promise.all([
+        Certificate.updateMany(
+          { student: user._id },
+          {
+            $set: {
+              pdfStatus: 'pending',
+              pdfRequestedAt: null,
+              pdfGeneratedAt: null,
+              pdfError: '',
+            },
+            $unset: { pdfBuffer: 1, pdfUrl: 1 },
+          }
+        ),
+        EventCertificate.updateMany(
+          { student: user._id },
+          {
+            $set: {
+              pdfStatus: 'pending',
+              pdfGeneratedAt: null,
+              pdfError: '',
+            },
+            $unset: { pdfBuffer: 1 },
+          }
+        ),
+      ]);
+    }
     
     const updatedUser = await User.findById(req.user.id).select('-password');
     res.json(updatedUser);
