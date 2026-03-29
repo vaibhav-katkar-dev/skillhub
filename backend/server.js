@@ -69,8 +69,9 @@ app.use(cors(corsOptions));
 // Helmet must come AFTER cors middleware so it doesn't override CORS headers.
 // COOP set to unsafe-none so Google OAuth popup postMessage is NOT blocked.
 app.use(helmet({
-  crossOriginOpenerPolicy: false, // disable COOP — required for Google OAuth popup flow
-  crossOriginEmbedderPolicy: false, // disable COEP — prevents blocking cross-origin resources
+  crossOriginOpenerPolicy: false,
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: false, // Prevents strictly blocking API blob downloads from skillvalix.com
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
