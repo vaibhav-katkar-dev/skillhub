@@ -854,24 +854,6 @@ function drawCornerOrnaments(doc, color = P.goldMid) {
 }
 
 /**
- * Repeating micro-dot texture overlay — gives a subtle premium paper feel.
- * Very low opacity; drawn as tiny circles on a grid.
- */
-function drawGrainOverlay(doc) {
-  const W = doc.page.width;
-  const H = doc.page.height;
-  doc.save();
-  doc.fillOpacity(0.018).fillColor(P.goldDark);
-  const step = 26; // Reduced density: dramatically speeds up Vercel Lambda generation
-  for (let x = MARGIN_INNER + 4; x < W - MARGIN_INNER; x += step) {
-    for (let y = MARGIN_INNER + 4; y < H - MARGIN_INNER; y += step) {
-      doc.circle(x, y, 0.65).fill();
-    }
-  }
-  doc.restore();
-}
-
-/**
  * Central watermark monogram "SV" printed at very low opacity
  * behind the name area.
  */
@@ -1042,13 +1024,10 @@ async function buildJobSimCertificate(doc, {
   radGlow.stop(0, '#FFFFFF').stop(0.6, '#FDFAF2').stop(1, P.pageBg);
   doc.rect(0, 0, W, H).fill(radGlow);
 
-  // ── 2. Grain texture ──────────────────────────────────────────────────────
-  drawGrainOverlay(doc);
-
-  // ── 3. Watermark monogram ─────────────────────────────────────────────────
+  // ── 2. Watermark monogram ─────────────────────────────────────────────────
   drawWatermark(doc);
 
-  // ── 4. Borders: outer (thick gold) + inner (hairline) ────────────────────
+  // ── 3. Borders: outer (thick gold) + inner (hairline) ────────────────────
   const outerGrad = hGrad(doc, [[0, P.goldDark], [0.25, P.goldMid], [0.5, P.goldLight], [0.75, P.goldMid], [1, P.goldDark]]);
   doc.rect(MARGIN_OUTER, MARGIN_OUTER, W - MARGIN_OUTER * 2, H - MARGIN_OUTER * 2)
      .lineWidth(2.5).strokeColor(outerGrad).stroke();
@@ -1254,9 +1233,6 @@ async function buildGenericCertificate(doc, {
 
   // Outer border
   doc.rect(18, 18, W - 36, H - 36).lineWidth(1).strokeColor('#CBD5E1').stroke();
-
-  // Grain
-  drawGrainOverlay(doc);
 
   let curY = 160;
 

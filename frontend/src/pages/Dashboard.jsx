@@ -420,20 +420,17 @@ const Dashboard = () => {
     });
   }, [certs]);
 
-  // Silently fetch PDF bytes & trigger browser save/open — no tab switch
+  // Fetch stored PDF bytes & trigger browser save — no custom request headers to avoid CORS preflight
   const triggerBlobDownload = async (cert) => {
     const endpoint = cert.isEvent
-      ? `/events/certificates/download/${cert.certificateId}?v=${Date.now()}`
+      ? `/events/certificates/download/${cert.certificateId}`
       : `/certificates/download/${cert.certificateId}`;
-    const res = await api.get(endpoint, {
-      responseType: 'blob',
-      headers: cert.isEvent ? { 'Cache-Control': 'no-cache', Pragma: 'no-cache' } : undefined,
-    });
+    const res = await api.get(endpoint, { responseType: 'blob' });
     const blob = new Blob([res.data], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${cert.isEvent ? 'EventBase' : 'Certificate'}-${cert.certificateId}.pdf`;
+    a.download = `${cert.isEvent ? 'JobSimCertificate' : 'Certificate'}-${cert.certificateId}.pdf`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -445,11 +442,15 @@ const Dashboard = () => {
     if (!certId) return;
 
     if (cert.isEvent) {
-      setPrepStates(prev => ({ ...prev, [certId]: { busy: true, seconds: 0, message: 'Downloading...' } }));
+      // Event certs: call prepare first (generates+saves PDF), then download stored PDF
+      setPrepStates(prev => ({ ...prev, [certId]: { busy: true, seconds: 0, message: 'Generating PDF...' } }));
       try {
+        await api.post(`/events/certificates/prepare/${certId}`);
+        setPrepStates(prev => ({ ...prev, [certId]: { busy: true, seconds: 0, message: 'Downloading...' } }));
         await triggerBlobDownload(cert);
       } catch (e) {
-        setPrepStates(prev => ({ ...prev, [certId]: { busy: false, seconds: 0, message: 'Failed to download.' } }));
+        const msg = e.response?.data?.message || 'Failed to download event certificate.';
+        setPrepStates(prev => ({ ...prev, [certId]: { busy: false, seconds: 0, message: msg } }));
       } finally {
         setPrepStates(prev => { const next = { ...prev }; delete next[certId]; return next; });
       }
