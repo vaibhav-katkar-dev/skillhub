@@ -59,7 +59,7 @@ const corsOptions = {
 };
 
 // Handle all OPTIONS preflight requests FIRST — must be before rate limiters
-app.options('*', cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
 app.use(cors(corsOptions));
 
 // CORS configuration handled purely by the cors() middleware
