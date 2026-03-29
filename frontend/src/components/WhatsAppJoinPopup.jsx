@@ -34,7 +34,7 @@ const WhatsAppJoinPopup = () => {
             <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
               <MessageCircle className="h-5 w-5" />
             </span>
-            <h3 className="text-base font-bold text-slate-900">Join Our WhatsApp Group</h3>
+            <h3 className="text-base font-bold text-slate-900">Join Our Learning Community!</h3>
           </div>
           <button
             type="button"
@@ -46,8 +46,13 @@ const WhatsAppJoinPopup = () => {
           </button>
         </div>
 
-        <p className="mt-3 text-sm text-slate-600">
-          Get free course updates, resources, and career tips.
+        <p className="mt-3 text-sm text-slate-600 whitespace-pre-line">
+          Learn Python, JavaScript & AI for FREE {"\n\n"}
+          ✔ Free Courses{"\n"}
+          ✔ Certificates{"\n"}
+          ✔ Career Tips{"\n"}
+          ✔ Real Opportunities{"\n\n"}
+          👉 Start your journey now
         </p>
 
         <div className="mt-4 flex gap-2">
