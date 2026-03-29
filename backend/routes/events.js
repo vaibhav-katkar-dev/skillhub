@@ -862,10 +862,10 @@ function drawGrainOverlay(doc) {
   const H = doc.page.height;
   doc.save();
   doc.fillOpacity(0.018).fillColor(P.goldDark);
-  const step = 9;
+  const step = 26; // Reduced density: dramatically speeds up Vercel Lambda generation
   for (let x = MARGIN_INNER + 4; x < W - MARGIN_INNER; x += step) {
     for (let y = MARGIN_INNER + 4; y < H - MARGIN_INNER; y += step) {
-      doc.circle(x, y, 0.55).fill();
+      doc.circle(x, y, 0.65).fill();
     }
   }
   doc.restore();
