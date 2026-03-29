@@ -229,10 +229,12 @@ export default function JobSimulation() {
   };
 
   const handleDownload = async () => {
-    if (!certId) return;
+    if (!certId || downloading) return;
 
     setDownloading(true);
+    setErr('');
     try {
+      const start = Date.now();
       const res = await apiClient.get(`/events/certificates/download/${certId}?v=${Date.now()}`, {
         responseType: 'blob',
         headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
@@ -246,8 +248,14 @@ export default function JobSimulation() {
       anchor.click();
       document.body.removeChild(anchor);
       setTimeout(() => URL.revokeObjectURL(url), 10000);
+      
+      // Wait timer to guarantee a smooth "Downloading..." visual experience
+      const elapsed = Date.now() - start;
+      if (elapsed < 3000) {
+        await new Promise(resolve => setTimeout(resolve, 3000 - elapsed));
+      }
     } catch {
-      setErr('Download failed. Please try again.');
+      setErr('Download failed. Please try again or check your connection.');
     } finally {
       setDownloading(false);
     }

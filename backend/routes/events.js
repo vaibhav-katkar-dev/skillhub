@@ -16,22 +16,7 @@ import { authOptions, adminCheck } from '../middleware/auth.js';
 const router = express.Router();
 const FRONTEND_URL = () => (process.env.FRONTEND_URL || 'https://www.skillvalix.com').replace(/\/$/, '');
 const EVENT_CERT_TEMPLATE_VERSION = 4;
-const EVENT_CERT_ALLOWED_ORIGINS = new Set([
-  'https://skillvalix.com',
-  'https://www.skillvalix.com',
-  'http://localhost:5173',
-  'http://localhost:3000',
-]);
 
-function applyEventDownloadCors(req, res) {
-  const origin = req.headers.origin;
-  if (origin && EVENT_CERT_ALLOWED_ORIGINS.has(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Vary', 'Origin');
-    res.setHeader('Access-Control-Expose-Headers', 'Content-Type, Content-Disposition, Retry-After');
-  }
-}
 
 const EVENT_CERT_WARM_CONCURRENCY = Math.max(1, Number(process.env.CERT_WARM_CONCURRENCY || 1));
 const eventCertWarmJob = {
@@ -1552,7 +1537,6 @@ router.post('/certificates/generate', authOptions, async (req, res) => {
 // ─── Download event certificate ───────────────────────────────────────────────
 router.get('/certificates/download/:certId', async (req, res) => {
   try {
-    applyEventDownloadCors(req, res);
     const cert = await EventCertificate.findOne({ certificateId: req.params.certId })
       .populate('student', 'name').select('+pdfBuffer').lean();
     if (!cert) return res.status(404).json({ message: 'Certificate not found.' });
@@ -1560,7 +1544,10 @@ router.get('/certificates/download/:certId', async (req, res) => {
     const hasLatestTemplate = Number(cert.pdfTemplateVersion || 0) >= EVENT_CERT_TEMPLATE_VERSION;
 
     if (cert.pdfStatus === 'ready' && hasLatestTemplate) {
-      const rawBuf = cert.pdfBuffer?.buffer || cert.pdfBuffer;
+      // Robustly pull buffer from Mongoose model
+      const rawBuf = (cert.pdfBuffer && cert.pdfBuffer.buffer) 
+        ? Buffer.from(cert.pdfBuffer.buffer)
+        : cert.pdfBuffer;
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `inline; filename=EventCertificate-${cert.certificateId}.pdf`);
       res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
