@@ -815,6 +815,63 @@ function fitFontSizeH(doc, text, opts, { maxPt, minPt }) {
   return minPt;
 }
 
+function normalizeCertificateName(name, fallback = 'Learner') {
+  return String(name || fallback).trim().replace(/\s+/g, ' ').toUpperCase();
+}
+
+function fitCertificateNameLayout(doc, name, maxWidth, { font = 'Helvetica-Bold', maxPt, minPt }) {
+  const displayName = normalizeCertificateName(name);
+  const words = displayName.split(' ').filter(Boolean);
+
+  let size = maxPt;
+  let bestLines = [displayName];
+
+  while (size >= minPt) {
+    doc.font(font).fontSize(size);
+
+    if (doc.widthOfString(displayName) <= maxWidth) {
+      return { displayName, size, lines: [displayName] };
+    }
+
+    if (words.length > 1) {
+      let bestSplit = null;
+      for (let i = 1; i < words.length; i++) {
+        const line1 = words.slice(0, i).join(' ');
+        const line2 = words.slice(i).join(' ');
+        const width1 = doc.widthOfString(line1);
+        const width2 = doc.widthOfString(line2);
+        const widest = Math.max(width1, width2);
+        if (width1 <= maxWidth && width2 <= maxWidth) {
+          if (!bestSplit || widest < bestSplit.widest) {
+            bestSplit = { lines: [line1, line2], widest };
+          }
+        }
+      }
+
+      if (bestSplit) {
+        return { displayName, size, lines: bestSplit.lines };
+      }
+
+      bestLines = [words.join(' ')];
+    }
+
+    size -= 0.5;
+  }
+
+  doc.font(font).fontSize(minPt);
+  if (words.length > 1) {
+    for (let i = 1; i < words.length; i++) {
+      const line1 = words.slice(0, i).join(' ');
+      const line2 = words.slice(i).join(' ');
+      if (doc.widthOfString(line1) <= maxWidth && doc.widthOfString(line2) <= maxWidth) {
+        return { displayName, size: minPt, lines: [line1, line2] };
+      }
+    }
+  }
+
+  return { displayName, size: minPt, lines: bestLines };
+}
+
 /**
  * Draw four decorative corner rosettes (cross + diamond).
  * Placed at each corner inside the inner border.
@@ -1076,15 +1133,20 @@ async function buildJobSimCertificate(doc, {
 
   // ── 10. Learner name (auto-size) ─────────────────────────────────────────
   const nameMaxW = W - 230; // leave room for QR on the right
-  const rawName  = String(studentName || 'Learner').toUpperCase();
-  const nameSize = fitFontSize(doc, rawName, {
+  const { size: nameSize, lines: nameLines } = fitCertificateNameLayout(doc, studentName, nameMaxW, {
     font: 'Helvetica-Bold', maxPt: 46, minPt: 22, maxWidth: nameMaxW,
   });
-  const safeName = clipText(doc.font('Helvetica-Bold').fontSize(nameSize), rawName, nameMaxW);
+  const nameLineGap = 4;
+  const nameBlockH = nameLines.length * nameSize + (nameLines.length - 1) * nameLineGap;
   doc.font('Helvetica-Bold').fontSize(nameSize).fillColor(P.inkDark)
-     .text(safeName, (W - nameMaxW) / 2, curY, { width: nameMaxW, align: 'center', lineBreak: false });
+     .text(nameLines.join('\n'), (W - nameMaxW) / 2, curY, {
+       width: nameMaxW,
+       align: 'center',
+       lineBreak: true,
+       lineGap: nameLineGap,
+     });
 
-  const underY = curY + nameSize + 5;
+  const underY = curY + nameBlockH + 5;
   // Double underline (thick + thin)
   doc.moveTo(CX - 220, underY).lineTo(CX + 220, underY)
      .lineWidth(1.6).strokeColor(P.goldMid).stroke();
@@ -1255,14 +1317,20 @@ async function buildGenericCertificate(doc, {
 
   // Name
   const nameMaxW = W - 200;
-  const rawName  = String(studentName || 'Learner').toUpperCase();
-  const nameSize = fitFontSize(doc, rawName, {
+  const { size: nameSize, lines: nameLines } = fitCertificateNameLayout(doc, studentName, nameMaxW, {
     font: 'Helvetica-Bold', maxPt: 44, minPt: 20, maxWidth: nameMaxW,
   });
+  const nameLineGap = 4;
+  const nameBlockH = nameLines.length * nameSize + (nameLines.length - 1) * nameLineGap;
   doc.font('Helvetica-Bold').fontSize(nameSize).fillColor('#0F172A')
-     .text(rawName, 0, curY, { width: W, align: 'center', lineBreak: false });
+     .text(nameLines.join('\n'), 0, curY, {
+       width: W,
+       align: 'center',
+       lineBreak: true,
+       lineGap: nameLineGap,
+     });
 
-  const underY = curY + nameSize + 6;
+  const underY = curY + nameBlockH + 6;
   doc.moveTo(CX - 180, underY).lineTo(CX + 180, underY)
      .lineWidth(1.4).strokeColor(P.blueMid).stroke();
   curY = underY + 14;

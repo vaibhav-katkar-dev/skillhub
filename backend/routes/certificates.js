@@ -33,6 +33,63 @@ function isPdfReady(cert) {
   return cert?.pdfStatus === 'ready' && hasStoredPdf(cert);
 }
 
+function normalizeCertificateName(name, fallback = 'Student') {
+  return String(name || fallback).trim().replace(/\s+/g, ' ').toUpperCase();
+}
+
+function fitCertificateNameLayout(doc, name, maxWidth, { font = 'Helvetica-Bold', maxPt, minPt }) {
+  const displayName = normalizeCertificateName(name);
+  const words = displayName.split(' ').filter(Boolean);
+
+  let size = maxPt;
+  let fallbackLines = [displayName];
+
+  while (size >= minPt) {
+    doc.font(font).fontSize(size);
+
+    if (doc.widthOfString(displayName) <= maxWidth) {
+      return { displayName, size, lines: [displayName] };
+    }
+
+    if (words.length > 1) {
+      let bestSplit = null;
+      for (let i = 1; i < words.length; i++) {
+        const line1 = words.slice(0, i).join(' ');
+        const line2 = words.slice(i).join(' ');
+        const width1 = doc.widthOfString(line1);
+        const width2 = doc.widthOfString(line2);
+        const widest = Math.max(width1, width2);
+        if (width1 <= maxWidth && width2 <= maxWidth) {
+          if (!bestSplit || widest < bestSplit.widest) {
+            bestSplit = { lines: [line1, line2], widest };
+          }
+        }
+      }
+
+      if (bestSplit) {
+        return { displayName, size, lines: bestSplit.lines };
+      }
+
+      fallbackLines = [words.join(' ')];
+    }
+
+    size -= 0.5;
+  }
+
+  doc.font(font).fontSize(minPt);
+  if (words.length > 1) {
+    for (let i = 1; i < words.length; i++) {
+      const line1 = words.slice(0, i).join(' ');
+      const line2 = words.slice(i).join(' ');
+      if (doc.widthOfString(line1) <= maxWidth && doc.widthOfString(line2) <= maxWidth) {
+        return { displayName, size: minPt, lines: [line1, line2] };
+      }
+    }
+  }
+
+  return { displayName, size: minPt, lines: fallbackLines };
+}
+
 function normalizeId(value) {
   let current = value;
   let depth = 0;
@@ -289,12 +346,20 @@ function buildCertificatePdfBuffer({ studentName, courseTitle, certificateId, is
 
       // Student name
       const NAME_Y = CERT_Y + 104;
-      let namePt = 32;
-      doc.font('Helvetica-Bold');
-      while (namePt > 20 && doc.fontSize(namePt).widthOfString(String(studentName || 'Student').toUpperCase()) > CONTENT_W) namePt -= 1;
-      doc.fontSize(namePt).font('Helvetica-Bold').fillColor(DARK).text(String(studentName || 'Student').toUpperCase(), LX, NAME_Y, { lineBreak: false });
-      const NAME_STR_W = Math.min(doc.fontSize(namePt).widthOfString(String(studentName || 'Student').toUpperCase()), CONTENT_W);
-      const UL_Y = NAME_Y + namePt + 12;
+      const { size: namePt, lines: nameLines } = fitCertificateNameLayout(doc, studentName, CONTENT_W, {
+        font: 'Helvetica-Bold', maxPt: 32, minPt: 20, maxWidth: CONTENT_W,
+      });
+      const nameLineGap = 4;
+      const nameBlockH = nameLines.length * namePt + (nameLines.length - 1) * nameLineGap;
+      doc.font('Helvetica-Bold').fontSize(namePt).fillColor(DARK)
+        .text(nameLines.join('\n'), LX, NAME_Y, {
+          width: CONTENT_W,
+          align: 'left',
+          lineBreak: true,
+          lineGap: nameLineGap,
+        });
+      const NAME_STR_W = Math.min(Math.max(...nameLines.map((line) => doc.font('Helvetica-Bold').fontSize(namePt).widthOfString(line))), CONTENT_W);
+      const UL_Y = NAME_Y + nameBlockH + 12;
       doc.rect(LX, UL_Y, NAME_STR_W, 3).fill(BLUE);
       doc.rect(LX + NAME_STR_W + 8, UL_Y, CONTENT_W - NAME_STR_W - 8, 1).fillOpacity(0.15).fill(BLUE); doc.fillOpacity(1);
 
