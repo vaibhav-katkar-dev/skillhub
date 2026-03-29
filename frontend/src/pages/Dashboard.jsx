@@ -216,8 +216,9 @@ const CertCard = ({ cert, onDownload, copyMsg, onCopy, prepState }) => {
         <div className="flex flex-col gap-2">
           {/* Row 1: Core Actions */}
           <div className="flex gap-2">
-            <button
+    <button
               onClick={() => onDownload(cert)}
+              disabled={prepState?.busy}
               className={`flex-1 relative overflow-hidden text-xs font-bold py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-[.98] ${primaryBtn}`}
             >
               {cert.pdfReady ? <Download className="w-3.5 h-3.5" /> : <Loader2 className={`w-3.5 h-3.5 ${cert.pdfStatus === 'generating' || cert.pdfStatus === 'queued' ? 'animate-spin' : ''}`} />}
@@ -435,6 +436,7 @@ const Dashboard = () => {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+    await new Promise(resolve => setTimeout(resolve, 800));
     setTimeout(() => URL.revokeObjectURL(url), 10000);
   };
 
@@ -462,12 +464,13 @@ const Dashboard = () => {
       const statusRes = await api.get(`/certificates/status/${certId}`);
       if (statusRes.data?.pdfReady) {
         clearCache('certs_mine');
+        setPrepStates(prev => ({ ...prev, [certId]: { busy: true, seconds: 0, message: 'Downloading...' } }));
+        await triggerBlobDownload(cert);
         setPrepStates(prev => {
           const next = { ...prev };
           delete next[certId];
           return next;
         });
-        await triggerBlobDownload(cert);
         return;
       }
     } catch (err) {
@@ -480,12 +483,13 @@ const Dashboard = () => {
         clearCache('certs_mine');
         const refreshed = await api.get('/certificates/mine');
         setCerts(refreshed.data);
+        setPrepStates(prev => ({ ...prev, [certId]: { busy: true, seconds: 0, message: 'Downloading...' } }));
+        await triggerBlobDownload(cert);
         setPrepStates(prev => {
           const next = { ...prev };
           delete next[certId];
           return next;
         });
-        await triggerBlobDownload(cert);
         return;
       }
 
