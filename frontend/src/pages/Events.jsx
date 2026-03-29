@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   CircleDot,
   Clock3,
+  Lock,
   Rocket,
   Star,
   Trophy,
@@ -162,17 +163,16 @@ export default function Events() {
 
       <section className="py-16 px-6 bg-gradient-to-r from-indigo-600 to-violet-600">
         <div className="max-w-3xl mx-auto text-center text-white">
-          <h2 className="text-3xl font-black mb-3">Ready to prove your skills?</h2>
-          <p className="text-indigo-200 mb-8">Complete a job simulation, earn your certificate, and stand out to recruiters.</p>
-          <Link
-            to="/job-simulation/frontend-developer"
-            className="inline-block px-8 py-3 rounded-xl bg-white text-indigo-700 font-bold text-sm hover:bg-indigo-50 transition-colors shadow-lg"
+          <h2 className="text-3xl font-black mb-3">Job Simulations Coming Soon</h2>
+          <p className="text-indigo-200 mb-8">The simulations stay visible, but the launch flow is locked for now while we rebuild the heavy CPU path.</p>
+          <button
+            type="button"
+            disabled
+            className="inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-white/20 text-white font-bold text-sm cursor-not-allowed border border-white/20 shadow-lg"
           >
-            <span className="inline-flex items-center gap-2">
-              Start a Job Simulation
-              <ArrowRight className="w-4 h-4" aria-hidden="true" />
-            </span>
-          </Link>
+            <Lock className="w-4 h-4" aria-hidden="true" />
+            Coming Soon
+          </button>
         </div>
       </section>
     </>

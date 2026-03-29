@@ -6,6 +6,7 @@
     "category": "Job Simulation",
     "company": "SkillValix Labs",
     "role": "Frontend Developer Intern",
+    "comingSoon": true,
     "duration": "5-7 hours",
     "skills": [
       "React",
@@ -133,6 +134,7 @@
     "category": "Job Simulation",
     "company": "SkillValix Labs",
     "role": "Data Analyst Intern",
+    "comingSoon": true,
     "duration": "5-7 hours",
     "skills": [
       "Python",

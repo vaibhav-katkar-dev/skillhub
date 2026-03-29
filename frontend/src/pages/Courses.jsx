@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   BookOpen, Clock, Loader2,
   ArrowRight, Sparkles, GraduationCap, Star,
-  Search, Filter, X, BriefcaseBusiness
+  Search, Filter, X, BriefcaseBusiness, Lock
 } from 'lucide-react';
 import { getCourseList, preloadCourses } from '../data/courseLoader';
 
@@ -161,7 +161,7 @@ const Courses = () => {
           </h1>
           <p className={`${heroTheme.copy} text-lg font-medium max-w-2xl mb-7`}>
             {isSims 
-              ? <>Experience real-world task modules and earn a verified certificate. Complete real tasks to <span className={`text-white font-bold underline ${heroTheme.underline}`}>stand out</span>.</>
+              ? <>Job simulations are <span className="text-white font-bold">coming soon</span>. They stay visible here, but the launch flow is locked for now while we rebuild the CPU-heavy parts.</>
               : <>Industry-leading curriculum designed to take you from absolute beginner to professional. All courses are <span className={`text-white font-bold underline ${heroTheme.underline}`}>100% free</span>.</>}
           </p>
 
@@ -306,12 +306,22 @@ const Courses = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {filtered.map((course) => {
               const t = THEMES[course.theme] || THEMES.blue;
+              const isLockedSimulation = Boolean(course.isJobSimulation && course.comingSoon);
+              const handleCardClick = () => {
+                if (isLockedSimulation) return;
+                navigate(course.isJobSimulation ? `/job-simulation/${course.slug}` : `/courses/${course.slug}`);
+              };
               return (
                 <div
                   key={course._id}
-                  onClick={() => navigate(course.isJobSimulation ? `/job-simulation/${course.slug}` : `/courses/${course.slug}`)}
-                  className="group relative bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 cursor-pointer flex flex-col"
+                  onClick={handleCardClick}
+                  className={`group relative bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-md transition-all duration-300 flex flex-col ${
+                    isLockedSimulation ? 'opacity-90 cursor-not-allowed' : 'hover:shadow-2xl hover:-translate-y-2 cursor-pointer'
+                  }`}
                 >
+                  {isLockedSimulation && (
+                    <div className="absolute inset-0 z-10 bg-slate-950/10 backdrop-blur-[1px] pointer-events-none" />
+                  )}
                   {/* ── Image banner (if image set) ── */}
                   {course.image ? (
                     <div className="relative h-40 overflow-hidden flex-shrink-0">
@@ -325,8 +335,11 @@ const Courses = () => {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
                       {/* Category badge */}
                       <div className="absolute top-3 right-3">
-                        <span className="bg-white/90 backdrop-blur-sm text-indigo-700 text-xs font-bold px-2.5 py-1 rounded-full">
-                          {getCourseCategory(course)}
+                        <span className={`bg-white/90 backdrop-blur-sm text-xs font-bold px-2.5 py-1 rounded-full inline-flex items-center gap-1.5 ${
+                          isLockedSimulation ? 'text-slate-700' : 'text-indigo-700'
+                        }`}>
+                          {isLockedSimulation ? <Lock className="w-3 h-3" /> : null}
+                          {isLockedSimulation ? 'Coming Soon' : getCourseCategory(course)}
                         </span>
                       </div>
                       {/* Title overlaid on image */}
@@ -338,7 +351,9 @@ const Courses = () => {
                     </div>
                   ) : (
                     /* ── No image: coloured strip ── */
-                    <div className={`h-1.5 bg-gradient-to-r ${t.bar} flex-shrink-0`} />
+                    <div className={`relative h-1.5 bg-gradient-to-r ${t.bar} flex-shrink-0`}>
+                      {isLockedSimulation && <div className="absolute inset-0 bg-slate-900/20" />}
+                    </div>
                   )}
 
                   {/* ── Card body ── */}
@@ -350,8 +365,9 @@ const Courses = () => {
                           <div className={`w-10 h-10 rounded-xl ${t.iconBg} flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 flex-shrink-0 border border-black/5`}>
                             <BookOpen className={`w-5 h-5 ${t.iconText}`} />
                           </div>
-                          <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${t.iconBg} ${t.iconText}`}>
-                            {getCourseCategory(course)}
+                          <span className={`text-xs font-bold px-2.5 py-1 rounded-full inline-flex items-center gap-1.5 ${t.iconBg} ${isLockedSimulation ? 'text-slate-500' : t.iconText}`}>
+                            {isLockedSimulation ? <Lock className="w-3 h-3" /> : null}
+                            {isLockedSimulation ? 'Coming Soon' : getCourseCategory(course)}
                           </span>
                         </div>
                         <h2 className="text-base font-bold text-slate-900 mb-2 leading-snug group-hover:text-indigo-700 transition-colors duration-200 line-clamp-2">
@@ -370,9 +386,15 @@ const Courses = () => {
                       <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400">
                         <Clock className="w-3.5 h-3.5" /> {isSims ? course.duration || 'Self-paced' : 'Self-paced'}
                       </span>
-                      <span className={`inline-flex items-center gap-1 text-xs font-bold ${t.link} group-hover:gap-2 transition-all duration-200`}>
-                        View {isSims ? 'Simulation' : 'Course'} <ArrowRight className="w-3.5 h-3.5" />
-                      </span>
+                      {isLockedSimulation ? (
+                        <span className="inline-flex items-center gap-1 text-xs font-bold text-slate-400">
+                          Locked <Lock className="w-3.5 h-3.5" />
+                        </span>
+                      ) : (
+                        <span className={`inline-flex items-center gap-1 text-xs font-bold ${t.link} group-hover:gap-2 transition-all duration-200`}>
+                          View {isSims ? 'Simulation' : 'Course'} <ArrowRight className="w-3.5 h-3.5" />
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>

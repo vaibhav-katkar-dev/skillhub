@@ -14,6 +14,7 @@ import {
   Clock3,
   Download,
   Laptop,
+  Lock,
   Palette,
   Search,
   Settings,
@@ -122,6 +123,51 @@ export default function JobSimulation() {
           Back to Events
         </Link>
       </div>
+    );
+  }
+
+  if (sim.comingSoon) {
+    return (
+      <>
+        <Helmet>
+          <title>{sim.title} - Coming Soon | SkillValix Events</title>
+          <meta name="description" content={`${sim.title} is coming soon.`} />
+        </Helmet>
+
+        <section className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 px-6 py-20 flex items-center justify-center">
+          <div className="max-w-3xl w-full rounded-3xl border border-white/10 bg-white/5 backdrop-blur-md p-8 md:p-10 text-center shadow-2xl">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-400/15 text-amber-200 text-xs font-bold uppercase tracking-[0.3em] mb-6">
+              <Lock className="w-4 h-4" aria-hidden="true" />
+              Coming Soon
+            </div>
+            <h1 className="text-3xl md:text-5xl font-black text-white mb-4">{sim.title}</h1>
+            <p className="text-slate-300 max-w-2xl mx-auto mb-8">
+              This job simulation is visible for preview, but it is currently locked while we work on a lighter version of the experience.
+            </p>
+            <div className="grid sm:grid-cols-3 gap-4 mb-8 text-left">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="text-xs uppercase tracking-widest text-slate-400 mb-1">Role</div>
+                <div className="font-bold text-white">{sim.role}</div>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="text-xs uppercase tracking-widest text-slate-400 mb-1">Duration</div>
+                <div className="font-bold text-white">{sim.duration}</div>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <div className="text-xs uppercase tracking-widest text-slate-400 mb-1">Status</div>
+                <div className="font-bold text-amber-200">Locked</div>
+              </div>
+            </div>
+            <Link
+              to="/events"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-indigo-700 font-bold hover:bg-indigo-50 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" aria-hidden="true" />
+              Back to Events
+            </Link>
+          </div>
+        </section>
+      </>
     );
   }
 
