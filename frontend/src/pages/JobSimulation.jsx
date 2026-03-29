@@ -61,6 +61,7 @@ export default function JobSimulation() {
   const [paying, setPaying] = useState(false);
   const [certId, setCertId] = useState(null);
   const [downloading, setDownloading] = useState(false);
+  const [downloadLabel, setDownloadLabel] = useState('');
   const [err, setErr] = useState('');
   
   // Interactive Task tracking
@@ -205,7 +206,10 @@ export default function JobSimulation() {
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
             });
-            setCertId(res.data.certificateId);
+            const newCertId = res.data.certificateId;
+            setCertId(newCertId);
+            // Automatically prepare the PDF in background after payment
+            apiClient.post(`/events/certificates/prepare/${newCertId}`).catch(() => {});
           } catch (e) {
             setErr(e.response?.data?.message || 'Verification failed. Contact support.');
           } finally {
@@ -234,29 +238,31 @@ export default function JobSimulation() {
     setDownloading(true);
     setErr('');
     try {
-      const start = Date.now();
-      const res = await apiClient.get(`/events/certificates/download/${certId}?v=${Date.now()}`, {
+      // Step 1: Prepare (generate + save PDF if not already ready)
+      setDownloadLabel('Generating PDF...');
+      await apiClient.post(`/events/certificates/prepare/${certId}`);
+
+      // Step 2: Download the stored PDF
+      setDownloadLabel('Downloading...');
+      const res = await apiClient.get(`/events/certificates/download/${certId}`, {
         responseType: 'blob',
-        headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
+        headers: { 'Cache-Control': 'no-cache' },
       });
+
       const blob = new Blob([res.data], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
       anchor.href = url;
-      anchor.download = `EventCertificate-${certId}.pdf`;
+      anchor.download = `JobSimCertificate-${certId}.pdf`;
       document.body.appendChild(anchor);
       anchor.click();
       document.body.removeChild(anchor);
       setTimeout(() => URL.revokeObjectURL(url), 10000);
-      
-      // Wait timer to guarantee a smooth "Downloading..." visual experience
-      const elapsed = Date.now() - start;
-      if (elapsed < 3000) {
-        await new Promise(resolve => setTimeout(resolve, 3000 - elapsed));
-      }
+      setDownloadLabel('');
     } catch (e) {
-      const status = e.response ? `HTTP ${e.response.status}` : 'Network/CORS Error';
-      setErr(`Download failed (${status}): ${e.message}. Please try again.`);
+      const msg = e.response?.data?.message || e.message || 'Unknown error';
+      setErr(`Download failed: ${msg}`);
+      setDownloadLabel('');
     } finally {
       setDownloading(false);
     }
@@ -387,8 +393,8 @@ export default function JobSimulation() {
                   <span className="inline-flex items-center gap-2">
                     {downloading ? (
                       <>
-                        <Download className="w-4 h-4" aria-hidden="true" />
-                        Downloading...
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        {downloadLabel || 'Please wait...'}
                       </>
                     ) : (
                       <>

@@ -1534,7 +1534,59 @@ router.post('/certificates/generate', authOptions, async (req, res) => {
   }
 });
 
-// ─── Download event certificate ───────────────────────────────────────────────
+// ─── Prepare event certificate PDF (generate + save) ──────────────────────────
+router.post('/certificates/prepare/:certId', authOptions, async (req, res) => {
+  try {
+    const cert = await EventCertificate.findOne({ certificateId: req.params.certId })
+      .populate('student', 'name').lean();
+    if (!cert) return res.status(404).json({ message: 'Certificate not found.' });
+
+    // Only the owner or admin can prepare
+    const isOwner = String(cert.student?._id || cert.student) === String(req.user.id);
+    if (!isOwner && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied.' });
+    }
+
+    const hasLatestTemplate = Number(cert.pdfTemplateVersion || 0) >= EVENT_CERT_TEMPLATE_VERSION;
+    if (cert.pdfStatus === 'ready' && hasLatestTemplate) {
+      return res.json({ pdfStatus: 'ready', certificateId: cert.certificateId });
+    }
+
+    // Mark as generating
+    await EventCertificate.updateOne({ _id: cert._id }, { $set: { pdfStatus: 'generating', pdfError: '' } });
+
+    const issueDate = new Date(cert.issueDate).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
+    const verifyUrl = `${FRONTEND_URL()}/verify/${cert.certificateId}`;
+    const studentName = cert.student?.name || 'Student';
+
+    try {
+      const pdfBuffer = await buildEventCertificatePdf({
+        studentName, eventTitle: cert.eventTitle, role: cert.role,
+        certificateId: cert.certificateId, issueDate, eventType: cert.eventType, verifyUrl,
+      });
+      await EventCertificate.updateOne({ _id: cert._id }, {
+        $set: {
+          pdfStatus: 'ready',
+          pdfBuffer,
+          pdfSizeBytes: pdfBuffer.length,
+          pdfGeneratedAt: new Date(),
+          pdfTemplateVersion: EVENT_CERT_TEMPLATE_VERSION,
+          pdfError: '',
+        }
+      });
+      return res.json({ pdfStatus: 'ready', certificateId: cert.certificateId });
+    } catch (pdfErr) {
+      console.error('[Events] PDF build error in prepare:', pdfErr.message);
+      await EventCertificate.updateOne({ _id: cert._id }, { $set: { pdfStatus: 'failed', pdfError: pdfErr.message } });
+      return res.status(500).json({ message: 'PDF generation failed. Please try again.', pdfStatus: 'failed' });
+    }
+  } catch (err) {
+    console.error('[Events] Prepare cert error:', err);
+    res.status(500).json({ message: 'Server error.' });
+  }
+});
+
+// ─── Download event certificate (ONLY serves stored PDFs) ─────────────────────
 router.get('/certificates/download/:certId', async (req, res) => {
   try {
     const cert = await EventCertificate.findOne({ certificateId: req.params.certId })
@@ -1544,39 +1596,24 @@ router.get('/certificates/download/:certId', async (req, res) => {
     const hasLatestTemplate = Number(cert.pdfTemplateVersion || 0) >= EVENT_CERT_TEMPLATE_VERSION;
 
     if (cert.pdfStatus === 'ready' && hasLatestTemplate) {
-      // Robustly pull buffer from Mongoose model
       const rawBuf = cert.pdfBuffer?.buffer || cert.pdfBuffer;
+      if (!rawBuf || rawBuf.length === 0) {
+        return res.status(503).json({ message: 'PDF not ready. Call /prepare first.', pdfStatus: 'pending' });
+      }
       res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `inline; filename=EventCertificate-${cert.certificateId}.pdf`);
+      res.setHeader('Content-Disposition', `attachment; filename=EventCertificate-${cert.certificateId}.pdf`);
       res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
       return res.send(rawBuf);
     }
 
-    // Regenerate on the fly
-    const issueDate = new Date(cert.issueDate).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
-    const verifyUrl = `${FRONTEND_URL()}/verify/${cert.certificateId}`;
-    const pdfBuffer = await buildEventCertificatePdf({
-      studentName: cert.student?.name, eventTitle: cert.eventTitle, role: cert.role,
-      certificateId: cert.certificateId, issueDate, eventType: cert.eventType, verifyUrl,
+    // PDF not ready — tell client to call prepare first
+    return res.status(503).json({
+      message: 'PDF not ready. Please call prepare first.',
+      pdfStatus: cert.pdfStatus || 'pending',
+      certificateId: cert.certificateId,
     });
-    await EventCertificate.updateOne({ _id: cert._id }, {
-      $set: {
-        pdfStatus: 'ready',
-        pdfBuffer,
-        pdfSizeBytes: pdfBuffer.length,
-        pdfGeneratedAt: new Date(),
-        pdfTemplateVersion: EVENT_CERT_TEMPLATE_VERSION,
-        pdfError: '',
-      }
-    });
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `inline; filename=EventCertificate-${cert.certificateId}.pdf`);
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-    return res.send(pdfBuffer);
   } catch (err) {
     console.error('[Events] Download cert error:', err);
     res.status(500).json({ message: 'Server error.' });
