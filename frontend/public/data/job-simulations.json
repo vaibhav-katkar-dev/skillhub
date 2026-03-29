@@ -6,6 +6,7 @@
     "category": "Job Simulation",
     "company": "SkillValix Labs",
     "role": "Frontend Developer Intern",
+    "comingSoon": true,
     "duration": "5-7 hours",
     "skills": [
       "React",
@@ -133,6 +134,7 @@
     "category": "Job Simulation",
     "company": "SkillValix Labs",
     "role": "Data Analyst Intern",
+    "comingSoon": true,
     "duration": "5-7 hours",
     "skills": [
       "Python",
@@ -265,6 +267,7 @@
     "icon": "Palette",
     "image": "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&q=80",
     "description": "Go from research to interactive prototype with practical UX deliverables.",
+    
     "about": "A realistic design sprint where you define user pain points, map flows, and craft a clickable prototype.",
     "modules": [
       "Problem discovery and user intent",
