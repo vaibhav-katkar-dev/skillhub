@@ -35,39 +35,74 @@ app.use(express.json({ limit: '2mb' }));
 const ALLOWED_ORIGINS = [
   'https://skillvalix.com',
   'https://www.skillvalix.com',
+  'https://api.skillvalix.com',
+  'https://skillvalixback.vercel.app',
   'http://localhost:5173',
   'http://localhost:3000',
 ];
 
 const corsOptions = {
   origin: (origin, callback) => {
+    // Allow requests with no origin (server-to-server, curl, mobile apps)
     if (!origin) return callback(null, true);
     if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+    // Log for debugging but don't block — return error
+    console.warn(`[CORS] Blocked origin: ${origin}`);
     return callback(new Error(`CORS: origin ${origin} not allowed`));
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
   exposedHeaders: ['Content-Type', 'Content-Disposition', 'Retry-After', 'Authorization'],
   credentials: true,
-  optionsSuccessStatus: 200,
+  optionsSuccessStatus: 204,
+  preflightContinue: false,
 };
 
+// Handle all OPTIONS preflight requests FIRST — must be before rate limiters
+app.options('*', cors(corsOptions));
 app.use(cors(corsOptions));
-app.options('/api/*', cors(corsOptions));
 
-// Keep CORS headers explicit for allowed origins across all response paths.
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (origin && ALLOWED_ORIGINS.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Vary', 'Origin');
-  }
-  next();
-});
+// CORS configuration handled purely by the cors() middleware
+// to ensure no duplicate manual headers trigger preflight errors.
 
+
+// Helmet must come AFTER cors middleware so it doesn't override CORS headers.
+// COOP set to unsafe-none so Google OAuth popup postMessage is NOT blocked.
 app.use(helmet({
-  crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
+  crossOriginOpenerPolicy: false, // disable COOP — required for Google OAuth popup flow
+  crossOriginEmbedderPolicy: false, // disable COEP — prevents blocking cross-origin resources
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        'https://checkout.razorpay.com',
+        'https://accounts.google.com',
+        'https://apis.google.com',
+      ],
+      frameSrc: [
+        "'self'",
+        'https://accounts.google.com',
+        'https://checkout.razorpay.com',
+      ],
+      connectSrc: [
+        "'self'",
+        'https://skillvalix.com',
+        'https://www.skillvalix.com',
+        'https://api.skillvalix.com',
+        'https://skillvalixback.vercel.app',
+        'https://accounts.google.com',
+        'https://oauth2.googleapis.com',
+        'https://api.razorpay.com',
+      ],
+      imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: [],
+    },
+  },
 }));
 app.use(morgan('dev'));
 

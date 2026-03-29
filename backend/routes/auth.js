@@ -12,25 +12,6 @@ import crypto from 'crypto';
 
 const router = express.Router();
 
-// ─── Auth CORS Helper ──────────────────────────────────────
-const AUTH_ALLOWED_ORIGINS = new Set([
-  'https://skillvalix.com',
-  'https://www.skillvalix.com',
-  'http://localhost:5173',
-  'http://localhost:3000',
-]);
-
-function applyAuthCors(req, res) {
-  const origin = req.headers.origin;
-  if (origin && AUTH_ALLOWED_ORIGINS.has(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
-    res.setHeader('Access-Control-Expose-Headers', 'Content-Type, Authorization');
-    res.setHeader('Vary', 'Origin');
-  }
-}
 
 const getJwtSecret = () => {
   if (!process.env.JWT_SECRET) {
@@ -54,7 +35,6 @@ const getTransporter = () => nodemailer.createTransport({
 // Get current user details
 router.get('/me', authOptions, async (req, res) => {
   try {
-    applyAuthCors(req, res);
     const user = await User.findById(req.user.id).select('-password');
     res.json(user);
   } catch (err) {
@@ -65,7 +45,6 @@ router.get('/me', authOptions, async (req, res) => {
 // Register
 router.post('/register', async (req, res) => {
   try {
-    applyAuthCors(req, res);
     const { name, email, password, role } = req.body;
     let user = await User.findOne({ email });
     if (user) return res.status(400).json({ message: 'User already exists' });
@@ -95,7 +74,6 @@ router.post('/register', async (req, res) => {
 // Login
 router.post('/login', async (req, res) => {
   try {
-    applyAuthCors(req, res);
     const { email, password } = req.body;
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: 'Invalid Credentials' });
@@ -123,7 +101,6 @@ router.post('/login', async (req, res) => {
 // ── Google Login ────────────────────────────────────────────────────────────
 router.post('/google', async (req, res) => {
   try {
-    applyAuthCors(req, res);
     const { credential } = req.body;
     const ticket = await client.verifyIdToken({
       idToken: credential,
@@ -166,7 +143,6 @@ router.post('/google', async (req, res) => {
 // ── Forgot Password ─────────────────────────────────────────────────────────
 router.post('/forgot-password', async (req, res) => {
   try {
-    applyAuthCors(req, res);
     const { email } = req.body;
     const user = await User.findOne({ email });
     
@@ -215,7 +191,6 @@ router.post('/forgot-password', async (req, res) => {
 // ── Reset Password ──────────────────────────────────────────────────────────
 router.post('/reset-password/:token', async (req, res) => {
   try {
-    applyAuthCors(req, res);
     const { password } = req.body;
     const { token } = req.params;
 
@@ -296,7 +271,6 @@ router.get('/public/:id', async (req, res) => {
 // ── Update Profile ────────────────────────────────────────────────────────
 router.put('/profile', authOptions, async (req, res) => {
   try {
-    applyAuthCors(req, res);
     const { github, linkedin, resume, portfolio, username, openToWork } = req.body;
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ message: 'User not found' });
