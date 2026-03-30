@@ -52,6 +52,7 @@ function getCoursePracticeConfig(slug) {
 
   if (lower.includes('ultimate-python')) {
     return {
+      showLab: true,
       runnerEnabled: false,
       modes: [],
       defaultMode: null,
@@ -59,17 +60,29 @@ function getCoursePracticeConfig(slug) {
     };
   }
 
-  if (lower.includes('ultimate-java') || lower.includes('artificial-intelligence')) {
+  if (lower.includes('cyber-security')) {
     return {
+      showLab: false,
       runnerEnabled: false,
       modes: [],
       defaultMode: null,
-      description: 'This course currently uses syntax examples and tasks only. No browser runner is shown for this language track.'
+      description: 'Lab disabled for this introductory course'
+    };
+  }
+
+  if (lower.includes('ultimate-java') || lower.includes('artificial-intelligence')) {
+    return {
+      showLab: true,
+      runnerEnabled: false,
+      modes: [],
+      defaultMode: null,
+      description: 'Note: No interactive runner for this topic. Use syntax examples and tasks below.'
     };
   }
 
   if (lower.includes('css-for-beginners')) {
     return {
+      showLab: true,
       runnerEnabled: true,
       modes: ['css', 'html'],
       defaultMode: 'css',
@@ -79,6 +92,7 @@ function getCoursePracticeConfig(slug) {
 
   if (lower.includes('ultimate-html')) {
     return {
+      showLab: true,
       runnerEnabled: true,
       modes: ['html', 'css'],
       defaultMode: 'html',
@@ -88,6 +102,7 @@ function getCoursePracticeConfig(slug) {
 
   if (lower.includes('ultimate-javascript') || lower.includes('react')) {
     return {
+      showLab: true,
       runnerEnabled: true,
       modes: ['javascript', 'html', 'css'],
       defaultMode: 'javascript',
@@ -97,6 +112,7 @@ function getCoursePracticeConfig(slug) {
 
   if (lower.includes('node') || lower.includes('express')) {
     return {
+      showLab: true,
       runnerEnabled: true,
       modes: ['javascript'],
       defaultMode: 'javascript',
@@ -105,6 +121,7 @@ function getCoursePracticeConfig(slug) {
   }
 
   return {
+    showLab: true,
     runnerEnabled: true,
     modes: ['javascript'],
     defaultMode: 'javascript',
@@ -288,6 +305,7 @@ const LessonView = () => {
   const [loading,          setLoading]          = useState(true);
   const [completedLessons, setCompletedLessons] = useState([]);
   const [mobileOpen,       setMobileOpen]       = useState(false);
+  const [showModuleGlow,   setShowModuleGlow]   = useState(false);
   const [isSpeechSupported, setIsSpeechSupported] = useState(false);
   const [isReading,         setIsReading]         = useState(false);
   const [isPaused,          setIsPaused]          = useState(false);
@@ -302,6 +320,17 @@ const LessonView = () => {
     const saved = JSON.parse(localStorage.getItem('skillvalix_progress') || '{}');
     if (saved[slug]) setCompletedLessons(saved[slug]);
   }, [slug]);
+
+  /* ── Mobile modules highlight ── */
+  useEffect(() => {
+    if (mobileOpen) {
+      setShowModuleGlow(false);
+      return;
+    }
+    const timer = setTimeout(() => setShowModuleGlow(true), 4000);
+    const hideTimer = setTimeout(() => setShowModuleGlow(false), 12000);
+    return () => { clearTimeout(timer); clearTimeout(hideTimer); };
+  }, [lessonId, mobileOpen]);
 
   const persist = (list) => {
     const saved = JSON.parse(localStorage.getItem('skillvalix_progress') || '{}');
@@ -568,6 +597,17 @@ const LessonView = () => {
         }
         .lv-modules-btn:hover { background:#e0e7ff; }
 
+        .lv-modules-btn.glow {
+          animation: module-glow 2s infinite;
+          border-color: #6366f1;
+          background: #f5f3ff;
+        }
+        @keyframes module-glow {
+          0% { box-shadow: 0 0 0 0 rgba(99,102,241,0.6); }
+          70% { box-shadow: 0 0 0 12px rgba(99,102,241,0); }
+          100% { box-shadow: 0 0 0 0 rgba(99,102,241,0); }
+        }
+
         /* ── Mobile drawer ── */
         .lv-mobile-drawer {
           background:#fff; border-bottom:1px solid #e2e8f0;
@@ -833,7 +873,10 @@ const LessonView = () => {
                 <span className="lv-progress-pct">{progress}%</span>
               </div>
 
-              <button className="lv-modules-btn" onClick={() => setMobileOpen(o => !o)}>
+              <button 
+                className={`lv-modules-btn ${showModuleGlow ? 'glow' : ''}`} 
+                onClick={() => setMobileOpen(o => !o)}
+              >
                 <ListOrdered size={13} />
                 Modules
                 {mobileOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
@@ -921,7 +964,8 @@ const LessonView = () => {
                 )}
                 <div dangerouslySetInnerHTML={{ __html: normalizeHtmlContent(lesson.content) }} />
 
-                <section className="lv-practice-wrap" aria-label="Lesson practice lab">
+                {practiceConfig.showLab && (
+                  <section className="lv-practice-wrap" aria-label="Lesson practice lab">
                   <div className="lv-practice-head">
                     <div>
                       <p className="lv-practice-title">Practice Lab (Frontend Only)</p>
@@ -995,6 +1039,7 @@ const LessonView = () => {
                     </div>
                   </div>
                 </section>
+                )}
               </div>
 
               {/* Action bar */}

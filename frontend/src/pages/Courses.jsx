@@ -20,10 +20,10 @@ const THEMES = {
 const CATEGORY_KEYWORDS = {
   'HTML':       ['html'],
   'CSS':        ['css'],
-  'JavaScript': ['javascript', 'js'],
+  'JavaScript': ['javascript', 'js', 'react', 'node', 'express'],
   'Python':     ['python'],
-  'Java':       ['java masterclass', 'ultimate java'],
-  'AI / ML':    ['artificial intelligence', 'machine learning', 'ai'],
+  'Java':       ['java'],
+  'AI / ML':    ['artificial intelligence', 'machine learning', 'ai', 'data science'],
 };
 
 function getCourseCategory(course) {
@@ -95,10 +95,16 @@ const Courses = () => {
     }
     if (search.trim()) {
       const q = search.toLowerCase();
-      list = list.filter(c =>
-        (c.title || '').toLowerCase().includes(q) ||
-        (c.description || '').toLowerCase().includes(q)
-      );
+      const searchWords = q.split(/\s+/).filter(Boolean);
+      list = list.filter(c => {
+        const title = (c.title || '').toLowerCase();
+        const desc = (c.description || '').toLowerCase();
+        const cat = getCourseCategory(c).toLowerCase();
+        const searchableText = `${title} ${desc} ${cat}`;
+        
+        // Match each word individually
+        return searchWords.every(word => searchableText.includes(word));
+      });
     }
     return list;
   }, [courses, search, activeCategory, isSims]);

@@ -41,55 +41,67 @@ function ScrollToTop() {
   return null;
 }
 
-function App() {
+function AppContent() {
   const { loadUser } = useAuthStore();
+  const location = useLocation();
 
   useEffect(() => {
     loadUser();
-    preloadCourses(); // fire-and-forget: warms the cache immediately
+    preloadCourses();
   }, [loadUser]);
 
+  const isCoursePath = location.pathname.startsWith('/courses/');
+  const isCoursesList = location.pathname === '/courses';
+  const isQuizPath = location.pathname.includes('/quiz');
+  const isLearningView = (isCoursePath && !isCoursesList) || isQuizPath;
+
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-blue-500/30">
+      <Navbar />
+      <main className="flex-grow">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
+          <Route path="/courses" element={<Courses />} />
+          <Route path="/courses/:slug" element={<CourseDetail />} />
+          <Route path="/courses/:slug/lesson/:lessonId" element={<LessonView />} />
+          <Route path="/courses/:slug/quiz" element={<QuizView />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/u/:id" element={<PublicProfile />} />
+          <Route path="/admin" element={<AdminPanel />} />
+          <Route path="/admin/upload" element={<AdminPanel />} />
+          <Route path="/verify" element={<VerifyCert />} />
+          <Route path="/verify/:certId" element={<VerifyCert />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/:slug" element={<BlogPost />} />
+          <Route path="/events" element={<Events />} />
+          <Route path="/events/hackathon/:id" element={<HackathonDetail />} />
+          <Route path="/job-simulation/:id" element={<JobSimulation />} />
+          <Route path="/events/job-simulation/:id" element={<JobSimulation />} />
+          <Route path="/verify-event/:certId" element={<VerifyCert />} />
+          <Route path="/verify-event" element={<VerifyCert />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/refund-policy" element={<RefundPolicy />} />
+          <Route path="/cookie-policy" element={<CookiePolicy />} />
+        </Routes>
+      </main>
+      {!isLearningView && <PreFooterCTA />}
+      {!isLearningView && <Footer />}
+      <WhatsAppJoinPopup />
+    </div>
+  );
+}
+
+function App() {
   return (
     <HelmetProvider>
       <Router>
         <ScrollToTop />
-        <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-blue-500/30">
-          <Navbar />
-          <main className="flex-grow">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password/:token" element={<ResetPassword />} />
-              <Route path="/courses" element={<Courses />} />
-              <Route path="/courses/:slug" element={<CourseDetail />} />
-              <Route path="/courses/:slug/lesson/:lessonId" element={<LessonView />} />
-              <Route path="/courses/:slug/quiz" element={<QuizView />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/u/:id" element={<PublicProfile />} />
-              <Route path="/admin" element={<AdminPanel />} />
-              <Route path="/admin/upload" element={<AdminPanel />} />
-              <Route path="/verify" element={<VerifyCert />} />
-              <Route path="/verify/:certId" element={<VerifyCert />} />
-              <Route path="/blog" element={<Blog />} />
-              <Route path="/blog/:slug" element={<BlogPost />} />
-              <Route path="/events" element={<Events />} />
-              <Route path="/events/hackathon/:id" element={<HackathonDetail />} />
-              <Route path="/job-simulation/:id" element={<JobSimulation />} />
-              <Route path="/events/job-simulation/:id" element={<JobSimulation />} />
-              <Route path="/verify-event/:certId" element={<VerifyCert />} />
-              <Route path="/verify-event" element={<VerifyCert />} />
-              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/terms" element={<TermsOfService />} />
-              <Route path="/refund-policy" element={<RefundPolicy />} />
-              <Route path="/cookie-policy" element={<CookiePolicy />} />
-            </Routes>
-          </main>
-          <PreFooterCTA />
-          <Footer />
-          <WhatsAppJoinPopup />
-        </div>
+        <AppContent />
         <Analytics />
       </Router>
     </HelmetProvider>
