@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useParams, Link } from 'react-router-dom';
-import { getCourseBySlug } from '../data/courseLoader';
-import { PlayCircle, ShieldCheck, ListTodo, Loader2, BookOpen, Clock, Award, Sparkles, Zap } from 'lucide-react';
+import { getCourseBySlug, getCourseList } from '../data/courseLoader';
+import { getCourseCategory } from '../utils/course';
+import { PlayCircle, ShieldCheck, ListTodo, Loader2, BookOpen, Clock, Award, Sparkles, Zap, ArrowRight } from 'lucide-react';
 
 const THEMES = {
   blue: 'from-blue-600 to-indigo-700',
@@ -17,6 +18,7 @@ const CourseDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [completedLessons, setCompletedLessons] = useState([]);
+  const [recommended, setRecommended] = useState([]);
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -36,6 +38,15 @@ const CourseDetail = () => {
     if (savedProgress[slug]) {
       setCompletedLessons(savedProgress[slug]);
     }
+
+    getCourseList()
+      .then(all => {
+        if (!all) return;
+        const others = all.filter(c => c.slug !== slug && !c.isJobSimulation);
+        const shuffled = [...others].sort(() => 0.5 - Math.random());
+        setRecommended(shuffled.slice(0, 3));
+      })
+      .catch(console.error);
   }, [slug]);
 
   if (loading) {
@@ -258,6 +269,46 @@ const CourseDetail = () => {
             </div>
           </div>
         </div>
+
+        {/* ── Recommendations ── */}
+        {recommended.length > 0 && (
+          <div className="mt-16 pt-12 border-t-2 border-dashed border-slate-200">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100">
+                <Sparkles size={22} />
+              </div>
+              <div>
+                <h2 className="text-xl font-black text-slate-900 leading-tight">You can also try these related courses</h2>
+                <p className="text-sm text-slate-500 font-medium">Picked at random just for you</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              {recommended.map(rec => {
+                const recCat = getCourseCategory(rec);
+                const themeColor = rec.theme === 'pink' ? '#ec4899' : rec.theme === 'green' ? '#22c55e' : rec.theme === 'orange' ? '#f97316' : '#6366f1';
+                const themeBg = rec.theme === 'pink' ? '#fdf2f8' : rec.theme === 'green' ? '#f0fdf4' : rec.theme === 'orange' ? '#fff7ed' : '#eef2ff';
+                
+                return (
+                  <Link key={rec.slug} to={`/courses/${rec.slug}`} className="group relative bg-white border border-slate-200 rounded-2xl p-6 transition-all hover:shadow-xl hover:border-blue-300 flex flex-col gap-4 overflow-hidden">
+                    <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
+                      <BookOpen className="w-16 h-16" />
+                    </div>
+                    <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shadow-sm border border-white/50" style={{ backgroundColor: themeBg, color: themeColor }}>
+                      <BookOpen size={24} />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1 block">{recCat}</span>
+                      <h3 className="text-base font-bold text-slate-800 leading-snug group-hover:text-blue-600 transition-colors line-clamp-2">{rec.title}</h3>
+                    </div>
+                    <div className="mt-auto flex items-center gap-2 text-xs font-black text-blue-600">
+                      EXPLORE COURSE <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

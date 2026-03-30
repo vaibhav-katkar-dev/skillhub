@@ -617,7 +617,7 @@ const LessonView = () => {
 
         /* ── Two-column grid layout ── */
         .lv-body {
-          max-width:1400px; margin:0 auto; padding:24px 20px;
+          max-width:1400px; margin:0 auto; padding:24px 20px 80px;
           display:grid;
           grid-template-columns:1fr 320px;
           gap:24px;
@@ -952,93 +952,83 @@ const LessonView = () => {
 
               {/* Lesson content */}
               <div className="lv-body-content">
-                {lesson.videoUrl && (
-                  <div className="lv-video-wrap">
-                    <iframe
-                      src={lesson.videoUrl}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      title={lesson.title}
-                    />
-                  </div>
-                )}
                 <div dangerouslySetInnerHTML={{ __html: normalizeHtmlContent(lesson.content) }} />
 
                 {practiceConfig.showLab && (
                   <section className="lv-practice-wrap" aria-label="Lesson practice lab">
-                  <div className="lv-practice-head">
-                    <div>
-                      <p className="lv-practice-title">Practice Lab (Frontend Only)</p>
-                      <p className="lv-practice-sub">{practiceConfig.description}</p>
-                    </div>
-
-                    {practiceConfig.runnerEnabled && (
-                      <div className="lv-practice-controls">
-                        <select
-                          className="lv-practice-select"
-                          value={practiceMode}
-                          onChange={(e) => setPracticeMode(e.target.value)}
-                        >
-                          {practiceConfig.modes.map((mode) => (
-                            <option key={mode} value={mode}>{PRACTICE_MODE_LABELS[mode]}</option>
-                          ))}
-                        </select>
-
-                        <button type="button" className="lv-practice-btn run" onClick={runPracticeCode}>Run</button>
-                        <button type="button" className="lv-practice-btn reset" onClick={resetPracticeCode}>Reset</button>
+                    <div className="lv-practice-head">
+                      <div>
+                        <p className="lv-practice-title">Practice Lab (Frontend Only)</p>
+                        <p className="lv-practice-sub">{practiceConfig.description}</p>
                       </div>
-                    )}
-                  </div>
 
-                  {practiceConfig.runnerEnabled ? (
-                    <div className="lv-practice-body">
-                      <textarea
-                        className="lv-practice-editor"
-                        value={practiceCode}
-                        onChange={(e) => handlePracticeCodeChange(e.target.value)}
-                        spellCheck={false}
-                      />
+                      {practiceConfig.runnerEnabled && (
+                        <div className="lv-practice-controls">
+                          <select
+                            className="lv-practice-select"
+                            value={practiceMode}
+                            onChange={(e) => setPracticeMode(e.target.value)}
+                          >
+                            {practiceConfig.modes.map((mode) => (
+                              <option key={mode} value={mode}>{PRACTICE_MODE_LABELS[mode]}</option>
+                            ))}
+                          </select>
 
-                      {practiceMode === 'javascript' ? (
-                        <pre className="lv-practice-output">{practiceOutput}</pre>
-                      ) : (
-                        <iframe
-                          title="Practice preview"
-                          className="lv-practice-preview"
-                          sandbox="allow-scripts"
-                          srcDoc={practicePreviewDoc}
-                        />
+                          <button type="button" className="lv-practice-btn run" onClick={runPracticeCode}>Run</button>
+                          <button type="button" className="lv-practice-btn reset" onClick={resetPracticeCode}>Reset</button>
+                        </div>
                       )}
                     </div>
-                  ) : (
-                    <div className="lv-practice-disabled">
-                      Runtime execution is intentionally disabled for this course language in the lightweight frontend lab.
-                    </div>
-                  )}
 
-                  <div className="lv-practice-help">
-                    <div className="lv-practice-help-grid">
-                      <div>
-                        <h3>Syntax Examples</h3>
-                        {lessonPractice.syntaxExamples.map((item, idx) => (
-                          <div className="lv-practice-syntax-item" key={`${item.label}-${idx}`}>
-                            <div className="lv-practice-syntax-title">{item.label}</div>
-                            <pre className="lv-practice-syntax-code">{item.code}</pre>
-                          </div>
-                        ))}
+                    {practiceConfig.runnerEnabled ? (
+                      <div className="lv-practice-body">
+                        <textarea
+                          className="lv-practice-editor"
+                          value={practiceCode}
+                          onChange={(e) => handlePracticeCodeChange(e.target.value)}
+                          spellCheck={false}
+                        />
+
+                        {practiceMode === 'javascript' ? (
+                          <pre className="lv-practice-output">{practiceOutput}</pre>
+                        ) : (
+                          <iframe
+                            title="Practice preview"
+                            className="lv-practice-preview"
+                            sandbox="allow-scripts"
+                            srcDoc={practicePreviewDoc}
+                          />
+                        )}
                       </div>
+                    ) : (
+                      <div className="lv-practice-disabled">
+                        Runtime execution is intentionally disabled for this course language in the lightweight frontend lab.
+                      </div>
+                    )}
 
-                      <div>
-                        <h3>Mini Practice Tasks</h3>
-                        <ol className="lv-practice-task-list">
-                          {lessonPractice.tasks.map((task) => (
-                            <li key={task}>{task}</li>
+                    <div className="lv-practice-help">
+                      <div className="lv-practice-help-grid">
+                        <div>
+                          <h3>Syntax Examples</h3>
+                          {lessonPractice.syntaxExamples.map((item, idx) => (
+                            <div className="lv-practice-syntax-item" key={`${item.label}-${idx}`}>
+                              <div className="lv-practice-syntax-title">{item.label}</div>
+                              <pre className="lv-practice-syntax-code">{item.code}</pre>
+                            </div>
                           ))}
-                        </ol>
+                        </div>
+
+                        <div>
+                          <h3>Mini Practice Tasks</h3>
+                          <ol className="lv-practice-task-list">
+                            {lessonPractice.tasks.map((task) => (
+                              <li key={task}>{task}</li>
+                            ))}
+                          </ol>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </section>
+                  </section>
                 )}
               </div>
 
