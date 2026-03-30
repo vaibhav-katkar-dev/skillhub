@@ -136,54 +136,60 @@ export default function PublicProfile() {
       </div>
 
       {/* ── PROFILE HERO ── */}
-      <header className="pt-24 pb-12 px-6">
-        <div className="max-w-5xl mx-auto">
-          <div className="flex flex-col md:flex-row gap-8 items-center md:items-end">
-            
-            {/* Avatar */}
-            <div className="relative group">
-                <div className="w-32 h-32 md:w-40 md:h-40 bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-600 rounded-[2.5rem] shadow-2xl flex items-center justify-center text-white text-4xl md:text-5xl font-black rotate-2 group-hover:rotate-0 transition-all duration-500 border-4 border-white">
-                    {initials}
+      <header className="pt-24 pb-12 lg:pb-14 px-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="relative overflow-hidden rounded-[2.5rem] border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-indigo-50/40 px-6 py-10 md:px-10 md:py-12 lg:px-14 lg:py-14 shadow-xl shadow-slate-100">
+            <div className="absolute -top-16 -right-16 w-56 h-56 bg-indigo-200/35 blur-3xl rounded-full" />
+            <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-sky-200/30 blur-3xl rounded-full" />
+
+            <div className="relative z-10 max-w-4xl mx-auto text-center">
+              <div className="relative w-fit mx-auto mb-5 group">
+                <div className="w-32 h-32 md:w-36 md:h-36 lg:w-40 lg:h-40 bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-600 rounded-[2.25rem] shadow-2xl flex items-center justify-center text-white text-4xl md:text-5xl font-black rotate-2 group-hover:rotate-0 transition-all duration-500 border-4 border-white">
+                  {initials}
                 </div>
                 {profile.openToWork && (
-                    <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-white p-2.5 rounded-2xl shadow-xl border-4 border-white animate-bounce">
-                        <Zap className="w-5 h-5 fill-current" />
-                    </div>
+                  <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-white p-2.5 rounded-2xl shadow-xl border-4 border-white animate-bounce">
+                    <Zap className="w-5 h-5 fill-current" />
+                  </div>
                 )}
-            </div>
+              </div>
 
-            {/* Info */}
-            <div className="flex-1 text-center md:text-left">
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-2">
-                <h1 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900">
+              <div className="flex flex-wrap items-center justify-center gap-3 mb-3">
+                <h1 className="text-4xl md:text-5xl xl:text-6xl font-black tracking-tight text-slate-900 leading-[1.02]">
                   {profile.name}
                 </h1>
                 <CheckCircle className="w-8 h-8 text-indigo-500" />
               </div>
-              
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-y-2 gap-x-4 text-slate-500 font-bold mb-6">
+
+              <div className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-full px-4 py-2 mb-6 shadow-sm">
+                <ShieldCheck className="w-4 h-4" />
+                <span className="text-[11px] md:text-xs font-black uppercase tracking-wider">
+                  {certCount} Verified Certificate{certCount === 1 ? '' : 's'} on SkillValix
+                </span>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center gap-y-2 gap-x-3 md:gap-x-4 text-slate-500 font-bold mb-7">
                 {profile.college && (
-                  <div className="flex items-center gap-1.5 bg-slate-100 px-3 py-1 rounded-lg">
+                  <div className="flex items-center gap-1.5 bg-white/90 border border-slate-200 px-3 py-1.5 rounded-full shadow-sm">
                     <GraduationCap className="w-4 h-4 text-indigo-600" />
-                    <span className="text-xs uppercase tracking-wider">{profile.college}</span>
+                    <span className="text-[11px] md:text-xs uppercase tracking-wider">{profile.college}</span>
                   </div>
                 )}
                 {profile.branch && (
-                  <div className="flex items-center gap-1.5 bg-slate-100 px-3 py-1 rounded-lg">
+                  <div className="flex items-center gap-1.5 bg-white/90 border border-slate-200 px-3 py-1.5 rounded-full shadow-sm">
                     <Briefcase className="w-4 h-4 text-indigo-600" />
-                    <span className="text-xs uppercase tracking-wider">{profile.branch}</span>
+                    <span className="text-[11px] md:text-xs uppercase tracking-wider">{profile.branch}</span>
                   </div>
                 )}
                 {profile.year && (
-                  <div className="flex items-center gap-1.5 bg-slate-100 px-3 py-1 rounded-lg">
+                  <div className="flex items-center gap-1.5 bg-white/90 border border-slate-200 px-3 py-1.5 rounded-full shadow-sm">
                     <Calendar className="w-4 h-4 text-indigo-600" />
-                    <span className="text-xs uppercase tracking-wider">{profile.year}</span>
+                    <span className="text-[11px] md:text-xs uppercase tracking-wider">{profile.year}</span>
                   </div>
                 )}
               </div>
 
-              {/* Actions */}
-              <div className="flex flex-wrap justify-center md:justify-start gap-3">
+              <div className="flex flex-wrap justify-center gap-3 mb-7">
                 {profile.linkedin && (
                   <a href={safeUrl(profile.linkedin)} target="_blank" rel="noopener noreferrer" className="h-11 px-6 bg-[#0A66C2] text-white rounded-2xl flex items-center gap-2 font-bold text-sm shadow-lg shadow-blue-200 hover:scale-105 active:scale-95 transition-all">
                     <Linkedin className="w-4 h-4" />
@@ -203,36 +209,50 @@ export default function PublicProfile() {
                   </a>
                 )}
                 {profile.github && (
-                   <a href={safeUrl(profile.github)} target="_blank" rel="noopener noreferrer" className="w-11 h-11 bg-white border border-slate-200 rounded-2xl flex items-center justify-center hover:bg-slate-50 hover:border-slate-300 transition-all">
-                     <Github className="w-5 h-5 text-slate-800" />
-                   </a>
+                  <a href={safeUrl(profile.github)} target="_blank" rel="noopener noreferrer" className="w-11 h-11 bg-white border border-slate-200 rounded-2xl flex items-center justify-center hover:bg-slate-50 hover:border-slate-300 transition-all">
+                    <Github className="w-5 h-5 text-slate-800" />
+                  </a>
                 )}
                 {profile.portfolio && (
-                   <a href={safeUrl(profile.portfolio)} target="_blank" rel="noopener noreferrer" className="w-11 h-11 bg-white border border-slate-200 rounded-2xl flex items-center justify-center hover:bg-slate-50 hover:border-slate-300 transition-all">
-                     <Globe className="w-5 h-5 text-slate-800" />
-                   </a>
+                  <a href={safeUrl(profile.portfolio)} target="_blank" rel="noopener noreferrer" className="w-11 h-11 bg-white border border-slate-200 rounded-2xl flex items-center justify-center hover:bg-slate-50 hover:border-slate-300 transition-all">
+                    <Globe className="w-5 h-5 text-slate-800" />
+                  </a>
                 )}
               </div>
-            </div>
 
-            {/* Bio / About Section */}
-            {profile.bio && (
-              <div className="mt-8 text-center md:text-left">
-                <h3 className="text-xs font-black uppercase tracking-widest text-indigo-400 mb-2">About Me</h3>
-                <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-medium max-w-2xl whitespace-pre-line">
-                    {profile.bio}
-                </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg mx-auto mb-7">
+                <div className="bg-white border-2 border-emerald-300 rounded-2xl p-4 text-left shadow-md shadow-emerald-100">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-1">Verified Certificates</p>
+                  <p className="text-2xl font-black text-slate-900">{certCount}</p>
+                </div>
+                {profile.joinedAt && (
+                  <div className="bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Member Since</p>
+                    <p className="text-sm font-black text-slate-800">
+                      {new Date(profile.joinedAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                    </p>
+                  </div>
+                )}
               </div>
-            )}
+
+              {profile.bio && (
+                <div className="border-t border-slate-200 pt-6 max-w-3xl mx-auto">
+                  <h3 className="text-xs font-black uppercase tracking-widest text-indigo-500 mb-3">About Me</h3>
+                  <p className="text-slate-600 text-sm sm:text-base lg:text-[17px] leading-relaxed font-medium whitespace-pre-line">
+                    {profile.bio}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>
 
       {/* ── MAIN RESUME BODY ── */}
-      <main className="max-w-5xl mx-auto px-6 pb-24 grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <main className="max-w-6xl mx-auto px-6 pb-24 grid grid-cols-1 lg:grid-cols-12 gap-8 xl:gap-10">
         
         {/* LEFT COLUMN: CONTACT & ABOUT */}
-        <aside className="lg:col-span-4 space-y-8">
+        <aside className="lg:col-span-4 lg:sticky lg:top-28 h-fit space-y-8">
             
             {/* Quick Summary Card */}
             <section className="bg-white/50 backdrop-blur-sm border border-slate-200 rounded-[2rem] p-6 shadow-sm">
@@ -292,27 +312,27 @@ export default function PublicProfile() {
         </aside>
 
         {/* RIGHT COLUMN: CERTIFICATIONS & SKILLS */}
-        <div className="lg:col-span-8 space-y-10">
+        <div className="lg:col-span-8 space-y-10 xl:space-y-12">
             
             {/* Certifications Section */}
             <section>
-                <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-black text-slate-900 flex items-center gap-3">
+              <div className="flex items-center justify-between mb-6 pb-3 border-b border-slate-200">
+                <h2 className="text-2xl xl:text-[2rem] font-black text-slate-900 flex items-center gap-3">
                         <Award className="w-6 h-6 text-indigo-600" />
                         Verified Certifications
                     </h2>
                 </div>
 
                 {certCount > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 xl:gap-5">
                         {(profile.certificates || []).map(cert => (
-                            <div key={cert.certificateId} className="group bg-white border border-slate-200 rounded-3xl p-5 hover:border-indigo-300 hover:shadow-xl hover:shadow-indigo-50 transition-all flex flex-col justify-between items-start">
+                        <div key={cert.certificateId} className="group min-h-[250px] bg-white border-2 border-emerald-200 rounded-3xl p-5 xl:p-6 hover:border-emerald-400 hover:shadow-xl hover:shadow-emerald-100 transition-all flex flex-col justify-between items-start">
                                 <div className="w-full mb-4">
                                     <div className="flex justify-between items-start mb-3">
-                                        <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
+                              <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
                                             <ShieldCheck className="w-6 h-6" />
                                         </div>
-                                        <span className="text-[10px] font-black uppercase text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md">Verified</span>
+                              <span className="text-[10px] font-black uppercase text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-md">Verified Certificate</span>
                                     </div>
                                     <h3 className="font-extrabold text-slate-900 leading-tight mb-1 group-hover:text-indigo-600 transition-colors">
                                         {cert.course?.title || 'Certification'}
@@ -382,7 +402,7 @@ export default function PublicProfile() {
 
       {/* ── CUSTOM MINIMAL FOOTER ── */}
       <footer className="px-6 py-10 border-t border-slate-100">
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
             <Link to="/" className="flex items-center gap-2 grayscale hover:grayscale-0 transition-all opacity-50 hover:opacity-100">
                 <div className="w-6 h-6 bg-slate-900 rounded-md flex items-center justify-center">
                     <Award className="w-3.5 h-3.5 text-white" />
