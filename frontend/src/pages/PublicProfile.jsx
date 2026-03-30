@@ -20,6 +20,23 @@ export default function PublicProfile() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showNav, setShowNav] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        setShowNav(false);
+      } else {
+        setShowNav(true);
+      }
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -90,7 +107,7 @@ export default function PublicProfile() {
     <div className="min-h-screen bg-[#fafbfc] text-slate-900 font-sans selection:bg-indigo-100 selection:text-indigo-900">
       
       {/* ── MINIMAL BRANDING BAR (Marketing) ── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-4 pointer-events-none">
+      <nav className={`fixed top-0 left-0 right-0 z-50 px-6 py-4 transition-all duration-500 pointer-events-none ${showNav ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}`}>
         <div className="max-w-6xl mx-auto flex justify-between items-center">
             <div className="pointer-events-auto">
                 <Logo size="sm" linkTo="/" />
@@ -102,6 +119,21 @@ export default function PublicProfile() {
             </div>
         </div>
       </nav>
+
+      {/* ── MOBILE ONLY "Build Your Profile" STICKY CTA ── */}
+      <div className="fixed bottom-6 left-6 right-6 z-[100] sm:hidden pointer-events-none">
+        <div className={`transition-all duration-700 pointer-events-auto ${showNav ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+          <Link to="/register" className="flex items-center justify-center gap-3 w-full bg-slate-900 text-white rounded-2xl py-4 shadow-2xl shadow-indigo-100 border border-slate-800 backdrop-blur-sm group active:scale-95 transition-all">
+             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center group-hover:rotate-6 transition-transform shadow-lg">
+                <Award className="w-5 h-5 text-indigo-100" />
+             </div>
+             <div className="text-left">
+               <p className="text-[10px] font-black uppercase tracking-widest text-indigo-300 leading-none mb-1">Create Your Own</p>
+               <p className="text-sm font-bold leading-none">Build Professional Profile</p>
+             </div>
+          </Link>
+        </div>
+      </div>
 
       {/* ── PROFILE HERO ── */}
       <header className="pt-24 pb-12 px-6">
