@@ -228,12 +228,12 @@ router.get('/public/:id', async (req, res) => {
     let user;
 
     if (mongoose.Types.ObjectId.isValid(queryParam)) {
-      user = await User.findById(queryParam).select('name createdAt github linkedin resume portfolio username openToWork');
+      user = await User.findById(queryParam).select('name createdAt github linkedin resume portfolio username openToWork college branch year bio phoneNumber showPhoneNumber');
     }
     
     if (!user) {
       // If not a valid ObjectId or not found, try searching by custom username
-      user = await User.findOne({ username: queryParam }).select('name createdAt github linkedin resume portfolio username openToWork');
+      user = await User.findOne({ username: queryParam }).select('name createdAt github linkedin resume portfolio username openToWork college branch year bio phoneNumber showPhoneNumber');
     }
 
     if (!user) return res.status(404).json({ message: 'User not found' });
@@ -260,6 +260,12 @@ router.get('/public/:id', async (req, res) => {
       portfolio: user.portfolio,
       username: user.username,
       openToWork: user.openToWork,
+      college: user.college,
+      branch: user.branch,
+      year: user.year,
+      bio: user.bio,
+      phoneNumber: user.showPhoneNumber ? user.phoneNumber : undefined,
+      showPhoneNumber: user.showPhoneNumber,
       certificates: allCerts
     });
   } catch (err) {
@@ -271,7 +277,7 @@ router.get('/public/:id', async (req, res) => {
 // ── Update Profile ────────────────────────────────────────────────────────
 router.put('/profile', authOptions, async (req, res) => {
   try {
-    const { name, github, linkedin, resume, portfolio, username, openToWork } = req.body;
+    const { name, github, linkedin, resume, portfolio, username, openToWork, college, branch, year, phoneNumber, bio, showPhoneNumber } = req.body;
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
@@ -305,6 +311,12 @@ router.put('/profile', authOptions, async (req, res) => {
     if (resume !== undefined) user.resume = resume;
     if (portfolio !== undefined) user.portfolio = portfolio;
     if (openToWork !== undefined) user.openToWork = openToWork;
+    if (college !== undefined) user.college = college;
+    if (branch !== undefined) user.branch = branch;
+    if (year !== undefined) user.year = year;
+    if (phoneNumber !== undefined) user.phoneNumber = phoneNumber;
+    if (bio !== undefined) user.bio = bio;
+    if (showPhoneNumber !== undefined) user.showPhoneNumber = showPhoneNumber;
 
     await user.save();
 

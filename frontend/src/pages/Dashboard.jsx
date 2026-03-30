@@ -316,7 +316,8 @@ const Dashboard = () => {
   const [editingProfile, setEditingProfile] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileData, setProfileData] = useState({
-    name: '', github: '', linkedin: '', resume: '', portfolio: '', username: '', openToWork: false
+    name: '', github: '', linkedin: '', resume: '', portfolio: '', username: '', openToWork: false,
+    college: '', branch: '', year: '', phoneNumber: '', bio: '', showPhoneNumber: false
   });
 
   useEffect(() => {
@@ -328,7 +329,13 @@ const Dashboard = () => {
         resume: userData.resume || '',
         portfolio: userData.portfolio || '',
         username: userData.username || '',
-        openToWork: userData.openToWork || false
+        openToWork: userData.openToWork || false,
+        college: userData.college || '',
+        branch: userData.branch || '',
+        year: userData.year || '',
+        phoneNumber: userData.phoneNumber || '',
+        bio: userData.bio || '',
+        showPhoneNumber: userData.showPhoneNumber || false
       });
     }
   }, [userData]);
@@ -717,7 +724,15 @@ const Dashboard = () => {
                       <div>
                         <label className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1.5"><UserRound className="w-3 h-3"/> Full Name</label>
                         <input type="text" value={profileData.name} onChange={e => setProfileData({...profileData, name: e.target.value})} placeholder="John Doe" className="w-full text-sm px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
-                        <p className="text-[11px] text-slate-400 mt-1">This name is used on newly generated certificates.</p>
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1.5"><FileText className="w-3 h-3"/> Professional Bio / About Me</label>
+                        <textarea 
+                          value={profileData.bio} 
+                          onChange={e => setProfileData({...profileData, bio: e.target.value})} 
+                          placeholder="Passionate student interested in..." 
+                          className="w-full text-sm px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none h-24 resize-none" 
+                        />
                       </div>
                       <div>
                         <label className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1.5"><Github className="w-3 h-3"/> GitHub Username / Link</label>
@@ -742,9 +757,43 @@ const Dashboard = () => {
                           <input type="text" value={profileData.username} onChange={e => setProfileData({...profileData, username: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')})} placeholder={userData._id || 'vaibhav-katkar'} className="flex-1 min-w-0 text-sm px-3 py-2 border rounded-none rounded-r-xl focus:ring-2 focus:ring-indigo-500 outline-none uppercase-none" />
                         </div>
                       </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1.5"><GraduationCap className="w-3 h-3"/> College / University</label>
+                          <input type="text" value={profileData.college} onChange={e => setProfileData({...profileData, college: e.target.value})} placeholder="IIT Bombay / Your College" className="w-full text-sm px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1.5"><Settings className="w-3 h-3"/> Branch / Specialization</label>
+                          <input type="text" value={profileData.branch} onChange={e => setProfileData({...profileData, branch: e.target.value})} placeholder="Computer Science / AI" className="w-full text-sm px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1.5"><Clock className="w-3 h-3"/> Graduation Year / Current Year</label>
+                          <select value={profileData.year} onChange={e => setProfileData({...profileData, year: e.target.value})} className="w-full text-sm px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                            <option value="">Select Year</option>
+                            <option value="1st Year">1st Year</option>
+                            <option value="2nd Year">2nd Year</option>
+                            <option value="3rd Year">3rd Year</option>
+                            <option value="4th Year">4th Year</option>
+                            <option value="Graduated">Graduated</option>
+                            <option value="Post-Graduation">Post-Graduation</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1.5"><Globe className="w-3 h-3"/> Phone Number</label>
+                          <input type="tel" value={profileData.phoneNumber} onChange={e => setProfileData({...profileData, phoneNumber: e.target.value})} placeholder="+91 12345 67890" className="w-full text-sm px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
+                        </div>
+                      </div>
                       <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-xl hover:bg-emerald-50 transition-colors">
                         <input type="checkbox" checked={profileData.openToWork} onChange={e => setProfileData({...profileData, openToWork: e.target.checked})} className="w-5 h-5 rounded text-emerald-600" />
                         <span className="text-sm font-bold text-slate-700">Display "Open to Work" Badge</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-xl hover:bg-indigo-50 transition-colors">
+                        <input type="checkbox" checked={profileData.showPhoneNumber} onChange={e => setProfileData({...profileData, showPhoneNumber: e.target.checked})} className="w-5 h-5 rounded text-indigo-600" />
+                        <span className="text-sm font-bold text-slate-700">Display Phone Number on Profile</span>
                       </label>
                       <div className="flex gap-2 pt-2">
                         <button onClick={() => setEditingProfile(false)} className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-bold transition-colors">Cancel</button>
@@ -755,8 +804,42 @@ const Dashboard = () => {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {profileData.github || profileData.linkedin || profileData.resume || profileData.portfolio ? (
+                      {profileData.github || profileData.linkedin || profileData.resume || profileData.portfolio || profileData.college || profileData.phoneNumber ? (
                         <div className="grid grid-cols-1 gap-3">
+                          {/* Academic Info */}
+                          {(profileData.college || profileData.branch || profileData.year) && (
+                            <div className="p-3 bg-indigo-50/30 rounded-xl border border-indigo-100/50">
+                              <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider mb-2">Academic Information</p>
+                              <div className="flex flex-wrap gap-x-6 gap-y-2">
+                                {profileData.college && (
+                                  <div className="flex items-center gap-2">
+                                    <GraduationCap className="w-4 h-4 text-indigo-500" />
+                                    <span className="text-sm font-semibold text-slate-700">{profileData.college}</span>
+                                  </div>
+                                )}
+                                {profileData.branch && (
+                                  <div className="flex items-center gap-2">
+                                    <Settings className="w-4 h-4 text-slate-400" />
+                                    <span className="text-sm text-slate-600">{profileData.branch}</span>
+                                  </div>
+                                )}
+                                {profileData.year && (
+                                  <div className="flex items-center gap-2">
+                                    <Clock className="w-4 h-4 text-slate-400" />
+                                    <span className="text-sm text-slate-600">{profileData.year}</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {profileData.phoneNumber && (
+                            <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border">
+                              <Globe className="w-5 h-5 text-slate-400" />
+                              <span className="text-sm font-medium text-slate-600">{profileData.phoneNumber}</span>
+                            </div>
+                          )}
+
                           {profileData.github && (
                             <a href={profileData.github.startsWith('http') ? profileData.github : `https://${profileData.github}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors border shadow-sm group">
                               <div className="flex items-center gap-3 overflow-hidden">

@@ -19,7 +19,13 @@ const userSchema = new mongoose.Schema({
   resume: { type: String, default: '' },
   portfolio: { type: String, default: '' },
   username: { type: String, unique: true, sparse: true },
-  openToWork: { type: Boolean, default: false }
+  openToWork: { type: Boolean, default: false },
+  college: { type: String, default: '' },
+  branch: { type: String, default: '' },
+  year: { type: String, default: '' },
+  phoneNumber: { type: String, default: '' },
+  bio: { type: String, default: '' },
+  showPhoneNumber: { type: Boolean, default: false }
 }, { timestamps: true });
 
 export default mongoose.model('User', userSchema);

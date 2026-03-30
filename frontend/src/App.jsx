@@ -53,11 +53,14 @@ function AppContent() {
   const isCoursePath = location.pathname.startsWith('/courses/');
   const isCoursesList = location.pathname === '/courses';
   const isQuizPath = location.pathname.includes('/quiz');
+  const isPublicProfile = location.pathname.startsWith('/u/');
+  const isVerifyPath = location.pathname.startsWith('/verify/') || location.pathname.startsWith('/verify-event');
   const isLearningView = (isCoursePath && !isCoursesList) || isQuizPath;
+  const isCleanView = isPublicProfile || isVerifyPath;
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-blue-500/30">
-      <Navbar />
+      {!isCleanView && <Navbar />}
       <main className="flex-grow">
         <Routes>
           <Route path="/" element={<Home />} />
@@ -89,8 +92,8 @@ function AppContent() {
           <Route path="/cookie-policy" element={<CookiePolicy />} />
         </Routes>
       </main>
-      {!isLearningView && <PreFooterCTA />}
-      {!isLearningView && <Footer />}
+      {!isLearningView && !isCleanView && <PreFooterCTA />}
+      {!isLearningView && !isCleanView && <Footer />}
       <WhatsAppJoinPopup />
     </div>
   );
