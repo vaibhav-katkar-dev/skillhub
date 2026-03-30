@@ -4,7 +4,7 @@ import {
   Award, Briefcase, Calendar, ChevronRight, FileText, 
   Github, Linkedin, CheckCircle, Globe, GraduationCap, 
   Zap, Mail, Phone, Download, MapPin, ExternalLink,
-  ShieldCheck, Share2
+  ShieldCheck, Share2, Sparkles
 } from 'lucide-react';
 import { api, useAuthStore } from '../store/authStore';
 import Logo from '../components/Logo';
@@ -84,7 +84,7 @@ export default function PublicProfile() {
   );
 
   const certCount = profile.certificates?.length || 0;
-  const initials = profile.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  const initials = (profile.name || '').split(' ').map(n => n[0] || '').join('').toUpperCase().slice(0, 2) || '?';
 
   return (
     <div className="min-h-screen bg-[#fafbfc] text-slate-900 font-sans selection:bg-indigo-100 selection:text-indigo-900">
@@ -130,10 +130,12 @@ export default function PublicProfile() {
               </div>
               
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-y-2 gap-x-4 text-slate-500 font-bold mb-6">
-                <div className="flex items-center gap-1.5 bg-slate-100 px-3 py-1 rounded-lg">
-                  <GraduationCap className="w-4 h-4 text-indigo-600" />
-                  <span className="text-xs uppercase tracking-wider">{profile.college || 'SkillValix Scholar'}</span>
-                </div>
+                {profile.college && (
+                  <div className="flex items-center gap-1.5 bg-slate-100 px-3 py-1 rounded-lg">
+                    <GraduationCap className="w-4 h-4 text-indigo-600" />
+                    <span className="text-xs uppercase tracking-wider">{profile.college}</span>
+                  </div>
+                )}
                 {profile.branch && (
                   <div className="flex items-center gap-1.5 bg-slate-100 px-3 py-1 rounded-lg">
                     <Briefcase className="w-4 h-4 text-indigo-600" />
@@ -202,7 +204,7 @@ export default function PublicProfile() {
             
             {/* Quick Summary Card */}
             <section className="bg-white/50 backdrop-blur-sm border border-slate-200 rounded-[2rem] p-6 shadow-sm">
-                <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4">Credentials Summary</h3>
+                <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4">Profile Summary</h3>
                 <div className="space-y-4">
                     <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center">
@@ -210,18 +212,33 @@ export default function PublicProfile() {
                         </div>
                         <div>
                             <p className="text-xl font-black text-slate-900">{certCount}</p>
-                            <p className="text-[10px] font-bold text-slate-500 uppercase">Verified Skills</p>
+                            <p className="text-[10px] font-bold text-slate-500 uppercase font-sans">Verified Certificates</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center">
-                            <ShieldCheck className="w-6 h-6" />
+                    {profile.joinedAt && (
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-slate-100 text-slate-600 rounded-2xl flex items-center justify-center">
+                            <Calendar className="w-5 h-5" />
                         </div>
                         <div>
-                            <p className="text-xl font-black text-slate-900">Verified</p>
-                            <p className="text-[10px] font-bold text-slate-500 uppercase">Profile Status</p>
+                            <p className="text-sm font-black text-slate-800">
+                                {new Date(profile.joinedAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                            </p>
+                            <p className="text-[10px] font-bold text-slate-500 uppercase font-sans">Member Since</p>
                         </div>
-                    </div>
+                      </div>
+                    )}
+                    {profile.college && (
+                      <div className="flex items-center gap-4 border-t border-slate-100 pt-4">
+                        <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center">
+                            <GraduationCap className="w-6 h-6" />
+                        </div>
+                        <div className="min-w-0">
+                            <p className="text-[11px] font-black text-slate-800 leading-tight truncate">{profile.college}</p>
+                            <p className="text-[10px] font-bold text-slate-500 uppercase font-sans">{profile.year || 'Student'}</p>
+                        </div>
+                      </div>
+                    )}
                 </div>
             </section>
 
@@ -256,7 +273,7 @@ export default function PublicProfile() {
 
                 {certCount > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {profile.certificates.map(cert => (
+                        {(profile.certificates || []).map(cert => (
                             <div key={cert.certificateId} className="group bg-white border border-slate-200 rounded-3xl p-5 hover:border-indigo-300 hover:shadow-xl hover:shadow-indigo-50 transition-all flex flex-col justify-between items-start">
                                 <div className="w-full mb-4">
                                     <div className="flex justify-between items-start mb-3">

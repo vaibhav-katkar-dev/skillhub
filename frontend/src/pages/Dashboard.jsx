@@ -9,8 +9,61 @@ import {
   Download, CheckCircle, Award, Share2, BookOpen,
   ArrowRight, Loader2, Trophy, GraduationCap, Medal,
   Sparkles, Clock, Star, Linkedin, Github, FileText, Globe,
-  User, Settings, Briefcase, X, Save, UserRound
+  User, Settings, Briefcase, X, Save, UserRound, MapPin, ExternalLink,
+  Phone, ShieldCheck, Mail, Zap
 } from 'lucide-react';
+
+/* ────────────────────────────────────────────
+   HELPER COMPONENTS FOR PROFILE
+──────────────────────────────────────────── */
+const InfoItem = ({ label, value, icon: Icon }) => (
+  <div className="flex items-center gap-3">
+    <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center shrink-0">
+      <Icon className="w-4 h-4 text-slate-400" />
+    </div>
+    <div className="min-w-0">
+      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none mb-1">{label}</p>
+      <p className="text-sm font-bold text-slate-700 truncate">{value || 'Not specified'}</p>
+    </div>
+  </div>
+);
+
+const SocialIcon = ({ title, value, icon: Icon, color }) => {
+  if (!value) return (
+    <div className="p-3 bg-slate-50 border border-slate-100 rounded-2xl opacity-40 grayscale flex flex-col items-center justify-center">
+      <Icon className="w-5 h-5 mb-1 text-slate-300" />
+      <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">{title}</p>
+    </div>
+  );
+  
+  return (
+    <a 
+      href={value.startsWith('http') ? value : `https://${value}`} 
+      target="_blank" 
+      rel="noopener noreferrer"
+      className="p-3 bg-white border border-slate-200 rounded-2xl hover:border-indigo-300 hover:shadow-lg hover:shadow-indigo-50 transition-all flex flex-col items-center justify-center group"
+    >
+      <Icon className="w-5 h-5 mb-1 transition-transform group-hover:scale-110" style={{ color }} />
+      <p className="text-[9px] font-black text-slate-600 uppercase tracking-tighter">{title}</p>
+    </a>
+  );
+};
+
+const SectionHead = ({ icon: Icon, title, iconCls, count, countCls }) => (
+  <div className="flex items-center gap-4 mb-6">
+    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg shadow-slate-100 ${iconCls}`}>
+      <Icon className="w-6 h-6" />
+    </div>
+    <div className="flex-1">
+      <h2 className="text-xl font-black text-slate-900 tracking-tight">{title}</h2>
+      {count && (
+        <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider mt-0.5 ${countCls}`}>
+          {count}
+        </span>
+      )}
+    </div>
+  </div>
+);
 
 /* ────────────────────────────────────────────
    Skeleton
@@ -270,21 +323,6 @@ const CertCard = ({ cert, onDownload, copyMsg, onCopy, prepState }) => {
     </div>
   );
 };
-
-/* ────────────────────────────────────────────
-   Section Header
-──────────────────────────────────────────── */
-const SectionHead = ({ icon: Icon, title, iconCls, count, countCls }) => (
-  <div className="flex items-center gap-3 mb-6">
-    <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${iconCls}`}>
-      <Icon className="w-5 h-5" />
-    </div>
-    <h2 className="font-extrabold text-slate-800 text-sm uppercase tracking-widest">{title}</h2>
-    {count !== undefined && (
-      <span className={`ml-auto text-xs font-extrabold px-3 py-1 rounded-full ${countCls}`}>{count}</span>
-    )}
-  </div>
-);
 
 /* ────────────────────────────────────────────
    Empty State
@@ -701,194 +739,282 @@ const Dashboard = () => {
 
           {/* TAB: PROFILE SETTINGS */}
           {activeTab === 'profile' && (
-            <div className="animate-fade-in max-w-2xl mx-auto">
+            <div className="animate-fade-in max-w-3xl mx-auto">
               {!loading && userData && (
-                <div className="mb-10">
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-black text-slate-900 mb-1 flex items-center justify-between w-full">
-                      <div>
-                        My Public Portfolio
-                        <p className="text-sm font-medium text-slate-500 mt-1">Manage your custom portfolio link and social profiles.</p>
-                      </div>
-                  </h2>
-                  {!editingProfile && (
-                    <button onClick={() => setEditingProfile(true)} className="text-sm font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-xl transition-colors">
-                      Edit Profile
-                    </button>
-                  )}
-                </div>
+                <div className="space-y-6">
+                  {/* Header Row */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <h2 className="text-2xl font-black text-slate-900 tracking-tight">Public Portfolio</h2>
+                      <p className="text-sm font-medium text-slate-500">How your profile appears to recruiters and visitors.</p>
+                    </div>
+                    {!editingProfile && (
+                      <button 
+                        onClick={() => {
+                          setProfileData({
+                            name: userData.name || '',
+                            github: userData.github || '',
+                            linkedin: userData.linkedin || '',
+                            resume: userData.resume || '',
+                            portfolio: userData.portfolio || '',
+                            username: userData.username || '',
+                            openToWork: userData.openToWork || false,
+                            college: userData.college || '',
+                            branch: userData.branch || '',
+                            year: userData.year || '',
+                            phoneNumber: userData.phoneNumber || '',
+                            bio: userData.bio || '',
+                            showPhoneNumber: userData.showPhoneNumber || false
+                          });
+                          setEditingProfile(true);
+                        }} 
+                        className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-indigo-100 transition-all active:scale-95"
+                      >
+                        <Settings className="w-4 h-4" />
+                        Edit Profile
+                      </button>
+                    )}
+                  </div>
 
-                <div className="bg-white border rounded-2xl p-5 shadow-sm transition-all duration-300">
                   {editingProfile ? (
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1.5"><UserRound className="w-3 h-3"/> Full Name</label>
-                        <input type="text" value={profileData.name} onChange={e => setProfileData({...profileData, name: e.target.value})} placeholder="John Doe" className="w-full text-sm px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
-                      </div>
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1.5"><FileText className="w-3 h-3"/> Professional Bio / About Me</label>
-                        <textarea 
-                          value={profileData.bio} 
-                          onChange={e => setProfileData({...profileData, bio: e.target.value})} 
-                          placeholder="Passionate student interested in..." 
-                          className="w-full text-sm px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none h-24 resize-none" 
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1.5"><Github className="w-3 h-3"/> GitHub Username / Link</label>
-                        <input type="text" value={profileData.github} onChange={e => setProfileData({...profileData, github: e.target.value})} placeholder="github.com/myname" className="w-full text-sm px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
-                      </div>
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1.5"><Linkedin className="w-3 h-3"/> LinkedIn URL</label>
-                        <input type="text" value={profileData.linkedin} onChange={e => setProfileData({...profileData, linkedin: e.target.value})} placeholder="linkedin.com/in/myname" className="w-full text-sm px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
-                      </div>
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1.5"><FileText className="w-3 h-3"/> Resume Link</label>
-                        <input type="text" value={profileData.resume} onChange={e => setProfileData({...profileData, resume: e.target.value})} placeholder="https://docs.google.com/..." className="w-full text-sm px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
-                      </div>
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1.5"><GraduationCap className="w-3 h-3"/> Personal Portfolio</label>
-                        <input type="text" value={profileData.portfolio} onChange={e => setProfileData({...profileData, portfolio: e.target.value})} placeholder="https://myportfolio.com" className="w-full text-sm px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
-                      </div>
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1.5"><Globe className="w-3 h-3"/> Custom Username Slug</label>
-                        <div className="flex">
-                          <span className="inline-flex items-center px-3 rounded-l-xl border border-r-0 border-slate-200 bg-slate-50 text-slate-500 sm:text-sm">skillvalix.com/u/</span>
-                          <input type="text" value={profileData.username} onChange={e => setProfileData({...profileData, username: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')})} placeholder={userData._id || 'vaibhav-katkar'} className="flex-1 min-w-0 text-sm px-3 py-2 border rounded-none rounded-r-xl focus:ring-2 focus:ring-indigo-500 outline-none uppercase-none" />
+                    /* ── EDIT MODE ── */
+                    <div className="bg-white border border-slate-200 rounded-3xl shadow-xl shadow-slate-200/50 p-6 md:p-8 space-y-8">
+                      
+                      {/* Section: Personal Info */}
+                      <section className="space-y-4">
+                        <div className="flex items-center gap-2 pb-2 border-b border-slate-100 mb-4">
+                          <UserRound className="w-4 h-4 text-indigo-600" />
+                          <h3 className="text-sm font-black uppercase tracking-widest text-slate-800">Personal Information</h3>
                         </div>
-                      </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-500 ml-1">Full Name</label>
+                            <input type="text" value={profileData.name} onChange={e => setProfileData({...profileData, name: e.target.value})} placeholder="John Doe" className="w-full text-sm px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition-all" />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-500 ml-1">Custom Username Slug</label>
+                            <div className="flex">
+                              <span className="inline-flex items-center px-3 rounded-l-xl border border-r-0 border-slate-200 bg-slate-100 text-slate-400 text-xs font-bold">/u/</span>
+                              <input type="text" value={profileData.username} onChange={e => setProfileData({...profileData, username: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')})} placeholder={userData._id} className="flex-1 min-w-0 text-sm px-4 py-3 bg-slate-50 border border-slate-200 rounded-none rounded-r-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition-all" />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-500 ml-1">Professional Bio / About Me</label>
+                          <textarea 
+                            value={profileData.bio} 
+                            onChange={e => setProfileData({...profileData, bio: e.target.value})} 
+                            placeholder="Tell recruiters about your goals, skills, and background..." 
+                            className="w-full text-sm px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none h-32 resize-none transition-all" 
+                          />
+                        </div>
+                      </section>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                          <label className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1.5"><GraduationCap className="w-3 h-3"/> College / University</label>
-                          <input type="text" value={profileData.college} onChange={e => setProfileData({...profileData, college: e.target.value})} placeholder="IIT Bombay / Your College" className="w-full text-sm px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
+                      {/* Section: Academic Info */}
+                      <section className="space-y-4">
+                        <div className="flex items-center gap-2 pb-2 border-b border-slate-100 mb-4">
+                          <GraduationCap className="w-4 h-4 text-indigo-600" />
+                          <h3 className="text-sm font-black uppercase tracking-widest text-slate-800">Academic Details</h3>
                         </div>
-                        <div>
-                          <label className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1.5"><Settings className="w-3 h-3"/> Branch / Specialization</label>
-                          <input type="text" value={profileData.branch} onChange={e => setProfileData({...profileData, branch: e.target.value})} placeholder="Computer Science / AI" className="w-full text-sm px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-500 ml-1">College / University Name</label>
+                          <input type="text" value={profileData.college} onChange={e => setProfileData({...profileData, college: e.target.value})} placeholder="IIT Bombay / Your University" className="w-full text-sm px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition-all" />
                         </div>
-                      </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-500 ml-1">Branch / Specialization</label>
+                            <input type="text" value={profileData.branch} onChange={e => setProfileData({...profileData, branch: e.target.value})} placeholder="Computer Science / AI" className="w-full text-sm px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition-all" />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-500 ml-1">Current Year / Status</label>
+                            <select value={profileData.year} onChange={e => setProfileData({...profileData, year: e.target.value})} className="w-full text-sm px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition-all appearance-none cursor-pointer">
+                              <option value="">Select Year</option>
+                              <option value="1st Year">1st Year</option>
+                              <option value="2nd Year">2nd Year</option>
+                              <option value="3rd Year">3rd Year</option>
+                              <option value="4th Year">4th Year</option>
+                              <option value="Graduated">Graduated</option>
+                              <option value="Post-Graduation">Post-Graduation</option>
+                            </select>
+                          </div>
+                        </div>
+                      </section>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                          <label className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1.5"><Clock className="w-3 h-3"/> Graduation Year / Current Year</label>
-                          <select value={profileData.year} onChange={e => setProfileData({...profileData, year: e.target.value})} className="w-full text-sm px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
-                            <option value="">Select Year</option>
-                            <option value="1st Year">1st Year</option>
-                            <option value="2nd Year">2nd Year</option>
-                            <option value="3rd Year">3rd Year</option>
-                            <option value="4th Year">4th Year</option>
-                            <option value="Graduated">Graduated</option>
-                            <option value="Post-Graduation">Post-Graduation</option>
-                          </select>
+                      {/* Section: Social & Contact */}
+                      <section className="space-y-4">
+                        <div className="flex items-center gap-2 pb-2 border-b border-slate-100 mb-4">
+                          <Globe className="w-4 h-4 text-indigo-600" />
+                          <h3 className="text-sm font-black uppercase tracking-widest text-slate-800">Social & Contact Links</h3>
                         </div>
-                        <div>
-                          <label className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1.5"><Globe className="w-3 h-3"/> Phone Number</label>
-                          <input type="tel" value={profileData.phoneNumber} onChange={e => setProfileData({...profileData, phoneNumber: e.target.value})} placeholder="+91 12345 67890" className="w-full text-sm px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-500 ml-1">LinkedIn URL</label>
+                            <div className="relative">
+                              <Linkedin className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#0A66C2]" />
+                              <input type="text" value={profileData.linkedin} onChange={e => setProfileData({...profileData, linkedin: e.target.value})} placeholder="linkedin.com/in/myname" className="w-full text-sm pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition-all" />
+                            </div>
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-500 ml-1">GitHub URL</label>
+                            <div className="relative">
+                              <Github className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-800" />
+                              <input type="text" value={profileData.github} onChange={e => setProfileData({...profileData, github: e.target.value})} placeholder="github.com/myname" className="w-full text-sm pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition-all" />
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                      <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-xl hover:bg-emerald-50 transition-colors">
-                        <input type="checkbox" checked={profileData.openToWork} onChange={e => setProfileData({...profileData, openToWork: e.target.checked})} className="w-5 h-5 rounded text-emerald-600" />
-                        <span className="text-sm font-bold text-slate-700">Display "Open to Work" Badge</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-xl hover:bg-indigo-50 transition-colors">
-                        <input type="checkbox" checked={profileData.showPhoneNumber} onChange={e => setProfileData({...profileData, showPhoneNumber: e.target.checked})} className="w-5 h-5 rounded text-indigo-600" />
-                        <span className="text-sm font-bold text-slate-700">Display Phone Number on Profile</span>
-                      </label>
-                      <div className="flex gap-2 pt-2">
-                        <button onClick={() => setEditingProfile(false)} className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-bold transition-colors">Cancel</button>
-                        <button onClick={handleSaveProfile} disabled={savingProfile} className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-1.5 disabled:opacity-70">
-                          {savingProfile ? <Loader2 className="w-4 h-4 animate-spin"/> : <Save className="w-4 h-4" />} Save
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-500 ml-1">Resume Link (G-Drive/Dropbox)</label>
+                            <div className="relative">
+                              <FileText className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-rose-500" />
+                              <input type="text" value={profileData.resume} onChange={e => setProfileData({...profileData, resume: e.target.value})} placeholder="https://drive.google.com/..." className="w-full text-sm pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition-all" />
+                            </div>
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-500 ml-1">Phone Number</label>
+                            <div className="relative">
+                              <Phone className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-500" />
+                              <input type="tel" value={profileData.phoneNumber} onChange={e => setProfileData({...profileData, phoneNumber: e.target.value})} placeholder="+91 12345 67890" className="w-full text-sm pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition-all" />
+                            </div>
+                          </div>
+                        </div>
+                      </section>
+
+                      {/* Section: Privacy Settings */}
+                      <section className="space-y-4">
+                        <div className="flex items-center gap-2 pb-2 border-b border-slate-100 mb-4">
+                          <ShieldCheck className="w-4 h-4 text-indigo-600" />
+                          <h3 className="text-sm font-black uppercase tracking-widest text-slate-800">Public Privacy</h3>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <label className="flex items-center gap-3 cursor-pointer p-4 border border-slate-200 rounded-2xl bg-slate-50 hover:bg-white hover:border-emerald-300 hover:shadow-lg hover:shadow-emerald-50 transition-all group">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${profileData.openToWork ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-500'}`}>
+                              <Zap className={`w-5 h-5 ${profileData.openToWork ? 'animate-bounce' : ''}`} />
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-black text-slate-900">Open to Work</p>
+                              <p className="text-[10px] font-bold text-slate-500 uppercase">Displays hired badge</p>
+                            </div>
+                            <input type="checkbox" checked={profileData.openToWork} onChange={e => setProfileData({...profileData, openToWork: e.target.checked})} className="w-5 h-5 rounded-lg border-2 border-slate-300 text-emerald-600 focus:ring-emerald-500" />
+                          </label>
+
+                          <label className="flex items-center gap-3 cursor-pointer p-4 border border-slate-200 rounded-2xl bg-slate-50 hover:bg-white hover:border-indigo-300 hover:shadow-lg hover:shadow-indigo-50 transition-all group">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${profileData.showPhoneNumber ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-200 text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-500'}`}>
+                              <Phone className="w-5 h-5" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-black text-slate-900">Show Contact</p>
+                              <p className="text-[10px] font-bold text-slate-500 uppercase">Public phone view</p>
+                            </div>
+                            <input type="checkbox" checked={profileData.showPhoneNumber} onChange={e => setProfileData({...profileData, showPhoneNumber: e.target.checked})} className="w-5 h-5 rounded-lg border-2 border-slate-300 text-indigo-600 focus:ring-indigo-500" />
+                          </label>
+                        </div>
+                      </section>
+
+                      {/* Form Actions */}
+                      <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-slate-100">
+                        <button 
+                          onClick={() => setEditingProfile(false)} 
+                          className="flex-1 py-3.5 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-2xl text-sm font-black uppercase tracking-widest transition-all active:scale-[0.98]"
+                        >
+                          Discard Changes
+                        </button>
+                        <button 
+                          onClick={handleSaveProfile} 
+                          disabled={savingProfile} 
+                          className="flex-[2] py-3.5 bg-slate-900 hover:bg-black text-white rounded-2xl text-sm font-black uppercase tracking-widest transition-all shadow-xl shadow-slate-200 disabled:opacity-70 flex items-center justify-center gap-2 active:scale-[0.98]"
+                        >
+                          {savingProfile ? <Loader2 className="w-5 h-5 animate-spin"/> : <Save className="w-5 h-5" />}
+                          {savingProfile ? 'Saving...' : 'Sync Profile'}
                         </button>
                       </div>
                     </div>
                   ) : (
-                    <div className="space-y-4">
-                      {profileData.github || profileData.linkedin || profileData.resume || profileData.portfolio || profileData.college || profileData.phoneNumber ? (
-                        <div className="grid grid-cols-1 gap-3">
-                          {/* Academic Info */}
-                          {(profileData.college || profileData.branch || profileData.year) && (
-                            <div className="p-3 bg-indigo-50/30 rounded-xl border border-indigo-100/50">
-                              <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider mb-2">Academic Information</p>
-                              <div className="flex flex-wrap gap-x-6 gap-y-2">
-                                {profileData.college && (
-                                  <div className="flex items-center gap-2">
-                                    <GraduationCap className="w-4 h-4 text-indigo-500" />
-                                    <span className="text-sm font-semibold text-slate-700">{profileData.college}</span>
-                                  </div>
-                                )}
-                                {profileData.branch && (
-                                  <div className="flex items-center gap-2">
-                                    <Settings className="w-4 h-4 text-slate-400" />
-                                    <span className="text-sm text-slate-600">{profileData.branch}</span>
-                                  </div>
-                                )}
-                                {profileData.year && (
-                                  <div className="flex items-center gap-2">
-                                    <Clock className="w-4 h-4 text-slate-400" />
-                                    <span className="text-sm text-slate-600">{profileData.year}</span>
-                                  </div>
-                                )}
-                              </div>
+                    /* ── VIEW MODE ── */
+                    <div className="space-y-6">
+                      
+                      {/* Top Preview Card */}
+                      <div className="bg-white border border-slate-200 rounded-[2.5rem] p-8 shadow-sm relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full blur-3xl -z-10 group-hover:scale-150 transition-transform duration-1000" />
+                        <div className="flex flex-col md:flex-row items-center gap-6">
+                          <div className="w-24 h-24 bg-gradient-to-br from-indigo-600 to-violet-600 rounded-[2rem] shadow-xl shadow-indigo-100 flex items-center justify-center text-white text-3xl font-black rotate-2 group-hover:rotate-0 transition-all">
+                            {profileData.name.charAt(0)}
+                          </div>
+                          <div className="text-center md:text-left flex-1">
+                            <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-1">
+                              <h3 className="text-2xl font-black text-slate-900">{profileData.name}</h3>
+                              <CheckCircle className="w-5 h-5 text-indigo-500" />
                             </div>
-                          )}
-
-                          {profileData.phoneNumber && (
-                            <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border">
-                              <Globe className="w-5 h-5 text-slate-400" />
-                              <span className="text-sm font-medium text-slate-600">{profileData.phoneNumber}</span>
+                            <div className="flex flex-wrap justify-center md:justify-start items-center gap-3 text-slate-400 font-bold text-xs uppercase tracking-wider">
+                              <span className="flex items-center gap-1.5">
+                                <MapPin className="w-3.5 h-3.5" />
+                                {userData.username ? `/u/${userData.username}` : 'No username set'}
+                              </span>
+                              {profileData.openToWork && (
+                                <span className="text-emerald-600 flex items-center gap-1.5 bg-emerald-50 px-2.5 py-1 rounded-lg">
+                                  <Zap className="w-3.5 h-3.5 animate-bounce fill-current" />
+                                  Open to Work
+                                </span>
+                              )}
                             </div>
-                          )}
+                          </div>
+                          <Link 
+                            to={`/u/${userData.username || userData._id}`} 
+                            target="_blank"
+                            className="w-full md:w-auto h-12 px-6 bg-slate-900 hover:bg-black text-white rounded-xl flex items-center justify-center gap-3 text-sm font-bold shadow-lg shadow-slate-100 transition-all"
+                          >
+                            Visit Portfolio
+                            <ExternalLink className="w-4 h-4" />
+                          </Link>
+                        </div>
 
-                          {profileData.github && (
-                            <a href={profileData.github.startsWith('http') ? profileData.github : `https://${profileData.github}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors border shadow-sm group">
-                              <div className="flex items-center gap-3 overflow-hidden">
-                                <Github className="w-5 h-5 text-slate-700 flex-shrink-0" />
-                                <span className="text-sm font-semibold text-slate-700 truncate">{profileData.github.replace(/^https?:\/\//, '')}</span>
+                        {profileData.bio && (
+                          <div className="mt-8 pt-8 border-t border-slate-100">
+                            <p className="text-sm font-bold text-indigo-400 uppercase tracking-[0.2em] mb-3">About Me</p>
+                            <p className="text-slate-600 text-sm leading-relaxed font-medium whitespace-pre-line">{profileData.bio}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Secondary Info Grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        
+                        {/* Academic Block */}
+                        <div className="bg-white border border-slate-200 rounded-[2rem] p-6 shadow-sm">
+                           <div className="flex items-center gap-3 mb-5">
+                              <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
+                                <GraduationCap className="w-5 h-5" />
                               </div>
-                              <ArrowRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
-                            </a>
-                          )}
-                          {profileData.linkedin && (
-                            <a href={profileData.linkedin.startsWith('http') ? profileData.linkedin : `https://${profileData.linkedin}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 bg-blue-50/50 hover:bg-blue-50 rounded-xl transition-colors border border-blue-100 shadow-sm group">
-                              <div className="flex items-center gap-3 overflow-hidden">
-                                <Linkedin className="w-5 h-5 text-[#0A66C2] flex-shrink-0" />
-                                <span className="text-sm font-semibold text-blue-700 truncate">{profileData.linkedin.replace(/^https?:\/\//, '')}</span>
-                              </div>
-                              <ArrowRight className="w-4 h-4 text-blue-400 group-hover:translate-x-1 transition-transform" />
-                            </a>
-                          )}
-                          {profileData.portfolio && (
-                            <a href={profileData.portfolio.startsWith('http') ? profileData.portfolio : `https://${profileData.portfolio}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 bg-indigo-50/50 hover:bg-indigo-50 rounded-xl transition-colors border border-indigo-100 shadow-sm group">
-                              <div className="flex items-center gap-3 overflow-hidden">
-                                <GraduationCap className="w-5 h-5 text-indigo-600 flex-shrink-0" />
-                                <span className="text-sm font-semibold text-indigo-700 truncate">My Portfolio</span>
-                              </div>
-                              <ArrowRight className="w-4 h-4 text-indigo-400 group-hover:translate-x-1 transition-transform" />
-                            </a>
-                          )}
-                          {profileData.resume && (
-                            <a href={profileData.resume.startsWith('http') ? profileData.resume : `https://${profileData.resume}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 bg-rose-50/50 hover:bg-rose-50 rounded-xl transition-colors border border-rose-100 shadow-sm group">
-                              <div className="flex items-center gap-3 overflow-hidden">
-                                <FileText className="w-5 h-5 text-rose-600 flex-shrink-0" />
-                                <span className="text-sm font-semibold text-rose-700 truncate">View Resume</span>
-                              </div>
-                              <ArrowRight className="w-4 h-4 text-rose-400 group-hover:translate-x-1 transition-transform" />
-                            </a>
-                          )}
+                              <h4 className="font-black text-slate-900 tracking-tight">Academic Info</h4>
+                           </div>
+                           <div className="space-y-4">
+                              <InfoItem label="University" value={profileData.college} icon={MapPin} />
+                              <InfoItem label="Branch" value={profileData.branch} icon={Settings} />
+                              <InfoItem label="Status" value={profileData.year} icon={Clock} />
+                           </div>
                         </div>
-                      ) : (
-                        <div className="text-center py-4">
-                          <p className="text-sm text-slate-500 font-medium mb-3">Make your public portfolio stand out to recruiters.</p>
-                          <button onClick={() => setEditingProfile(true)} className="px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded-lg hover:bg-slate-800 transition-colors inline-flex items-center gap-2">
-                            Add Social Links
-                          </button>
+
+                        {/* Social Block */}
+                        <div className="bg-white border border-slate-200 rounded-[2rem] p-6 shadow-sm">
+                           <div className="flex items-center gap-3 mb-5">
+                              <div className="w-10 h-10 bg-slate-100 text-slate-600 rounded-xl flex items-center justify-center">
+                                <Share2 className="w-5 h-5" />
+                              </div>
+                              <h4 className="font-black text-slate-900 tracking-tight">Social Presence</h4>
+                           </div>
+                           <div className="grid grid-cols-2 gap-3">
+                              <SocialIcon title="LinkedIn" value={profileData.linkedin} icon={Linkedin} color="#0A66C2" />
+                              <SocialIcon title="GitHub" value={profileData.github} icon={Github} color="#181717" />
+                              <SocialIcon title="Resume" value={profileData.resume} icon={FileText} color="#EF4444" />
+                              <SocialIcon title="My Work" value={profileData.portfolio} icon={Globe} color="#4F46E5" />
+                           </div>
                         </div>
-                      )}
+
+                      </div>
+
                     </div>
                   )}
                 </div>
-              </div>
               )}
             </div>
           )}
