@@ -1,4 +1,4 @@
-﻿[
+[
   {
     "course": {
       "_id": "69b8ec57dc1649c0c42c9d8d",
@@ -1427,7 +1427,7 @@
   },
   {
     "course": {
-      "_id": "8bc2f9c31e5g0b4f72d3cb02",
+      "_id": "8bc2f9c31e5f0b4f72d3cb02",
       "title": "Cyber Security Basics: Introduction to Information Security",
       "slug": "cyber-security-basics-introduction",
       "description": "A beginner-friendly yet comprehensive introduction to cyber security fundamentals. Covers threat landscape, core security principles, network security, cryptography, ethical hacking concepts, and real-world best practices for protecting systems and data.",
@@ -1440,8 +1440,8 @@
     },
     "lessons": [
       {
-        "_id": "8bc2f9c31e5g0b4f72d3cb10",
-        "course": "8bc2f9c31e5g0b4f72d3cb02",
+        "_id": "8bc2f9c31e5f0b4f72d3cb10",
+        "course": "8bc2f9c31e5f0b4f72d3cb02",
         "title": "1. What is Cyber Security?",
         "content": "<h2>Understanding the Field of Cyber Security</h2>\n<p>Cyber security is the practice of protecting computer systems, networks, and digital data from unauthorized access, damage, or attack. As digital infrastructure expands, understanding security fundamentals becomes essential for every developer and IT professional.</p>\n<h3>Core Concepts</h3>\n<ul><li>Cyber security protects confidentiality, integrity, and availability of data (CIA Triad).</li><li>Threats can come from external attackers, insider threats, or accidental misconfigurations.</li><li>Security is a continuous process, not a one-time implementation.</li></ul>\n<div class=\"my-6 rounded-xl overflow-hidden border border-slate-200 shadow-sm\">\n  <div class=\"bg-slate-100 px-4 py-2 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider\">CIA Triad Overview</div>\n  <pre class=\"!m-0 !rounded-none !bg-slate-900 !p-6\"><code>Confidentiality → Only authorized users can access data\nIntegrity       → Data is not tampered with or altered\nAvailability    → Systems and data are accessible when needed</code></pre>\n</div>\n<h3>Professional Implementation Notes</h3>\n<ul><li>Apply CIA Triad thinking to every system you design or deploy.</li><li>Treat security as a shared responsibility, not just the security team's job.</li><li>Stay updated on evolving threats through trusted security advisories.</li></ul>\n<p><strong>Practice Task:</strong> Research one real-world data breach and map how it violated the CIA Triad.</p>",
         "videoUrl": "",
@@ -1451,8 +1451,8 @@
         "updatedAt": "2026-03-30T10:00:00.000Z"
       },
       {
-        "_id": "8bc2f9c31e5g0b4f72d3cb11",
-        "course": "8bc2f9c31e5g0b4f72d3cb02",
+        "_id": "8bc2f9c31e5f0b4f72d3cb11",
+        "course": "8bc2f9c31e5f0b4f72d3cb02",
         "title": "2. Types of Cyber Threats and Attackers",
         "content": "<h2>Identifying the Threat Landscape</h2>\n<p>Understanding who attacks systems and how they operate is the foundation of building effective defenses. Threats vary by motivation, capability, and target.</p>\n<h3>Core Concepts</h3>\n<ul><li>Threat actors include hackers, nation-states, insiders, and organized crime groups.</li><li>Attack types range from malware and phishing to DDoS and zero-day exploits.</li><li>Understanding attacker motivation helps prioritize the right defenses.</li></ul>\n<div class=\"my-6 rounded-xl overflow-hidden border border-slate-200 shadow-sm\">\n  <div class=\"bg-slate-100 px-4 py-2 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider\">Common Threat Categories</div>\n  <pre class=\"!m-0 !rounded-none !bg-slate-900 !p-6\"><code>Malware        → Viruses, ransomware, spyware, trojans\nPhishing       → Social engineering via fake emails/sites\nDDoS           → Overloading servers to deny service\nMan-in-Middle  → Intercepting communication between parties\nZero-Day       → Exploiting unknown vulnerabilities</code></pre>\n</div>\n<h3>Professional Implementation Notes</h3>\n<ul><li>Use threat modeling frameworks like STRIDE to classify risks early.</li><li>Track threat intelligence feeds relevant to your industry.</li><li>Differentiate opportunistic attacks from targeted advanced persistent threats.</li></ul>\n<p><strong>Practice Task:</strong> Map three real attack types to their threat actor categories and motivations.</p>",
         "videoUrl": "",
@@ -1462,8 +1462,8 @@
         "updatedAt": "2026-03-30T10:00:00.000Z"
       },
       {
-        "_id": "8bc2f9c31e5g0b4f72d3cb12",
-        "course": "8bc2f9c31e5g0b4f72d3cb02",
+        "_id": "8bc2f9c31e5f0b4f72d3cb12",
+        "course": "8bc2f9c31e5f0b4f72d3cb02",
         "title": "3. OSI Model and Network Security Basics",
         "content": "<h2>How Networks Work and Where Attacks Happen</h2>\n<p>The OSI model provides a layered framework for understanding how data travels across networks. Security vulnerabilities can exist at any layer, so knowing the model helps identify the right countermeasures.</p>\n<h3>Core Concepts</h3>\n<ul><li>The OSI model has 7 layers: Physical, Data Link, Network, Transport, Session, Presentation, Application.</li><li>Most web application attacks target Layer 7 (Application).</li><li>Network-level controls like firewalls operate at Layers 3 and 4.</li></ul>\n<div class=\"my-6 rounded-xl overflow-hidden border border-slate-200 shadow-sm\">\n  <div class=\"bg-slate-100 px-4 py-2 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider\">OSI Layers and Attack Examples</div>\n  <pre class=\"!m-0 !rounded-none !bg-slate-900 !p-6\"><code>Layer 7 - Application  → SQL Injection, XSS, CSRF\nLayer 4 - Transport    → SYN Flood, Port Scanning\nLayer 3 - Network      → IP Spoofing, Routing Attacks\nLayer 2 - Data Link    → ARP Spoofing, MAC Flooding</code></pre>\n</div>\n<h3>Professional Implementation Notes</h3>\n<ul><li>Use packet analyzers like Wireshark to inspect traffic across layers.</li><li>Deploy WAFs to add Layer 7 protection to web applications.</li><li>Segment networks to limit lateral movement after a breach.</li></ul>\n<p><strong>Practice Task:</strong> Use Wireshark on a local machine to inspect HTTP packets and identify Layer 7 data.</p>",
         "videoUrl": "",
@@ -1473,8 +1473,8 @@
         "updatedAt": "2026-03-30T10:00:00.000Z"
       },
       {
-        "_id": "8bc2f9c31e5g0b4f72d3cb13",
-        "course": "8bc2f9c31e5g0b4f72d3cb02",
+        "_id": "8bc2f9c31e5f0b4f72d3cb13",
+        "course": "8bc2f9c31e5f0b4f72d3cb02",
         "title": "4. Cryptography Fundamentals",
         "content": "<h2>Securing Data with Encryption</h2>\n<p>Cryptography is the science of securing communication through mathematical transformations. It underpins HTTPS, password storage, digital signatures, and most modern security protocols.</p>\n<h3>Core Concepts</h3>\n<ul><li>Symmetric encryption uses a single shared key; asymmetric uses a public/private key pair.</li><li>Hashing is a one-way transformation used for password storage and data integrity.</li><li>TLS/SSL encrypts data in transit using a combination of symmetric and asymmetric techniques.</li></ul>\n<div class=\"my-6 rounded-xl overflow-hidden border border-slate-200 shadow-sm\">\n  <div class=\"bg-slate-100 px-4 py-2 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider\">Cryptography Types at a Glance</div>\n  <pre class=\"!m-0 !rounded-none !bg-slate-900 !p-6\"><code>Symmetric     → AES, DES (same key for encrypt/decrypt)\nAsymmetric    → RSA, ECC (public key encrypts, private decrypts)\nHashing       → SHA-256, bcrypt (one-way, no decryption)\nDigital Sign  → Verifies sender identity using private key</code></pre>\n</div>\n<h3>Professional Implementation Notes</h3>\n<ul><li>Never store plaintext passwords; always hash with a salt using bcrypt or argon2.</li><li>Use well-vetted libraries for cryptographic operations, never roll your own.</li><li>Enforce HTTPS everywhere using TLS 1.2 or higher.</li></ul>\n<p><strong>Practice Task:</strong> Hash a password using bcrypt in Node.js and verify it against the stored hash.</p>",
         "videoUrl": "",
@@ -1484,8 +1484,8 @@
         "updatedAt": "2026-03-30T10:00:00.000Z"
       },
       {
-        "_id": "8bc2f9c31e5g0b4f72d3cb14",
-        "course": "8bc2f9c31e5g0b4f72d3cb02",
+        "_id": "8bc2f9c31e5f0b4f72d3cb14",
+        "course": "8bc2f9c31e5f0b4f72d3cb02",
         "title": "5. Authentication and Identity Management",
         "content": "<h2>Verifying Who You Are</h2>\n<p>Authentication is the process of verifying a user's identity before granting system access. Weak authentication is one of the leading causes of security breaches worldwide.</p>\n<h3>Core Concepts</h3>\n<ul><li>Authentication factors: something you know, something you have, something you are.</li><li>Multi-factor authentication (MFA) dramatically reduces account takeover risk.</li><li>Session management must handle token expiry, invalidation, and hijacking prevention.</li></ul>\n<div class=\"my-6 rounded-xl overflow-hidden border border-slate-200 shadow-sm\">\n  <div class=\"bg-slate-100 px-4 py-2 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider\">Authentication Factor Examples</div>\n  <pre class=\"!m-0 !rounded-none !bg-slate-900 !p-6\"><code>Knowledge   → Password, PIN, security questions\nPossession  → OTP app (TOTP), hardware token, SMS code\nInherence   → Fingerprint, face recognition, voice\nMFA         → Combining two or more of the above</code></pre>\n</div>\n<h3>Professional Implementation Notes</h3>\n<ul><li>Enforce MFA for admin and high-privilege accounts as a baseline.</li><li>Implement account lockout after repeated failed login attempts.</li><li>Use OAuth 2.0 and OpenID Connect for third-party identity delegation.</li></ul>\n<p><strong>Practice Task:</strong> Implement TOTP-based 2FA in a Node.js application using the speakeasy library.</p>",
         "videoUrl": "",
@@ -1495,8 +1495,8 @@
         "updatedAt": "2026-03-30T10:00:00.000Z"
       },
       {
-        "_id": "8bc2f9c31e5g0b4f72d3cb15",
-        "course": "8bc2f9c31e5g0b4f72d3cb02",
+        "_id": "8bc2f9c31e5f0b4f72d3cb15",
+        "course": "8bc2f9c31e5f0b4f72d3cb02",
         "title": "6. Common Web Application Vulnerabilities (OWASP Top 10)",
         "content": "<h2>Understanding the Most Critical Web Security Risks</h2>\n<p>The OWASP Top 10 is the globally recognized standard for web application security risks. Every developer building web apps must understand and actively mitigate these vulnerabilities.</p>\n<h3>Core Concepts</h3>\n<ul><li>Injection attacks (SQL, NoSQL, command) exploit unsanitized user input.</li><li>Broken access control allows users to act beyond their permissions.</li><li>Security misconfigurations expose systems through default or improper settings.</li></ul>\n<div class=\"my-6 rounded-xl overflow-hidden border border-slate-200 shadow-sm\">\n  <div class=\"bg-slate-100 px-4 py-2 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider\">OWASP Top 10 (2021) Summary</div>\n  <pre class=\"!m-0 !rounded-none !bg-slate-900 !p-6\"><code>A01 - Broken Access Control\nA02 - Cryptographic Failures\nA03 - Injection (SQL, XSS, etc.)\nA04 - Insecure Design\nA05 - Security Misconfiguration\nA06 - Vulnerable and Outdated Components\nA07 - Identification and Authentication Failures\nA08 - Software and Data Integrity Failures\nA09 - Security Logging and Monitoring Failures\nA10 - Server-Side Request Forgery (SSRF)</code></pre>\n</div>\n<h3>Professional Implementation Notes</h3>\n<ul><li>Use parameterized queries to eliminate SQL/NoSQL injection risks.</li><li>Sanitize and encode all user-controlled output before rendering in HTML.</li><li>Regularly run automated DAST scans against your web applications.</li></ul>\n<p><strong>Practice Task:</strong> Identify and fix a SQL injection vulnerability in a sample Node.js + MySQL application.</p>",
         "videoUrl": "",
@@ -1506,8 +1506,8 @@
         "updatedAt": "2026-03-30T10:00:00.000Z"
       },
       {
-        "_id": "8bc2f9c31e5g0b4f72d3cb16",
-        "course": "8bc2f9c31e5g0b4f72d3cb02",
+        "_id": "8bc2f9c31e5f0b4f72d3cb16",
+        "course": "8bc2f9c31e5f0b4f72d3cb02",
         "title": "7. Firewalls, IDS, and IPS",
         "content": "<h2>Defending Network Perimeters</h2>\n<p>Firewalls, Intrusion Detection Systems (IDS), and Intrusion Prevention Systems (IPS) form the core of network-level defense. Together they monitor, filter, and block malicious traffic.</p>\n<h3>Core Concepts</h3>\n<ul><li>Firewalls filter traffic based on rules defined by IP, port, protocol, and state.</li><li>IDS detects and alerts on suspicious activity without blocking it.</li><li>IPS actively blocks detected threats in real time.</li></ul>\n<div class=\"my-6 rounded-xl overflow-hidden border border-slate-200 shadow-sm\">\n  <div class=\"bg-slate-100 px-4 py-2 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider\">Firewall Rule Example (iptables)</div>\n  <pre class=\"!m-0 !rounded-none !bg-slate-900 !p-6\"><code># Allow HTTP and HTTPS traffic\niptables -A INPUT -p tcp --dport 80 -j ACCEPT\niptables -A INPUT -p tcp --dport 443 -j ACCEPT\n\n# Drop all other inbound traffic\niptables -A INPUT -j DROP</code></pre>\n</div>\n<h3>Professional Implementation Notes</h3>\n<ul><li>Apply deny-by-default rule policies and whitelist required traffic only.</li><li>Use SIEM tools to correlate IDS alerts and reduce false-positive noise.</li><li>Review firewall rules periodically and remove stale exceptions.</li></ul>\n<p><strong>Practice Task:</strong> Set up UFW on an Ubuntu server and configure rules to allow only SSH and HTTPS.</p>",
         "videoUrl": "",
@@ -1517,8 +1517,8 @@
         "updatedAt": "2026-03-30T10:00:00.000Z"
       },
       {
-        "_id": "8bc2f9c31e5g0b4f72d3cb17",
-        "course": "8bc2f9c31e5g0b4f72d3cb02",
+        "_id": "8bc2f9c31e5f0b4f72d3cb17",
+        "course": "8bc2f9c31e5f0b4f72d3cb02",
         "title": "8. Social Engineering and Phishing Attacks",
         "content": "<h2>The Human Layer of Security</h2>\n<p>Social engineering exploits human psychology rather than technical vulnerabilities. It is one of the most effective and dangerous attack vectors because even well-secured systems can be bypassed through human error.</p>\n<h3>Core Concepts</h3>\n<ul><li>Phishing delivers malicious links or payloads via deceptive emails or messages.</li><li>Pretexting involves crafting a fake identity or scenario to extract information.</li><li>Vishing and smishing extend phishing to voice calls and SMS respectively.</li></ul>\n<div class=\"my-6 rounded-xl overflow-hidden border border-slate-200 shadow-sm\">\n  <div class=\"bg-slate-100 px-4 py-2 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider\">Social Engineering Attack Types</div>\n  <pre class=\"!m-0 !rounded-none !bg-slate-900 !p-6\"><code>Phishing    → Fake emails mimicking trusted sources\nSpear Phish → Targeted phishing using personal details\nVishing     → Phone-based social engineering\nSmishing    → SMS-based phishing attacks\nBaiting     → Leaving infected USB drives in public</code></pre>\n</div>\n<h3>Professional Implementation Notes</h3>\n<ul><li>Run phishing simulation campaigns to train employees proactively.</li><li>Enforce email authentication protocols: SPF, DKIM, and DMARC.</li><li>Create clear reporting channels for suspicious communication.</li></ul>\n<p><strong>Practice Task:</strong> Design a mock phishing email and identify all red flags it should trigger for a trained user.</p>",
         "videoUrl": "",
@@ -1528,8 +1528,8 @@
         "updatedAt": "2026-03-30T10:00:00.000Z"
       },
       {
-        "_id": "8bc2f9c31e5g0b4f72d3cb18",
-        "course": "8bc2f9c31e5g0b4f72d3cb02",
+        "_id": "8bc2f9c31e5f0b4f72d3cb18",
+        "course": "8bc2f9c31e5f0b4f72d3cb02",
         "title": "9. Malware Analysis and Defense",
         "content": "<h2>Understanding Malicious Software</h2>\n<p>Malware is any software designed to disrupt, damage, or gain unauthorized access to systems. Understanding how malware works is essential for designing effective detection and response strategies.</p>\n<h3>Core Concepts</h3>\n<ul><li>Malware types include viruses, worms, trojans, ransomware, spyware, and rootkits.</li><li>Static analysis inspects malware without executing it; dynamic analysis observes its behavior in a sandbox.</li><li>Indicators of Compromise (IOCs) help detect active malware infections.</li></ul>\n<div class=\"my-6 rounded-xl overflow-hidden border border-slate-200 shadow-sm\">\n  <div class=\"bg-slate-100 px-4 py-2 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider\">Malware Category Reference</div>\n  <pre class=\"!m-0 !rounded-none !bg-slate-900 !p-6\"><code>Virus      → Attaches to files, spreads on execution\nWorm       → Self-replicates across networks autonomously\nTrojan     → Disguised as legitimate software\nRansomware → Encrypts data and demands payment\nRootkit    → Hides malware deep in OS/firmware\nSpyware    → Silently collects user activity data</code></pre>\n</div>\n<h3>Professional Implementation Notes</h3>\n<ul><li>Use sandboxed environments like Cuckoo Sandbox for safe dynamic analysis.</li><li>Maintain updated endpoint detection and response (EDR) tools.</li><li>Isolate infected systems immediately to prevent lateral spread.</li></ul>\n<p><strong>Practice Task:</strong> Analyze a sample malware hash using VirusTotal and document its behavior and IOCs.</p>",
         "videoUrl": "",
@@ -1539,8 +1539,8 @@
         "updatedAt": "2026-03-30T10:00:00.000Z"
       },
       {
-        "_id": "8bc2f9c31e5g0b4f72d3cb19",
-        "course": "8bc2f9c31e5g0b4f72d3cb02",
+        "_id": "8bc2f9c31e5f0b4f72d3cb19",
+        "course": "8bc2f9c31e5f0b4f72d3cb02",
         "title": "10. Ethical Hacking and Penetration Testing Concepts",
         "content": "<h2>Thinking Like an Attacker to Defend Better</h2>\n<p>Ethical hacking, also known as penetration testing, involves authorized attempts to breach systems to discover vulnerabilities before real attackers do. It follows a structured methodology and strict legal boundaries.</p>\n<h3>Core Concepts</h3>\n<ul><li>Penetration testing phases: Reconnaissance, Scanning, Exploitation, Post-Exploitation, Reporting.</li><li>Black-box testing simulates an external attacker with no prior knowledge of the target.</li><li>White-box testing provides full system access to simulate insider threat scenarios.</li></ul>\n<div class=\"my-6 rounded-xl overflow-hidden border border-slate-200 shadow-sm\">\n  <div class=\"bg-slate-100 px-4 py-2 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider\">Pentest Phases</div>\n  <pre class=\"!m-0 !rounded-none !bg-slate-900 !p-6\"><code>1. Reconnaissance  → OSINT, domain/IP discovery\n2. Scanning        → Nmap, Nessus, vulnerability scan\n3. Exploitation    → Metasploit, manual exploit\n4. Post-Exploit    → Privilege escalation, pivoting\n5. Reporting       → Risk ratings, remediation steps</code></pre>\n</div>\n<h3>Professional Implementation Notes</h3>\n<ul><li>Always obtain written authorization before performing any security tests.</li><li>Document scope, findings, and severity using CVSS scoring standards.</li><li>Provide actionable remediation guidance alongside each identified vulnerability.</li></ul>\n<p><strong>Practice Task:</strong> Perform a basic Nmap scan on a local lab VM and document open ports and services discovered.</p>",
         "videoUrl": "",
@@ -1550,8 +1550,8 @@
         "updatedAt": "2026-03-30T10:00:00.000Z"
       },
       {
-        "_id": "8bc2f9c31e5g0b4f72d3cb1a",
-        "course": "8bc2f9c31e5g0b4f72d3cb02",
+        "_id": "8bc2f9c31e5f0b4f72d3cb1a",
+        "course": "8bc2f9c31e5f0b4f72d3cb02",
         "title": "11. Security Information and Event Management (SIEM)",
         "content": "<h2>Centralized Security Monitoring</h2>\n<p>SIEM systems aggregate and correlate logs from across an organization's infrastructure to detect threats, investigate incidents, and support compliance reporting.</p>\n<h3>Core Concepts</h3>\n<ul><li>SIEM collects logs from firewalls, servers, endpoints, and applications in real time.</li><li>Correlation rules identify patterns that indicate malicious activity.</li><li>Alerts are triaged and investigated by security analysts during incident response.</li></ul>\n<div class=\"my-6 rounded-xl overflow-hidden border border-slate-200 shadow-sm\">\n  <div class=\"bg-slate-100 px-4 py-2 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider\">SIEM Log Sources</div>\n  <pre class=\"!m-0 !rounded-none !bg-slate-900 !p-6\"><code>Firewall Logs     → Allowed/blocked connection attempts\nAuth Logs         → Login success, failure, lockouts\nEndpoint Logs     → Process execution, file changes\nApp Logs          → API errors, session anomalies\nDNS Logs          → Suspicious domain resolution events</code></pre>\n</div>\n<h3>Professional Implementation Notes</h3>\n<ul><li>Define use cases and correlation rules before deploying a SIEM platform.</li><li>Tune alert thresholds to reduce analyst alert fatigue from false positives.</li><li>Retain logs for at least 90 days for forensic investigation capability.</li></ul>\n<p><strong>Practice Task:</strong> Set up a basic ELK Stack locally, ingest a sample log file, and create a simple alert rule.</p>",
         "videoUrl": "",
@@ -1561,8 +1561,8 @@
         "updatedAt": "2026-03-30T10:00:00.000Z"
       },
       {
-        "_id": "8bc2f9c31e5g0b4f72d3cb1b",
-        "course": "8bc2f9c31e5g0b4f72d3cb02",
+        "_id": "8bc2f9c31e5f0b4f72d3cb1b",
+        "course": "8bc2f9c31e5f0b4f72d3cb02",
         "title": "12. Incident Response and Disaster Recovery",
         "content": "<h2>Responding When Breaches Happen</h2>\n<p>No system is perfectly secure. A strong incident response plan ensures that when a breach occurs, damage is contained quickly and recovery is structured and predictable.</p>\n<h3>Core Concepts</h3>\n<ul><li>Incident response phases: Preparation, Detection, Containment, Eradication, Recovery, Lessons Learned.</li><li>Disaster recovery plans define RTO (Recovery Time Objective) and RPO (Recovery Point Objective).</li><li>Tabletop exercises simulate breach scenarios to validate response readiness.</li></ul>\n<div class=\"my-6 rounded-xl overflow-hidden border border-slate-200 shadow-sm\">\n  <div class=\"bg-slate-100 px-4 py-2 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider\">Incident Response Phases</div>\n  <pre class=\"!m-0 !rounded-none !bg-slate-900 !p-6\"><code>1. Preparation   → IR plan, team roles, tooling ready\n2. Detection     → Alert triggered, initial triage\n3. Containment   → Isolate affected systems\n4. Eradication   → Remove malware, close attack vector\n5. Recovery      → Restore systems, validate integrity\n6. Lessons       → Post-incident review and improvement</code></pre>\n</div>\n<h3>Professional Implementation Notes</h3>\n<ul><li>Define a clear communication tree for internal and external breach notification.</li><li>Practice IR playbooks regularly, not just during real incidents.</li><li>Preserve forensic evidence before eradicating threats where possible.</li></ul>\n<p><strong>Practice Task:</strong> Write a basic incident response playbook for a ransomware attack scenario.</p>",
         "videoUrl": "",
@@ -1572,8 +1572,8 @@
         "updatedAt": "2026-03-30T10:00:00.000Z"
       },
       {
-        "_id": "8bc2f9c31e5g0b4f72d3cb1c",
-        "course": "8bc2f9c31e5g0b4f72d3cb02",
+        "_id": "8bc2f9c31e5f0b4f72d3cb1c",
+        "course": "8bc2f9c31e5f0b4f72d3cb02",
         "title": "13. Cloud Security Fundamentals",
         "content": "<h2>Securing Infrastructure in the Cloud</h2>\n<p>Cloud adoption has transformed how infrastructure is managed, but it also introduces unique security responsibilities. The shared responsibility model defines what the provider secures versus what the customer must protect.</p>\n<h3>Core Concepts</h3>\n<ul><li>In IaaS, the provider secures physical infra; the customer secures OS and above.</li><li>Misconfigured S3 buckets, storage blobs, and IAM roles are leading cloud breach causes.</li><li>Cloud security posture management (CSPM) tools continuously audit cloud configuration compliance.</li></ul>\n<div class=\"my-6 rounded-xl overflow-hidden border border-slate-200 shadow-sm\">\n  <div class=\"bg-slate-100 px-4 py-2 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider\">Shared Responsibility Model</div>\n  <pre class=\"!m-0 !rounded-none !bg-slate-900 !p-6\"><code>Provider Manages  → Physical hardware, networking, hypervisor\nCustomer Manages  → OS patching, IAM policies, data encryption\n                    App security, network config, monitoring</code></pre>\n</div>\n<h3>Professional Implementation Notes</h3>\n<ul><li>Apply least privilege principles to all IAM roles and service accounts.</li><li>Enable cloud-native logging (CloudTrail, Azure Monitor) from day one.</li><li>Scan Infrastructure-as-Code templates for misconfigurations before deployment.</li></ul>\n<p><strong>Practice Task:</strong> Audit an AWS S3 bucket configuration and fix any public access or encryption gaps found.</p>",
         "videoUrl": "",
@@ -1583,8 +1583,8 @@
         "updatedAt": "2026-03-30T10:00:00.000Z"
       },
       {
-        "_id": "8bc2f9c31e5g0b4f72d3cb1d",
-        "course": "8bc2f9c31e5g0b4f72d3cb02",
+        "_id": "8bc2f9c31e5f0b4f72d3cb1d",
+        "course": "8bc2f9c31e5f0b4f72d3cb02",
         "title": "14. Security Compliance and Frameworks",
         "content": "<h2>Aligning Security with Industry Standards</h2>\n<p>Compliance frameworks provide structured guidance for implementing security controls. They help organizations demonstrate due diligence and meet regulatory requirements across industries.</p>\n<h3>Core Concepts</h3>\n<ul><li>ISO 27001 is the international standard for information security management systems.</li><li>NIST Cybersecurity Framework provides five core functions: Identify, Protect, Detect, Respond, Recover.</li><li>GDPR, PCI-DSS, and HIPAA impose domain-specific compliance requirements with legal consequences.</li></ul>\n<div class=\"my-6 rounded-xl overflow-hidden border border-slate-200 shadow-sm\">\n  <div class=\"bg-slate-100 px-4 py-2 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider\">Major Frameworks and Domains</div>\n  <pre class=\"!m-0 !rounded-none !bg-slate-900 !p-6\"><code>ISO 27001   → Information security management system\nNIST CSF    → Risk-based cyber security framework\nPCI-DSS     → Payment card industry data security\nGDPR        → EU personal data protection regulation\nHIPAA       → US healthcare data privacy requirements</code></pre>\n</div>\n<h3>Professional Implementation Notes</h3>\n<ul><li>Map your existing controls to a chosen framework before gap analysis.</li><li>Treat compliance as a floor, not a ceiling, for security maturity.</li><li>Automate evidence collection to reduce audit preparation burden.</li></ul>\n<p><strong>Practice Task:</strong> Map the NIST CSF five functions to controls already implemented in a sample web application.</p>",
         "videoUrl": "",
@@ -1594,8 +1594,8 @@
         "updatedAt": "2026-03-30T10:00:00.000Z"
       },
       {
-        "_id": "8bc2f9c31e5g0b4f72d3cb1e",
-        "course": "8bc2f9c31e5g0b4f72d3cb02",
+        "_id": "8bc2f9c31e5f0b4f72d3cb1e",
+        "course": "8bc2f9c31e5f0b4f72d3cb02",
         "title": "15. Secure Coding Practices for Developers",
         "content": "<h2>Building Security into Code from the Start</h2>\n<p>Security should be integrated throughout the software development lifecycle, not added as an afterthought. Secure coding practices reduce the attack surface at the source.</p>\n<h3>Core Concepts</h3>\n<ul><li>Input validation and output encoding prevent injection and XSS vulnerabilities.</li><li>Dependency scanning catches vulnerable third-party packages before they reach production.</li><li>Static application security testing (SAST) identifies code-level issues during development.</li></ul>\n<div class=\"my-6 rounded-xl overflow-hidden border border-slate-200 shadow-sm\">\n  <div class=\"bg-slate-100 px-4 py-2 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider\">Secure Coding Checklist</div>\n  <pre class=\"!m-0 !rounded-none !bg-slate-900 !p-6\"><code>✓ Validate all inputs server-side\n✓ Parameterize database queries\n✓ Escape output based on context (HTML, JSON, URL)\n✓ Enforce HTTPS and HSTS headers\n✓ Audit npm/pip dependencies for known CVEs\n✓ Never hardcode secrets in source code</code></pre>\n</div>\n<h3>Professional Implementation Notes</h3>\n<ul><li>Integrate SAST and dependency scanning tools into CI/CD pipelines.</li><li>Conduct peer security code reviews for authentication and data handling code.</li><li>Use environment variables and secret managers for all credentials.</li></ul>\n<p><strong>Practice Task:</strong> Run npm audit on a Node.js project and resolve at least two identified high-severity vulnerabilities.</p>",
         "videoUrl": "",
@@ -1605,8 +1605,8 @@
         "updatedAt": "2026-03-30T10:00:00.000Z"
       },
       {
-        "_id": "8bc2f9c31e5g0b4f72d3cb1f",
-        "course": "8bc2f9c31e5g0b4f72d3cb02",
+        "_id": "8bc2f9c31e5f0b4f72d3cb1f",
+        "course": "8bc2f9c31e5f0b4f72d3cb02",
         "title": "16. Capstone: Security Audit and Hardening Plan",
         "content": "<h2>End-to-End Security Assessment</h2>\n<p>This capstone requires conducting a structured security audit of a web application and producing a prioritized hardening plan covering vulnerabilities, misconfigurations, and operational gaps.</p>\n<h3>Core Concepts</h3>\n<ul><li>Apply threat modeling, vulnerability scanning, and code review techniques together.</li><li>Classify findings by severity using CVSS and map to affected CIA Triad properties.</li><li>Deliver an actionable remediation roadmap with short, medium, and long-term fixes.</li></ul>\n<div class=\"my-6 rounded-xl overflow-hidden border border-slate-200 shadow-sm\">\n  <div class=\"bg-slate-100 px-4 py-2 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider\">Capstone Deliverables</div>\n  <pre class=\"!m-0 !rounded-none !bg-slate-900 !p-6\"><code>- Threat model diagram (assets, threats, controls)\n- Vulnerability findings report (CVSS scored)\n- OWASP Top 10 compliance checklist\n- Network and IAM hardening recommendations\n- Incident response plan outline\n- Remediation priority roadmap</code></pre>\n</div>\n<h3>Professional Implementation Notes</h3>\n<ul><li>Treat this as portfolio-level security engineering work.</li><li>Use a real or simulated application (DVWA, Juice Shop) as the audit target.</li><li>Present findings as a professional penetration test report with executive summary.</li></ul>\n<p><strong>Practice Task:</strong> Complete a full security audit of OWASP Juice Shop and publish a structured findings report.</p>",
         "videoUrl": "",
