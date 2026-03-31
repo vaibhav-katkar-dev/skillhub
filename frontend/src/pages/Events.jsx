@@ -144,7 +144,7 @@ export default function Events() {
                       )}
 
                       <Link
-                        to={`/events/hackathon/${hack._id}`}
+                        to={`/events/hackathon/${hack.slug || hack._id}`}
                         className="block text-center py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-bold hover:opacity-90 transition-opacity"
                       >
                         <span className="inline-flex items-center gap-2">

@@ -97,17 +97,17 @@ export default function HackathonDetail() {
   }, [id]);
 
   const fetchMyTeam = useCallback(async () => {
-    if (!isAuthenticated) { setRegistration(null); return; }
+    if (!isAuthenticated || !hack?._id) { setRegistration(null); return; }
     setLoadingReg(true);
     try {
-      const r = await api.get(`/events/hackathons/${id}/my-team`);
+      const r = await api.get(`/events/hackathons/${hack._id}/my-team`);
       setRegistration(r.data);
     } catch {
       setRegistration(null);
     } finally {
       setLoadingReg(false);
     }
-  }, [id, isAuthenticated]);
+  }, [hack?._id, isAuthenticated]);
 
   const fetchWinners = useCallback(async () => {
     try {
@@ -186,7 +186,7 @@ export default function HackathonDetail() {
     setBusy(true);
     showMsg('Registering your team…', 'info');
     try {
-      await api.post(`/events/hackathons/${id}/register`, {
+      await api.post(`/events/hackathons/${hack._id}/register`, {
         teamName: trimmedTeam,
         memberEmails: filledMembers.map((m) => m.email.trim()),
       });
@@ -217,7 +217,7 @@ export default function HackathonDetail() {
       return;
     }
     try {
-      const orderRes = await api.post(`/events/hackathons/${id}/razorpay-order`, { registrationId: registration._id });
+      const orderRes = await api.post(`/events/hackathons/${hack._id}/razorpay-order`, { registrationId: registration._id });
       const order = orderRes.data;
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID || '',
@@ -229,7 +229,7 @@ export default function HackathonDetail() {
         theme: { color: hack?.styleConfig?.accentColor || '#4F46E5' },
         handler: async (response) => {
           try {
-            await api.post(`/events/hackathons/${id}/payment/verify`, {
+            await api.post(`/events/hackathons/${hack._id}/payment/verify`, {
               registrationId: registration._id,
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
@@ -269,7 +269,7 @@ export default function HackathonDetail() {
     setBusy(true);
     showMsg('Submitting your solution…', 'info');
     try {
-      await api.post(`/events/hackathons/${id}/submit`, {
+      await api.post(`/events/hackathons/${hack._id}/submit`, {
         registrationId: registration._id,
         submissionLink: link,
         note: String(note || '').trim(),
