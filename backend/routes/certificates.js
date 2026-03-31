@@ -231,14 +231,14 @@ function buildCertificatePdfBuffer({ studentName, courseTitle, certificateId, is
       doc.font('Helvetica-Bold');
       const CARD_W = SIDEBAR_W - 32, CARD_X = SIDEBAR_X + 16;
       const textOptions = { width: CARD_W - 24, align: 'center', lineGap: 2 };
-      const words = courseTitle.split(' ');
-      while (coursePt > 10) {
+      // Shrink font until title fits within card width and height
+      while (coursePt > 9) {
         doc.fontSize(coursePt);
-        let wordOverflow = false;
-        for (const w of words) { if (doc.widthOfString(w) > CARD_W - 24) { wordOverflow = true; break; } }
-        if (!wordOverflow && doc.heightOfString(courseTitle, textOptions) <= 85) break;
+        if (doc.heightOfString(courseTitle, textOptions) <= 85) break;
         coursePt -= 1;
       }
+      // Always clip to card region to guarantee no bleed
+      doc.fontSize(coursePt);
       const textHeight = doc.heightOfString(courseTitle, textOptions);
       const CARD_Y = 36, CARD_H = 62 + textHeight;
       const TAIL_W = 14, TAIL_OFFSET_Y = 16, NOTCH = 8;
@@ -365,12 +365,28 @@ function buildCertificatePdfBuffer({ studentName, courseTitle, certificateId, is
 
       // Course line
       const COURSE_Y = UL_Y + 36;
-      doc.fontSize(13).font('Helvetica').fillColor(GRAY).text('for successfully completing the online learning course:', LX, COURSE_Y, { lineBreak: false });
-      doc.fontSize(18).font('Helvetica-Bold').fillColor(DARK_MID).text(courseTitle, LX, COURSE_Y + 24, { lineBreak: false });
+      doc.fontSize(13).font('Helvetica').fillColor(GRAY)
+        .text('for successfully completing the online learning course:', LX, COURSE_Y, { width: CONTENT_W, lineBreak: false });
 
-      // Description paragraph
-      const PARA_Y = COURSE_Y + 64;
-      doc.fontSize(12).font('Helvetica').fillColor(GRAY).text('This certificate is proudly awarded in recognition of the outstanding performance, dedication, and practical professional skills demonstrated throughout the curriculum.', LX, PARA_Y, { width: CONTENT_W, lineGap: 6, align: 'left' });
+      // Course title — shrink font size until it fits within CONTENT_W on one line; allow wrap if still too long
+      let courseTitlePt = 18;
+      doc.font('Helvetica-Bold');
+      while (courseTitlePt > 11) {
+        doc.fontSize(courseTitlePt);
+        if (doc.widthOfString(courseTitle) <= CONTENT_W) break;
+        courseTitlePt -= 0.5;
+      }
+      doc.fontSize(courseTitlePt).fillColor(DARK_MID)
+        .text(courseTitle, LX, COURSE_Y + 24, { width: CONTENT_W, lineBreak: true, lineGap: 2 });
+
+      // Description paragraph — Y is dynamic so it flows after the (possibly wrapped) title
+      const courseTitleH = doc.heightOfString(courseTitle, { width: CONTENT_W, lineBreak: true, lineGap: 2 });
+      const PARA_Y = COURSE_Y + 24 + courseTitleH + 16;
+      doc.fontSize(12).font('Helvetica').fillColor(GRAY)
+        .text(
+          'This certificate is proudly awarded in recognition of the outstanding performance, dedication, and practical professional skills demonstrated throughout the curriculum.',
+          LX, PARA_Y, { width: CONTENT_W, lineGap: 6, align: 'left' }
+        );
 
       // ── Bottom row: Cert ID + QR ───────────────────────────────────────────
       const BOTTOM_Y = H - 72, QR_SIZE = 72;

@@ -8,19 +8,35 @@ import {
   CircleDot,
   Clock3,
   CreditCard,
+  ExternalLink,
   FileText,
+  Link2,
   Loader2,
+  Plus,
   Send,
   ShieldCheck,
+  Star,
+  Trash2,
   Trophy,
   Users,
+  X,
 } from 'lucide-react';
 import { api, useAuthStore } from '../store/authStore';
 
 const STATUS_STYLE = {
   upcoming: { bg: 'bg-amber-100', text: 'text-amber-700', label: 'Upcoming', icon: Clock3 },
-  live: { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Live Now', icon: CircleDot },
-  ended: { bg: 'bg-slate-100', text: 'text-slate-500', label: 'Ended', icon: CheckCircle2 },
+  live:     { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Live Now', icon: CircleDot },
+  ended:    { bg: 'bg-slate-100', text: 'text-slate-500', label: 'Ended', icon: CheckCircle2 },
+};
+
+const REG_STATUS_STYLE = {
+  registered:      { bg: 'bg-indigo-100',  text: 'text-indigo-700',  label: 'Registered' },
+  payment_pending: { bg: 'bg-amber-100',   text: 'text-amber-700',   label: 'Payment Pending' },
+  submitted:       { bg: 'bg-sky-100',     text: 'text-sky-700',     label: 'Submitted' },
+  under_review:    { bg: 'bg-violet-100',  text: 'text-violet-700',  label: 'Under Review' },
+  approved:        { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Approved' },
+  rejected:        { bg: 'bg-red-100',     text: 'text-red-700',     label: 'Rejected' },
+  winner:          { bg: 'bg-amber-200',   text: 'text-amber-900',   label: '🏆 Winner' },
 };
 
 const loadRazorpay = () =>
@@ -36,7 +52,7 @@ const loadRazorpay = () =>
 export default function HackathonDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
 
   const [hack, setHack] = useState(null);
   const [loadingHack, setLoadingHack] = useState(true);
@@ -44,8 +60,13 @@ export default function HackathonDetail() {
   const [registration, setRegistration] = useState(null);
   const [loadingReg, setLoadingReg] = useState(false);
 
+  const [winners, setWinners] = useState(null);
+
+  // Team registration
   const [teamName, setTeamName] = useState('');
-  const [memberEmails, setMemberEmails] = useState('');
+  const [memberEmails, setMemberEmails] = useState(['']); // array for dynamic inputs
+
+  // Submission
   const [submissionLink, setSubmissionLink] = useState('');
   const [note, setNote] = useState('');
 
@@ -76,11 +97,7 @@ export default function HackathonDetail() {
   }, [id]);
 
   const fetchMyTeam = useCallback(async () => {
-    if (!isAuthenticated) {
-      setRegistration(null);
-      return;
-    }
-
+    if (!isAuthenticated) { setRegistration(null); return; }
     setLoadingReg(true);
     try {
       const r = await api.get(`/events/hackathons/${id}/my-team`);
@@ -92,46 +109,63 @@ export default function HackathonDetail() {
     }
   }, [id, isAuthenticated]);
 
-  useEffect(() => {
-    fetchHack();
-  }, [fetchHack]);
-
-  useEffect(() => {
-    fetchMyTeam();
-  }, [fetchMyTeam]);
-
-  const handleRegisterTeam = async () => {
-    if (!isAuthenticated) {
-      navigate('/login');
-      return;
+  const fetchWinners = useCallback(async () => {
+    try {
+      const r = await api.get(`/events/hackathons/${id}/winners`);
+      setWinners(r.data);
+    } catch {
+      setWinners(null);
     }
+  }, [id]);
+
+  useEffect(() => { fetchHack(); }, [fetchHack]);
+  useEffect(() => { fetchMyTeam(); }, [fetchMyTeam]);
+  useEffect(() => { if (hack?.winnerConfig?.announced) fetchWinners(); }, [hack, fetchWinners]);
+
+  // ── Dynamic member email rows ──────────────────────────────────────────────
+  const teamMax = Number(hack?.teamConfig?.maxMembers || 4);
+  const teamMin = Number(hack?.teamConfig?.minMembers || 1);
+
+  const addMemberRow = () => {
+    if (memberEmails.length < teamMax - 1) {
+      setMemberEmails((prev) => [...prev, '']);
+    }
+  };
+
+  const removeMemberRow = (idx) => {
+    setMemberEmails((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const updateMemberEmail = (idx, val) => {
+    setMemberEmails((prev) => prev.map((e, i) => (i === idx ? val : e)));
+  };
+
+  // ── Team registration ──────────────────────────────────────────────────────
+  const handleRegisterTeam = async () => {
+    if (!isAuthenticated) { navigate('/login'); return; }
 
     const trimmedTeam = String(teamName || '').trim();
-    const emails = String(memberEmails || '')
-      .split(',')
-      .map((x) => x.trim())
-      .filter(Boolean);
+    const emails = memberEmails.map((x) => x.trim()).filter(Boolean);
 
     if (trimmedTeam.length < 3) {
-      showMsg('Team name must be at least 3 characters.', 'error');
-      return;
+      showMsg('Team name must be at least 3 characters.', 'error'); return;
     }
 
     setBusy(true);
-    showMsg('Registering your team...', 'info');
+    showMsg('Registering your team…', 'info');
     try {
       await api.post(`/events/hackathons/${id}/register`, {
         teamName: trimmedTeam,
         memberEmails: emails,
       });
       await fetchMyTeam();
-      showMsg('Team registered successfully.', 'success');
+      showMsg('Team registered successfully! You are the team leader.', 'success');
       setTeamName('');
-      setMemberEmails('');
+      setMemberEmails(['']);
     } catch (err) {
       const missing = err.response?.data?.missingEmails;
       if (Array.isArray(missing) && missing.length) {
-        showMsg(`These emails are not registered users: ${missing.join(', ')}`, 'error');
+        showMsg(`These emails are not registered SkillValix users: ${missing.join(', ')}`, 'error');
       } else {
         showMsg(err.response?.data?.message || 'Failed to register team.', 'error');
       }
@@ -140,9 +174,9 @@ export default function HackathonDetail() {
     }
   };
 
+  // ── Payment ────────────────────────────────────────────────────────────────
   const handlePay = async () => {
     if (!registration) return;
-
     setBusy(true);
     const loaded = await loadRazorpay();
     if (!loaded) {
@@ -150,13 +184,9 @@ export default function HackathonDetail() {
       setBusy(false);
       return;
     }
-
     try {
-      const orderRes = await api.post(`/events/hackathons/${id}/razorpay-order`, {
-        registrationId: registration._id,
-      });
+      const orderRes = await api.post(`/events/hackathons/${id}/razorpay-order`, { registrationId: registration._id });
       const order = orderRes.data;
-
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID || '',
         amount: order.amount,
@@ -174,7 +204,7 @@ export default function HackathonDetail() {
               razorpay_signature: response.razorpay_signature,
             });
             await fetchMyTeam();
-            showMsg('Payment successful. Submission is now unlocked.', 'success');
+            showMsg('Payment successful. Submission is now unlocked!', 'success');
           } catch (err) {
             showMsg(err.response?.data?.message || 'Payment verification failed.', 'error');
           } finally {
@@ -183,7 +213,6 @@ export default function HackathonDetail() {
         },
         modal: { ondismiss: () => setBusy(false) },
       };
-
       const razorpay = new window.Razorpay(options);
       razorpay.on('payment.failed', (response) => {
         showMsg(response?.error?.description || 'Payment failed.', 'error');
@@ -196,16 +225,17 @@ export default function HackathonDetail() {
     }
   };
 
+  // ── Submit solution ────────────────────────────────────────────────────────
   const handleSubmit = async () => {
     if (!registration) return;
     const link = String(submissionLink || '').trim();
-    if (!link) {
-      showMsg('Submission link is required.', 'error');
-      return;
+    if (!link) { showMsg('Submission link is required.', 'error'); return; }
+    try { new URL(link); } catch {
+      showMsg('Please enter a valid URL (starting with https:// or http://).', 'error'); return;
     }
 
     setBusy(true);
-    showMsg('Submitting your solution...', 'info');
+    showMsg('Submitting your solution…', 'info');
     try {
       await api.post(`/events/hackathons/${id}/submit`, {
         registrationId: registration._id,
@@ -213,7 +243,7 @@ export default function HackathonDetail() {
         note: String(note || '').trim(),
       });
       await fetchMyTeam();
-      showMsg('Solution submitted successfully.', 'success');
+      showMsg('Solution submitted successfully! 🎉', 'success');
       setSubmissionLink('');
       setNote('');
     } catch (err) {
@@ -226,7 +256,10 @@ export default function HackathonDetail() {
   if (loadingHack) {
     return (
       <div className="min-h-[70vh] bg-slate-50 px-6 py-12">
-        <div className="max-w-6xl mx-auto rounded-2xl border border-slate-200 bg-white h-72 animate-pulse" />
+        <div className="max-w-6xl mx-auto space-y-4">
+          <div className="h-8 w-40 rounded-xl bg-slate-200 animate-pulse" />
+          <div className="rounded-2xl border border-slate-200 bg-white h-72 animate-pulse" />
+        </div>
       </div>
     );
   }
@@ -244,76 +277,174 @@ export default function HackathonDetail() {
     );
   }
 
-  const teamMin = Number(hack?.teamConfig?.minMembers || 1);
-  const teamMax = Number(hack?.teamConfig?.maxMembers || 4);
   const paymentRequired = Boolean(hack?.paymentConfig?.enabled && Number(hack?.paymentConfig?.amountInr || 0) > 0);
-  const submissionInstructions = hack?.submissionConfig?.instructions || 'Submit your final project link (Drive or PDF as configured by admin).';
+  const submissionInstructions = hack?.submissionConfig?.instructions || '';
+  const linkLabel = hack?.submissionConfig?.linkLabel || 'Submission Link';
+  const linkPlaceholder = hack?.submissionConfig?.linkPlaceholder || 'Paste your link here…';
+  const linkHint = hack?.submissionConfig?.linkHint || '';
+  const canSubmit = registration && (!registration.payment?.required || registration.payment?.status === 'paid') && hack.status !== 'ended';
+  const regStatusStyle = REG_STATUS_STYLE[registration?.status] || REG_STATUS_STYLE.registered;
+  const isLeader = registration && user && String(registration.leader?._id || registration.leader) === String(user._id || user.id);
+  const submissionCount = registration?.submissions?.length || 0;
+  const maxSubs = Number(hack?.submissionConfig?.maxSubmissionsPerTeam || 3);
+
+  // SEO canonical URL
+  const canonicalPath = hack.slug ? `/events/hackathon/${hack.slug}` : `/events/hackathon/${hack._id}`;
+  const canonicalUrl = `https://www.skillvalix.com${canonicalPath}`;
 
   return (
     <>
       <Helmet>
         <title>{hack.title} | Hackathon | SkillValix</title>
-        <meta name="description" content={hack.description?.slice(0, 160) || 'Hackathon details and registration'} />
+        <meta name="description" content={hack.tagline || hack.description?.slice(0, 155) || 'Join this hackathon on SkillValix'} />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href={canonicalUrl} />
+        {/* Open Graph */}
+        <meta property="og:title" content={`${hack.title} | SkillValix Hackathon`} />
+        <meta property="og:description" content={hack.tagline || hack.description?.slice(0, 155) || ''} />
+        {hack.image && <meta property="og:image" content={hack.image} />}
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:type" content="event" />
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${hack.title} | SkillValix Hackathon`} />
+        <meta name="twitter:description" content={hack.tagline || hack.description?.slice(0, 155) || ''} />
+        {hack.image && <meta name="twitter:image" content={hack.image} />}
       </Helmet>
 
+      {/* ── Hero Section ── */}
       <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 py-16 px-6">
         <div
           className="absolute inset-0 opacity-20"
-          style={{
-            backgroundImage:
-              'radial-gradient(circle at 30% 50%, #4f46e5 0%, transparent 50%), radial-gradient(circle at 80% 20%, #7c3aed 0%, transparent 40%)',
-          }}
+          style={{ backgroundImage: 'radial-gradient(circle at 30% 50%, #4f46e5 0%, transparent 50%), radial-gradient(circle at 80% 20%, #7c3aed 0%, transparent 40%)' }}
+          aria-hidden="true"
         />
 
         <div className="relative max-w-6xl mx-auto">
-          <Link to="/events" className="inline-flex items-center gap-2 text-indigo-200 hover:text-white text-sm font-semibold mb-6">
+          <Link to="/events" className="inline-flex items-center gap-2 text-indigo-200 hover:text-white text-sm font-semibold mb-6 transition-colors">
             <ArrowLeft className="w-4 h-4" /> Back to Events
           </Link>
 
           <div className="grid lg:grid-cols-[1.5fr_1fr] gap-6 items-stretch">
+            {/* Title card */}
             <div className="rounded-2xl border border-white/20 bg-white/10 backdrop-blur p-6 text-white">
               <div className="flex items-center justify-between gap-3 mb-4">
                 <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${statusStyle.bg} ${statusStyle.text}`}>
-                  <StatusIcon className="w-3.5 h-3.5" /> {statusStyle.label}
+                  <StatusIcon className="w-3.5 h-3.5" />
+                  {statusStyle.label}
                 </span>
-                {hack.featured ? <span className="text-xs px-2 py-1 rounded-full bg-amber-100 text-amber-800 font-bold">Featured</span> : null}
+                {hack.featured && (
+                  <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-amber-100 text-amber-800 font-bold">
+                    <Star className="w-3 h-3 fill-current" /> Featured
+                  </span>
+                )}
               </div>
 
               <h1 className="text-3xl md:text-4xl font-black leading-tight">{hack.title}</h1>
-              {hack.tagline ? <p className="text-indigo-200 mt-2 font-semibold">{hack.tagline}</p> : null}
+              {hack.tagline && <p className="text-indigo-200 mt-2 font-semibold">{hack.tagline}</p>}
               <p className="text-slate-200 mt-4 leading-relaxed">{hack.description}</p>
 
-              {hack.tags?.length > 0 ? (
+              {hack.tags?.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-5">
                   {hack.tags.map((tag) => (
-                    <span key={tag} className="px-2.5 py-1 rounded-full bg-white/15 border border-white/20 text-xs font-semibold">
-                      {tag}
-                    </span>
+                    <span key={tag} className="px-2.5 py-1 rounded-full bg-white/15 border border-white/20 text-xs font-semibold">{tag}</span>
                   ))}
                 </div>
-              ) : null}
+              )}
             </div>
 
+            {/* Snapshot card */}
             <div className="rounded-2xl border border-slate-200 bg-white p-6">
               <h2 className="text-sm uppercase tracking-widest font-black text-slate-700 mb-4">Event Snapshot</h2>
               <div className="space-y-3 text-sm">
-                <div className="flex items-center justify-between"><span className="text-slate-500">Team Size</span><span className="font-bold text-slate-900">{teamMin} - {teamMax}</span></div>
-                <div className="flex items-center justify-between"><span className="text-slate-500">Payment</span><span className="font-bold text-slate-900">{paymentRequired ? `INR ${hack.paymentConfig.amountInr}` : 'Free'}</span></div>
-                <div className="flex items-center justify-between"><span className="text-slate-500">Submission Limit</span><span className="font-bold text-slate-900">{hack?.submissionConfig?.maxSubmissionsPerTeam || 3}</span></div>
-                <div className="flex items-center justify-between"><span className="text-slate-500">Drive Link</span><span className="font-bold text-slate-900">{hack?.submissionConfig?.acceptsDriveLink ? 'Allowed' : 'Not allowed'}</span></div>
-                <div className="flex items-center justify-between"><span className="text-slate-500">PDF Link</span><span className="font-bold text-slate-900">{hack?.submissionConfig?.acceptsPdfLink ? 'Allowed' : 'Not allowed'}</span></div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500">Team Size</span>
+                  <span className="font-bold text-slate-900">{teamMin} – {teamMax} members</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500">Entry</span>
+                  <span className="font-bold text-slate-900">{paymentRequired ? `₹${hack.paymentConfig.amountInr}` : 'Free'}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500">Submission Limit</span>
+                  <span className="font-bold text-slate-900">{maxSubs} per team</span>
+                </div>
+                {hack?.submissionConfig?.acceptsAnyLink ? (
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500">Link Type</span>
+                    <span className="font-bold text-emerald-700">Any URL</span>
+                  </div>
+                ) : (
+                  <>
+                    {hack?.submissionConfig?.acceptsDriveLink && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-500">Google Drive</span>
+                        <span className="font-bold text-emerald-700">✓ Allowed</span>
+                      </div>
+                    )}
+                    {hack?.submissionConfig?.acceptsPdfLink && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-500">PDF Link</span>
+                        <span className="font-bold text-emerald-700">✓ Allowed</span>
+                      </div>
+                    )}
+                  </>
+                )}
+                {hack?.startDate && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500">Starts</span>
+                    <span className="font-bold text-slate-900">{new Date(hack.startDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                  </div>
+                )}
+                {hack?.endDate && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500">Ends</span>
+                    <span className="font-bold text-slate-900">{new Date(hack.endDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
       </section>
 
+      {/* ── Winners Banner ── */}
+      {hack.winnerConfig?.announced && winners?.winners?.length > 0 && (
+        <section className="bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 px-6 py-8">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-5">
+              <h2 className="text-2xl font-black text-amber-900 flex items-center justify-center gap-2">
+                <Trophy className="w-7 h-7" /> Winners Announced!
+              </h2>
+              {winners.note && <p className="text-amber-800 mt-1 font-medium">{winners.note}</p>}
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {winners.winners.map((w) => (
+                <div key={w._id} className="bg-white rounded-2xl border-2 border-amber-300 p-5 text-center shadow-lg">
+                  <p className="text-xs font-black uppercase tracking-widest text-amber-500 mb-1">{w.winnerRank || 'Winner'}</p>
+                  <p className="text-lg font-black text-slate-900">{w.teamName}</p>
+                  {w.winnerNote && <p className="text-sm text-slate-500 mt-1">{w.winnerNote}</p>}
+                  <p className="text-xs text-slate-400 mt-2">
+                    {(w.members || []).map((m) => m.name || m.email).join(', ')}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── Main Content ── */}
       <section className="bg-slate-50 px-6 py-10">
         <div className="max-w-6xl mx-auto grid lg:grid-cols-[1.15fr_1fr] gap-6">
+          {/* Left column - info */}
           <div className="space-y-6">
+            {/* Prizes & FAQs */}
             {(prizes.length > 0 || faqs.length > 0) && (
               <div className="bg-white border border-slate-200 rounded-2xl p-6">
-                <h3 className="text-xl font-black text-slate-900 mb-4 flex items-center gap-2"><Trophy className="w-5 h-5 text-amber-500" /> About this Hackathon</h3>
+                <h2 className="text-xl font-black text-slate-900 mb-4 flex items-center gap-2">
+                  <Trophy className="w-5 h-5 text-amber-500" /> About this Hackathon
+                </h2>
 
                 {prizes.length > 0 && (
                   <div className="mb-6">
@@ -334,10 +465,13 @@ export default function HackathonDetail() {
                     <p className="text-xs uppercase tracking-widest font-black text-slate-500 mb-3">FAQs</p>
                     <div className="space-y-3">
                       {faqs.map((faq, idx) => (
-                        <div key={`${faq.question}-${idx}`} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                          <p className="text-sm font-bold text-slate-900">{faq.question}</p>
+                        <details key={`${faq.question}-${idx}`} className="rounded-xl border border-slate-200 bg-slate-50 p-4 group">
+                          <summary className="text-sm font-bold text-slate-900 cursor-pointer list-none flex items-center justify-between">
+                            {faq.question}
+                            <span className="text-slate-400 group-open:rotate-45 transition-transform text-lg">+</span>
+                          </summary>
                           <p className="text-sm text-slate-600 mt-2">{faq.answer}</p>
-                        </div>
+                        </details>
                       ))}
                     </div>
                   </div>
@@ -345,38 +479,61 @@ export default function HackathonDetail() {
               </div>
             )}
 
-            <div className="bg-white border border-slate-200 rounded-2xl p-6">
-              <h3 className="text-xl font-black text-slate-900 mb-3 flex items-center gap-2"><FileText className="w-5 h-5 text-indigo-600" /> Submission Instructions</h3>
-              <p className="text-slate-600">{submissionInstructions}</p>
-            </div>
+            {/* Submission instructions */}
+            {submissionInstructions && (
+              <div className="bg-white border border-slate-200 rounded-2xl p-6">
+                <h3 className="text-xl font-black text-slate-900 mb-3 flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-indigo-600" /> Submission Instructions
+                </h3>
+                <p className="text-slate-600 leading-relaxed whitespace-pre-line">{submissionInstructions}</p>
+              </div>
+            )}
 
+            {/* Rules */}
             {rules.length > 0 && (
               <div className="bg-white border border-slate-200 rounded-2xl p-6">
                 <h3 className="text-xl font-black text-slate-900 mb-3">Rules</h3>
-                <ul className="space-y-2 text-slate-700 list-disc pl-5">
-                  {rules.map((rule) => <li key={rule}>{rule}</li>)}
+                <ul className="space-y-2 text-slate-700 list-none">
+                  {rules.map((rule, idx) => (
+                    <li key={idx} className="flex items-start gap-2 text-sm">
+                      <CheckCircle2 className="w-4 h-4 text-indigo-500 mt-0.5 shrink-0" />
+                      {rule}
+                    </li>
+                  ))}
                 </ul>
               </div>
             )}
 
+            {/* Judging criteria */}
             {judgingCriteria.length > 0 && (
               <div className="bg-white border border-slate-200 rounded-2xl p-6">
                 <h3 className="text-xl font-black text-slate-900 mb-3">Judging Criteria</h3>
-                <ul className="space-y-2 text-slate-700 list-disc pl-5">
-                  {judgingCriteria.map((item) => <li key={item}>{item}</li>)}
+                <ul className="space-y-2 text-slate-700 list-none">
+                  {judgingCriteria.map((item, idx) => (
+                    <li key={idx} className="flex items-start gap-2 text-sm">
+                      <Star className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
+                      {item}
+                    </li>
+                  ))}
                 </ul>
               </div>
             )}
 
+            {/* Timeline */}
             {timeline.length > 0 && (
               <div className="bg-white border border-slate-200 rounded-2xl p-6">
-                <h3 className="text-xl font-black text-slate-900 mb-3">Timeline</h3>
-                <div className="space-y-3">
+                <h3 className="text-xl font-black text-slate-900 mb-3 flex items-center gap-2">
+                  <Clock3 className="w-5 h-5 text-indigo-600" /> Timeline
+                </h3>
+                <div className="relative pl-4 border-l-2 border-indigo-200 space-y-4">
                   {timeline.map((entry, idx) => (
-                    <div key={`${entry.label}-${idx}`} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                    <div key={`${entry.label}-${idx}`} className="relative">
+                      <div className="absolute -left-5 top-1 w-3 h-3 rounded-full bg-indigo-500 border-2 border-white" />
                       <p className="text-sm font-bold text-slate-900">{entry.label || `Milestone ${idx + 1}`}</p>
-                      <p className="text-xs text-slate-500 mt-1">{entry.date ? new Date(entry.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Date TBA'}</p>
-                      {entry.description ? <p className="text-sm text-slate-600 mt-2">{entry.description}</p> : null}
+                      <p className="text-xs text-indigo-600 mt-0.5">
+                        {entry.date ? new Date(entry.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Date TBA'}
+                      </p>
+                      {entry.description && <p className="text-sm text-slate-600 mt-1">{entry.description}</p>}
                     </div>
                   ))}
                 </div>
@@ -384,98 +541,259 @@ export default function HackathonDetail() {
             )}
           </div>
 
-          <div className="space-y-6">
+          {/* Right column - registration sidebar */}
+          <div className="space-y-5">
             <div className="bg-white border border-slate-200 rounded-2xl p-6 sticky top-24">
-              <h3 className="text-xl font-black text-slate-900 mb-1">Team Registration</h3>
-              <p className="text-sm text-slate-500 mb-4">Only existing SkillValix users can be team members.</p>
-
+              {/* Already registered - status card */}
               {loadingReg ? (
                 <div className="h-24 rounded-xl bg-slate-100 animate-pulse" />
               ) : registration ? (
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 mb-4">
-                  <p className="text-xs uppercase tracking-wide font-bold text-emerald-700">Registered Team</p>
-                  <p className="text-sm font-black text-emerald-900 mt-1">{registration.teamName}</p>
-                  <p className="text-xs text-emerald-700 mt-1">Status: {registration.status?.replace('_', ' ')}</p>
-                  <p className="text-xs text-emerald-700">Members: {(registration.members || []).map((m) => m.email).join(', ')}</p>
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-4">
+                    <h3 className="text-lg font-black text-slate-900">Your Registration</h3>
+                    <span className={`text-xs px-2.5 py-1 rounded-full font-bold ${regStatusStyle.bg} ${regStatusStyle.text}`}>
+                      {regStatusStyle.label}
+                    </span>
+                  </div>
+
+                  {/* Team info */}
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 mb-4">
+                    <p className="text-xs uppercase tracking-wide font-bold text-slate-500 mb-2">Team</p>
+                    <p className="font-black text-slate-900 text-base">{registration.teamName}</p>
+                    <p className="text-xs text-indigo-600 mt-1 font-medium">
+                      {isLeader ? '👑 You are the team leader' : 'You are a member'}
+                    </p>
+                    <div className="mt-3 space-y-1">
+                      {(registration.members || []).map((m, idx) => (
+                        <div key={idx} className="flex items-center gap-2 text-xs text-slate-600">
+                          <Users className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                          <span className="font-medium">{m.name}</span>
+                          <span className="text-slate-400">({m.email})</span>
+                          {String(m.user?._id || m.user) === String(user?._id || user?.id) && (
+                            <span className="text-indigo-600 font-bold">(you)</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Payment required */}
+                  {registration.payment?.required && registration.payment?.status !== 'paid' && (
+                    <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                      <p className="text-xs font-bold text-amber-700 uppercase tracking-wide">Payment Required</p>
+                      <p className="text-lg font-black text-amber-900 mt-1">₹{registration.payment.amountInr}</p>
+                      <p className="text-xs text-amber-700 mt-1">Complete payment to unlock submission access.</p>
+                      {isLeader && (
+                        <button
+                          onClick={handlePay}
+                          disabled={busy}
+                          className="mt-3 w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold disabled:opacity-60 transition-colors"
+                        >
+                          <span className="inline-flex items-center gap-2">
+                            {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
+                            Pay ₹{registration.payment.amountInr}
+                          </span>
+                        </button>
+                      )}
+                      {!isLeader && (
+                        <p className="mt-2 text-xs text-amber-700">Your team leader needs to complete payment.</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Previous submissions */}
+                  {(registration.submissions || []).length > 0 && (
+                    <div className="mb-4">
+                      <p className="text-xs uppercase tracking-wide font-bold text-slate-500 mb-2">
+                        Submissions ({submissionCount}/{maxSubs})
+                      </p>
+                      <div className="space-y-2">
+                        {registration.submissions.map((sub, idx) => (
+                          <div key={idx} className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                            <Link2 className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                            <a
+                              href={sub.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-indigo-600 underline truncate flex-1"
+                            >
+                              {sub.link}
+                            </a>
+                            <ExternalLink className="w-3 h-3 text-slate-400 shrink-0" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Submit form */}
+                  {canSubmit && submissionCount < maxSubs && (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">{linkLabel}</label>
+                        <input
+                          type="url"
+                          value={submissionLink}
+                          onChange={(e) => setSubmissionLink(e.target.value)}
+                          className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-400 focus:border-transparent outline-none"
+                          placeholder={linkPlaceholder}
+                        />
+                        {linkHint && <p className="text-xs text-slate-500 mt-1">{linkHint}</p>}
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">Note (optional)</label>
+                        <textarea
+                          value={note}
+                          onChange={(e) => setNote(e.target.value)}
+                          rows={2}
+                          className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-400 outline-none resize-none"
+                          placeholder="Any notes for the judges…"
+                        />
+                      </div>
+                      <button
+                        onClick={handleSubmit}
+                        disabled={busy || !submissionLink.trim()}
+                        className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold disabled:opacity-60 transition-colors"
+                      >
+                        <span className="inline-flex items-center gap-2">
+                          {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                          Submit Solution
+                          {submissionCount > 0 && ` (${submissionCount + 1}/${maxSubs})`}
+                        </span>
+                      </button>
+                    </div>
+                  )}
+
+                  {canSubmit && submissionCount >= maxSubs && (
+                    <div className="rounded-lg bg-slate-100 border border-slate-200 px-4 py-3 text-sm text-slate-600 text-center">
+                      Max {maxSubs} submissions reached. No more submissions allowed.
+                    </div>
+                  )}
+
+                  {hack.status === 'ended' && (
+                    <div className="mt-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600 flex items-start gap-2">
+                      <AlertTriangle className="w-4 h-4 mt-0.5 text-slate-500" />
+                      This hackathon has ended. No new submissions accepted.
+                    </div>
+                  )}
                 </div>
               ) : (
-                <>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-500 mb-1">Team Name</label>
-                      <input value={teamName} onChange={(e) => setTeamName(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" />
+                /* Registration form */
+                <div>
+                  <h3 className="text-xl font-black text-slate-900 mb-1">Join this Hackathon</h3>
+                  <p className="text-sm text-slate-500 mb-5">
+                    You are the team leader. Add teammates by their SkillValix email addresses.
+                    Team size: {teamMin}–{teamMax} members (including yourself).
+                  </p>
+
+                  {hack.status === 'ended' ? (
+                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-5 text-center text-slate-500 text-sm">
+                      <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-slate-400" />
+                      Registrations are closed for this hackathon.
                     </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-500 mb-1">Member Emails (comma separated)</label>
-                      <input value={memberEmails} onChange={(e) => setMemberEmails(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="user1@email.com, user2@email.com" />
+                  ) : !isAuthenticated ? (
+                    <div className="text-center">
+                      <p className="text-sm text-slate-500 mb-4">You need to be logged in to register.</p>
+                      <Link
+                        to="/login"
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-sm hover:bg-indigo-700 transition-colors"
+                      >
+                        Login to Register
+                      </Link>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-600 mb-1">Team Name *</label>
+                        <input
+                          type="text"
+                          value={teamName}
+                          onChange={(e) => setTeamName(e.target.value)}
+                          className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-400 outline-none"
+                          placeholder="e.g. Team Phoenix"
+                        />
+                      </div>
 
-                  <button onClick={handleRegisterTeam} disabled={busy || hack.status === 'ended'} className="mt-4 w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold disabled:opacity-60">
-                    <span className="inline-flex items-center gap-2">
-                      {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Users className="w-4 h-4" />}
-                      Register Team
-                    </span>
-                  </button>
-                </>
-              )}
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="text-xs font-semibold text-slate-600">Teammates' Emails</label>
+                          <span className="text-xs text-slate-400">{memberEmails.filter(Boolean).length + 1}/{teamMax} members</span>
+                        </div>
+                        <div className="space-y-2">
+                          {memberEmails.map((email, idx) => (
+                            <div key={idx} className="flex items-center gap-2">
+                              <input
+                                type="email"
+                                value={email}
+                                onChange={(e) => updateMemberEmail(idx, e.target.value)}
+                                className="flex-1 px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-400 outline-none"
+                                placeholder={`Teammate ${idx + 1} email`}
+                              />
+                              {memberEmails.length > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() => removeMemberRow(idx)}
+                                  className="p-2 rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                        {memberEmails.length < teamMax - 1 && (
+                          <button
+                            type="button"
+                            onClick={addMemberRow}
+                            className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
+                          >
+                            <Plus className="w-3.5 h-3.5" /> Add Teammate
+                          </button>
+                        )}
+                        <p className="text-xs text-slate-400 mt-2">
+                          Leave empty for solo. All teammates must be registered SkillValix users.
+                        </p>
+                      </div>
 
-              {registration && registration.payment?.required && registration.payment?.status !== 'paid' && (
-                <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
-                  <p className="text-xs font-bold text-amber-700 uppercase tracking-wide">Payment Required</p>
-                  <p className="text-sm font-semibold text-amber-900 mt-1">INR {registration.payment.amountInr}</p>
-                  <button onClick={handlePay} disabled={busy} className="mt-3 w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold disabled:opacity-60">
-                    <span className="inline-flex items-center gap-2">
-                      {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
-                      Pay Registration Fee
-                    </span>
-                  </button>
+                      <button
+                        onClick={handleRegisterTeam}
+                        disabled={busy || !teamName.trim()}
+                        className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-sm font-bold disabled:opacity-60 transition-all shadow-lg shadow-indigo-500/25"
+                      >
+                        <span className="inline-flex items-center gap-2">
+                          {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Users className="w-4 h-4" />}
+                          Register Team
+                        </span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 
-              {registration && (!registration.payment?.required || registration.payment?.status === 'paid') && hack.status !== 'ended' && (
-                <div className="mt-4 space-y-3">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-500 mb-1">Submission Link</label>
-                    <input value={submissionLink} onChange={(e) => setSubmissionLink(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" placeholder="Drive or .pdf link as per event settings" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-500 mb-1">Note (optional)</label>
-                    <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm" />
-                  </div>
-                  <button onClick={handleSubmit} disabled={busy} className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold disabled:opacity-60">
-                    <span className="inline-flex items-center gap-2">
-                      {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                      Submit Solution
-                    </span>
-                  </button>
-                </div>
-              )}
-
-              {registration && hack.status === 'ended' && (
-                <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600 flex items-start gap-2">
-                  <AlertTriangle className="w-4 h-4 mt-0.5 text-slate-500" />
-                  This hackathon has ended. New submissions are disabled.
-                </div>
-              )}
-
-              {msg.text ? (
-                <div className={`mt-4 text-xs rounded-lg border px-3 py-2 ${
+              {/* Feedback messages */}
+              {msg.text && (
+                <div className={`mt-4 text-xs rounded-lg border px-3 py-2.5 ${
                   msg.tone === 'error'
                     ? 'bg-red-50 text-red-700 border-red-200'
                     : msg.tone === 'success'
                     ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                    : 'bg-slate-50 text-slate-700 border-slate-200'
+                    : 'bg-indigo-50 text-indigo-700 border-indigo-200'
                 }`}>
                   {msg.text}
                 </div>
-              ) : null}
+              )}
 
+              {/* Safety notice */}
               <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
-                <p className="font-semibold text-slate-800 mb-1 inline-flex items-center gap-1"><ShieldCheck className="w-4 h-4" /> Safety Checks</p>
-                <p>- Team members must already be registered users</p>
-                <p>- Duplicate member/team participation is blocked</p>
-                <p>- Payment verification is cryptographically validated</p>
+                <p className="font-semibold text-slate-800 mb-1 inline-flex items-center gap-1">
+                  <ShieldCheck className="w-4 h-4 text-indigo-500" /> Security Guarantees
+                </p>
+                <ul className="space-y-0.5 mt-1">
+                  <li>• Team members must be registered SkillValix users</li>
+                  <li>• Duplicate registration per hackathon is blocked</li>
+                  <li>• Payment verified cryptographically before unlock</li>
+                  <li>• Submission limit enforced server-side</li>
+                </ul>
               </div>
             </div>
           </div>

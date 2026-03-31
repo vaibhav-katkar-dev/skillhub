@@ -7,7 +7,8 @@ import {
   ShieldCheck, BookOpen, FileJson, Upload, CheckCircle,
   AlertCircle, ChevronDown, Loader2, Plus,
   ClipboardList, Edit3, RefreshCw, BarChart3, Users,
-  Award, Activity, Lock, Database, Eye, Star
+  Award, Activity, Lock, Database, Eye, Star,
+  Trophy, Link2, ExternalLink, Filter, Crown
 } from 'lucide-react';
 
 const QUIZ_TEMPLATE = {
@@ -42,29 +43,14 @@ const AdminPanel = () => {
   const [hacks, setHacks] = useState([]);
   const [hacksLoading, setHacksLoading] = useState(false);
   const [hackForm, setHackForm] = useState({
-    title: '',
-    tagline: '',
-    description: '',
-    theme: '',
-    status: 'upcoming',
-    image: '',
-    tags: '',
-    visible: false,
-    featured: false,
-    teamMin: 1,
-    teamMax: 4,
-    paymentEnabled: false,
-    paymentAmountInr: 0,
-    paymentDescription: 'Hackathon registration fee',
-    acceptsDriveLink: true,
-    acceptsPdfLink: true,
-    submissionInstructions: '',
-    maxSubmissionsPerTeam: 3,
-    rules: '',
-    judgingCriteria: '',
-    prizes: '',
-    faqs: '',
-    accentColor: '#4F46E5',
+    title: '', slug: '', tagline: '', description: '', theme: '',
+    status: 'upcoming', image: '', tags: '', visible: false, featured: false,
+    teamMin: 1, teamMax: 4,
+    paymentEnabled: false, paymentAmountInr: 0, paymentDescription: 'Hackathon registration fee',
+    acceptsDriveLink: true, acceptsPdfLink: true, acceptsAnyLink: false,
+    submissionInstructions: '', maxSubmissionsPerTeam: 3,
+    linkLabel: 'Submission Link', linkPlaceholder: 'Paste your submission link here...', linkHint: '',
+    rules: '', judgingCriteria: '', prizes: '', faqs: '', accentColor: '#4F46E5',
   });
   const [editingHackId, setEditingHackId] = useState('');
   const [hackSaving, setHackSaving] = useState(false);
@@ -74,6 +60,20 @@ const AdminPanel = () => {
   const [warmJob, setWarmJob] = useState(null);
   const [warmJobLoading, setWarmJobLoading] = useState(false);
   const [warmJobError, setWarmJobError] = useState('');
+  // Submissions viewer state
+  const [submissionsViewHackId, setSubmissionsViewHackId] = useState('');
+  const [submissionsData, setSubmissionsData] = useState(null);
+  const [submissionsLoading, setSubmissionsLoading] = useState(false);
+  const [submissionsPage, setSubmissionsPage] = useState(1);
+  const [submissionsStatusFilter, setSubmissionsStatusFilter] = useState('');
+  // Winner state
+  const [winnerModal, setWinnerModal] = useState(null); // { hackId, reg }
+  const [winnerRank, setWinnerRank] = useState('');
+  const [winnerNote, setWinnerNote] = useState('');
+  const [winnerSaving, setWinnerSaving] = useState(false);
+  const [winnerConfigHackId, setWinnerConfigHackId] = useState('');
+  const [winnerConfigNote, setWinnerConfigNote] = useState('');
+  const [winnerConfigSaving, setWinnerConfigSaving] = useState(false);
 
   useEffect(() => {
     getCourseList().then(setCourses).catch(console.error);
@@ -99,31 +99,52 @@ const AdminPanel = () => {
 
   const resetHackForm = () => {
     setHackForm({
-      title: '',
-      tagline: '',
-      description: '',
-      theme: '',
-      status: 'upcoming',
-      image: '',
-      tags: '',
-      visible: false,
-      featured: false,
-      teamMin: 1,
-      teamMax: 4,
-      paymentEnabled: false,
-      paymentAmountInr: 0,
-      paymentDescription: 'Hackathon registration fee',
-      acceptsDriveLink: true,
-      acceptsPdfLink: true,
-      submissionInstructions: '',
-      maxSubmissionsPerTeam: 3,
-      rules: '',
-      judgingCriteria: '',
-      prizes: '',
-      faqs: '',
-      accentColor: '#4F46E5',
+      title: '', slug: '', tagline: '', description: '', theme: '',
+      status: 'upcoming', image: '', tags: '', visible: false, featured: false,
+      teamMin: 1, teamMax: 4,
+      paymentEnabled: false, paymentAmountInr: 0, paymentDescription: 'Hackathon registration fee',
+      acceptsDriveLink: true, acceptsPdfLink: true, acceptsAnyLink: false,
+      submissionInstructions: '', maxSubmissionsPerTeam: 3,
+      linkLabel: 'Submission Link', linkPlaceholder: 'Paste your submission link here...', linkHint: '',
+      rules: '', judgingCriteria: '', prizes: '', faqs: '', accentColor: '#4F46E5',
     });
     setEditingHackId('');
+  };
+
+  const loadSubmissionsView = async (hackId, page = 1, statusFilter = '') => {
+    setSubmissionsViewHackId(hackId);
+    setSubmissionsLoading(true);
+    try {
+      const params = new URLSearchParams({ page, limit: 20 });
+      if (statusFilter) params.set('status', statusFilter);
+      const r = await api.get(`/events/admin/hackathons/${hackId}/submissions?${params}`);
+      setSubmissionsData(r.data);
+      setSubmissionsPage(page);
+    } catch { setSubmissionsData(null); }
+    finally { setSubmissionsLoading(false); }
+  };
+
+  const handleSetWinner = async (hackId, regId, isWinner) => {
+    setWinnerSaving(true);
+    try {
+      await api.put(`/events/admin/hackathons/${hackId}/registrations/${regId}/winner`, {
+        isWinner, winnerRank, winnerNote,
+      });
+      setWinnerModal(null); setWinnerRank(''); setWinnerNote('');
+      loadRegistrations(hackId);
+      if (submissionsViewHackId === hackId) loadSubmissionsView(hackId, submissionsPage, submissionsStatusFilter);
+    } catch (e) { alert(e.response?.data?.message || 'Failed to set winner.'); }
+    finally { setWinnerSaving(false); }
+  };
+
+  const handleAnnounceWinners = async (hackId, announced) => {
+    setWinnerConfigSaving(true);
+    try {
+      await api.put(`/events/admin/hackathons/${hackId}/winner-config`, { announced, note: winnerConfigNote });
+      loadHacks();
+      setWinnerConfigHackId('');
+    } catch (e) { alert(e.response?.data?.message || 'Failed.'); }
+    finally { setWinnerConfigSaving(false); }
   };
 
   useEffect(() => { if (tab === 'hackathons') loadHacks(); }, [tab]);
@@ -968,7 +989,7 @@ const AdminPanel = () => {
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
               <h2 className="text-lg font-bold text-slate-900 mb-5 flex items-center gap-2"><Award className="w-5 h-5 text-amber-500" /> {editingHackId ? 'Edit Hackathon' : 'Post a Hackathon'} (Full Dynamic Control)</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {[['title', 'Title *'], ['tagline', 'Tagline'], ['theme', 'Theme'], ['image', 'Banner Image URL'], ['tags', 'Tags (comma-separated)'], ['accentColor', 'Accent Color (hex)']].map(([key, label]) => (
+                {[['title', 'Title *'], ['slug', 'SEO Slug (e.g. ai-hackathon-2026)'], ['tagline', 'Tagline'], ['theme', 'Theme / Track'], ['image', 'Banner Image URL'], ['tags', 'Tags (comma-separated)'], ['accentColor', 'Accent Color (hex)']].map(([key, label]) => (
                   <div key={key}>
                     <label className="block text-xs font-semibold text-slate-500 mb-1">{label}</label>
                     <input value={hackForm[key]} onChange={e => setHackForm(p => ({ ...p, [key]: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" />
@@ -1001,25 +1022,31 @@ const AdminPanel = () => {
                 </div>
 
                 <div className="sm:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50">
+                  <p className="md:col-span-2 text-xs font-black uppercase tracking-widest text-slate-500">Toggles</p>
                   <label className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
                     <input type="checkbox" checked={hackForm.paymentEnabled} onChange={e => setHackForm(p => ({ ...p, paymentEnabled: e.target.checked }))} className="rounded" />
                     Enable Payment
                   </label>
                   <label className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
-                    <input type="checkbox" checked={hackForm.acceptsDriveLink} onChange={e => setHackForm(p => ({ ...p, acceptsDriveLink: e.target.checked }))} className="rounded" />
-                    Accept Google Drive links
-                  </label>
-                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
-                    <input type="checkbox" checked={hackForm.acceptsPdfLink} onChange={e => setHackForm(p => ({ ...p, acceptsPdfLink: e.target.checked }))} className="rounded" />
-                    Accept direct PDF links
-                  </label>
-                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
                     <input type="checkbox" checked={hackForm.visible} onChange={e => setHackForm(p => ({ ...p, visible: e.target.checked }))} className="rounded" />
                     Visible to public
                   </label>
-                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer md:col-span-2">
+                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
                     <input type="checkbox" checked={hackForm.featured} onChange={e => setHackForm(p => ({ ...p, featured: e.target.checked }))} className="rounded" />
                     Featured card
+                  </label>
+                  <p className="md:col-span-2 text-xs font-black uppercase tracking-widest text-slate-500 mt-2">Accepted Link Types</p>
+                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
+                    <input type="checkbox" checked={hackForm.acceptsAnyLink} onChange={e => setHackForm(p => ({ ...p, acceptsAnyLink: e.target.checked }))} className="rounded" />
+                    Accept Any Valid URL (override all)
+                  </label>
+                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
+                    <input type="checkbox" checked={hackForm.acceptsDriveLink} onChange={e => setHackForm(p => ({ ...p, acceptsDriveLink: e.target.checked }))} className="rounded" disabled={hackForm.acceptsAnyLink} />
+                    Google Drive links
+                  </label>
+                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
+                    <input type="checkbox" checked={hackForm.acceptsPdfLink} onChange={e => setHackForm(p => ({ ...p, acceptsPdfLink: e.target.checked }))} className="rounded" disabled={hackForm.acceptsAnyLink} />
+                    Direct PDF links
                   </label>
                 </div>
 
@@ -1036,6 +1063,26 @@ const AdminPanel = () => {
                   <label className="block text-xs font-semibold text-slate-500 mb-1">Payment Description</label>
                   <input value={hackForm.paymentDescription} onChange={e => setHackForm(p => ({ ...p, paymentDescription: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" />
                 </div>
+
+                {/* ── Submission link customisation ── */}
+                <div className="sm:col-span-2 rounded-xl border border-indigo-200 bg-indigo-50 p-4">
+                  <p className="text-xs font-black uppercase tracking-widest text-indigo-700 mb-3">Submission Link Field Labels</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-500 mb-1">Field Label (shown to user)</label>
+                      <input value={hackForm.linkLabel} onChange={e => setHackForm(p => ({ ...p, linkLabel: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-indigo-200 bg-white text-sm" placeholder="Submission Link" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-500 mb-1">Placeholder Text</label>
+                      <input value={hackForm.linkPlaceholder} onChange={e => setHackForm(p => ({ ...p, linkPlaceholder: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-indigo-200 bg-white text-sm" placeholder="Paste your link here..." />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-semibold text-slate-500 mb-1">Hint Text (below field)</label>
+                      <input value={hackForm.linkHint} onChange={e => setHackForm(p => ({ ...p, linkHint: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-indigo-200 bg-white text-sm" placeholder="e.g. Share your GitHub repo or project demo link" />
+                    </div>
+                  </div>
+                </div>
+
                 <div className="sm:col-span-2">
                   <label className="block text-xs font-semibold text-slate-500 mb-1">Submission Instructions</label>
                   <textarea value={hackForm.submissionInstructions} onChange={e => setHackForm(p => ({ ...p, submissionInstructions: e.target.value }))} rows={2} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" />
