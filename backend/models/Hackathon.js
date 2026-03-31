@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 
 const hackathonSchema = new mongoose.Schema({
   title:        { type: String, required: true, trim: true },
+  slug:         { type: String, trim: true, lowercase: true },   // SEO-friendly slug
   tagline:      { type: String, trim: true },
   description:  { type: String, required: true },
   theme:        { type: String },                          // e.g. "AI / ML", "Web3"
@@ -25,10 +26,15 @@ const hackathonSchema = new mongoose.Schema({
     description: { type: String, default: 'Hackathon registration fee' },
   },
   submissionConfig: {
-    acceptsDriveLink: { type: Boolean, default: true },
-    acceptsPdfLink: { type: Boolean, default: true },
-    instructions: { type: String, default: '' },
+    acceptsDriveLink:   { type: Boolean, default: true },
+    acceptsPdfLink:     { type: Boolean, default: true },
+    acceptsAnyLink:     { type: Boolean, default: false }, // NEW: accept any valid URL
+    instructions:       { type: String, default: '' },
     maxSubmissionsPerTeam: { type: Number, default: 3, min: 1, max: 50 },
+    // Custom label & hint for the submission link field shown to users
+    linkLabel:          { type: String, default: 'Submission Link' },
+    linkPlaceholder:    { type: String, default: 'Paste your submission link here...' },
+    linkHint:           { type: String, default: '' },
   },
   contentConfig: {
     rules: [{ type: String, trim: true }],
@@ -48,6 +54,15 @@ const hackathonSchema = new mongoose.Schema({
     cardStyle: { type: String, default: 'modern' },
     bannerStyle: { type: String, default: 'gradient' },
   },
+  // Winner info - set by admin after hackathon ends
+  winnerConfig: {
+    announced:   { type: Boolean, default: false },
+    announcedAt: { type: Date },
+    note:        { type: String, default: '' },   // optional announcement note
+  },
 }, { timestamps: true });
+
+// SEO index on slug
+hackathonSchema.index({ slug: 1 }, { sparse: true });
 
 export default mongoose.model('Hackathon', hackathonSchema);

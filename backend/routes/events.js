@@ -222,12 +222,44 @@ router.get('/hackathons', async (req, res) => {
   }
 });
 
-// ─── PUBLIC: Get single hackathon ────────────────────────────────────────────
+// ─── PUBLIC: Get single hackathon by ID or slug ──────────────────────────────
 router.get('/hackathons/:id', async (req, res) => {
   try {
-    const hack = await Hackathon.findOne({ _id: req.params.id, visible: true }).lean();
+    const param = req.params.id;
+    // Try ObjectId first, then fall back to slug
+    let hack = null;
+    if (/^[a-f\d]{24}$/i.test(param)) {
+      hack = await Hackathon.findOne({ _id: param, visible: true }).lean();
+    }
+    if (!hack) {
+      hack = await Hackathon.findOne({ slug: param, visible: true }).lean();
+    }
     if (!hack) return res.status(404).json({ message: 'Hackathon not found.' });
     res.json(hack);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ─── PUBLIC: Get winners for a hackathon ────────────────────────────────────
+router.get('/hackathons/:id/winners', async (req, res) => {
+  try {
+    const param = req.params.id;
+    let hack = null;
+    if (/^[a-f\d]{24}$/i.test(param)) {
+      hack = await Hackathon.findOne({ _id: param, visible: true }).select('_id winnerConfig title').lean();
+    }
+    if (!hack) {
+      hack = await Hackathon.findOne({ slug: param, visible: true }).select('_id winnerConfig title').lean();
+    }
+    if (!hack) return res.status(404).json({ message: 'Hackathon not found.' });
+
+    const winners = await HackathonRegistration.find({ hackathon: hack._id, isWinner: true })
+      .select('teamName winnerRank winnerNote members leader')
+      .populate('leader', 'name email')
+      .populate('members.user', 'name')
+      .lean();
+    res.json({ announced: Boolean(hack.winnerConfig?.announced), note: hack.winnerConfig?.note || '', winners });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
@@ -588,7 +620,7 @@ router.post('/hackathons/:id/submit', authOptions, async (req, res) => {
     }
 
     if (!isHttpUrl(submissionLink)) {
-      return res.status(400).json({ message: 'Submission link must be a valid public URL.' });
+      return res.status(400).json({ message: 'Submission link must be a valid URL starting with http:// or https://.' });
     }
 
     const registration = await HackathonRegistration.findOne({
@@ -596,11 +628,15 @@ router.post('/hackathons/:id/submit', authOptions, async (req, res) => {
       hackathon: req.params.id,
       'members.user': req.user.id,
     })
-      .populate('hackathon', 'submissionConfig paymentConfig')
+      .populate('hackathon', 'submissionConfig paymentConfig status')
       .lean();
 
     if (!registration || !registration.hackathon) {
       return res.status(404).json({ message: 'Team registration not found.' });
+    }
+
+    if (registration.hackathon.status === 'ended') {
+      return res.status(400).json({ message: 'This hackathon has ended. Submissions are closed.' });
     }
 
     if (registration.payment?.required && registration.payment?.status !== 'paid') {
@@ -612,16 +648,20 @@ router.post('/hackathons/:id/submit', authOptions, async (req, res) => {
       return res.status(400).json({ message: `Submission limit reached (${maxSubmissions}).` });
     }
 
+    // Link type validation — skip if acceptsAnyLink is enabled
+    const acceptsAnyLink  = Boolean(registration.hackathon.submissionConfig?.acceptsAnyLink);
     const acceptsDriveLink = Boolean(registration.hackathon.submissionConfig?.acceptsDriveLink);
-    const acceptsPdfLink = Boolean(registration.hackathon.submissionConfig?.acceptsPdfLink);
-    const isDrive = isDriveLink(submissionLink);
-    const isPdf = isPdfLink(submissionLink);
+    const acceptsPdfLink   = Boolean(registration.hackathon.submissionConfig?.acceptsPdfLink);
 
-    const allowedByType = (acceptsDriveLink && isDrive) || (acceptsPdfLink && isPdf) || (acceptsDriveLink && acceptsPdfLink);
-    if (!allowedByType) {
-      return res.status(400).json({
-        message: 'Invalid submission link type for this hackathon. Check admin submission instructions.',
-      });
+    if (!acceptsAnyLink) {
+      const isDrive = isDriveLink(submissionLink);
+      const isPdf   = isPdfLink(submissionLink);
+      const allowedByType = (acceptsDriveLink && isDrive) || (acceptsPdfLink && isPdf);
+      if (!allowedByType) {
+        return res.status(400).json({
+          message: 'Invalid submission link type for this hackathon. Check the submission instructions.',
+        });
+      }
     }
 
     await HackathonRegistration.updateOne(
@@ -691,7 +731,7 @@ router.get('/admin/hackathons/:id/registrations', authOptions, adminCheck, async
 router.put('/admin/hackathons/:id/registrations/:registrationId', authOptions, adminCheck, async (req, res) => {
   try {
     const { status, adminRemarks = '' } = req.body;
-    const allowedStatus = ['registered', 'payment_pending', 'submitted', 'under_review', 'approved', 'rejected'];
+    const allowedStatus = ['registered', 'payment_pending', 'submitted', 'under_review', 'approved', 'rejected', 'winner'];
     if (status && !allowedStatus.includes(status)) {
       return res.status(400).json({ message: 'Invalid status value.' });
     }
@@ -712,6 +752,86 @@ router.put('/admin/hackathons/:id/registrations/:registrationId', authOptions, a
     res.json(updated);
   } catch (err) {
     console.error('[Events] Admin registration update error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ─── ADMIN: Set / unset winner for a registration ───────────────────────────
+router.put('/admin/hackathons/:id/registrations/:registrationId/winner', authOptions, adminCheck, async (req, res) => {
+  try {
+    const { isWinner = true, winnerRank = '', winnerNote = '' } = req.body;
+
+    const updates = {
+      isWinner:    Boolean(isWinner),
+      winnerRank:  String(winnerRank || '').trim(),
+      winnerNote:  String(winnerNote || '').trim(),
+      winnerSetAt: isWinner ? new Date() : null,
+      status:      isWinner ? 'winner' : 'approved',
+    };
+
+    const updated = await HackathonRegistration.findOneAndUpdate(
+      { _id: req.params.registrationId, hackathon: req.params.id },
+      { $set: updates },
+      { new: true }
+    )
+      .populate('leader', 'name email')
+      .populate('members.user', 'name email')
+      .lean();
+
+    if (!updated) return res.status(404).json({ message: 'Registration not found.' });
+    res.json(updated);
+  } catch (err) {
+    console.error('[Events] Admin set winner error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ─── ADMIN: Get all submissions for hackathon (paginated + sorted) ──────────
+router.get('/admin/hackathons/:id/submissions', authOptions, adminCheck, async (req, res) => {
+  try {
+    const page   = Math.max(1, Number(req.query.page   || 1));
+    const limit  = Math.min(50, Math.max(5, Number(req.query.limit || 20)));
+    const sort   = req.query.sort === 'oldest' ? 1 : -1;
+    const status = req.query.status || '';
+
+    const filter = { hackathon: req.params.id, 'submissions.0': { $exists: true } };
+    if (status) filter.status = status;
+
+    const total = await HackathonRegistration.countDocuments(filter);
+    const registrations = await HackathonRegistration.find(filter)
+      .populate('leader', 'name email')
+      .populate('members.user', 'name email')
+      .sort({ latestSubmissionAt: sort })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean();
+
+    res.json({
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+      registrations,
+    });
+  } catch (err) {
+    console.error('[Events] Admin submissions list error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ─── ADMIN: Announce / update winner config for hackathon ──────────────────
+router.put('/admin/hackathons/:id/winner-config', authOptions, adminCheck, async (req, res) => {
+  try {
+    const { announced, note } = req.body;
+    const updates = {
+      'winnerConfig.announced':   Boolean(announced),
+      'winnerConfig.note':        String(note || '').trim(),
+      'winnerConfig.announcedAt': announced ? new Date() : null,
+    };
+    const hack = await Hackathon.findByIdAndUpdate(req.params.id, { $set: updates }, { new: true }).lean();
+    if (!hack) return res.status(404).json({ message: 'Hackathon not found.' });
+    res.json(hack);
+  } catch (err) {
+    console.error('[Events] Admin winner config error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
