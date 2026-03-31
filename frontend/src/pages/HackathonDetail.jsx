@@ -140,6 +140,31 @@ export default function HackathonDetail() {
     setMembers((prev) => prev.map((m, i) => i === idx ? { ...m, [field]: val } : m));
   };
 
+  // ── Countdown Timer ────────────────────────────────────────────────────────
+  const [timeLeft, setTimeLeft] = useState('');
+
+  useEffect(() => {
+    if (!hack?.endDate || hack.status === 'ended') {
+      setTimeLeft('');
+      return;
+    }
+    const updateTimer = () => {
+      const diff = new Date(hack.endDate).getTime() - Date.now();
+      if (diff <= 0) {
+        setTimeLeft('Ended');
+        return;
+      }
+      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const h = Math.floor((diff / (1000 * 60 * 60)) % 24).toString().padStart(2, '0');
+      const m = Math.floor((diff / 1000 / 60) % 60).toString().padStart(2, '0');
+      const s = Math.floor((diff / 1000) % 60).toString().padStart(2, '0');
+      setTimeLeft(d > 0 ? `${d}d ${h}h ${m}m ${s}s` : `${h}h ${m}m ${s}s`);
+    };
+    updateTimer();
+    const timerId = setInterval(updateTimer, 1000);
+    return () => clearInterval(timerId);
+  }, [hack?.endDate, hack?.status]);
+
   // ── Team registration ──────────────────────────────────────────────────────
   const handleRegisterTeam = async () => {
     if (!isAuthenticated) { navigate('/login'); return; }
@@ -363,6 +388,24 @@ export default function HackathonDetail() {
             {/* Snapshot card */}
             <div className="rounded-2xl border border-slate-200 bg-white p-6">
               <h2 className="text-sm uppercase tracking-widest font-black text-slate-700 mb-4">Event Snapshot</h2>
+
+              {/* Countdown Timer */}
+              {hack?.endDate && hack.status !== 'ended' && timeLeft && timeLeft !== 'Ended' && (
+                <div className="mb-5 rounded-xl bg-gradient-to-r from-red-50 to-orange-50 border border-red-100 p-3 text-center">
+                  <p className="text-xs uppercase tracking-widest font-black text-red-500 mb-1 flex items-center justify-center gap-1.5">
+                    <Clock3 className="w-3.5 h-3.5" /> Submission Deadline
+                  </p>
+                  <p className="text-xl font-black text-red-600 font-mono tracking-tight tabular-nums">
+                    {timeLeft}
+                  </p>
+                </div>
+              )}
+              {hack.status === 'ended' && (
+                <div className="mb-5 rounded-xl bg-slate-100 border border-slate-200 p-3 text-center">
+                  <p className="text-sm font-black text-slate-500 uppercase tracking-widest">Ended</p>
+                </div>
+              )}
+
               <div className="space-y-3 text-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-slate-500">Team Size</span>
