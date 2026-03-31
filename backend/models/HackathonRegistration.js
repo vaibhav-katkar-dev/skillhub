@@ -36,6 +36,10 @@ const hackathonRegistrationSchema = new mongoose.Schema({
   winnerRank:  { type: String, default: '' },   // e.g. "1st", "2nd", "Best UI"
   winnerNote:  { type: String, default: '' },
   winnerSetAt: { type: Date },
+  // Scoring - set by admin
+  score:       { type: Number, default: 0, min: 0, max: 100 },
+  scoreNote:   { type: String, default: '' },
+  scoredAt:    { type: Date },
 }, { timestamps: true });
 
 hackathonRegistrationSchema.index({ hackathon: 1, leader: 1 }, { unique: true });

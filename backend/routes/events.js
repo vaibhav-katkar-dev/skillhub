@@ -836,6 +836,30 @@ router.put('/admin/hackathons/:id/winner-config', authOptions, adminCheck, async
   }
 });
 
+// ─── ADMIN: Set score / points for a registration ───────────────────────────
+router.put('/admin/hackathons/:id/registrations/:registrationId/score', authOptions, adminCheck, async (req, res) => {
+  try {
+    const { score, scoreNote = '' } = req.body;
+    const parsedScore = Number(score);
+    if (isNaN(parsedScore) || parsedScore < 0 || parsedScore > 100) {
+      return res.status(400).json({ message: 'Score must be a number between 0 and 100.' });
+    }
+    const updated = await HackathonRegistration.findOneAndUpdate(
+      { _id: req.params.registrationId, hackathon: req.params.id },
+      { $set: { score: parsedScore, scoreNote: String(scoreNote || '').trim(), scoredAt: new Date() } },
+      { new: true }
+    )
+      .populate('leader', 'name email')
+      .populate('members.user', 'name email')
+      .lean();
+    if (!updated) return res.status(404).json({ message: 'Registration not found.' });
+    res.json(updated);
+  } catch (err) {
+    console.error('[Events] Admin score error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // ─── PDF Builder: Event Certificate (job simulation has premium achievement look) ─────
 function buildEventCertificatePdf({ studentName, eventTitle, role, certificateId, issueDate, eventType, verifyUrl }) {
   return new Promise(async (resolve, reject) => {

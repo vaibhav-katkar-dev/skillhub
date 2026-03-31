@@ -1228,7 +1228,7 @@ const AdminPanel = () => {
                             {h.visible ? <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Visible</span> : <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-400">Hidden</span>}
                             {h.featured && <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Featured</span>}
                           </div>
-                          <p className="text-sm text-slate-500 mt-1">{h.description}</p>
+                          <p className="text-sm text-slate-500 mt-1 line-clamp-2">{h.description}</p>
                           <p className="text-xs text-slate-400 mt-2">
                             Team: {h.teamConfig?.minMembers || 1}-{h.teamConfig?.maxMembers || 4} | Payment: {h.paymentConfig?.enabled ? `INR ${h.paymentConfig?.amountInr || 0}` : 'Free'}
                           </p>
@@ -1284,34 +1284,113 @@ const AdminPanel = () => {
                       {loadingRegistrationsFor === h._id && <div className="mt-3 text-xs text-slate-500">Loading team registrations...</div>}
 
                       {Array.isArray(registrationsByHack[h._id]) && registrationsByHack[h._id].length > 0 && (
-                        <div className="mt-4 space-y-2">
-                          {registrationsByHack[h._id].map(reg => (
-                            <div key={reg._id} className="rounded-lg border border-slate-200 p-3 bg-slate-50">
-                              <div className="flex items-center justify-between gap-3">
-                                <div className="min-w-0">
-                                  <p className="text-sm font-bold text-slate-900">{reg.teamName}</p>
-                                  <p className="text-xs text-slate-500">Leader: {reg.leader?.name} ({reg.leader?.email})</p>
-                                  <p className="text-xs text-slate-500">Members: {(reg.members || []).map(m => m.email).join(', ')}</p>
-                                  <p className="text-xs text-slate-500">Payment: {reg.payment?.status || 'not_required'} | Submissions: {reg.submissions?.length || 0}</p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <select
-                                    value={reg.status}
-                                    onChange={async (e) => {
-                                      await api.put(`/events/admin/hackathons/${h._id}/registrations/${reg._id}`, {
-                                        status: e.target.value,
-                                        adminRemarks: reg.adminRemarks || '',
-                                      });
-                                      loadRegistrations(h._id);
-                                    }}
-                                    className="px-2 py-1 rounded border border-slate-200 text-xs"
-                                  >
-                                    {['registered', 'payment_pending', 'submitted', 'under_review', 'approved', 'rejected'].map(s => <option key={s} value={s}>{s}</option>)}
-                                  </select>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
+                        <div className="mt-4">
+                          <div className="overflow-x-auto rounded-xl border border-slate-200">
+                            <table className="w-full text-xs">
+                              <thead>
+                                <tr className="bg-slate-50 border-b border-slate-200">
+                                  <th className="px-3 py-2 text-left font-bold text-slate-600">Team</th>
+                                  <th className="px-3 py-2 text-left font-bold text-slate-600">Leader</th>
+                                  <th className="px-3 py-2 text-left font-bold text-slate-600">Members</th>
+                                  <th className="px-3 py-2 text-left font-bold text-slate-600">Submissions</th>
+                                  <th className="px-3 py-2 text-left font-bold text-slate-600">Payment</th>
+                                  <th className="px-3 py-2 text-left font-bold text-slate-600">Score /100</th>
+                                  <th className="px-3 py-2 text-left font-bold text-slate-600">Status</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-100">
+                                {registrationsByHack[h._id].map(reg => (
+                                  <tr key={reg._id} className="hover:bg-slate-50 transition-colors align-top">
+                                    {/* Team Name */}
+                                    <td className="px-3 py-2.5">
+                                      <p className="font-bold text-slate-900">{reg.teamName}</p>
+                                      {reg.isWinner && <span className="inline-block mt-1 text-xs bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold">🏆 {reg.winnerRank || 'Winner'}</span>}
+                                    </td>
+                                    {/* Leader */}
+                                    <td className="px-3 py-2.5">
+                                      <p className="font-semibold text-slate-800">{reg.leader?.name || '—'}</p>
+                                      <p className="text-slate-400">{reg.leader?.email || ''}</p>
+                                    </td>
+                                    {/* Members */}
+                                    <td className="px-3 py-2.5">
+                                      <div className="space-y-1">
+                                        {(reg.members || []).map((m, mi) => (
+                                          <div key={mi}>
+                                            <span className="font-medium text-slate-800">{m.name || m.user?.name || '—'}</span>
+                                            <span className="text-slate-400 ml-1">({m.email})</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </td>
+                                    {/* Submissions */}
+                                    <td className="px-3 py-2.5">
+                                      {(reg.submissions || []).length === 0 ? (
+                                        <span className="text-slate-400 italic">None</span>
+                                      ) : (
+                                        <div className="space-y-1">
+                                          {reg.submissions.map((sub, si) => (
+                                            <div key={si} className="flex items-center gap-1">
+                                              <span className="text-slate-400">{si + 1}.</span>
+                                              <a href={sub.link} target="_blank" rel="noopener noreferrer"
+                                                className="text-indigo-600 underline hover:text-indigo-800 max-w-[160px] truncate block"
+                                                title={sub.link}>
+                                                {sub.link}
+                                              </a>
+                                              <ExternalLink className="w-2.5 h-2.5 text-slate-400 shrink-0" />
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </td>
+                                    {/* Payment */}
+                                    <td className="px-3 py-2.5">
+                                      <span className={`px-1.5 py-0.5 rounded text-xs font-semibold ${
+                                        reg.payment?.status === 'paid' ? 'bg-emerald-100 text-emerald-700' :
+                                        reg.payment?.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                                        'bg-slate-100 text-slate-500'
+                                      }`}>
+                                        {reg.payment?.status || 'not_required'}
+                                      </span>
+                                    </td>
+                                    {/* Score input */}
+                                    <td className="px-3 py-2.5">
+                                      <div className="flex items-center gap-1">
+                                        <input
+                                          type="number" min="0" max="100"
+                                          defaultValue={reg.score ?? 0}
+                                          onBlur={async (e) => {
+                                            const val = Number(e.target.value);
+                                            if (val < 0 || val > 100) { e.target.value = reg.score ?? 0; return; }
+                                            try {
+                                              await api.put(`/events/admin/hackathons/${h._id}/registrations/${reg._id}/score`, { score: val });
+                                            } catch { e.target.value = reg.score ?? 0; }
+                                          }}
+                                          className="w-14 px-2 py-1 border border-slate-200 rounded text-xs text-center focus:ring-2 focus:ring-indigo-400 outline-none"
+                                        />
+                                        {reg.scoredAt && <span className="text-slate-300 text-xs" title={`Scored ${new Date(reg.scoredAt).toLocaleDateString()}`}>✓</span>}
+                                      </div>
+                                    </td>
+                                    {/* Status dropdown */}
+                                    <td className="px-3 py-2.5">
+                                      <select
+                                        value={reg.status}
+                                        onChange={async (e) => {
+                                          await api.put(`/events/admin/hackathons/${h._id}/registrations/${reg._id}`, {
+                                            status: e.target.value,
+                                            adminRemarks: reg.adminRemarks || '',
+                                          });
+                                          loadRegistrations(h._id);
+                                        }}
+                                        className="px-2 py-1 rounded border border-slate-200 text-xs"
+                                      >
+                                        {['registered', 'payment_pending', 'submitted', 'under_review', 'approved', 'rejected'].map(s => <option key={s} value={s}>{s}</option>)}
+                                      </select>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
                         </div>
                       )}
 

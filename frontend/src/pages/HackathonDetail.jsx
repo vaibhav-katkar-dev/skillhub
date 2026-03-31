@@ -64,7 +64,7 @@ export default function HackathonDetail() {
 
   // Team registration
   const [teamName, setTeamName] = useState('');
-  const [memberEmails, setMemberEmails] = useState(['']); // array for dynamic inputs
+  const [members, setMembers] = useState([{ name: '', email: '' }]); // array of {name, email}
 
   // Submission
   const [submissionLink, setSubmissionLink] = useState('');
@@ -122,22 +122,22 @@ export default function HackathonDetail() {
   useEffect(() => { fetchMyTeam(); }, [fetchMyTeam]);
   useEffect(() => { if (hack?.winnerConfig?.announced) fetchWinners(); }, [hack, fetchWinners]);
 
-  // ── Dynamic member email rows ──────────────────────────────────────────────
+  // ── Dynamic member rows ──────────────────────────────────────────────────
   const teamMax = Number(hack?.teamConfig?.maxMembers || 4);
   const teamMin = Number(hack?.teamConfig?.minMembers || 1);
 
   const addMemberRow = () => {
-    if (memberEmails.length < teamMax - 1) {
-      setMemberEmails((prev) => [...prev, '']);
+    if (members.length < teamMax - 1) {
+      setMembers((prev) => [...prev, { name: '', email: '' }]);
     }
   };
 
   const removeMemberRow = (idx) => {
-    setMemberEmails((prev) => prev.filter((_, i) => i !== idx));
+    setMembers((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  const updateMemberEmail = (idx, val) => {
-    setMemberEmails((prev) => prev.map((e, i) => (i === idx ? val : e)));
+  const updateMember = (idx, field, val) => {
+    setMembers((prev) => prev.map((m, i) => i === idx ? { ...m, [field]: val } : m));
   };
 
   // ── Team registration ──────────────────────────────────────────────────────
@@ -145,10 +145,17 @@ export default function HackathonDetail() {
     if (!isAuthenticated) { navigate('/login'); return; }
 
     const trimmedTeam = String(teamName || '').trim();
-    const emails = memberEmails.map((x) => x.trim()).filter(Boolean);
-
     if (trimmedTeam.length < 3) {
       showMsg('Team name must be at least 3 characters.', 'error'); return;
+    }
+
+    // Validate members: every non-empty row must have both name and email
+    const filledMembers = members.filter((m) => m.email.trim());
+    for (const m of filledMembers) {
+      if (!m.name.trim()) {
+        showMsg('Please enter a name for every teammate you added.', 'error'); return;
+      }
+      try { new URL(`mailto:${m.email.trim()}`); } catch { /* basic check */ }
     }
 
     setBusy(true);
@@ -156,12 +163,12 @@ export default function HackathonDetail() {
     try {
       await api.post(`/events/hackathons/${id}/register`, {
         teamName: trimmedTeam,
-        memberEmails: emails,
+        memberEmails: filledMembers.map((m) => m.email.trim()),
       });
       await fetchMyTeam();
       showMsg('Team registered successfully! You are the team leader.', 'success');
       setTeamName('');
-      setMemberEmails(['']);
+      setMembers([{ name: '', email: '' }]);
     } catch (err) {
       const missing = err.response?.data?.missingEmails;
       if (Array.isArray(missing) && missing.length) {
@@ -609,24 +616,30 @@ export default function HackathonDetail() {
                       </p>
                       <div className="space-y-2">
                         {registration.submissions.map((sub, idx) => (
-                          <div key={idx} className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-                            <Link2 className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                            <a
-                              href={sub.link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-indigo-600 underline truncate flex-1"
-                            >
-                              {sub.link}
-                            </a>
-                            <ExternalLink className="w-3 h-3 text-slate-400 shrink-0" />
+                          <div key={idx} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                            <div className="flex items-center gap-2">
+                              <Link2 className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                              <a
+                                href={sub.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-indigo-600 underline truncate flex-1"
+                              >
+                                {sub.link}
+                              </a>
+                              <ExternalLink className="w-3 h-3 text-slate-400 shrink-0" />
+                            </div>
+                            {sub.note && <p className="text-xs text-slate-400 mt-1 pl-5">{sub.note}</p>}
+                            <p className="text-xs text-slate-300 mt-0.5 pl-5">
+                              {new Date(sub.submittedAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
+                            </p>
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
 
-                  {/* Submit form */}
+                  {/* Submit form — hidden once limit hit */}
                   {canSubmit && submissionCount < maxSubs && (
                     <div className="space-y-3">
                       <div>
@@ -664,9 +677,12 @@ export default function HackathonDetail() {
                     </div>
                   )}
 
+                  {/* Locked — max submissions reached */}
                   {canSubmit && submissionCount >= maxSubs && (
-                    <div className="rounded-lg bg-slate-100 border border-slate-200 px-4 py-3 text-sm text-slate-600 text-center">
-                      Max {maxSubs} submissions reached. No more submissions allowed.
+                    <div className="rounded-xl border-2 border-slate-200 bg-slate-50 px-4 py-4 text-center">
+                      <Lock className="w-6 h-6 mx-auto mb-2 text-slate-400" />
+                      <p className="text-sm font-bold text-slate-700">Submission Locked</p>
+                      <p className="text-xs text-slate-500 mt-1">Max {maxSubs} submission{maxSubs !== 1 ? 's' : ''} reached. No further submissions allowed.</p>
                     </div>
                   )}
 
@@ -715,39 +731,49 @@ export default function HackathonDetail() {
                       </div>
 
                       <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <label className="text-xs font-semibold text-slate-600">Teammates' Emails</label>
-                          <span className="text-xs text-slate-400">{memberEmails.filter(Boolean).length + 1}/{teamMax} members</span>
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="text-xs font-semibold text-slate-600">Teammates</label>
+                          <span className="text-xs text-slate-400">{members.filter(m => m.email.trim()).length + 1}/{teamMax} members</span>
                         </div>
-                        <div className="space-y-2">
-                          {memberEmails.map((email, idx) => (
-                            <div key={idx} className="flex items-center gap-2">
+                        <div className="space-y-3">
+                          {members.map((member, idx) => (
+                            <div key={idx} className="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-semibold text-slate-500">Teammate {idx + 1}</span>
+                                {members.length > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => removeMemberRow(idx)}
+                                    className="p-1 rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                              </div>
+                              <input
+                                type="text"
+                                value={member.name}
+                                onChange={(e) => updateMember(idx, 'name', e.target.value)}
+                                className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-indigo-400 outline-none"
+                                placeholder="Full name"
+                              />
                               <input
                                 type="email"
-                                value={email}
-                                onChange={(e) => updateMemberEmail(idx, e.target.value)}
-                                className="flex-1 px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-400 outline-none"
-                                placeholder={`Teammate ${idx + 1} email`}
+                                value={member.email}
+                                onChange={(e) => updateMember(idx, 'email', e.target.value)}
+                                className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-indigo-400 outline-none"
+                                placeholder="Email (must be registered SkillValix account)"
                               />
-                              {memberEmails.length > 0 && (
-                                <button
-                                  type="button"
-                                  onClick={() => removeMemberRow(idx)}
-                                  className="p-2 rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors"
-                                >
-                                  <X className="w-4 h-4" />
-                                </button>
-                              )}
                             </div>
                           ))}
                         </div>
-                        {memberEmails.length < teamMax - 1 && (
+                        {members.length < teamMax - 1 && (
                           <button
                             type="button"
                             onClick={addMemberRow}
-                            className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
+                            className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
                           >
-                            <Plus className="w-3.5 h-3.5" /> Add Teammate
+                            <Plus className="w-3.5 h-3.5" /> Add Another Teammate
                           </button>
                         )}
                         <p className="text-xs text-slate-400 mt-2">
