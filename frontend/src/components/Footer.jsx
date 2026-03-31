@@ -1,8 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Twitter,
-  Github,
   Linkedin,
   Mail,
   MessageCircle,
@@ -11,6 +9,7 @@ import {
   Building2,
   ChevronRight,
   Shield,
+  Instagram,
 } from 'lucide-react';
 import Logo from './Logo';
 
@@ -59,10 +58,9 @@ const STATS = [
 ];
 
 const SOCIAL = [
-  { icon: Twitter,  href: '#', label: 'Twitter'  },
-  { icon: Github,   href: '#', label: 'GitHub'   },
-  { icon: Linkedin, href: '#', label: 'LinkedIn' },
-  { icon: Mail,     href: '#', label: 'Email'    },
+  { icon: Linkedin, href: 'https://www.linkedin.com/company/skillvalix/', label: 'LinkedIn' },
+  { icon: Instagram, href: 'https://www.instagram.com/skillvalix/', label: 'Instagram' },
+  { icon: Mail,     href: 'mailto:skillvalix@gmail.com', label: 'Email'    },
 ];
 
 const LEGAL_LINKS = [
