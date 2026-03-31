@@ -390,20 +390,23 @@ export default function HackathonDetail() {
               <h2 className="text-sm uppercase tracking-widest font-black text-slate-700 mb-4">Event Snapshot</h2>
 
               {/* Countdown Timer */}
-              {hack?.endDate && hack.status !== 'ended' && timeLeft && timeLeft !== 'Ended' && (
-                <div className="mb-5 rounded-xl bg-gradient-to-r from-red-50 to-orange-50 border border-red-100 p-3 text-center">
-                  <p className="text-xs uppercase tracking-widest font-black text-red-500 mb-1 flex items-center justify-center gap-1.5">
-                    <Clock3 className="w-3.5 h-3.5" /> Submission Deadline
-                  </p>
-                  <p className="text-xl font-black text-red-600 font-mono tracking-tight tabular-nums">
-                    {timeLeft}
-                  </p>
-                </div>
-              )}
-              {hack.status === 'ended' && (
-                <div className="mb-5 rounded-xl bg-slate-100 border border-slate-200 p-3 text-center">
-                  <p className="text-sm font-black text-slate-500 uppercase tracking-widest">Ended</p>
-                </div>
+              {hack?.endDate && (
+                <>
+                  {timeLeft === 'Ended' || hack.status === 'ended' ? (
+                    <div className="mb-5 rounded-xl bg-slate-100 border border-slate-200 p-3 text-center">
+                      <p className="text-sm font-black text-slate-500 uppercase tracking-widest">Ended</p>
+                    </div>
+                  ) : (
+                    <div className="mb-5 rounded-xl bg-gradient-to-r from-red-50 to-orange-50 border border-red-100 p-3 text-center">
+                      <p className="text-xs uppercase tracking-widest font-black text-red-500 mb-1 flex items-center justify-center gap-1.5">
+                        <Clock3 className="w-3.5 h-3.5" /> Submission Deadline
+                      </p>
+                      <p className="text-xl font-black text-red-600 font-mono tracking-tight tabular-nums">
+                        {timeLeft}
+                      </p>
+                    </div>
+                  )}
+                </>
               )}
 
               <div className="space-y-3 text-sm">
@@ -452,6 +455,18 @@ export default function HackathonDetail() {
                     <span className="font-bold text-slate-900">{new Date(hack.endDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                   </div>
                 )}
+              </div>
+
+              {/* Join Community CTAs */}
+              <div className="mt-5 border-t border-slate-100 pt-5 space-y-3">
+                <a 
+                  href="https://chat.whatsapp.com/GzB2Pq8XwFCAkE6bEv6EaR" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 text-white font-bold text-sm hover:opacity-90 transition shadow-lg shadow-emerald-500/25"
+                >
+                  <Users className="w-4 h-4" /> Join WhatsApp Community
+                </a>
               </div>
             </div>
           </div>
