@@ -45,6 +45,7 @@ const AdminPanel = () => {
   const [hackForm, setHackForm] = useState({
     title: '', slug: '', tagline: '', description: '', theme: '',
     status: 'upcoming', image: '', tags: '', visible: false, featured: false,
+    startDate: '', endDate: '',
     teamMin: 1, teamMax: 4,
     paymentEnabled: false, paymentAmountInr: 0, paymentDescription: 'Hackathon registration fee',
     acceptsDriveLink: true, acceptsPdfLink: true, acceptsAnyLink: false,
@@ -101,6 +102,7 @@ const AdminPanel = () => {
     setHackForm({
       title: '', slug: '', tagline: '', description: '', theme: '',
       status: 'upcoming', image: '', tags: '', visible: false, featured: false,
+      startDate: '', endDate: '',
       teamMin: 1, teamMax: 4,
       paymentEnabled: false, paymentAmountInr: 0, paymentDescription: 'Hackathon registration fee',
       acceptsDriveLink: true, acceptsPdfLink: true, acceptsAnyLink: false,
@@ -996,13 +998,23 @@ const AdminPanel = () => {
                   </div>
                 ))}
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-500 mb-1">Status</label>
-                  <select value={hackForm.status} onChange={e => setHackForm(p => ({ ...p, status: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
-                    <option value="upcoming">Upcoming</option>
-                    <option value="live">Live</option>
-                    <option value="ended">Ended</option>
-                  </select>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 mb-1">Status</label>
+                    <select value={hackForm.status} onChange={e => setHackForm(p => ({ ...p, status: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
+                      <option value="upcoming">Upcoming</option>
+                      <option value="live">Live</option>
+                      <option value="ended">Ended</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 mb-1">Start Date</label>
+                    <input type="date" value={hackForm.startDate} onChange={e => setHackForm(p => ({ ...p, startDate: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 mb-1">End Date (Deadline)</label>
+                    <input type="date" value={hackForm.endDate} onChange={e => setHackForm(p => ({ ...p, endDate: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
@@ -1147,6 +1159,8 @@ const AdminPanel = () => {
                       description: hackForm.description,
                       theme: hackForm.theme,
                       status: hackForm.status,
+                      startDate: hackForm.startDate || null,
+                      endDate: hackForm.endDate || null,
                       image: hackForm.image,
                       tags: hackForm.tags.split(',').map(t => t.trim()).filter(Boolean),
                       visible: hackForm.visible,
@@ -1243,6 +1257,8 @@ const AdminPanel = () => {
                                 description: h.description || '',
                                 theme: h.theme || '',
                                 status: h.status || 'upcoming',
+                                startDate: h.startDate ? String(h.startDate).slice(0, 10) : '',
+                                endDate: h.endDate ? String(h.endDate).slice(0, 10) : '',
                                 image: h.image || '',
                                 tags: (h.tags || []).join(', '),
                                 visible: Boolean(h.visible),
