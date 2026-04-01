@@ -434,12 +434,16 @@ export default function JobSimulation() {
                 <button
                   onClick={handleDownload}
                   disabled={downloading}
-                  className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-60"
+                  className={`w-full py-3 rounded-xl font-bold text-sm transition-all shadow-sm ${
+                    downloading 
+                      ? 'bg-emerald-50 text-emerald-600 border border-emerald-200 cursor-wait' 
+                      : 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:opacity-90 shadow-emerald-500/25'
+                  }`}
                 >
                   <span className="inline-flex items-center gap-2">
                     {downloading ? (
                       <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <div className="w-4 h-4 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
                         {downloadLabel || 'Please wait...'}
                       </>
                     ) : (
@@ -450,6 +454,14 @@ export default function JobSimulation() {
                     )}
                   </span>
                 </button>
+                {downloading && (
+                  <div className="mt-3 p-3 rounded-xl bg-amber-50 border border-amber-200 text-center animate-pulse">
+                    <p className="text-xs text-amber-800 font-semibold leading-relaxed">
+                       Preparing your high-quality PDF certificate.<br/>
+                       This can safely take 5-10 seconds...
+                    </p>
+                  </div>
+                )}
               </div>
             ) : (
               <button
