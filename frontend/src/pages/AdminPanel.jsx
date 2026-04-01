@@ -998,7 +998,7 @@ const AdminPanel = () => {
                   </div>
                 ))}
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <div>
                     <label className="block text-xs font-semibold text-slate-500 mb-1">Status</label>
                     <select value={hackForm.status} onChange={e => setHackForm(p => ({ ...p, status: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
@@ -1006,10 +1006,6 @@ const AdminPanel = () => {
                       <option value="live">Live</option>
                       <option value="ended">Ended</option>
                     </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-500 mb-1">Start Date & Time</label>
-                    <input type="datetime-local" value={hackForm.startDate} onChange={e => setHackForm(p => ({ ...p, startDate: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-slate-500 mb-1">End Date (Deadline)</label>
@@ -1164,7 +1160,6 @@ const AdminPanel = () => {
                       description: hackForm.description,
                       theme: hackForm.theme,
                       status: hackForm.status,
-                      startDate: hackForm.startDate || null,
                       endDate: hackForm.endDate || null,
                       image: hackForm.image,
                       tags: hackForm.tags.split(',').map(t => t.trim()).filter(Boolean),
@@ -1263,7 +1258,6 @@ const AdminPanel = () => {
                                 description: h.description || '',
                                 theme: h.theme || '',
                                 status: h.status || 'upcoming',
-                                startDate: h.startDate ? new Date(h.startDate).toISOString().slice(0, 16) : '',
                                 endDate: h.endDate ? new Date(h.endDate).toISOString().slice(0, 16) : '',
                                 image: h.image || '',
                                 tags: (h.tags || []).join(', '),

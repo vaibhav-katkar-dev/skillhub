@@ -444,12 +444,6 @@ export default function HackathonDetail() {
                     )}
                   </>
                 )}
-                {hack?.startDate && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-500">Starts</span>
-                    <span className="font-bold text-slate-900">{new Date(hack.startDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                  </div>
-                )}
                 {hack?.endDate && (
                   <div className="flex items-center justify-between">
                     <span className="text-slate-500">Ends</span>
@@ -461,7 +455,7 @@ export default function HackathonDetail() {
               {/* Join Community CTAs */}
               <div className="mt-5 border-t border-slate-100 pt-5 space-y-3">
                 <a 
-                  href="https://chat.whatsapp.com/GzB2Pq8XwFCAkE6bEv6EaR" 
+                  href="https://chat.whatsapp.com/IejES4kDNfx1RgMWLPeA6P" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 text-white font-bold text-sm hover:opacity-90 transition shadow-lg shadow-emerald-500/25"
