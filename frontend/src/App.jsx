@@ -36,7 +36,19 @@ import JobSimulation from './pages/JobSimulation';
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => {
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
+    
     window.scrollTo(0, 0);
+    
+    const t1 = setTimeout(() => window.scrollTo(0, 0), 10);
+    const t2 = setTimeout(() => window.scrollTo(0, 0), 100);
+    
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
   }, [pathname]);
   return null;
 }

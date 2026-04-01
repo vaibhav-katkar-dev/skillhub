@@ -19,6 +19,7 @@ import {
   Star,
   Trophy,
   Users,
+  Linkedin,
   X,
 } from 'lucide-react';
 import { api, useAuthStore } from '../store/authStore';
@@ -466,6 +467,14 @@ export default function HackathonDetail() {
                   className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 text-white font-bold text-sm hover:opacity-90 transition shadow-lg shadow-emerald-500/25"
                 >
                   <Users className="w-4 h-4" /> Join WhatsApp Community
+                </a>
+                <a 
+                  href="https://www.linkedin.com/company/skillvalix/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#0A66C2] text-white font-bold text-sm hover:opacity-90 transition shadow-lg shadow-[#0A66C2]/25"
+                >
+                  <Linkedin className="w-4 h-4" /> Follow for Updates & Opportunities
                 </a>
               </div>
             </div>

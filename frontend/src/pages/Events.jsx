@@ -143,6 +143,15 @@ export default function Events() {
                         </div>
                       )}
 
+                      {hack.endDate && (
+                        <div className="flex items-center gap-1.5 mb-4 text-xs font-semibold bg-rose-50 p-2.5 rounded-xl border border-rose-100">
+                          <Clock3 className="w-4 h-4 text-rose-500" />
+                          <span className="text-rose-700">
+                            Deadline: {new Date(hack.endDate).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                      )}
+
                       <Link
                         to={`/events/hackathon/${hack.slug || hack._id}`}
                         className="block text-center py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-bold hover:opacity-90 transition-opacity"

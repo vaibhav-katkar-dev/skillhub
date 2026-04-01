@@ -1008,12 +1008,12 @@ const AdminPanel = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-500 mb-1">Start Date</label>
-                    <input type="date" value={hackForm.startDate} onChange={e => setHackForm(p => ({ ...p, startDate: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" />
+                    <label className="block text-xs font-semibold text-slate-500 mb-1">Start Date & Time</label>
+                    <input type="datetime-local" value={hackForm.startDate} onChange={e => setHackForm(p => ({ ...p, startDate: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-slate-500 mb-1">End Date (Deadline)</label>
-                    <input type="date" value={hackForm.endDate} onChange={e => setHackForm(p => ({ ...p, endDate: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" />
+                    <input type="datetime-local" value={hackForm.endDate} onChange={e => setHackForm(p => ({ ...p, endDate: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" />
                   </div>
                 </div>
 
@@ -1153,8 +1153,13 @@ const AdminPanel = () => {
                       })
                       .filter((item) => item.question && item.answer);
 
+                    const generatedSlug = hackForm.slug 
+                      ? hackForm.slug.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+                      : hackForm.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
                     const payload = {
                       title: hackForm.title,
+                      slug: generatedSlug,
                       tagline: hackForm.tagline,
                       description: hackForm.description,
                       theme: hackForm.theme,
@@ -1253,12 +1258,13 @@ const AdminPanel = () => {
                               setEditingHackId(h._id);
                               setHackForm({
                                 title: h.title || '',
+                                slug: h.slug || '',
                                 tagline: h.tagline || '',
                                 description: h.description || '',
                                 theme: h.theme || '',
                                 status: h.status || 'upcoming',
-                                startDate: h.startDate ? String(h.startDate).slice(0, 10) : '',
-                                endDate: h.endDate ? String(h.endDate).slice(0, 10) : '',
+                                startDate: h.startDate ? new Date(h.startDate).toISOString().slice(0, 16) : '',
+                                endDate: h.endDate ? new Date(h.endDate).toISOString().slice(0, 16) : '',
                                 image: h.image || '',
                                 tags: (h.tags || []).join(', '),
                                 visible: Boolean(h.visible),
