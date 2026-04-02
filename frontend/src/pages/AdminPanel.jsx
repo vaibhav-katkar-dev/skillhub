@@ -48,7 +48,7 @@ const AdminPanel = () => {
     startDate: '', endDate: '',
     teamMin: 1, teamMax: 4,
     paymentEnabled: false, paymentAmountInr: 0, paymentDescription: 'Hackathon registration fee',
-    acceptsDriveLink: true, acceptsPdfLink: true, acceptsAnyLink: false,
+    acceptsDriveLink: true, acceptsPdfLink: true, acceptsAnyLink: false, acceptsGitHubLink: true,
     submissionInstructions: '', maxSubmissionsPerTeam: 3,
     linkLabel: 'Submission Link', linkPlaceholder: 'Paste your submission link here...', linkHint: '',
     rules: '', judgingCriteria: '', prizes: '', faqs: '', accentColor: '#4F46E5',
@@ -125,7 +125,7 @@ const AdminPanel = () => {
       startDate: '', endDate: '',
       teamMin: 1, teamMax: 4,
       paymentEnabled: false, paymentAmountInr: 0, paymentDescription: 'Hackathon registration fee',
-      acceptsDriveLink: true, acceptsPdfLink: true, acceptsAnyLink: false,
+      acceptsDriveLink: true, acceptsPdfLink: true, acceptsAnyLink: false, acceptsGitHubLink: true,
       submissionInstructions: '', maxSubmissionsPerTeam: 3,
       linkLabel: 'Submission Link', linkPlaceholder: 'Paste your submission link here...', linkHint: '',
       rules: '', judgingCriteria: '', prizes: '', faqs: '', accentColor: '#4F46E5',
@@ -1085,15 +1085,19 @@ const AdminPanel = () => {
                     Featured card
                   </label>
                   <p className="md:col-span-2 text-xs font-black uppercase tracking-widest text-slate-500 mt-2">Accepted Link Types</p>
-                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
+                   <label className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
                     <input type="checkbox" checked={hackForm.acceptsAnyLink} onChange={e => setHackForm(p => ({ ...p, acceptsAnyLink: e.target.checked }))} className="rounded" />
-                    Accept Any Valid URL (override all)
+                    Accept Any Valid URL <span className="text-xs text-slate-400">(overrides below)</span>
                   </label>
-                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
+                  <label className={`flex items-center gap-2 text-sm font-medium cursor-pointer ${hackForm.acceptsAnyLink ? 'text-slate-400' : 'text-slate-700'}`}>
+                    <input type="checkbox" checked={hackForm.acceptsGitHubLink} onChange={e => setHackForm(p => ({ ...p, acceptsGitHubLink: e.target.checked }))} className="rounded" disabled={hackForm.acceptsAnyLink} />
+                    GitHub repo links (github.com)
+                  </label>
+                  <label className={`flex items-center gap-2 text-sm font-medium cursor-pointer ${hackForm.acceptsAnyLink ? 'text-slate-400' : 'text-slate-700'}`}>
                     <input type="checkbox" checked={hackForm.acceptsDriveLink} onChange={e => setHackForm(p => ({ ...p, acceptsDriveLink: e.target.checked }))} className="rounded" disabled={hackForm.acceptsAnyLink} />
                     Google Drive links
                   </label>
-                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
+                  <label className={`flex items-center gap-2 text-sm font-medium cursor-pointer ${hackForm.acceptsAnyLink ? 'text-slate-400' : 'text-slate-700'}`}>
                     <input type="checkbox" checked={hackForm.acceptsPdfLink} onChange={e => setHackForm(p => ({ ...p, acceptsPdfLink: e.target.checked }))} className="rounded" disabled={hackForm.acceptsAnyLink} />
                     Direct PDF links
                   </label>
@@ -1221,10 +1225,15 @@ const AdminPanel = () => {
                         description: hackForm.paymentDescription,
                       },
                       submissionConfig: {
-                        acceptsDriveLink: Boolean(hackForm.acceptsDriveLink),
-                        acceptsPdfLink: Boolean(hackForm.acceptsPdfLink),
-                        instructions: hackForm.submissionInstructions,
+                        acceptsAnyLink:    Boolean(hackForm.acceptsAnyLink),
+                        acceptsDriveLink:  Boolean(hackForm.acceptsDriveLink),
+                        acceptsPdfLink:    Boolean(hackForm.acceptsPdfLink),
+                        acceptsGitHubLink: Boolean(hackForm.acceptsGitHubLink),
+                        instructions:      hackForm.submissionInstructions,
                         maxSubmissionsPerTeam: Number(hackForm.maxSubmissionsPerTeam || 3),
+                        linkLabel:         hackForm.linkLabel || 'Submission Link',
+                        linkPlaceholder:   hackForm.linkPlaceholder || 'Paste your submission link here...',
+                        linkHint:          hackForm.linkHint || '',
                       },
                       contentConfig: {
                         rules: (hackForm.rules || '').split('\n').map(x => x.trim()).filter(Boolean),
@@ -1315,10 +1324,15 @@ const AdminPanel = () => {
                                 paymentEnabled: Boolean(h.paymentConfig?.enabled),
                                 paymentAmountInr: Number(h.paymentConfig?.amountInr || 0),
                                 paymentDescription: h.paymentConfig?.description || 'Hackathon registration fee',
-                                acceptsDriveLink: Boolean(h.submissionConfig?.acceptsDriveLink),
-                                acceptsPdfLink: Boolean(h.submissionConfig?.acceptsPdfLink),
+                                acceptsAnyLink:    Boolean(h.submissionConfig?.acceptsAnyLink),
+                                acceptsDriveLink:  Boolean(h.submissionConfig?.acceptsDriveLink ?? true),
+                                acceptsPdfLink:    Boolean(h.submissionConfig?.acceptsPdfLink ?? true),
+                                acceptsGitHubLink: Boolean(h.submissionConfig?.acceptsGitHubLink ?? true),
                                 submissionInstructions: h.submissionConfig?.instructions || '',
                                 maxSubmissionsPerTeam: Number(h.submissionConfig?.maxSubmissionsPerTeam || 3),
+                                linkLabel:         h.submissionConfig?.linkLabel || 'Submission Link',
+                                linkPlaceholder:   h.submissionConfig?.linkPlaceholder || 'Paste your submission link here...',
+                                linkHint:          h.submissionConfig?.linkHint || '',
                                 rules: (h.contentConfig?.rules || []).join('\n'),
                                 judgingCriteria: (h.contentConfig?.judgingCriteria || []).join('\n'),
                                 prizes: (h.prizes || []).map((p) => `${p.rank || 'Prize'} | ${p.amount || ''}`).join('\n'),

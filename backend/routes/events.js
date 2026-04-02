@@ -183,6 +183,15 @@ function isPdfLink(url) {
   return /\.pdf(\?|#|$)/i.test(url);
 }
 
+function isGitHubLink(url) {
+  try {
+    const parsed = new URL(url);
+    return parsed.hostname === 'github.com' || parsed.hostname.endsWith('.github.com');
+  } catch {
+    return false;
+  }
+}
+
 function normalizeDomainList(values = []) {
   return Array.from(
     new Set(
@@ -639,8 +648,20 @@ router.post('/hackathons/:id/submit', authOptions, async (req, res) => {
       return res.status(400).json({ message: 'This hackathon has ended. Submissions are closed.' });
     }
 
+    // ── STRICT PAYMENT GATE ──────────────────────────────────────────────────
     if (registration.payment?.required && registration.payment?.status !== 'paid') {
-      return res.status(400).json({ message: 'Please complete payment before submission.' });
+      return res.status(403).json({
+        message: 'Payment required. Please complete registration payment before submitting.',
+        paymentRequired: true,
+      });
+    }
+
+    // Status must be 'registered' or 'submitted' — not payment_pending
+    if (registration.status === 'payment_pending') {
+      return res.status(403).json({
+        message: 'Your registration payment is pending. Complete payment to unlock submissions.',
+        paymentRequired: true,
+      });
     }
 
     const maxSubmissions = Number(registration.hackathon.submissionConfig?.maxSubmissionsPerTeam || 3);
@@ -648,18 +669,29 @@ router.post('/hackathons/:id/submit', authOptions, async (req, res) => {
       return res.status(400).json({ message: `Submission limit reached (${maxSubmissions}).` });
     }
 
-    // Link type validation — skip if acceptsAnyLink is enabled
-    const acceptsAnyLink  = Boolean(registration.hackathon.submissionConfig?.acceptsAnyLink);
-    const acceptsDriveLink = Boolean(registration.hackathon.submissionConfig?.acceptsDriveLink);
-    const acceptsPdfLink   = Boolean(registration.hackathon.submissionConfig?.acceptsPdfLink);
+    // ── Link type validation ─────────────────────────────────────────────────
+    const acceptsAnyLink    = Boolean(registration.hackathon.submissionConfig?.acceptsAnyLink);
+    const acceptsDriveLink  = Boolean(registration.hackathon.submissionConfig?.acceptsDriveLink);
+    const acceptsPdfLink    = Boolean(registration.hackathon.submissionConfig?.acceptsPdfLink);
+    const acceptsGitHubLink = Boolean(registration.hackathon.submissionConfig?.acceptsGitHubLink);
 
     if (!acceptsAnyLink) {
-      const isDrive = isDriveLink(submissionLink);
-      const isPdf   = isPdfLink(submissionLink);
-      const allowedByType = (acceptsDriveLink && isDrive) || (acceptsPdfLink && isPdf);
+      const isDrive  = isDriveLink(submissionLink);
+      const isPdf    = isPdfLink(submissionLink);
+      const isGitHub = isGitHubLink(submissionLink);
+
+      const allowedByType =
+        (acceptsDriveLink  && isDrive)  ||
+        (acceptsPdfLink    && isPdf)    ||
+        (acceptsGitHubLink && isGitHub);
+
       if (!allowedByType) {
+        const allowed = [];
+        if (acceptsDriveLink)  allowed.push('Google Drive');
+        if (acceptsPdfLink)    allowed.push('PDF link');
+        if (acceptsGitHubLink) allowed.push('GitHub repo');
         return res.status(400).json({
-          message: 'Invalid submission link type for this hackathon. Check the submission instructions.',
+          message: `Invalid link type. Accepted: ${allowed.join(', ')}. Check submission instructions.`,
         });
       }
     }

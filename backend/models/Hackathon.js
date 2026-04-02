@@ -28,7 +28,8 @@ const hackathonSchema = new mongoose.Schema({
   submissionConfig: {
     acceptsDriveLink:   { type: Boolean, default: true },
     acceptsPdfLink:     { type: Boolean, default: true },
-    acceptsAnyLink:     { type: Boolean, default: false }, // NEW: accept any valid URL
+    acceptsAnyLink:     { type: Boolean, default: false },
+    acceptsGitHubLink:  { type: Boolean, default: true },  // GitHub repo links
     instructions:       { type: String, default: '' },
     maxSubmissionsPerTeam: { type: Number, default: 3, min: 1, max: 50 },
     // Custom label & hint for the submission link field shown to users

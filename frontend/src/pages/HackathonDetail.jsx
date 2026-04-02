@@ -430,6 +430,12 @@ export default function HackathonDetail() {
                   </div>
                 ) : (
                   <>
+                    {hack?.submissionConfig?.acceptsGitHubLink && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-500">GitHub Repo</span>
+                        <span className="font-bold text-emerald-700">✓ Allowed</span>
+                      </div>
+                    )}
                     {hack?.submissionConfig?.acceptsDriveLink && (
                       <div className="flex items-center justify-between">
                         <span className="text-slate-500">Google Drive</span>
