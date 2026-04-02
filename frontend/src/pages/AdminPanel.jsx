@@ -58,6 +58,12 @@ const AdminPanel = () => {
   const [hackMsg, setHackMsg] = useState('');
   const [registrationsByHack, setRegistrationsByHack] = useState({});
   const [loadingRegistrationsFor, setLoadingRegistrationsFor] = useState('');
+  
+  // Host requests state
+  const [hostRequests, setHostRequests] = useState([]);
+  const [hostRequestsLoading, setHostRequestsLoading] = useState(false);
+  const [showHackForm, setShowHackForm] = useState(false);
+  
   const [warmJob, setWarmJob] = useState(null);
   const [warmJobLoading, setWarmJobLoading] = useState(false);
   const [warmJobError, setWarmJobError] = useState('');
@@ -97,6 +103,20 @@ const AdminPanel = () => {
       setLoadingRegistrationsFor('');
     }
   };
+
+  const loadHostRequests = async () => {
+    setHostRequestsLoading(true);
+    try { const r = await api.get('/host/admin/all'); setHostRequests(r.data); } catch { setHostRequests([]); }
+    finally { setHostRequestsLoading(false); }
+  };
+
+  const updateHostRequestStatus = async (id, status) => {
+    try {
+      await api.put(`/host/admin/${id}/status`, { status });
+      loadHostRequests();
+    } catch (e) { alert('Failed to update status'); }
+  };
+
 
   const resetHackForm = () => {
     setHackForm({
@@ -149,7 +169,10 @@ const AdminPanel = () => {
     finally { setWinnerConfigSaving(false); }
   };
 
-  useEffect(() => { if (tab === 'hackathons') loadHacks(); }, [tab]);
+  useEffect(() => { 
+    if (tab === 'hackathons') loadHacks(); 
+    if (tab === 'host-requests') loadHostRequests();
+  }, [tab]);
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'admin') return;
@@ -369,6 +392,7 @@ const AdminPanel = () => {
               { key: 'analytics', label: 'Analytics', icon: BarChart3 },
               { key: 'quiz', label: 'Quiz Manager', icon: ClipboardList },
               { key: 'hackathons', label: 'Hackathons', icon: Award },
+              { key: 'host-requests', label: 'Host Requests', icon: Users },
               { key: 'guide', label: 'Course Guide', icon: BookOpen },
             ].map(({ key, label, icon: Icon }) => (
               <button
@@ -389,57 +413,57 @@ const AdminPanel = () => {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-        <div className="bg-white rounded-2xl border-2 border-indigo-200 shadow-sm p-6">
-          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-            <div>
-              <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-indigo-600" />
-                Certificate Maintenance (Admin Only)
-              </h2>
-              <p className="text-sm text-slate-600 mt-2">
-                One-click fix for stale event/job certificate PDFs. Visible on all admin tabs.
-              </p>
-            </div>
-
-            <div className="min-w-[240px]">
-              <button
-                onClick={startWarmCertificates}
-                disabled={warmJobLoading || warmJob?.running}
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-sm font-bold shadow"
-              >
-                {warmJobLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                {warmJob?.running ? 'Fix Running...' : 'Fix Certificates Now'}
-              </button>
-
-              <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-                <div className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2"><span className="text-slate-500">Status</span><div className="font-bold text-slate-900 mt-0.5">{warmJob?.running ? 'Running' : 'Idle'}</div></div>
-                <div className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2"><span className="text-slate-500">Progress</span><div className="font-bold text-slate-900 mt-0.5">{warmJob?.processed ?? 0}/{warmJob?.total ?? 0}</div></div>
-                <div className="rounded-lg border border-slate-200 bg-emerald-50 px-2.5 py-2"><span className="text-slate-500">Success</span><div className="font-bold text-emerald-700 mt-0.5">{warmJob?.success ?? 0}</div></div>
-                <div className="rounded-lg border border-slate-200 bg-rose-50 px-2.5 py-2"><span className="text-slate-500">Failed</span><div className="font-bold text-rose-700 mt-0.5">{warmJob?.failed ?? 0}</div></div>
-              </div>
-
-              <div className="mt-2 grid grid-cols-2 gap-2 text-[11px]">
-                <div className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2"><span className="text-slate-500">Mode</span><div className="font-bold text-slate-900 mt-0.5">{warmJob?.mode || 'stale-only'}</div></div>
-                <div className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2"><span className="text-slate-500">In DB</span><div className="font-bold text-slate-900 mt-0.5">{warmJob?.totalInDb ?? 0}</div></div>
-              </div>
-            </div>
-          </div>
-
-          {warmJob?.currentCertificateId && (
-            <p className="mt-2 text-xs text-slate-600">Current certificate: <span className="font-mono">{warmJob.currentCertificateId}</span></p>
-          )}
-
-          {warmJob?.lastError && (
-            <p className="mt-2 text-xs text-rose-700">Last error: {warmJob.lastError}</p>
-          )}
-
-          {warmJobError && (
-            <p className="mt-2 text-xs text-rose-700">{warmJobError}</p>
-          )}
-        </div>
-
         {tab === 'analytics' && (
           <div className="space-y-6">
+            <div className="bg-white rounded-2xl border-2 border-indigo-200 shadow-sm p-6 mb-6">
+              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                <div>
+                  <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
+                    <ShieldCheck className="w-5 h-5 text-indigo-600" />
+                    Certificate Maintenance (Admin Only)
+                  </h2>
+                  <p className="text-sm text-slate-600 mt-2">
+                    One-click fix for stale event/job certificate PDFs.
+                  </p>
+                </div>
+
+                <div className="min-w-[240px]">
+                  <button
+                    onClick={startWarmCertificates}
+                    disabled={warmJobLoading || warmJob?.running}
+                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-sm font-bold shadow"
+                  >
+                    {warmJobLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                    {warmJob?.running ? 'Fix Running...' : 'Fix Certificates Now'}
+                  </button>
+
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2"><span className="text-slate-500">Status</span><div className="font-bold text-slate-900 mt-0.5">{warmJob?.running ? 'Running' : 'Idle'}</div></div>
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2"><span className="text-slate-500">Progress</span><div className="font-bold text-slate-900 mt-0.5">{warmJob?.processed ?? 0}/{warmJob?.total ?? 0}</div></div>
+                    <div className="rounded-lg border border-slate-200 bg-emerald-50 px-2.5 py-2"><span className="text-slate-500">Success</span><div className="font-bold text-emerald-700 mt-0.5">{warmJob?.success ?? 0}</div></div>
+                    <div className="rounded-lg border border-slate-200 bg-rose-50 px-2.5 py-2"><span className="text-slate-500">Failed</span><div className="font-bold text-rose-700 mt-0.5">{warmJob?.failed ?? 0}</div></div>
+                  </div>
+
+                  <div className="mt-2 grid grid-cols-2 gap-2 text-[11px]">
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2"><span className="text-slate-500">Mode</span><div className="font-bold text-slate-900 mt-0.5">{warmJob?.mode || 'stale-only'}</div></div>
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2"><span className="text-slate-500">In DB</span><div className="font-bold text-slate-900 mt-0.5">{warmJob?.totalInDb ?? 0}</div></div>
+                  </div>
+                </div>
+              </div>
+
+              {warmJob?.currentCertificateId && (
+                <p className="mt-2 text-xs text-slate-600">Current certificate: <span className="font-mono">{warmJob.currentCertificateId}</span></p>
+              )}
+
+              {warmJob?.lastError && (
+                <p className="mt-2 text-xs text-rose-700">Last error: {warmJob.lastError}</p>
+              )}
+
+              {warmJobError && (
+                <p className="mt-2 text-xs text-rose-700">{warmJobError}</p>
+              )}
+            </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
               {[
                 { label: 'Total Users', value: analytics?.overview?.totalUsers ?? '-', icon: Users, tone: 'from-indigo-600 to-blue-600' },
@@ -988,6 +1012,23 @@ const AdminPanel = () => {
         )}
         {tab === 'hackathons' && (
           <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-black text-slate-900">Hackathons Dashboard</h2>
+              <button
+                onClick={() => {
+                  if (showHackForm && editingHackId) {
+                    resetHackForm();
+                  }
+                  setShowHackForm(!showHackForm);
+                  setHackMsg('');
+                }}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition ${showHackForm ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm'}`}
+              >
+                {showHackForm ? <><X className="w-4 h-4" /> Close Form</> : <><Plus className="w-4 h-4" /> Post a Hackathon</>}
+              </button>
+            </div>
+
+            {showHackForm && (
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
               <h2 className="text-lg font-bold text-slate-900 mb-5 flex items-center gap-2"><Award className="w-5 h-5 text-amber-500" /> {editingHackId ? 'Edit Hackathon' : 'Post a Hackathon'} (Full Dynamic Control)</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1129,7 +1170,7 @@ const AdminPanel = () => {
                   setHackSaving(true);
                   setHackMsg('');
                   try {
-                    const prizes = hackForm.prizes
+                    const prizes = (hackForm.prizes || '')
                       .split('\n')
                       .map((line) => line.trim())
                       .filter(Boolean)
@@ -1139,7 +1180,7 @@ const AdminPanel = () => {
                       })
                       .filter((item) => item.amount);
 
-                    const faqs = hackForm.faqs
+                    const faqs = (hackForm.faqs || '')
                       .split('\n')
                       .map((line) => line.trim())
                       .filter(Boolean)
@@ -1149,22 +1190,25 @@ const AdminPanel = () => {
                       })
                       .filter((item) => item.question && item.answer);
 
-                    const generatedSlug = hackForm.slug 
-                      ? hackForm.slug.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
-                      : hackForm.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+                    const payloadTitle = hackForm.title || '';
+                    const payloadSlug = hackForm.slug || '';
+                    
+                    const generatedSlug = payloadSlug 
+                      ? payloadSlug.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+                      : payloadTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
                     const payload = {
-                      title: hackForm.title,
+                      title: payloadTitle,
                       slug: generatedSlug,
                       tagline: hackForm.tagline,
                       description: hackForm.description,
                       theme: hackForm.theme,
-                      status: hackForm.status,
+                      status: hackForm.status || 'upcoming',
                       endDate: hackForm.endDate || null,
                       image: hackForm.image,
-                      tags: hackForm.tags.split(',').map(t => t.trim()).filter(Boolean),
-                      visible: hackForm.visible,
-                      featured: hackForm.featured,
+                      tags: (hackForm.tags || '').split(',').map(t => t.trim()).filter(Boolean),
+                      visible: Boolean(hackForm.visible),
+                      featured: Boolean(hackForm.featured),
                       prizes,
                       teamConfig: {
                         minMembers: Number(hackForm.teamMin),
@@ -1183,8 +1227,8 @@ const AdminPanel = () => {
                         maxSubmissionsPerTeam: Number(hackForm.maxSubmissionsPerTeam || 3),
                       },
                       contentConfig: {
-                        rules: hackForm.rules.split('\n').map(x => x.trim()).filter(Boolean),
-                        judgingCriteria: hackForm.judgingCriteria.split('\n').map(x => x.trim()).filter(Boolean),
+                        rules: (hackForm.rules || '').split('\n').map(x => x.trim()).filter(Boolean),
+                        judgingCriteria: (hackForm.judgingCriteria || '').split('\n').map(x => x.trim()).filter(Boolean),
                         faqs,
                       },
                       styleConfig: {
@@ -1203,8 +1247,10 @@ const AdminPanel = () => {
                     }
                     resetHackForm();
                     loadHacks();
+                    setShowHackForm(false);
                   } catch (e) {
-                    setHackMsg('❌ ' + (e.response?.data?.message || 'Failed to save.'));
+                    console.error("Post Hackathon Error:", e);
+                    setHackMsg('❌ ' + (e.response?.data?.message || e.message || 'Failed to save.'));
                   } finally {
                     setHackSaving(false);
                   }
@@ -1216,13 +1262,14 @@ const AdminPanel = () => {
               </button>
               {editingHackId && (
                 <button
-                  onClick={() => { resetHackForm(); setHackMsg(''); }}
+                  onClick={() => { resetHackForm(); setHackMsg(''); setShowHackForm(false); }}
                   className="mt-3 ml-3 px-6 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold text-sm hover:bg-slate-200 transition"
                 >
                   Cancel Edit
                 </button>
               )}
             </div>
+            )}
 
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
               <h2 className="text-lg font-bold text-slate-900 mb-5">All Hackathons + Team Registrations</h2>
@@ -1279,6 +1326,7 @@ const AdminPanel = () => {
                                 accentColor: h.styleConfig?.accentColor || '#4F46E5',
                               });
                               setHackMsg('📝 Edit mode enabled. Update fields and click "Update Hackathon".');
+                              setShowHackForm(true);
                               window.scrollTo({ top: 0, behavior: 'smooth' });
                             }}
                             className="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-100 text-amber-700 hover:bg-amber-200 transition"
@@ -1520,6 +1568,99 @@ const AdminPanel = () => {
                   <span key={name} className={`${cls} text-white px-3 py-1 rounded-full text-xs font-bold`}>{name}</span>
                 ))}
               </div>
+            </div>
+          </div>
+        )}
+
+        {tab === 'host-requests' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+              <div className="flex items-center justify-between gap-4 mb-6">
+                <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                  <Users className="w-6 h-6 text-indigo-600" />
+                  Host Requests (B2B)
+                </h2>
+                <button
+                  onClick={loadHostRequests}
+                  className="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 font-bold text-sm flex items-center gap-2"
+                >
+                  <RefreshCw className="w-4 h-4" /> Refresh
+                </button>
+              </div>
+
+              {hostRequestsLoading ? (
+                <div className="space-y-3">{[1, 2, 3].map(i => <div key={i} className="h-16 rounded-xl bg-slate-100 animate-pulse" />)}</div>
+              ) : hostRequests.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center text-slate-500">
+                  No hosting requests received yet.
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {hostRequests.map(req => (
+                    <div key={req._id} className="rounded-xl border border-slate-200 bg-slate-50 p-5">
+                      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                        <div className="space-y-2 flex-1">
+                          <div className="flex items-center gap-3">
+                            <span className="font-bold text-lg text-slate-900">{req.organization}</span>
+                            <span className={`px-2 py-0.5 rounded text-xs font-bold ${
+                              req.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                              req.status === 'contacted' ? 'bg-blue-100 text-blue-700' :
+                              req.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
+                              'bg-slate-200 text-slate-600'
+                            }`}>
+                              {req.status.toUpperCase()}
+                            </span>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mt-2">
+                            <div><span className="text-slate-500 text-xs block">Contact Name</span><span className="font-medium">{req.name}</span></div>
+                            <div><span className="text-slate-500 text-xs block">Email</span><a href={`mailto:${req.email}`} className="font-medium text-indigo-600 hover:underline">{req.email}</a></div>
+                            <div><span className="text-slate-500 text-xs block">Expected Pax</span><span className="font-medium text-slate-700">{req.expectedParticipants || 'Not specified'}</span></div>
+                            <div><span className="text-slate-500 text-xs block">Date Submitted</span><span className="font-medium text-slate-700">{formatDate(req.createdAt)}</span></div>
+                          </div>
+                          
+                          {req.message && (
+                            <div className="mt-4 p-3 bg-white border border-slate-200 rounded-lg text-sm text-slate-600">
+                              <span className="font-semibold text-slate-400 block mb-1">Message:</span>
+                              {req.message}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="shrink-0 flex flex-row md:flex-col gap-2">
+                          <select 
+                            value={req.status} 
+                            onChange={(e) => updateHostRequestStatus(req._id, e.target.value)}
+                            className="px-3 py-2 border border-slate-200 rounded-lg text-sm font-semibold bg-white cursor-pointer"
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="contacted">Contacted</option>
+                            <option value="approved">Approved & Created</option>
+                            <option value="rejected">Rejected</option>
+                          </select>
+                          {req.status !== 'approved' && (
+                            <button
+                              onClick={() => {
+                                setTab('hackathons');
+                                setHackForm((prev) => ({
+                                  ...prev,
+                                  title: `${req.organization} Hackathon`,
+                                  paymentDescription: `Registration for ${req.organization} event`
+                                }));
+                                setShowHackForm(true);
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                              }}
+                              className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-bold shadow-sm flex items-center justify-center gap-2 transition"
+                            >
+                              <Plus className="w-4 h-4" /> Create Hackathon
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}

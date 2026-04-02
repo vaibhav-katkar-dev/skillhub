@@ -302,8 +302,8 @@ export default function HackathonDetail() {
       <div className="min-h-[70vh] bg-slate-50 px-6 py-12">
         <div className="max-w-3xl mx-auto bg-white border border-slate-200 rounded-2xl p-10 text-center">
           <p className="text-slate-900 text-xl font-bold">Hackathon not found.</p>
-          <Link to="/events" className="inline-flex items-center gap-2 mt-6 px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold">
-            <ArrowLeft className="w-4 h-4" /> Back to Events
+          <Link to="/hackathons" className="inline-flex items-center gap-2 mt-6 px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold">
+            <ArrowLeft className="w-4 h-4" /> Back to Hackathons
           </Link>
         </div>
       </div>
@@ -322,7 +322,7 @@ export default function HackathonDetail() {
   const maxSubs = Number(hack?.submissionConfig?.maxSubmissionsPerTeam || 3);
 
   // SEO canonical URL
-  const canonicalPath = hack.slug ? `/events/hackathon/${hack.slug}` : `/events/hackathon/${hack._id}`;
+  const canonicalPath = hack.slug ? `/hackathons/${hack.slug}` : `/hackathons/${hack._id}`;
   const canonicalUrl = `https://www.skillvalix.com${canonicalPath}`;
 
   return (
@@ -354,8 +354,8 @@ export default function HackathonDetail() {
         />
 
         <div className="relative max-w-6xl mx-auto">
-          <Link to="/events" className="inline-flex items-center gap-2 text-indigo-200 hover:text-white text-sm font-semibold mb-6 transition-colors">
-            <ArrowLeft className="w-4 h-4" /> Back to Events
+          <Link to="/hackathons" className="inline-flex items-center gap-2 text-indigo-200 hover:text-white text-sm font-semibold mb-6 transition-colors">
+            <ArrowLeft className="w-4 h-4" /> Back to Hackathons
           </Link>
 
           <div className="grid lg:grid-cols-[1.5fr_1fr] gap-6 items-stretch">

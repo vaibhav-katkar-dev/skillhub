@@ -40,11 +40,12 @@ export default function Events() {
   return (
     <>
       <Helmet>
-        <title>Events - SkillValix</title>
+        <title>Hackathons | SkillHub - Host & Join Tech Events</title>
         <meta
           name="description"
-          content="Explore SkillValix hackathons, open detailed event pages, register teams, and submit solutions from one in-platform workflow."
+          content="Explore the best hackathons, coding challenges, and tech events on SkillHub. Build projects, get certificates, and get hired!"
         />
+        <meta name="keywords" content="hackathon, coding challenge, tech events, programming competition, skillhub hackathons" />
       </Helmet>
 
       <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 py-24 px-6">
@@ -57,7 +58,7 @@ export default function Events() {
         />
         <div className="relative max-w-4xl mx-auto text-center">
           <span className="inline-block mb-4 px-4 py-1.5 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 text-sm font-semibold tracking-widest">
-            EVENTS HUB
+            HACKATHONS HUB
           </span>
           <h1 className="text-4xl md:text-6xl font-black text-white mb-6 leading-tight">
             Experience Real Work.
@@ -153,7 +154,7 @@ export default function Events() {
                       )}
 
                       <Link
-                        to={`/events/hackathon/${hack.slug || hack._id}`}
+                        to={`/hackathons/${hack.slug || hack._id}`}
                         className="block text-center py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-bold hover:opacity-90 transition-opacity"
                       >
                         <span className="inline-flex items-center gap-2">

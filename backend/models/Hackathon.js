@@ -12,8 +12,8 @@ const hackathonSchema = new mongoose.Schema({
   registrationLink: { type: String },
   image:        { type: String },                          // banner URL
   tags:         [String],
-  status:       { type: String, enum: ['upcoming', 'live', 'ended'], default: 'upcoming' },
-  visible:      { type: Boolean, default: false },         // admin toggle
+  status:       { type: String, enum: ['upcoming', 'live', 'ended'], default: 'upcoming', index: true },
+  visible:      { type: Boolean, default: false, index: true },         // admin toggle
   featured:     { type: Boolean, default: false },
   teamConfig: {
     minMembers: { type: Number, default: 1, min: 1, max: 20 },

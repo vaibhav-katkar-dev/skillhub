@@ -7,7 +7,8 @@ import Logo from './Logo';
 const navLinks = [
   { to: '/', label: 'Home' },
   { to: '/courses', label: 'Courses' },
-  { to: '/events', label: 'Events' },
+  { to: '/hackathons', label: 'Hackathons' },
+  { to: '/host', label: 'Host a Hackathon' },
   { to: '/blog', label: 'Blog' },
   { to: '/verify', label: 'Verify Certificate' },
 ];

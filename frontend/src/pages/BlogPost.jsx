@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { normalizeHtmlContent, normalizeDisplayText } from '../utils/text';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { Calendar, User, Clock, ArrowLeft, BookOpen, ArrowRight, Tag } from 'lucide-react';
+import { Calendar, User, Clock, ArrowLeft, BookOpen, ArrowRight, Tag, Trophy, Rocket } from 'lucide-react';
 import { blogPosts } from '../data/blogs';
 
 const SITE_URL = 'https://skillvalix.com';
@@ -215,8 +215,38 @@ const BlogPost = () => {
 
         {/* Sidebar */}
         <aside className="lg:col-span-4 space-y-8">
-          {/* Course CTA */}
-          {post.relatedCourse && (
+          {/* Hackathon CTA for hackathon posts, Course CTA for others */}
+          {post.tags?.some(t => ['Hackathon', 'Host Hackathon India', 'Online Hackathon India', 'Corporate Hackathon', 'Coding Competition'].includes(t)) ? (
+            <div className="rounded-2xl overflow-hidden bg-gradient-to-br from-indigo-700 via-indigo-800 to-violet-900 shadow-xl p-6 relative sticky top-8">
+              <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full bg-violet-500/20 blur-2xl pointer-events-none" />
+              <div className="relative">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="bg-white/20 w-10 h-10 rounded-xl flex items-center justify-center">
+                    <Trophy className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-xs font-black uppercase tracking-widest text-indigo-300">Hackathons on SkillValix</span>
+                </div>
+                <h3 className="text-lg font-black text-white mb-2 leading-snug">Ready to take the next step?</h3>
+                <p className="text-indigo-200 text-xs mb-5 leading-relaxed">
+                  Compete for prizes, or host a professional hackathon for your college or company — free.
+                </p>
+                <div className="flex flex-col gap-2">
+                  <Link
+                    to="/hackathons"
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white text-indigo-700 font-bold text-sm hover:bg-indigo-50 transition-colors shadow"
+                  >
+                    <Trophy className="w-4 h-4" /> Join a Hackathon
+                  </Link>
+                  <Link
+                    to="/host"
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-500/30 border border-indigo-400/40 text-white font-bold text-sm hover:bg-indigo-500/50 transition-colors"
+                  >
+                    <Rocket className="w-4 h-4" /> Host for Free
+                  </Link>
+                </div>
+              </div>
+            </div>
+          ) : post.relatedCourse ? (
             <div className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl p-6 text-white shadow-lg sticky top-8">
               <div className="bg-white/20 w-12 h-12 rounded-xl flex items-center justify-center mb-5 backdrop-blur-sm">
                 <BookOpen className="w-6 h-6 text-white" />
@@ -232,7 +262,7 @@ const BlogPost = () => {
                 View Free Course <ArrowRight className="inline w-4 h-4 ml-1 -mt-0.5" />
               </Link>
             </div>
-          )}
+          ) : null}
 
           {/* Related Posts */}
           {relatedPosts.length > 0 && (

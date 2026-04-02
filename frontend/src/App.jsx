@@ -32,6 +32,7 @@ import CookiePolicy from './pages/CookiePolicy';
 import Events from './pages/Events';
 import HackathonDetail from './pages/HackathonDetail';
 import JobSimulation from './pages/JobSimulation';
+import HostHackathon from './pages/HostHackathon';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -92,8 +93,8 @@ function AppContent() {
           <Route path="/verify/:certId" element={<VerifyCert />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
-          <Route path="/events" element={<Events />} />
-          <Route path="/events/hackathon/:id" element={<HackathonDetail />} />
+          <Route path="/hackathons" element={<Events />} />
+          <Route path="/hackathons/:id" element={<HackathonDetail />} />
           <Route path="/job-simulation/:id" element={<JobSimulation />} />
           <Route path="/events/job-simulation/:id" element={<JobSimulation />} />
           <Route path="/verify-event/:certId" element={<VerifyCert />} />
@@ -102,6 +103,7 @@ function AppContent() {
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/refund-policy" element={<RefundPolicy />} />
           <Route path="/cookie-policy" element={<CookiePolicy />} />
+          <Route path="/host" element={<HostHackathon />} />
         </Routes>
       </main>
       {!isLearningView && !isCleanView && <PreFooterCTA />}

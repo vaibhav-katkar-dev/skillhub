@@ -1,8 +1,8 @@
 import mongoose from 'mongoose';
 
 const eventCertificateSchema = new mongoose.Schema({
-  student:         { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  eventType:       { type: String, enum: ['job-simulation', 'hackathon', 'internship'], required: true },
+  student:         { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+  eventType:       { type: String, enum: ['job-simulation', 'hackathon', 'internship'], required: true, index: true },
   eventTitle:      { type: String, required: true },       // e.g. "Frontend Developer Job Simulation"
   role:            { type: String },                       // e.g. "Frontend Developer Intern"
   certificateId:   { type: String, required: true, unique: true },
