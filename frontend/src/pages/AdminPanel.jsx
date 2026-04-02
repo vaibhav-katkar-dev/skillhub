@@ -5,7 +5,7 @@ import { useAuthStore, api } from '../store/authStore';
 import { getCourseList } from '../data/courseLoader';
 import {
   ShieldCheck, BookOpen, FileJson, Upload, CheckCircle,
-  AlertCircle, ChevronDown, Loader2, Plus,
+  AlertCircle, ChevronDown, Loader2, Plus, X,
   ClipboardList, Edit3, RefreshCw, BarChart3, Users,
   Award, Activity, Lock, Database, Eye, Star,
   Trophy, Link2, ExternalLink, Filter, Crown
