@@ -33,6 +33,7 @@ import Events from './pages/Events';
 import HackathonDetail from './pages/HackathonDetail';
 import JobSimulation from './pages/JobSimulation';
 import HostHackathon from './pages/HostHackathon';
+import CampusAmbassador from './pages/CampusAmbassador';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -104,6 +105,7 @@ function AppContent() {
           <Route path="/refund-policy" element={<RefundPolicy />} />
           <Route path="/cookie-policy" element={<CookiePolicy />} />
           <Route path="/host" element={<HostHackathon />} />
+          <Route path="/campus-ambassador" element={<CampusAmbassador />} />
         </Routes>
       </main>
       {!isLearningView && !isCleanView && <PreFooterCTA />}

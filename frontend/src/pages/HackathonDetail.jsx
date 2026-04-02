@@ -10,6 +10,8 @@ import {
   CreditCard,
   ExternalLink,
   FileText,
+  Github,
+  HardDriveUpload,
   Link2,
   Lock,
   Loader2,
@@ -258,6 +260,12 @@ export default function HackathonDetail() {
     }
   };
 
+  // ── Link type helpers ──────────────────────────────────────────────────────
+  const isDriveLink = (url) => { try { return new URL(url).hostname.includes('drive.google.com'); } catch { return false; } };
+  const isPdfLink  = (url) => /\.pdf(\?|#|$)/i.test(url);
+  const isGitHub   = (url) => { try { const h = new URL(url).hostname; return h === 'github.com' || h.endsWith('.github.com'); } catch { return false; } };
+  const isNotion   = (url) => { try { const h = new URL(url).hostname; return h.includes('notion.site') || h.includes('notion.so'); } catch { return false; } };
+
   // ── Submit solution ────────────────────────────────────────────────────────
   const handleSubmit = async () => {
     if (!registration) return;
@@ -265,6 +273,30 @@ export default function HackathonDetail() {
     if (!link) { showMsg('Submission link is required.', 'error'); return; }
     try { new URL(link); } catch {
       showMsg('Please enter a valid URL (starting with https:// or http://).', 'error'); return;
+    }
+
+    // Client-side link type validation
+    const cfg = hack?.submissionConfig || {};
+    if (!cfg.acceptsAnyLink) {
+      const ok =
+        (cfg.acceptsDriveLink  && isDriveLink(link)) ||
+        (cfg.acceptsPdfLink    && isPdfLink(link))   ||
+        (cfg.acceptsGitHubLink && isGitHub(link))    ||
+        (cfg.acceptsNotionLink && isNotion(link));
+      if (!ok) {
+        const allowed = [];
+        if (cfg.acceptsGitHubLink) allowed.push('GitHub repo (github.com)');
+        if (cfg.acceptsNotionLink) allowed.push('Notion page (notion.site / notion.so)');
+        if (cfg.acceptsDriveLink)  allowed.push('Google Drive');
+        if (cfg.acceptsPdfLink)    allowed.push('PDF link (.pdf)');
+        showMsg(
+          allowed.length
+            ? `This link type isn't accepted. Allowed: ${allowed.join(', ')}.`
+            : 'This link type is not accepted for this hackathon.',
+          'error'
+        );
+        return;
+      }
     }
 
     setBusy(true);
@@ -313,8 +345,31 @@ export default function HackathonDetail() {
   const paymentRequired = Boolean(hack?.paymentConfig?.enabled && Number(hack?.paymentConfig?.amountInr || 0) > 0);
   const submissionInstructions = hack?.submissionConfig?.instructions || '';
   const linkLabel = hack?.submissionConfig?.linkLabel || 'Submission Link';
-  const linkPlaceholder = hack?.submissionConfig?.linkPlaceholder || 'Paste your link here…';
   const linkHint = hack?.submissionConfig?.linkHint || '';
+
+  // Build a smart placeholder based on which link types are accepted
+  const subCfg = hack?.submissionConfig || {};
+  const linkPlaceholder = (() => {
+    if (subCfg.linkPlaceholder && subCfg.linkPlaceholder !== 'Paste your submission link here...') return subCfg.linkPlaceholder;
+    if (subCfg.acceptsAnyLink) return 'Paste any valid URL here…';
+    const hints = [];
+    if (subCfg.acceptsGitHubLink) hints.push('https://github.com/your-org/your-repo');
+    if (subCfg.acceptsNotionLink) hints.push('https://your-workspace.notion.site/…');
+    if (subCfg.acceptsDriveLink)  hints.push('https://drive.google.com/…');
+    if (subCfg.acceptsPdfLink)    hints.push('https://…/report.pdf');
+    return hints[0] || 'Paste your submission link here…';
+  })();
+
+  // Accepted link type badges for the submission form
+  const acceptedLinkBadges = (() => {
+    if (subCfg.acceptsAnyLink) return [{ icon: Link2, label: 'Any URL', color: 'bg-indigo-50 text-indigo-700 border-indigo-200' }];
+    const badges = [];
+    if (subCfg.acceptsGitHubLink) badges.push({ icon: Github, label: 'GitHub', color: 'bg-slate-50 text-slate-700 border-slate-300' });
+    if (subCfg.acceptsNotionLink) badges.push({ icon: FileText, label: 'Notion', color: 'bg-neutral-50 text-neutral-700 border-neutral-300' });
+    if (subCfg.acceptsDriveLink)  badges.push({ icon: HardDriveUpload, label: 'Google Drive', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' });
+    if (subCfg.acceptsPdfLink)    badges.push({ icon: FileText, label: 'PDF Link', color: 'bg-rose-50 text-rose-700 border-rose-200' });
+    return badges;
+  })();
   const canSubmit = registration && (!registration.payment?.required || registration.payment?.status === 'paid') && hack.status !== 'ended';
   const regStatusStyle = REG_STATUS_STYLE[registration?.status] || REG_STATUS_STYLE.registered;
   const isLeader = registration && user && String(registration.leader?._id || registration.leader) === String(user._id || user.id);
@@ -433,6 +488,12 @@ export default function HackathonDetail() {
                     {hack?.submissionConfig?.acceptsGitHubLink && (
                       <div className="flex items-center justify-between">
                         <span className="text-slate-500">GitHub Repo</span>
+                        <span className="font-bold text-emerald-700">✓ Allowed</span>
+                      </div>
+                    )}
+                    {hack?.submissionConfig?.acceptsNotionLink && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-500">Notion URL</span>
                         <span className="font-bold text-emerald-700">✓ Allowed</span>
                       </div>
                     )}
@@ -709,6 +770,24 @@ export default function HackathonDetail() {
                   {/* Submit form — hidden once limit hit */}
                   {canSubmit && submissionCount < maxSubs && (
                     <div className="space-y-3">
+                      {/* Accepted link type badges */}
+                      {acceptedLinkBadges.length > 0 && (
+                        <div>
+                          <p className="text-xs font-semibold text-slate-500 mb-1.5">Accepted link types</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {acceptedLinkBadges.map(({ icon: Icon, label, color }) => (
+                              <span
+                                key={label}
+                                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-xs font-semibold ${color}`}
+                              >
+                                <Icon className="w-3 h-3" />
+                                {label}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       <div>
                         <label className="block text-xs font-semibold text-slate-600 mb-1">{linkLabel}</label>
                         <input

@@ -41,6 +41,7 @@ const NAV_COLUMNS = [
     heading: 'Company',
     icon: Building2,
     links: [
+      { to: '/campus-ambassador', label: '🎓 Campus Ambassador', highlight: true },
       { to: '/register',       label: 'Create Account' },
       { to: '/login',          label: 'Sign In' },
       { to: '/privacy-policy', label: 'Privacy Policy' },
@@ -159,11 +160,15 @@ const Footer = () => {
                 </h3>
 
                 <ul className="space-y-3" role="list">
-                  {links.map(({ to, label }) => (
+                  {links.map(({ to, label, highlight }) => (
                     <li key={label}>
                       <Link
                         to={to}
-                        className="group inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-blue-400 transition-colors duration-150"
+                        className={`group inline-flex items-center gap-1.5 text-sm transition-colors duration-150 ${
+                          highlight
+                            ? 'text-amber-400 hover:text-amber-300 font-semibold'
+                            : 'text-slate-400 hover:text-blue-400'
+                        }`}
                       >
                         <ChevronRight
                           className="w-3 h-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-150 text-blue-500"

@@ -192,6 +192,15 @@ function isGitHubLink(url) {
   }
 }
 
+function isNotionLink(url) {
+  try {
+    const parsed = new URL(url);
+    return parsed.hostname.includes('notion.site') || parsed.hostname.includes('notion.so');
+  } catch {
+    return false;
+  }
+}
+
 function normalizeDomainList(values = []) {
   return Array.from(
     new Set(
@@ -674,22 +683,26 @@ router.post('/hackathons/:id/submit', authOptions, async (req, res) => {
     const acceptsDriveLink  = Boolean(registration.hackathon.submissionConfig?.acceptsDriveLink);
     const acceptsPdfLink    = Boolean(registration.hackathon.submissionConfig?.acceptsPdfLink);
     const acceptsGitHubLink = Boolean(registration.hackathon.submissionConfig?.acceptsGitHubLink);
+    const acceptsNotionLink = Boolean(registration.hackathon.submissionConfig?.acceptsNotionLink);
 
     if (!acceptsAnyLink) {
       const isDrive  = isDriveLink(submissionLink);
       const isPdf    = isPdfLink(submissionLink);
       const isGitHub = isGitHubLink(submissionLink);
+      const isNotion = isNotionLink(submissionLink);
 
       const allowedByType =
         (acceptsDriveLink  && isDrive)  ||
         (acceptsPdfLink    && isPdf)    ||
-        (acceptsGitHubLink && isGitHub);
+        (acceptsGitHubLink && isGitHub) ||
+        (acceptsNotionLink && isNotion);
 
       if (!allowedByType) {
         const allowed = [];
         if (acceptsDriveLink)  allowed.push('Google Drive');
         if (acceptsPdfLink)    allowed.push('PDF link');
         if (acceptsGitHubLink) allowed.push('GitHub repo');
+        if (acceptsNotionLink) allowed.push('Notion workspace');
         return res.status(400).json({
           message: `Invalid link type. Accepted: ${allowed.join(', ')}. Check submission instructions.`,
         });

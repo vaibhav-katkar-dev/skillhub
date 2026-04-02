@@ -48,7 +48,7 @@ const AdminPanel = () => {
     startDate: '', endDate: '',
     teamMin: 1, teamMax: 4,
     paymentEnabled: false, paymentAmountInr: 0, paymentDescription: 'Hackathon registration fee',
-    acceptsDriveLink: true, acceptsPdfLink: true, acceptsAnyLink: false, acceptsGitHubLink: true,
+    acceptsDriveLink: true, acceptsPdfLink: true, acceptsAnyLink: false, acceptsGitHubLink: true, acceptsNotionLink: true,
     submissionInstructions: '', maxSubmissionsPerTeam: 3,
     linkLabel: 'Submission Link', linkPlaceholder: 'Paste your submission link here...', linkHint: '',
     rules: '', judgingCriteria: '', prizes: '', faqs: '', accentColor: '#4F46E5',
@@ -125,7 +125,7 @@ const AdminPanel = () => {
       startDate: '', endDate: '',
       teamMin: 1, teamMax: 4,
       paymentEnabled: false, paymentAmountInr: 0, paymentDescription: 'Hackathon registration fee',
-      acceptsDriveLink: true, acceptsPdfLink: true, acceptsAnyLink: false, acceptsGitHubLink: true,
+      acceptsDriveLink: true, acceptsPdfLink: true, acceptsAnyLink: false, acceptsGitHubLink: true, acceptsNotionLink: true,
       submissionInstructions: '', maxSubmissionsPerTeam: 3,
       linkLabel: 'Submission Link', linkPlaceholder: 'Paste your submission link here...', linkHint: '',
       rules: '', judgingCriteria: '', prizes: '', faqs: '', accentColor: '#4F46E5',
@@ -1094,6 +1094,10 @@ const AdminPanel = () => {
                     GitHub repo links (github.com)
                   </label>
                   <label className={`flex items-center gap-2 text-sm font-medium cursor-pointer ${hackForm.acceptsAnyLink ? 'text-slate-400' : 'text-slate-700'}`}>
+                    <input type="checkbox" checked={hackForm.acceptsNotionLink} onChange={e => setHackForm(p => ({ ...p, acceptsNotionLink: e.target.checked }))} className="rounded" disabled={hackForm.acceptsAnyLink} />
+                    Notion links (notion.site / notion.so)
+                  </label>
+                  <label className={`flex items-center gap-2 text-sm font-medium cursor-pointer ${hackForm.acceptsAnyLink ? 'text-slate-400' : 'text-slate-700'}`}>
                     <input type="checkbox" checked={hackForm.acceptsDriveLink} onChange={e => setHackForm(p => ({ ...p, acceptsDriveLink: e.target.checked }))} className="rounded" disabled={hackForm.acceptsAnyLink} />
                     Google Drive links
                   </label>
@@ -1229,6 +1233,7 @@ const AdminPanel = () => {
                         acceptsDriveLink:  Boolean(hackForm.acceptsDriveLink),
                         acceptsPdfLink:    Boolean(hackForm.acceptsPdfLink),
                         acceptsGitHubLink: Boolean(hackForm.acceptsGitHubLink),
+                        acceptsNotionLink: Boolean(hackForm.acceptsNotionLink),
                         instructions:      hackForm.submissionInstructions,
                         maxSubmissionsPerTeam: Number(hackForm.maxSubmissionsPerTeam || 3),
                         linkLabel:         hackForm.linkLabel || 'Submission Link',
@@ -1328,6 +1333,7 @@ const AdminPanel = () => {
                                 acceptsDriveLink:  Boolean(h.submissionConfig?.acceptsDriveLink ?? true),
                                 acceptsPdfLink:    Boolean(h.submissionConfig?.acceptsPdfLink ?? true),
                                 acceptsGitHubLink: Boolean(h.submissionConfig?.acceptsGitHubLink ?? true),
+                                acceptsNotionLink: Boolean(h.submissionConfig?.acceptsNotionLink ?? true),
                                 submissionInstructions: h.submissionConfig?.instructions || '',
                                 maxSubmissionsPerTeam: Number(h.submissionConfig?.maxSubmissionsPerTeam || 3),
                                 linkLabel:         h.submissionConfig?.linkLabel || 'Submission Link',
