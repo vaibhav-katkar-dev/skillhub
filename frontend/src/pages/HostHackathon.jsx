@@ -47,7 +47,7 @@ export default function HostHackathon() {
     {
       icon: <Globe className="w-6 h-6 text-indigo-400" />,
       title: "Custom Subdomain",
-      description: "Get a dedicated, lightning-fast landing page on hackathons.skillhub.in instantly."
+      description: "Get a dedicated, lightning-fast landing page on hackathons.skillvalix.com instantly."
     },
     {
       icon: <Award className="w-6 h-6 text-purple-400" />,
