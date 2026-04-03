@@ -396,14 +396,23 @@ const AdminPanel = () => {
 
       <div className="bg-gradient-to-r from-indigo-700 via-violet-700 to-purple-700 shadow-xl">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center border border-white/25 shadow-lg">
-              <ShieldCheck className="w-7 h-7 text-white" />
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center border border-white/25 shadow-lg">
+                <ShieldCheck className="w-7 h-7 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-extrabold text-white">Admin Panel</h1>
+                <p className="text-indigo-200 text-sm mt-0.5">Protected admin workspace for analytics, quiz operations, and course guidance.</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-3xl font-extrabold text-white">Admin Panel</h1>
-              <p className="text-indigo-200 text-sm mt-0.5">Protected admin workspace for analytics, quiz operations, and course guidance.</p>
-            </div>
+            
+            <button
+              onClick={handleExportAllUsers}
+              className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-bold text-sm shadow-xl transition-all flex items-center gap-2 border border-emerald-400 whitespace-nowrap"
+            >
+              Export All Users (CSV)
+            </button>
           </div>
 
           <div className="mt-6 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm p-4 text-sm text-indigo-50">
@@ -1419,7 +1428,7 @@ const AdminPanel = () => {
                             Teams
                           </button>
                           <button onClick={() => handleExportHackathonUsers(h._id)} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition">
-                            Export
+                            Export Teams CSV
                           </button>
                           <button onClick={async () => { if (!confirm('Delete this hackathon?')) return; await api.delete(`/events/hackathons/${h._id}`); loadHacks(); }} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-red-600 hover:bg-red-100 transition">
                             Delete
