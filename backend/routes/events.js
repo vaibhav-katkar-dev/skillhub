@@ -772,6 +772,42 @@ router.get('/admin/hackathons/:id/registrations', authOptions, adminCheck, async
   }
 });
 
+// ─── ADMIN: Export registrations of a hackathon to CSV ────────────────────
+router.get('/admin/hackathons/:id/registrations/export', authOptions, adminCheck, async (req, res) => {
+  try {
+    const list = await HackathonRegistration.find({ hackathon: req.params.id })
+      .populate('leader', 'name email')
+      .populate('members.user', 'name email')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    if (!list.length) return res.status(404).json({ message: 'No registrations found' });
+
+    let csv = 'Team Name,Leader Name,Leader Email,Members,Status,Payment Status,Submission Link,Registered At\n';
+    list.forEach(reg => {
+      const tName = (reg.teamName || '').replace(/"/g, '""');
+      const lName = (reg.leader?.name || '').replace(/"/g, '""');
+      const lEmail = (reg.leader?.email || '').replace(/"/g, '""');
+      
+      const membersText = (reg.members || []).map(m => `${m.name} (${m.email})`).join('; ').replace(/"/g, '""');
+      const status = reg.status || '';
+      const payStatus = reg.payment?.status || '';
+      
+      const link = reg.submissions?.length > 0 ? (reg.submissions[reg.submissions.length - 1].link || '').replace(/"/g, '""') : '';
+      const date = reg.createdAt ? new Date(reg.createdAt).toISOString() : '';
+      
+      csv += `"${tName}","${lName}","${lEmail}","${membersText}","${status}","${payStatus}","${link}","${date}"\n`;
+    });
+
+    res.header('Content-Type', 'text/csv');
+    res.attachment(`hackathon-${req.params.id}-users.csv`);
+    return res.send(csv);
+  } catch (err) {
+    console.error('[Events] Admin export registrations error:', err);
+    res.status(500).json({ message: 'Server error exporting' });
+  }
+});
+
 // ─── ADMIN: Update registration status / remarks ─────────────────────────────
 router.put('/admin/hackathons/:id/registrations/:registrationId', authOptions, adminCheck, async (req, res) => {
   try {

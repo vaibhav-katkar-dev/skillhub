@@ -36,6 +36,29 @@ function normalizeId(value) {
   return null;
 }
 
+router.get('/users/export', authOptions, adminCheck, async (req, res) => {
+  try {
+    const users = await User.find({}).lean();
+    if (!users.length) return res.status(404).json({ message: 'No users found' });
+
+    let csv = 'Name,Email,Role,Registered At\n';
+    users.forEach(u => {
+      const name = (u.name || '').replace(/"/g, '""');
+      const email = (u.email || '').replace(/"/g, '""');
+      const role = u.role || 'student';
+      const date = u.createdAt ? new Date(u.createdAt).toISOString() : '';
+      csv += `"${name}","${email}","${role}","${date}"\n`;
+    });
+
+    res.header('Content-Type', 'text/csv');
+    res.attachment('skillvalix-users.csv');
+    return res.send(csv);
+  } catch (err) {
+    console.error('[Admin] Export Users error:', err);
+    res.status(500).json({ message: 'Failed to export users' });
+  }
+});
+
 router.get('/analytics', authOptions, adminCheck, async (req, res) => {
   try {
     const allEntries = await getAllCoursesFromJSON();

@@ -104,6 +104,36 @@ const AdminPanel = () => {
     }
   };
 
+  const handleExportAllUsers = async () => {
+    try {
+      const response = await api.get('/admin/users/export', { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'skillvalix-users.csv');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (e) {
+      alert('Failed to export users.');
+    }
+  };
+
+  const handleExportHackathonUsers = async (hackId) => {
+    try {
+      const response = await api.get(`/events/admin/hackathons/${hackId}/registrations/export`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `hackathon-${hackId}-registrations.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (e) {
+      alert('Failed to export hackathon registrations.');
+    }
+  };
+
   const loadHostRequests = async () => {
     setHostRequestsLoading(true);
     try { const r = await api.get('/host/admin/all'); setHostRequests(r.data); } catch { setHostRequests([]); }
@@ -521,6 +551,12 @@ const AdminPanel = () => {
                       <div className="flex items-center justify-between"><span className="text-slate-500">Admins</span><span className="font-bold text-slate-900">{analytics?.overview?.totalAdmins ?? '-'}</span></div>
                       <div className="flex items-center justify-between"><span className="text-slate-500">Certified users</span><span className="font-bold text-slate-900">{analytics?.overview?.uniqueCertifiedUsers ?? '-'}</span></div>
                     </div>
+                    <button
+                      onClick={handleExportAllUsers}
+                      className="mt-4 w-full px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-lg transition"
+                    >
+                      Export All Users (CSV)
+                    </button>
                   </div>
 
                   <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
@@ -1382,6 +1418,9 @@ const AdminPanel = () => {
                           <button onClick={() => loadRegistrations(h._id)} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition">
                             Teams
                           </button>
+                          <button onClick={() => handleExportHackathonUsers(h._id)} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition">
+                            Export
+                          </button>
                           <button onClick={async () => { if (!confirm('Delete this hackathon?')) return; await api.delete(`/events/hackathons/${h._id}`); loadHacks(); }} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-red-600 hover:bg-red-100 transition">
                             Delete
                           </button>
@@ -1623,12 +1662,20 @@ const AdminPanel = () => {
                   <Users className="w-6 h-6 text-indigo-600" />
                   Host Requests (B2B)
                 </h2>
-                <button
-                  onClick={loadHostRequests}
-                  className="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 font-bold text-sm flex items-center gap-2"
-                >
-                  <RefreshCw className="w-4 h-4" /> Refresh
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleExportAllUsers}
+                    className="px-4 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 font-bold text-sm flex items-center gap-2"
+                  >
+                    Export All Users
+                  </button>
+                  <button
+                    onClick={loadHostRequests}
+                    className="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 font-bold text-sm flex items-center gap-2"
+                  >
+                    <RefreshCw className="w-4 h-4" /> Refresh
+                  </button>
+                </div>
               </div>
 
               {hostRequestsLoading ? (
