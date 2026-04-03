@@ -81,6 +81,8 @@ export default function HackathonDetail() {
   const timeline = useMemo(() => hack?.contentConfig?.timeline || [], [hack]);
   const prizes = useMemo(() => hack?.prizes || [], [hack]);
   const faqs = useMemo(() => hack?.contentConfig?.faqs || [], [hack]);
+  const problemStatement = useMemo(() => hack?.contentConfig?.problemStatement || '', [hack]);
+
 
   const statusStyle = STATUS_STYLE[hack?.status] || STATUS_STYLE.upcoming;
   const StatusIcon = statusStyle.icon;
@@ -145,16 +147,49 @@ export default function HackathonDetail() {
 
   // ── Countdown Timer ────────────────────────────────────────────────────────
   const [timeLeft, setTimeLeft] = useState('');
+  const [timerLabel, setTimerLabel] = useState('');
+
+  const isSubmissionOpen = useMemo(() => {
+    if (hack?.status === 'ended') return false;
+    const subDeadline = hack?.submissionDeadline ? new Date(hack.submissionDeadline).getTime() : hack?.endDate ? new Date(hack.endDate).getTime() : null;
+    if (!subDeadline) return true;
+    return Date.now() < subDeadline;
+  }, [hack]);
+
+  const isRegistrationOpen = useMemo(() => {
+    if (hack?.status === 'ended') return false;
+    const regDeadline = hack?.registrationDeadline ? new Date(hack.registrationDeadline).getTime() : hack?.endDate ? new Date(hack.endDate).getTime() : null;
+    if (!regDeadline) return true;
+    return Date.now() < regDeadline;
+  }, [hack]);
 
   useEffect(() => {
-    if (!hack?.endDate || hack.status === 'ended') {
+    if (hack?.status === 'ended') {
+      setTimeLeft('Ended');
+      setTimerLabel('Ended');
+      return;
+    }
+    const regDeadline = hack?.registrationDeadline ? new Date(hack.registrationDeadline).getTime() : hack?.endDate ? new Date(hack.endDate).getTime() : null;
+    const subDeadline = hack?.submissionDeadline ? new Date(hack.submissionDeadline).getTime() : hack?.endDate ? new Date(hack.endDate).getTime() : null;
+
+    if (!regDeadline && !subDeadline) {
       setTimeLeft('');
       return;
     }
+
     const updateTimer = () => {
-      const diff = new Date(hack.endDate).getTime() - Date.now();
-      if (diff <= 0) {
+      const now = Date.now();
+      let diff = 0;
+      let label = '';
+      if (regDeadline && now < regDeadline) {
+        diff = regDeadline - now;
+        label = 'Registration Deadline';
+      } else if (subDeadline && now < subDeadline) {
+        diff = subDeadline - now;
+        label = 'Submission Deadline';
+      } else {
         setTimeLeft('Ended');
+        setTimerLabel('Ended');
         return;
       }
       const d = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -162,11 +197,12 @@ export default function HackathonDetail() {
       const m = Math.floor((diff / 1000 / 60) % 60).toString().padStart(2, '0');
       const s = Math.floor((diff / 1000) % 60).toString().padStart(2, '0');
       setTimeLeft(d > 0 ? `${d}d ${h}h ${m}m ${s}s` : `${h}h ${m}m ${s}s`);
+      setTimerLabel(label);
     };
     updateTimer();
     const timerId = setInterval(updateTimer, 1000);
     return () => clearInterval(timerId);
-  }, [hack?.endDate, hack?.status]);
+  }, [hack]);
 
   // ── Team registration ──────────────────────────────────────────────────────
   const handleRegisterTeam = async () => {
@@ -370,7 +406,7 @@ export default function HackathonDetail() {
     if (subCfg.acceptsPdfLink)    badges.push({ icon: FileText, label: 'PDF Link', color: 'bg-rose-50 text-rose-700 border-rose-200' });
     return badges;
   })();
-  const canSubmit = registration && (!registration.payment?.required || registration.payment?.status === 'paid') && hack.status !== 'ended';
+  const canSubmit = registration && (!registration.payment?.required || registration.payment?.status === 'paid') && isSubmissionOpen;
   const regStatusStyle = REG_STATUS_STYLE[registration?.status] || REG_STATUS_STYLE.registered;
   const isLeader = registration && user && String(registration.leader?._id || registration.leader) === String(user._id || user.id);
   const submissionCount = registration?.submissions?.length || 0;
@@ -378,7 +414,7 @@ export default function HackathonDetail() {
 
   // SEO canonical URL
   const canonicalPath = hack.slug ? `/hackathons/${hack.slug}` : `/hackathons/${hack._id}`;
-  const canonicalUrl = `https://www.skillvalix.com${canonicalPath}`;
+  const canonicalUrl = `https://skillvalix.com${canonicalPath}`;
 
   return (
     <>
@@ -446,18 +482,18 @@ export default function HackathonDetail() {
               <h2 className="text-sm uppercase tracking-widest font-black text-slate-700 mb-4">Event Snapshot</h2>
 
               {/* Countdown Timer */}
-              {hack?.endDate && (
+              {(hack?.registrationDeadline || hack?.submissionDeadline || hack?.endDate) && (
                 <>
                   {timeLeft === 'Ended' || hack.status === 'ended' ? (
                     <div className="mb-5 rounded-xl bg-slate-100 border border-slate-200 p-3 text-center">
                       <p className="text-sm font-black text-slate-500 uppercase tracking-widest">Ended</p>
                     </div>
                   ) : (
-                    <div className="mb-5 rounded-xl bg-gradient-to-r from-red-50 to-orange-50 border border-red-100 p-3 text-center">
-                      <p className="text-xs uppercase tracking-widest font-black text-red-500 mb-1 flex items-center justify-center gap-1.5">
-                        <Clock3 className="w-3.5 h-3.5" /> Submission Deadline
+                    <div className="mb-5 rounded-xl bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-100 p-3 text-center">
+                      <p className="text-xs uppercase tracking-widest font-black text-indigo-500 mb-1 flex items-center justify-center gap-1.5">
+                        <Clock3 className="w-3.5 h-3.5" /> {timerLabel}
                       </p>
-                      <p className="text-xl font-black text-red-600 font-mono tracking-tight tabular-nums">
+                      <p className="text-xl font-black text-indigo-600 font-mono tracking-tight tabular-nums">
                         {timeLeft}
                       </p>
                     </div>
@@ -511,10 +547,16 @@ export default function HackathonDetail() {
                     )}
                   </>
                 )}
-                {hack?.endDate && (
+                {hack?.registrationDeadline && (
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-500">Ends</span>
-                    <span className="font-bold text-slate-900">{new Date(hack.endDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                    <span className="text-slate-500">Reg. Closes</span>
+                    <span className="font-bold text-slate-900">{new Date(hack.registrationDeadline).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                  </div>
+                )}
+                {(hack?.submissionDeadline || hack?.endDate) && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500">Sub. Closes</span>
+                    <span className="font-bold text-slate-900">{new Date(hack.submissionDeadline || hack.endDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                   </div>
                 )}
               </div>
@@ -574,11 +616,20 @@ export default function HackathonDetail() {
         <div className="max-w-6xl mx-auto grid lg:grid-cols-[1.15fr_1fr] gap-6">
           {/* Left column - info */}
           <div className="space-y-6">
+            {problemStatement && (
+              <div className="bg-white border border-slate-200 rounded-2xl p-6">
+                <h3 className="text-xl font-black text-slate-900 mb-3 flex items-center gap-2">
+                  <Star className="w-5 h-5 text-indigo-600" /> Problem Statement
+                </h3>
+                <p className="text-slate-700 leading-relaxed whitespace-pre-line">{problemStatement}</p>
+              </div>
+            )}
+
             {/* Prizes & FAQs */}
             {(prizes.length > 0 || faqs.length > 0) && (
               <div className="bg-white border border-slate-200 rounded-2xl p-6">
                 <h2 className="text-xl font-black text-slate-900 mb-4 flex items-center gap-2">
-                  <Trophy className="w-5 h-5 text-amber-500" /> About this Hackathon
+                  <Trophy className="w-5 h-5 text-amber-500" /> Prizes & FAQs
                 </h2>
 
                 {prizes.length > 0 && (
@@ -832,10 +883,10 @@ export default function HackathonDetail() {
                     </div>
                   )}
 
-                  {hack.status === 'ended' && (
+                  {!isSubmissionOpen && (
                     <div className="mt-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600 flex items-start gap-2">
                       <AlertTriangle className="w-4 h-4 mt-0.5 text-slate-500" />
-                      This hackathon has ended. No new submissions accepted.
+                      Submissions are now closed for this hackathon.
                     </div>
                   )}
                 </div>
@@ -848,7 +899,7 @@ export default function HackathonDetail() {
                     Team size: {teamMin}–{teamMax} members (including yourself).
                   </p>
 
-                  {hack.status === 'ended' ? (
+                  {!isRegistrationOpen ? (
                     <div className="rounded-xl border border-slate-200 bg-slate-50 p-5 text-center text-slate-500 text-sm">
                       <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-slate-400" />
                       Registrations are closed for this hackathon.

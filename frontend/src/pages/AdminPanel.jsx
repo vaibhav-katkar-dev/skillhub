@@ -122,7 +122,8 @@ const AdminPanel = () => {
     setHackForm({
       title: '', slug: '', tagline: '', description: '', theme: '',
       status: 'upcoming', image: '', tags: '', visible: false, featured: false,
-      startDate: '', endDate: '',
+      startDate: '', endDate: '', registrationDeadline: '', submissionDeadline: '',
+      problemStatement: '',
       teamMin: 1, teamMax: 4,
       paymentEnabled: false, paymentAmountInr: 0, paymentDescription: 'Hackathon registration fee',
       acceptsDriveLink: true, acceptsPdfLink: true, acceptsAnyLink: false, acceptsGitHubLink: true, acceptsNotionLink: true,
@@ -1048,9 +1049,19 @@ const AdminPanel = () => {
                       <option value="ended">Ended</option>
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-500 mb-1">End Date (Deadline)</label>
-                    <input type="datetime-local" value={hackForm.endDate} onChange={e => setHackForm(p => ({ ...p, endDate: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" />
+                  <div className="grid grid-cols-1 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-500 mb-1">Hackathon Start Date</label>
+                      <input type="datetime-local" value={hackForm.startDate} onChange={e => setHackForm(p => ({ ...p, startDate: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-500 mb-1">Registration Deadline</label>
+                      <input type="datetime-local" value={hackForm.registrationDeadline} onChange={e => setHackForm(p => ({ ...p, registrationDeadline: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-500 mb-1">Submission Deadline</label>
+                      <input type="datetime-local" value={hackForm.submissionDeadline} onChange={e => setHackForm(p => ({ ...p, submissionDeadline: e.target.value }))} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" />
+                    </div>
                   </div>
                 </div>
 
@@ -1145,6 +1156,10 @@ const AdminPanel = () => {
                   <textarea value={hackForm.submissionInstructions} onChange={e => setHackForm(p => ({ ...p, submissionInstructions: e.target.value }))} rows={2} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" />
                 </div>
                 <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">Problem Statement</label>
+                  <textarea value={hackForm.problemStatement} onChange={e => setHackForm(p => ({ ...p, problemStatement: e.target.value }))} rows={3} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" />
+                </div>
+                <div className="sm:col-span-2">
                   <label className="block text-xs font-semibold text-slate-500 mb-1">Rules (one per line)</label>
                   <textarea value={hackForm.rules} onChange={e => setHackForm(p => ({ ...p, rules: e.target.value }))} rows={3} className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" />
                 </div>
@@ -1211,6 +1226,9 @@ const AdminPanel = () => {
                       tagline: hackForm.tagline,
                       description: hackForm.description,
                       theme: hackForm.theme,
+                      startDate: hackForm.startDate || null,
+                      registrationDeadline: hackForm.registrationDeadline || null,
+                      submissionDeadline: hackForm.submissionDeadline || null,
                       status: hackForm.status || 'upcoming',
                       endDate: hackForm.endDate || null,
                       image: hackForm.image,
@@ -1241,6 +1259,7 @@ const AdminPanel = () => {
                         linkHint:          hackForm.linkHint || '',
                       },
                       contentConfig: {
+                        problemStatement: hackForm.problemStatement,
                         rules: (hackForm.rules || '').split('\n').map(x => x.trim()).filter(Boolean),
                         judgingCriteria: (hackForm.judgingCriteria || '').split('\n').map(x => x.trim()).filter(Boolean),
                         faqs,
@@ -1319,6 +1338,9 @@ const AdminPanel = () => {
                                 description: h.description || '',
                                 theme: h.theme || '',
                                 status: h.status || 'upcoming',
+                                startDate: h.startDate ? new Date(h.startDate).toISOString().slice(0, 16) : '',
+                                registrationDeadline: h.registrationDeadline ? new Date(h.registrationDeadline).toISOString().slice(0, 16) : '',
+                                submissionDeadline: h.submissionDeadline ? new Date(h.submissionDeadline).toISOString().slice(0, 16) : '',
                                 endDate: h.endDate ? new Date(h.endDate).toISOString().slice(0, 16) : '',
                                 image: h.image || '',
                                 tags: (h.tags || []).join(', '),
@@ -1339,6 +1361,7 @@ const AdminPanel = () => {
                                 linkLabel:         h.submissionConfig?.linkLabel || 'Submission Link',
                                 linkPlaceholder:   h.submissionConfig?.linkPlaceholder || 'Paste your submission link here...',
                                 linkHint:          h.submissionConfig?.linkHint || '',
+                                problemStatement: h.contentConfig?.problemStatement || '',
                                 rules: (h.contentConfig?.rules || []).join('\n'),
                                 judgingCriteria: (h.contentConfig?.judgingCriteria || []).join('\n'),
                                 prizes: (h.prizes || []).map((p) => `${p.rank || 'Prize'} | ${p.amount || ''}`).join('\n'),

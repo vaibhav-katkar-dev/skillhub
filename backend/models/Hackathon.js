@@ -8,7 +8,8 @@ const hackathonSchema = new mongoose.Schema({
   theme:        { type: String },                          // e.g. "AI / ML", "Web3"
   prizes:       [{ rank: String, amount: String }],        // e.g. [{rank:"1st", amount:"₹10,000"}]
   startDate:    { type: Date },
-  endDate:      { type: Date },
+  registrationDeadline: { type: Date },
+  submissionDeadline: { type: Date },
   registrationLink: { type: String },
   image:        { type: String },                          // banner URL
   tags:         [String],
@@ -39,6 +40,7 @@ const hackathonSchema = new mongoose.Schema({
     linkHint:           { type: String, default: '' },
   },
   contentConfig: {
+    problemStatement: { type: String, trim: true },
     rules: [{ type: String, trim: true }],
     judgingCriteria: [{ type: String, trim: true }],
     timeline: [{

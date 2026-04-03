@@ -144,11 +144,19 @@ export default function Events() {
                         </div>
                       )}
 
-                      {hack.endDate && (
+                      {hack.registrationDeadline && (
+                        <div className="flex items-center gap-1.5 mb-2 text-xs font-semibold bg-indigo-50 p-2.5 rounded-xl border border-indigo-100">
+                          <Clock3 className="w-4 h-4 text-indigo-500" />
+                          <span className="text-indigo-700">
+                            Reg. Deadline: {new Date(hack.registrationDeadline).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                      )}
+                      {(hack.submissionDeadline || hack.endDate) && (
                         <div className="flex items-center gap-1.5 mb-4 text-xs font-semibold bg-rose-50 p-2.5 rounded-xl border border-rose-100">
                           <Clock3 className="w-4 h-4 text-rose-500" />
                           <span className="text-rose-700">
-                            Deadline: {new Date(hack.endDate).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            Sub. Deadline: {new Date(hack.submissionDeadline || hack.endDate).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                           </span>
                         </div>
                       )}

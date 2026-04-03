@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import {
@@ -235,59 +235,59 @@ export default function Home() {
   return (
     <div style={{ fontFamily: "'Inter', system-ui, sans-serif", background: 'linear-gradient(180deg,#f5f7ff 0%, #f3fae9 34%, #ffffff 100%)', color: '#0f172a', overflowX: 'hidden' }}>
       <Helmet>
-        {/* â”€â”€ Primary SEO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* ── Primary SEO ─────────────────────────────── */}
         <title>SkillValix - Free Online Coding Courses with Certificates | Learn HTML, CSS, JavaScript, Python and More</title>
         <meta name="description" content="Learn to code 100% FREE - no credit card, no hidden fees, ever. SkillValix offers structured courses in HTML, CSS, JavaScript, Python, Java and AI with verifiable certificates. Join 2,800+ students already building their careers online. Start today!" />
         <meta name="keywords" content="free online coding courses, free web development course, learn HTML free, learn CSS free, learn JavaScript free, Python for beginners free, free programming courses India, coding courses with certificates, learn to code for free, web development for beginners, best free coding website, free HTML CSS JavaScript course, online learning platform India, programming certificate online free, learn AI machine learning free, free computer science courses, free tech courses 2026, programming for students free, software development course free, SkillValix, skillvalix.com" />
-        <link rel="canonical" href="https://www.skillvalix.com/" />
+        <link rel="canonical" href="https://skillvalix.com/" />
         <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
         <meta name="author" content="SkillValix" />
         <meta name="rating" content="general" />
 
-        {/* â”€â”€ Open Graph (Facebook / LinkedIn / WhatsApp) â”€â”€ */}
+        {/* ── Open Graph (Facebook / LinkedIn / WhatsApp) ── */}
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://www.skillvalix.com/" />
+        <meta property="og:url" content="https://skillvalix.com/" />
         <meta property="og:site_name" content="SkillValix" />
         <meta property="og:locale" content="en_IN" />
         <meta property="og:title" content="SkillValix - Free Coding Courses with Certificates | HTML, CSS, JS, Python, AI" />
         <meta property="og:description" content="Learn in-demand tech skills 100% free. SkillValix offers structured beginner-to-pro courses with real exam assessments and verifiable PDF certificates. No credit card. No paywall. Ever." />
-        <meta property="og:image" content="https://www.skillvalix.com/og-home.png" />
+        <meta property="og:image" content="https://skillvalix.com/og-home.png" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:image:alt" content="SkillValix - Free Online Coding Courses with Certificates" />
 
-        {/* â”€â”€ Twitter Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* ── Twitter Card ─────────────────────────────── */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:site" content="@SkillValix" />
         <meta name="twitter:creator" content="@SkillValix" />
         <meta name="twitter:title" content="SkillValix - Free Coding Courses with Certificates" />
         <meta name="twitter:description" content="Master HTML, CSS, JavaScript, Python, Java and AI for free. Get verifiable certificates and boost your career - no credit card needed." />
-        <meta name="twitter:image" content="https://www.skillvalix.com/og-home.png" />
+        <meta name="twitter:image" content="https://skillvalix.com/og-home.png" />
 
-        {/* â”€â”€ JSON-LD: WebSite + Sitelinks Search Box â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* ── JSON-LD: WebSite + Sitelinks Search Box ─────── */}
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "WebSite",
           "name": "SkillValix",
-          "url": "https://www.skillvalix.com",
+          "url": "https://skillvalix.com",
           "description": "Free online coding courses with certificates. Learn HTML, CSS, JavaScript, Python, Java and AI for free.",
           "potentialAction": {
             "@type": "SearchAction",
             "target": {
               "@type": "EntryPoint",
-              "urlTemplate": "https://www.skillvalix.com/courses?q={search_term_string}"
+              "urlTemplate": "https://skillvalix.com/courses?q={search_term_string}"
             },
             "query-input": "required name=search_term_string"
           }
         })}</script>
 
-        {/* â”€â”€ JSON-LD: Organization â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* ── JSON-LD: Organization ───────────────────────── */}
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Organization",
           "name": "SkillValix",
-          "url": "https://www.skillvalix.com",
-          "logo": "https://www.skillvalix.com/logo.svg",
+          "url": "https://skillvalix.com",
+          "logo": "https://skillvalix.com/logo.svg",
           "sameAs": [
             "https://www.linkedin.com/company/skillvalix",
             "https://twitter.com/skillvalix"
@@ -299,23 +299,23 @@ export default function Home() {
           }
         })}</script>
 
-        {/* â”€â”€ JSON-LD: EducationalOrganization â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* ── JSON-LD: EducationalOrganization ─────────────── */}
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "EducationalOrganization",
           "name": "SkillValix",
-          "url": "https://www.skillvalix.com",
+          "url": "https://skillvalix.com",
           "description": "SkillValix is a 100% free online learning platform offering structured web development and programming courses with verifiable certificates.",
           "hasOfferCatalog": {
             "@type": "OfferCatalog",
             "name": "Free Online Coding Courses",
             "itemListElement": [
-              { "@type": "Course", "name": "HTML for Beginners: Complete HTML5 Masterclass", "url": "https://www.skillvalix.com/courses/ultimate-html-masterclass", "isAccessibleForFree": true },
-              { "@type": "Course", "name": "CSS for Beginners â€” Zero to Pro", "url": "https://www.skillvalix.com/courses/css-for-beginners-learn-web-styling-zero-to-pro", "isAccessibleForFree": true },
-              { "@type": "Course", "name": "JavaScript for Beginners: Complete JS Masterclass", "url": "https://www.skillvalix.com/courses/ultimate-javascript-masterclass", "isAccessibleForFree": true },
-              { "@type": "Course", "name": "Python for Beginners: Complete Python Programming Masterclass", "url": "https://www.skillvalix.com/courses/ultimate-python-masterclass", "isAccessibleForFree": true },
-              { "@type": "Course", "name": "Java Programming Masterclass: Beginner to Advanced", "url": "https://www.skillvalix.com/courses/ultimate-java-masterclass", "isAccessibleForFree": true },
-              { "@type": "Course", "name": "Artificial Intelligence for Beginners: AI & Machine Learning Fundamentals", "url": "https://www.skillvalix.com/courses/basics-of-artificial-intelligence-beginners", "isAccessibleForFree": true }
+              { "@type": "Course", "name": "HTML for Beginners: Complete HTML5 Masterclass", "url": "https://skillvalix.com/courses/ultimate-html-masterclass", "isAccessibleForFree": true },
+              { "@type": "Course", "name": "CSS for Beginners — Zero to Pro", "url": "https://skillvalix.com/courses/css-for-beginners-learn-web-styling-zero-to-pro", "isAccessibleForFree": true },
+              { "@type": "Course", "name": "JavaScript for Beginners: Complete JS Masterclass", "url": "https://skillvalix.com/courses/ultimate-javascript-masterclass", "isAccessibleForFree": true },
+              { "@type": "Course", "name": "Python for Beginners: Complete Python Programming Masterclass", "url": "https://skillvalix.com/courses/ultimate-python-masterclass", "isAccessibleForFree": true },
+              { "@type": "Course", "name": "Java Programming Masterclass: Beginner to Advanced", "url": "https://skillvalix.com/courses/ultimate-java-masterclass", "isAccessibleForFree": true },
+              { "@type": "Course", "name": "Artificial Intelligence for Beginners: AI & Machine Learning Fundamentals", "url": "https://skillvalix.com/courses/basics-of-artificial-intelligence-beginners", "isAccessibleForFree": true }
             ]
           }
         })}</script>
@@ -640,6 +640,10 @@ export default function Home() {
                   <img
                     src={c.image}
                     alt={c.title}
+                    loading="lazy"
+                    decoding="async"
+                    width="800"
+                    height="500"
                     className="course-img"
                     style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }}
                     onError={e => { e.target.style.display='none'; }}
