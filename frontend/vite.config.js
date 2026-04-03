@@ -9,6 +9,23 @@ export default defineConfig({
     tailwindcjs()
   ],
   build: {
-    modulePreload: false,
+    // Re-enable module preload for optimal browser prefetching
+    modulePreload: true,
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Core React runtime — cached separately, rarely changes
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          // UI icon library — large but static
+          'vendor-ui': ['lucide-react'],
+          // Auth & state — changes independently of UI
+          'vendor-auth': ['@react-oauth/google', 'zustand'],
+          // HTTP & analytics
+          'vendor-utils': ['axios', '@vercel/analytics'],
+        },
+      },
+    },
   },
 })
+

@@ -1,39 +1,65 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { Analytics } from '@vercel/analytics/react';
 import { useAuthStore } from './store/authStore';
 import { preloadCourses } from './data/courseLoader';
 
+// Always-on shell components — kept eager
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import PreFooterCTA from './components/PreFooterCTA';
 import WhatsAppJoinPopup from './components/WhatsAppJoinPopup';
+
+// Critical above-the-fold pages — eager
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import Courses from './pages/Courses';
-import CourseDetail from './pages/CourseDetail';
-import LessonView from './pages/LessonView';
-import QuizView from './pages/QuizView';
-import Dashboard from './pages/Dashboard';
-import VerifyCert from './pages/VerifyCert';
-import Blog from './pages/Blog';
-import BlogPost from './pages/BlogPost';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
-import PublicProfile from './pages/PublicProfile';
 
-import AdminPanel from './pages/AdminPanel';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import TermsOfService from './pages/TermsOfService';
-import RefundPolicy from './pages/RefundPolicy';
-import CookiePolicy from './pages/CookiePolicy';
-import Events from './pages/Events';
-import HackathonDetail from './pages/HackathonDetail';
-import JobSimulation from './pages/JobSimulation';
-import HostHackathon from './pages/HostHackathon';
-import CampusAmbassador from './pages/CampusAmbassador';
+// All other pages — lazily loaded on first navigation
+const Courses          = lazy(() => import('./pages/Courses'));
+const CourseDetail     = lazy(() => import('./pages/CourseDetail'));
+const LessonView       = lazy(() => import('./pages/LessonView'));
+const QuizView         = lazy(() => import('./pages/QuizView'));
+const Dashboard        = lazy(() => import('./pages/Dashboard'));
+const VerifyCert       = lazy(() => import('./pages/VerifyCert'));
+const Blog             = lazy(() => import('./pages/Blog'));
+const BlogPost         = lazy(() => import('./pages/BlogPost'));
+const ForgotPassword   = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword    = lazy(() => import('./pages/ResetPassword'));
+const PublicProfile    = lazy(() => import('./pages/PublicProfile'));
+const AdminPanel       = lazy(() => import('./pages/AdminPanel'));
+const PrivacyPolicy    = lazy(() => import('./pages/PrivacyPolicy'));
+const TermsOfService   = lazy(() => import('./pages/TermsOfService'));
+const RefundPolicy     = lazy(() => import('./pages/RefundPolicy'));
+const CookiePolicy     = lazy(() => import('./pages/CookiePolicy'));
+const Events           = lazy(() => import('./pages/Events'));
+const HackathonDetail  = lazy(() => import('./pages/HackathonDetail'));
+const JobSimulation    = lazy(() => import('./pages/JobSimulation'));
+const HostHackathon    = lazy(() => import('./pages/HostHackathon'));
+const CampusAmbassador = lazy(() => import('./pages/CampusAmbassador'));
+
+// Lightweight page-transition loader shown during lazy chunk fetch
+function PageLoader() {
+  return (
+    <div style={{
+      minHeight: '60vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}>
+      <div style={{
+        width: 40,
+        height: 40,
+        border: '3px solid #e0e7ff',
+        borderTopColor: '#6366f1',
+        borderRadius: '50%',
+        animation: 'spin 0.7s linear infinite',
+      }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+}
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -76,37 +102,39 @@ function AppContent() {
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-blue-500/30">
       {!isCleanView && <Navbar />}
       <main className="flex-grow">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:token" element={<ResetPassword />} />
-          <Route path="/courses" element={<Courses />} />
-          <Route path="/courses/:slug" element={<CourseDetail />} />
-          <Route path="/courses/:slug/lesson/:lessonId" element={<LessonView />} />
-          <Route path="/courses/:slug/quiz" element={<QuizView />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/u/:id" element={<PublicProfile />} />
-          <Route path="/admin" element={<AdminPanel />} />
-          <Route path="/admin/upload" element={<AdminPanel />} />
-          <Route path="/verify" element={<VerifyCert />} />
-          <Route path="/verify/:certId" element={<VerifyCert />} />
-          <Route path="/blog" element={<Blog />} />
-          <Route path="/blog/:slug" element={<BlogPost />} />
-          <Route path="/hackathons" element={<Events />} />
-          <Route path="/hackathons/:id" element={<HackathonDetail />} />
-          <Route path="/job-simulation/:id" element={<JobSimulation />} />
-          <Route path="/events/job-simulation/:id" element={<JobSimulation />} />
-          <Route path="/verify-event/:certId" element={<VerifyCert />} />
-          <Route path="/verify-event" element={<VerifyCert />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/terms" element={<TermsOfService />} />
-          <Route path="/refund-policy" element={<RefundPolicy />} />
-          <Route path="/cookie-policy" element={<CookiePolicy />} />
-          <Route path="/host" element={<HostHackathon />} />
-          <Route path="/campus-ambassador" element={<CampusAmbassador />} />
-        </Routes>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
+            <Route path="/courses" element={<Courses />} />
+            <Route path="/courses/:slug" element={<CourseDetail />} />
+            <Route path="/courses/:slug/lesson/:lessonId" element={<LessonView />} />
+            <Route path="/courses/:slug/quiz" element={<QuizView />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/u/:id" element={<PublicProfile />} />
+            <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/admin/upload" element={<AdminPanel />} />
+            <Route path="/verify" element={<VerifyCert />} />
+            <Route path="/verify/:certId" element={<VerifyCert />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:slug" element={<BlogPost />} />
+            <Route path="/hackathons" element={<Events />} />
+            <Route path="/hackathons/:id" element={<HackathonDetail />} />
+            <Route path="/job-simulation/:id" element={<JobSimulation />} />
+            <Route path="/events/job-simulation/:id" element={<JobSimulation />} />
+            <Route path="/verify-event/:certId" element={<VerifyCert />} />
+            <Route path="/verify-event" element={<VerifyCert />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/refund-policy" element={<RefundPolicy />} />
+            <Route path="/cookie-policy" element={<CookiePolicy />} />
+            <Route path="/host" element={<HostHackathon />} />
+            <Route path="/campus-ambassador" element={<CampusAmbassador />} />
+          </Routes>
+        </Suspense>
       </main>
       {!isLearningView && !isCleanView && <PreFooterCTA />}
       {!isLearningView && !isCleanView && <Footer />}
