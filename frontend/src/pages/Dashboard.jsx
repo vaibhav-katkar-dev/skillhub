@@ -355,7 +355,9 @@ const Dashboard = () => {
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileData, setProfileData] = useState({
     name: '', github: '', linkedin: '', resume: '', portfolio: '', username: '', openToWork: false,
-    college: '', branch: '', year: '', phoneNumber: '', bio: '', showPhoneNumber: false
+    college: '', branch: '', year: '', phoneNumber: '', bio: '', showPhoneNumber: false,
+    theme: 'light', customSkillsText: '',
+    projects: [], customLinks: []
   });
 
   useEffect(() => {
@@ -373,7 +375,11 @@ const Dashboard = () => {
         year: userData.year || '',
         phoneNumber: userData.phoneNumber || '',
         bio: userData.bio || '',
-        showPhoneNumber: userData.showPhoneNumber || false
+        showPhoneNumber: userData.showPhoneNumber || false,
+        theme: userData.theme || 'light',
+        customSkillsText: (userData.customSkills || []).join(', '),
+        projects: userData.projects || [],
+        customLinks: userData.customLinks || []
       });
     }
   }, [userData]);
@@ -381,7 +387,17 @@ const Dashboard = () => {
   const handleSaveProfile = async () => {
     setSavingProfile(true);
     try {
-      const res = await api.put('/auth/profile', profileData);
+      // Filter out invalid projects or links to prevent backend database validation crashes
+      const validLinks = profileData.customLinks.filter(l => l.title.trim() !== '' && l.url.trim() !== '');
+      const validProjects = profileData.projects.filter(p => p.title.trim() !== '');
+
+      const payload = { 
+        ...profileData,
+        customLinks: validLinks,
+        projects: validProjects,
+        customSkills: profileData.customSkillsText ? profileData.customSkillsText.split(',').map(s => s.trim()).filter(Boolean) : []
+      };
+      const res = await api.put('/auth/profile', payload);
       useAuthStore.setState({ user: res.data });
       sessionStorage.setItem('skillvalix_user', JSON.stringify(res.data));
       setEditingProfile(false);
@@ -764,7 +780,11 @@ const Dashboard = () => {
                             year: userData.year || '',
                             phoneNumber: userData.phoneNumber || '',
                             bio: userData.bio || '',
-                            showPhoneNumber: userData.showPhoneNumber || false
+                            showPhoneNumber: userData.showPhoneNumber || false,
+                            theme: userData.theme || 'light',
+                            customSkillsText: (userData.customSkills || []).join(', '),
+                            projects: userData.projects || [],
+                            customLinks: userData.customLinks || []
                           });
                           setEditingProfile(true);
                         }} 
@@ -807,6 +827,17 @@ const Dashboard = () => {
                             placeholder="Tell recruiters about your goals, skills, and background..." 
                             className="w-full text-sm px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none h-32 resize-none transition-all" 
                           />
+                        </div>
+                        <div className="space-y-1.5 border-t border-slate-100 pt-4 mt-2">
+                          <label className="text-xs font-bold text-slate-500 ml-1">Custom Skills (comma separated)</label>
+                          <input 
+                            type="text" 
+                            value={profileData.customSkillsText} 
+                            onChange={e => setProfileData({...profileData, customSkillsText: e.target.value})} 
+                            placeholder="e.g. React, Node.js, Graphic Design" 
+                            className="w-full text-sm px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition-all" 
+                          />
+                          <p className="text-[10px] text-slate-400 pl-1">These will merge with skills automatically extracted from your finished courses.</p>
                         </div>
                       </section>
 
@@ -885,6 +916,51 @@ const Dashboard = () => {
                         </div>
                       </section>
 
+                      {/* Section: Custom Links (New Feature) */}
+                      <section className="space-y-4">
+                        <div className="flex items-center justify-between pb-2 border-b border-slate-100 mb-4">
+                          <div className="flex items-center gap-2">
+                            <i className="w-4 h-4 text-indigo-600 lucide lucide-link" />
+                            <h3 className="text-sm font-black uppercase tracking-widest text-slate-800">Featured Links</h3>
+                          </div>
+                          <button onClick={() => setProfileData({...profileData, customLinks: [...profileData.customLinks, {title: '', url: ''}]})} className="text-xs bg-indigo-50 text-indigo-600 font-bold px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-colors">+ Add Link</button>
+                        </div>
+                        {profileData.customLinks.map((link, idx) => (
+                          <div key={idx} className="flex flex-col sm:flex-row gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                             <input type="text" value={link.title} onChange={e => { const newLinks = [...profileData.customLinks]; newLinks[idx].title = e.target.value; setProfileData({...profileData, customLinks: newLinks}); }} placeholder="Link Title (e.g. My Blog)" className="flex-1 text-sm px-3 py-2 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" />
+                             <input type="text" value={link.url} onChange={e => { const newLinks = [...profileData.customLinks]; newLinks[idx].url = e.target.value; setProfileData({...profileData, customLinks: newLinks}); }} placeholder="URL (https://...)" className="flex-[2] text-sm px-3 py-2 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" />
+                             <button onClick={() => { const newLinks = [...profileData.customLinks]; newLinks.splice(idx, 1); setProfileData({...profileData, customLinks: newLinks}); }} className="px-3 py-2 bg-rose-50 text-rose-600 text-xs font-bold rounded-lg hover:bg-rose-100 transition-colors border border-rose-100">Remove</button>
+                          </div>
+                        ))}
+                      </section>
+
+                      {/* Section: Dynamic Portfolio Projects */}
+                      <section className="space-y-4">
+                        <div className="flex items-center justify-between pb-2 border-b border-slate-100 mb-4">
+                          <div className="flex items-center gap-2">
+                             <Briefcase className="w-4 h-4 text-indigo-600" />
+                             <h3 className="text-sm font-black uppercase tracking-widest text-slate-800">Portfolio Projects</h3>
+                          </div>
+                          <button onClick={() => setProfileData({...profileData, projects: [...profileData.projects, {title: '', description: '', link: '', github: '', techStack: []}]})} className="text-xs bg-indigo-50 text-indigo-600 font-bold px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-colors">+ Add Project</button>
+                        </div>
+                        <div className="grid grid-cols-1 gap-5">
+                          {profileData.projects.map((proj, idx) => (
+                            <div key={idx} className="bg-white border-2 border-slate-200 p-5 rounded-[1.5rem] relative shadow-sm">
+                              <button onClick={() => { const newProjs = [...profileData.projects]; newProjs.splice(idx, 1); setProfileData({...profileData, projects: newProjs}); }} className="absolute top-4 right-4 text-xs font-bold text-rose-500 bg-rose-50 px-2 py-1 rounded-md hover:bg-rose-100">Remove</button>
+                              <div className="space-y-3 pt-2">
+                                <input type="text" value={proj.title} onChange={e => { const newProjs = [...profileData.projects]; newProjs[idx].title = e.target.value; setProfileData({...profileData, projects: newProjs}); }} placeholder="Project Title" className="w-full text-base font-black px-4 py-2 border-b border-slate-200 outline-none focus:border-indigo-500 placeholder:font-medium" />
+                                <textarea value={proj.description} onChange={e => { const newProjs = [...profileData.projects]; newProjs[idx].description = e.target.value; setProfileData({...profileData, projects: newProjs}); }} placeholder="Briefly describe what you built..." className="w-full text-sm px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 h-20 resize-none" />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                  <input type="text" value={proj.link} onChange={e => { const newProjs = [...profileData.projects]; newProjs[idx].link = e.target.value; setProfileData({...profileData, projects: newProjs}); }} placeholder="Live Link (https://...)" className="w-full text-sm px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500" />
+                                  <input type="text" value={proj.github} onChange={e => { const newProjs = [...profileData.projects]; newProjs[idx].github = e.target.value; setProfileData({...profileData, projects: newProjs}); }} placeholder="GitHub / Source Link" className="w-full text-sm px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500" />
+                                </div>
+                                <input type="text" value={proj.techStack ? proj.techStack.join(', ') : ''} onChange={e => { const newProjs = [...profileData.projects]; newProjs[idx].techStack = e.target.value.split(',').map(s=>s.trim()).filter(Boolean); setProfileData({...profileData, projects: newProjs}); }} placeholder="Tech Stack (comma separated, e.g. React, Tailwind, Express)" className="w-full text-sm px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500" />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+
                       {/* Section: Privacy Settings */}
                       <section className="space-y-4">
                         <div className="flex items-center gap-2 pb-2 border-b border-slate-100 mb-4">
@@ -914,6 +990,17 @@ const Dashboard = () => {
                             <input type="checkbox" checked={profileData.showPhoneNumber} onChange={e => setProfileData({...profileData, showPhoneNumber: e.target.checked})} className="w-5 h-5 rounded-lg border-2 border-slate-300 text-indigo-600 focus:ring-indigo-500" />
                           </label>
                         </div>
+                        <div className="pt-4 border-t border-slate-100 space-y-1.5 mt-4">
+                            <label className="text-xs font-bold text-slate-500 ml-1">Portfolio Theme</label>
+                            <select 
+                                value={profileData.theme} 
+                                onChange={e => setProfileData({...profileData, theme: e.target.value})} 
+                                className="w-full text-sm px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition-all appearance-none cursor-pointer"
+                            >
+                                <option value="light">Light Mode (Clean & Minimal)</option>
+                                <option value="dark">Dark Mode (Premium & Modern)</option>
+                            </select>
+                        </div>
                       </section>
 
                       {/* Form Actions */}
@@ -930,7 +1017,7 @@ const Dashboard = () => {
                           className="flex-[2] py-3.5 bg-slate-900 hover:bg-black text-white rounded-2xl text-sm font-black uppercase tracking-widest transition-all shadow-xl shadow-slate-200 disabled:opacity-70 flex items-center justify-center gap-2 active:scale-[0.98]"
                         >
                           {savingProfile ? <Loader2 className="w-5 h-5 animate-spin"/> : <Save className="w-5 h-5" />}
-                          {savingProfile ? 'Saving...' : 'Sync Profile'}
+                          {savingProfile ? 'Saving...' : 'Save Profile'}
                         </button>
                       </div>
                     </div>

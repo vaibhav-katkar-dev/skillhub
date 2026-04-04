@@ -40,12 +40,69 @@ export default function Events() {
   return (
     <>
       <Helmet>
-        <title>Hackathons | SkillHub - Host & Join Tech Events</title>
-        <meta
-          name="description"
-          content="Explore the best hackathons, coding challenges, and tech events on SkillHub. Build projects, get certificates, and get hired!"
-        />
-        <meta name="keywords" content="hackathon, coding challenge, tech events, programming competition, skillhub hackathons" />
+        {/* ── Primary SEO ─────────────────────────────────── */}
+        <title>Free Student Hackathons with Certificate | SkillValix Online Hackathon Platform</title>
+        <meta name="description" content="Join free online hackathons for students on SkillValix. Build real projects, win prizes, and earn verified certificates. Beginner-friendly. Register today — 100% free!" />
+        <meta name="keywords" content="student hackathons, free hackathons for students with certificates, online hackathon platform, online hackathon for beginners, SkillValix hackathons, free hackathon India, hackathon with certificate, coding competition for students, free tech events students, programming contest beginners" />
+        <link rel="canonical" href="https://skillvalix.com/hackathons" />
+        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+        <meta name="author" content="SkillValix" />
+
+        {/* ── Open Graph ───────────────────────────────────── */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://skillvalix.com/hackathons" />
+        <meta property="og:site_name" content="SkillValix" />
+        <meta property="og:locale" content="en_IN" />
+        <meta property="og:title" content="Free Student Hackathons with Certificate | SkillValix" />
+        <meta property="og:description" content="Build real projects, compete with peers, and earn free verified certificates. Join SkillValix hackathons — open to all beginners. 100% free to enter." />
+        <meta property="og:image" content="https://skillvalix.com/og-home.png" />
+        <meta property="og:image:alt" content="SkillValix – Free Online Hackathons for Students" />
+
+        {/* ── Twitter Card ─────────────────────────────────── */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@SkillValix" />
+        <meta name="twitter:title" content="Free Student Hackathons with Certificate | SkillValix" />
+        <meta name="twitter:description" content="Join SkillValix free online hackathons for students. Build projects, earn verified certificates, get recognized. Register now." />
+        <meta name="twitter:image" content="https://skillvalix.com/og-home.png" />
+
+        {/* ── JSON-LD: Organization ─────────────────────────── */}
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          "name": "SkillValix",
+          "url": "https://skillvalix.com",
+          "logo": "https://skillvalix.com/logo.svg",
+          "sameAs": ["https://www.linkedin.com/company/skillvalix", "https://www.instagram.com/skillvalix"]
+        })}</script>
+
+        {/* ── JSON-LD: Event (Generic hackathon series) ─────── */}
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Event",
+          "name": "SkillValix Student Hackathon Series",
+          "description": "Free online hackathons for students and beginners. Build real projects, collaborate with peers, and earn verifiable certificates on SkillValix.",
+          "url": "https://skillvalix.com/hackathons",
+          "eventAttendanceMode": "https://schema.org/OnlineEventAttendanceMode",
+          "eventStatus": "https://schema.org/EventScheduled",
+          "isAccessibleForFree": true,
+          "organizer": { "@type": "Organization", "name": "SkillValix", "url": "https://skillvalix.com" },
+          "location": { "@type": "VirtualLocation", "url": "https://skillvalix.com/hackathons" },
+          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "INR", "availability": "https://schema.org/InStock", "url": "https://skillvalix.com/hackathons" },
+          "audience": { "@type": "Audience", "audienceType": "Students, Beginners, Developers aged 16-30" }
+        })}</script>
+
+        {/* ── JSON-LD: FAQPage ─────────────────────────────── */}
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": [
+            { "@type": "Question", "name": "Are SkillValix hackathons free for students?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, all hackathons on SkillValix are 100% free to enter. No registration fee, no hidden charges. Every participant gets a certificate." } },
+            { "@type": "Question", "name": "Can beginners join SkillValix hackathons?", "acceptedAnswer": { "@type": "Answer", "text": "Absolutely! SkillValix hackathons are designed specifically for beginners aged 16-30. No prior experience is required to participate." } },
+            { "@type": "Question", "name": "Do I get a certificate for participating in a hackathon?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Every participant receives a verified participation certificate. Winners receive special merit certificates that are verifiable on the SkillValix platform." } },
+            { "@type": "Question", "name": "How do I register for a hackathon on SkillValix?", "acceptedAnswer": { "@type": "Answer", "text": "Simply create a free SkillValix account, browse the hackathons page, click on any active hackathon, and click the Register button. It takes less than 2 minutes." } },
+            { "@type": "Question", "name": "Can I participate in hackathons solo or only in teams?", "acceptedAnswer": { "@type": "Answer", "text": "Both solo and team participation are welcome on SkillValix. Check each hackathon's detail page for specific team size requirements." } }
+          ]
+        })}</script>
       </Helmet>
 
       <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 py-24 px-6">

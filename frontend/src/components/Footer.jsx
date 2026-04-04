@@ -21,7 +21,7 @@ const NAV_COLUMNS = [
     heading: 'Learn',
     icon: GraduationCap,
     links: [
-      { to: '/courses',                                               label: 'All Courses' },
+      { to: '/free-courses',                                          label: 'Free Courses' },
       { to: '/courses/ultimate-html-masterclass',                     label: 'HTML Masterclass' },
       { to: '/courses/css-for-beginners-learn-web-styling-zero-to-pro', label: 'CSS Fundamentals' },
       { to: '/courses/ultimate-javascript-masterclass',                 label: 'JavaScript Basics' },
@@ -31,10 +31,10 @@ const NAV_COLUMNS = [
     heading: 'Resources',
     icon: BookMarked,
     links: [
-      { to: '/blog',           label: 'Blog' },
+      { to: '/certification',  label: 'Certification' },
       { to: '/verify',         label: 'Verify Certificate' },
-      { to: '/dashboard',      label: 'Student Dashboard' },
-      { to: '/',               label: 'Help Center' },
+      { to: '/hackathons',     label: 'Student Hackathons' },
+      { to: '/blog',           label: 'Blog' },
     ],
   },
   {
@@ -42,11 +42,10 @@ const NAV_COLUMNS = [
     icon: Building2,
     links: [
       { to: '/campus-ambassador', label: '🎓 Campus Ambassador', highlight: true },
-      { to: '/register',       label: 'Create Account' },
-      { to: '/login',          label: 'Sign In' },
+      { to: '/host',           label: 'Host a Hackathon' },
+      { to: '/dashboard',      label: 'Student Dashboard' },
       { to: '/privacy-policy', label: 'Privacy Policy' },
       { to: '/terms',          label: 'Terms of Service' },
-      { to: '/refund-policy',  label: 'Refund Policy' },
     ],
   },
 ];

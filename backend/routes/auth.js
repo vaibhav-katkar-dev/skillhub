@@ -247,19 +247,33 @@ router.post('/reset-password/:token', async (req, res) => {
   }
 });
 
+// ── High-Performance Caching for Public Profiles ──────────────────────────
+const publicProfileCache = new Map();
+const CACHE_TTL = 60 * 1000; // 60 seconds TTL
+
 // ── Get Public Profile ──────────────────────────────────────────────────────
 router.get('/public/:id', async (req, res) => {
   try {
     const queryParam = req.params.id;
+    
+    // Check Cache
+    if (publicProfileCache.has(queryParam)) {
+      const cached = publicProfileCache.get(queryParam);
+      if (Date.now() - cached.timestamp < CACHE_TTL) {
+        return res.json(cached.data);
+      }
+      publicProfileCache.delete(queryParam);
+    }
+    
     let user;
 
     if (mongoose.Types.ObjectId.isValid(queryParam)) {
-      user = await User.findById(queryParam).select('name createdAt github linkedin resume portfolio username openToWork college branch year bio phoneNumber showPhoneNumber');
+      user = await User.findById(queryParam).select('name createdAt github linkedin resume portfolio username openToWork college branch year bio phoneNumber showPhoneNumber theme customLinks projects customSkills');
     }
     
     if (!user) {
       // If not a valid ObjectId or not found, try searching by custom username
-      user = await User.findOne({ username: queryParam }).select('name createdAt github linkedin resume portfolio username openToWork college branch year bio phoneNumber showPhoneNumber');
+      user = await User.findOne({ username: queryParam }).select('name createdAt github linkedin resume portfolio username openToWork college branch year bio phoneNumber showPhoneNumber theme customLinks projects customSkills');
     }
 
     if (!user) return res.status(404).json({ message: 'User not found' });
@@ -277,7 +291,7 @@ router.get('/public/:id', async (req, res) => {
     
     const allCerts = [...stdCerts, ...eventCerts].sort((a,b) => new Date(b.issueDate) - new Date(a.issueDate));
     
-    res.json({
+    const payload = {
       name: user.name,
       joinedAt: user.createdAt,
       github: user.github,
@@ -292,8 +306,21 @@ router.get('/public/:id', async (req, res) => {
       bio: user.bio,
       phoneNumber: user.showPhoneNumber ? user.phoneNumber : undefined,
       showPhoneNumber: user.showPhoneNumber,
+      theme: user.theme,
+      customLinks: user.customLinks,
+      projects: user.projects,
+      customSkills: user.customSkills,
       certificates: allCerts
-    });
+    };
+    
+    publicProfileCache.set(queryParam, { data: payload, timestamp: Date.now() });
+    if (user.username && user.username !== queryParam) {
+      publicProfileCache.set(user.username, { data: payload, timestamp: Date.now() });
+    } else if (user._id.toString() !== queryParam) {
+      publicProfileCache.set(user._id.toString(), { data: payload, timestamp: Date.now() });
+    }
+
+    res.json(payload);
   } catch (err) {
     console.error('Public Profile Error:', err);
     res.status(500).send('Server Error loading public profile');
@@ -303,7 +330,7 @@ router.get('/public/:id', async (req, res) => {
 // ── Update Profile ────────────────────────────────────────────────────────
 router.put('/profile', authOptions, async (req, res) => {
   try {
-    const { name, github, linkedin, resume, portfolio, username, openToWork, college, branch, year, phoneNumber, bio, showPhoneNumber } = req.body;
+    const { name, github, linkedin, resume, portfolio, username, openToWork, college, branch, year, phoneNumber, bio, showPhoneNumber, theme, customLinks, projects, customSkills } = req.body;
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
@@ -343,6 +370,10 @@ router.put('/profile', authOptions, async (req, res) => {
     if (phoneNumber !== undefined) user.phoneNumber = phoneNumber;
     if (bio !== undefined) user.bio = bio;
     if (showPhoneNumber !== undefined) user.showPhoneNumber = showPhoneNumber;
+    if (theme !== undefined) user.theme = theme;
+    if (customLinks !== undefined) user.customLinks = customLinks;
+    if (projects !== undefined) user.projects = projects;
+    if (customSkills !== undefined) user.customSkills = customSkills;
 
     await user.save();
 
@@ -374,7 +405,12 @@ router.put('/profile', authOptions, async (req, res) => {
       ]);
     }
     
-    const updatedUser = await User.findById(req.user.id).select('-password');
+    const updatedUser = await User.findById(req.user.id).select('-password').lean();
+    
+    // Invalidate Cache for this user upon save
+    publicProfileCache.delete(updatedUser._id.toString());
+    if (updatedUser.username) publicProfileCache.delete(updatedUser.username);
+    
     res.json(updatedUser);
   } catch (err) {
     console.error('Profile Update Error:', err);

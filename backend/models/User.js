@@ -25,7 +25,22 @@ const userSchema = new mongoose.Schema({
   year: { type: String, default: '' },
   phoneNumber: { type: String, default: '' },
   bio: { type: String, default: '' },
-  showPhoneNumber: { type: Boolean, default: false }
+  showPhoneNumber: { type: Boolean, default: false },
+  
+  // Public Portfolio Improvements
+  theme: { type: String, enum: ['light', 'dark'], default: 'light' },
+  customLinks: [{
+    title: { type: String, required: true },
+    url: { type: String, required: true }
+  }],
+  projects: [{
+    title: { type: String, required: true },
+    description: { type: String },
+    link: { type: String },
+    github: { type: String },
+    techStack: [String]
+  }],
+  customSkills: [String]
 }, { timestamps: true });
 
 export default mongoose.model('User', userSchema);

@@ -93,12 +93,18 @@ const TESTIMONIALS = [
 ];
 
 const FAQS = [
-  { q: 'Is SkillValix really free?',              a: 'Yes - completely. Every course, every exam, every certificate is free. No hidden fees, no premium tiers. We believe education should be accessible to everyone.' },
-  { q: 'How are the certificates verified?',    a: 'Each certificate has a unique ID. Anyone can visit our Verify page, enter that ID and see your full result and completion date in seconds.' },
-  { q: 'Do I need prior experience to start?',  a: 'Not at all. Every course starts from zero and assumes no prior knowledge. If you can browse the web, you can start learning with us.' },
-  { q: 'Can I learn at my own pace?',           a: 'Absolutely. There are no deadlines, cohorts, or time limits. Start a lesson, pause, continue tomorrow - your progress is always saved.' },
-  { q: 'How difficult are the exams?',          a: "Challenging but fair. Each question links directly to lesson content, so thorough study leads to a confident pass. You can retake them too." },
+  { q: 'Are the courses on SkillValix free?',                    a: 'Yes — all courses on SkillValix are completely free to access. Browse our full library, study at your own pace, and level up your skills with zero upfront cost.' },
+  { q: 'How do I earn a certificate on SkillValix?',             a: 'Complete a course, pass the final exam, and unlock your verified certificate — a unique, employer-ready credential with your name and a verification ID. It\'s how top students prove their skills stand out.' },
+  { q: 'Does SkillValix have hackathons for students?',          a: 'Yes! SkillValix hosts online hackathons where students build real projects, collaborate with peers, and get recognized for their work. Ideal for your portfolio and resume.' },
+  { q: 'Are SkillValix certificates trusted by employers?',      a: 'Absolutely. Every certificate has a unique verification ID — employers can confirm your achievement in seconds at skillvalix.com/verify. Thousands of students have landed internships and jobs with theirs.' },
+  { q: 'Can beginners join SkillValix hackathons?',              a: 'Yes — SkillValix hackathons are designed for beginners aged 16–30. No prior experience needed. Show up, build something, and see what you\'re capable of.' },
+  { q: 'How fast can I finish a course?',                        a: 'Most courses take just 2–6 hours. Focused learners have gone from zero to exam-ready in a single day. Your pace, your schedule — no deadlines.' },
+  { q: 'Do I need prior experience to start?',                   a: 'Not at all. Every course starts from absolute zero. If you can browse the internet, you can start learning with SkillValix right now.' },
+  { q: 'Can I learn at my own pace?',                            a: 'Completely. No cohorts, no deadlines, no pressure. Progress is saved automatically — pick up exactly where you left off, whenever life allows.' },
 ];
+
+
+
 
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    HOOKS
@@ -235,10 +241,10 @@ export default function Home() {
   return (
     <div style={{ fontFamily: "'Inter', system-ui, sans-serif", background: 'linear-gradient(180deg,#f5f7ff 0%, #f3fae9 34%, #ffffff 100%)', color: '#0f172a', overflowX: 'hidden' }}>
       <Helmet>
-        {/* ── Primary SEO ─────────────────────────────── */}
-        <title>SkillValix - Free Online Coding Courses with Certificates | Learn HTML, CSS, JavaScript, Python and More</title>
-        <meta name="description" content="Learn to code 100% FREE - no credit card, no hidden fees, ever. SkillValix offers structured courses in HTML, CSS, JavaScript, Python, Java and AI with verifiable certificates. Join 2,800+ students already building their careers online. Start today!" />
-        <meta name="keywords" content="free online coding courses, free web development course, learn HTML free, learn CSS free, learn JavaScript free, Python for beginners free, free programming courses India, coding courses with certificates, learn to code for free, web development for beginners, best free coding website, free HTML CSS JavaScript course, online learning platform India, programming certificate online free, learn AI machine learning free, free computer science courses, free tech courses 2026, programming for students free, software development course free, SkillValix, skillvalix.com" />
+        {/* ── Primary SEO — Brand + High-Intent Keywords ───── */}
+        <title>SkillValix – Free Online Courses & Student Hackathons | Skill-Based Certification Platform</title>
+        <meta name="description" content="SkillValix: Learn free online courses in HTML, CSS, JavaScript, Python & more. Join student hackathons, earn verified skill certificates, and build a career. 2,800+ learners. Start free today!" />
+        <meta name="keywords" content="SkillValix, free online courses for students, student hackathons, online hackathon platform, skill based certification platform, online certification platform, free courses India, student hackathons with certificate, online hackathon for beginners, learn skills online free, free courses and hackathons for students, free web development course, online certification India" />
         <link rel="canonical" href="https://skillvalix.com/" />
         <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
         <meta name="author" content="SkillValix" />
@@ -249,19 +255,19 @@ export default function Home() {
         <meta property="og:url" content="https://skillvalix.com/" />
         <meta property="og:site_name" content="SkillValix" />
         <meta property="og:locale" content="en_IN" />
-        <meta property="og:title" content="SkillValix - Free Coding Courses with Certificates | HTML, CSS, JS, Python, AI" />
-        <meta property="og:description" content="Learn in-demand tech skills 100% free. SkillValix offers structured beginner-to-pro courses with real exam assessments and verifiable PDF certificates. No credit card. No paywall. Ever." />
+        <meta property="og:title" content="SkillValix – Free Online Courses & Student Hackathons" />
+        <meta property="og:description" content="Learn HTML, CSS, JavaScript, Python & AI — free. Join student hackathons. Earn verified skill certificates and launch your tech career on SkillValix." />
         <meta property="og:image" content="https://skillvalix.com/og-home.png" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
-        <meta property="og:image:alt" content="SkillValix - Free Online Coding Courses with Certificates" />
+        <meta property="og:image:alt" content="SkillValix – Free Online Courses, Hackathons & Certificates" />
 
         {/* ── Twitter Card ─────────────────────────────── */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:site" content="@SkillValix" />
         <meta name="twitter:creator" content="@SkillValix" />
-        <meta name="twitter:title" content="SkillValix - Free Coding Courses with Certificates" />
-        <meta name="twitter:description" content="Master HTML, CSS, JavaScript, Python, Java and AI for free. Get verifiable certificates and boost your career - no credit card needed." />
+        <meta name="twitter:title" content="SkillValix – Free Online Courses & Student Hackathons" />
+        <meta name="twitter:description" content="Learn HTML, CSS, JS, Python & more for free. Join student hackathons. Earn verified skill certificates. 2,800+ learners on SkillValix. Start today." />
         <meta name="twitter:image" content="https://skillvalix.com/og-home.png" />
 
         {/* ── JSON-LD: WebSite + Sitelinks Search Box ─────── */}
@@ -321,6 +327,17 @@ export default function Home() {
         })}</script>
 
         {/* â”€â”€ Fonts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* ── JSON-LD: FAQPage — Featured Snippet target ───── */}
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": FAQS.map(f => ({
+            "@type": "Question",
+            "name": f.q,
+            "acceptedAnswer": { "@type": "Answer", "text": f.a }
+          }))
+        })}</script>
+
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
       </Helmet>
 
