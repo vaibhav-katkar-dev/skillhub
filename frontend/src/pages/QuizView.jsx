@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api, useAuthStore, clearCache } from '../store/authStore';
 import { getCourseBySlug } from '../data/courseLoader';
 import { Award, Loader2, AlertCircle, Download, CreditCard, CheckCircle } from 'lucide-react';
+import { generatePDFFromDOM } from '../utils/pdfGenerator';
+import CertificateTemplate from '../components/CertificateTemplate';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://api.skillvalix.com/api';
 
@@ -23,46 +25,38 @@ const QuizView = () => {
   const [existingCert, setExistingCert] = useState(null);
   const [paying, setPaying] = useState(false);
   const [paymentInfo, setPaymentInfo] = useState(null);
-  const [certReady, setCertReady] = useState(false);
   const [certPreparing, setCertPreparing] = useState(false);
-  const [certRetryAfter, setCertRetryAfter] = useState(0);
   const [certStatusMessage, setCertStatusMessage] = useState('');
+  const [exportCertData, setExportCertData] = useState(null);
+  const certTemplateRef = useRef(null);
 
-  const pollCertificateStatus = async (certificateId) => {
-    try {
-      const res = await api.get(`/certificates/status/${certificateId}`);
-      setCertRetryAfter(res.data.retryAfterSeconds || 0);
-      if (res.data.pdfReady) {
-        setCertReady(true);
-        setCertPreparing(false);
-        setCertStatusMessage('Your certificate PDF is ready to download.');
-        clearCache('certs_mine');
-      }
-    } catch (err) {
-      console.error('Certificate status polling failed', err);
-    }
-  };
-
-  const prepareCertificate = async (certificateId) => {
-    if (!certificateId) return;
-    setGeneratedCertId(certificateId);
+  const handleClientDownload = async (certId) => {
+    if (!certId) return;
     setCertPreparing(true);
-    setCertReady(false);
-    try {
-      const res = await api.post(`/certificates/prepare/${certificateId}`);
-      setCertRetryAfter(res.data.retryAfterSeconds || 0);
-      if (res.data.pdfReady) {
-        setCertReady(true);
+    setCertStatusMessage('Generating your Certificate PDF locally... Please wait.');
+
+    setExportCertData({
+      course,
+      certificateId: certId,
+      issueDate: existingCert?.issueDate || Date.now(),
+      isEvent: course?.isEvent,
+    });
+
+    setTimeout(async () => {
+      try {
+        const fileName = `${course?.isEvent ? 'JobSimCertificate' : 'Certificate'}-${certId}`;
+        const success = await generatePDFFromDOM(certTemplateRef, fileName);
+        if (!success) throw new Error('Failed to generate PDF.');
         setCertPreparing(false);
-        setCertStatusMessage('Your certificate PDF is ready to download.');
-        clearCache('certs_mine');
-      } else {
-        setCertStatusMessage('Certificate created successfully. The PDF is now being prepared safely in the background.');
+        setExportCertData(null);
+        setCertStatusMessage('Certificate downloaded successfully!');
+      } catch (err) {
+        console.error(err);
+        setCertPreparing(false);
+        setExportCertData(null);
+        setCertStatusMessage('Failed to download. Please try again.');
       }
-    } catch (err) {
-      setCertPreparing(false);
-      setCertStatusMessage(err.response?.data?.message || 'Failed to prepare certificate PDF.');
-    }
+    }, 500);
   };
 
   useEffect(() => {
@@ -93,12 +87,7 @@ const QuizView = () => {
           if (pastCert) {
             setAlreadyPassed(true);
             setExistingCert(pastCert);
-            if (pastCert.pdfReady) {
-              setCertReady(true);
-            } else {
-              setGeneratedCertId(pastCert.certificateId);
-              prepareCertificate(pastCert.certificateId);
-            }
+            setGeneratedCertId(pastCert.certificateId);
           }
         } catch (certErr) {
           console.error('Could not fetch user certificates', certErr);
@@ -113,21 +102,7 @@ const QuizView = () => {
     fetchQuiz();
   }, [slug, isAuthenticated, navigate, authLoading]);
 
-  useEffect(() => {
-    if (!certPreparing || !generatedCertId || certReady) return undefined;
-    const intervalId = setInterval(() => {
-      pollCertificateStatus(generatedCertId);
-    }, 4000);
-    return () => clearInterval(intervalId);
-  }, [certPreparing, generatedCertId, certReady]);
 
-  useEffect(() => {
-    if (!certPreparing || certReady || certRetryAfter <= 0) return undefined;
-    const timerId = setInterval(() => {
-      setCertRetryAfter(prev => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
-    return () => clearInterval(timerId);
-  }, [certPreparing, certReady, certRetryAfter]);
 
   const handleOptionSelect = (qIndex, oIndex) => {
     setAnswers(prev => ({ ...prev, [qIndex]: oIndex }));
@@ -150,7 +125,6 @@ const QuizView = () => {
       if (res.data.passed && res.data.certificateId) {
         setGeneratedCertId(res.data.certificateId);
         clearCache('certs_mine');
-        prepareCertificate(res.data.certificateId);
       }
 
       if (!res.data.passed) {
@@ -272,23 +246,14 @@ const QuizView = () => {
           )}
 
           <div className="flex justify-center gap-4 flex-wrap">
-            {result.passed && generatedCertId && certReady && (
+            {result.passed && generatedCertId && (
               <button
-                onClick={() => window.open(`${API_BASE}/certificates/download/${generatedCertId}`, '_blank')}
-                className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition-colors shadow-md shadow-emerald-500/20 flex items-center gap-2"
-              >
-                <Download className="w-5 h-5" /> Download Certificate
-              </button>
-            )}
-
-            {result.passed && generatedCertId && !certReady && (
-              <button
-                onClick={() => prepareCertificate(generatedCertId)}
+                onClick={() => handleClientDownload(generatedCertId)}
                 disabled={certPreparing}
-                className="px-6 py-3 bg-amber-500 hover:bg-amber-400 disabled:bg-amber-300 text-white rounded-xl font-bold transition-colors shadow-md shadow-amber-500/20 flex items-center gap-2"
+                className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-400 text-white rounded-xl font-bold transition-colors shadow-md shadow-emerald-500/20 flex items-center gap-2"
               >
-                <Loader2 className={`w-5 h-5 ${certPreparing ? 'animate-spin' : ''}`} />
-                {certPreparing ? `Preparing PDF${certRetryAfter > 0 ? ` (${certRetryAfter}s)` : ''}` : 'Prepare Certificate PDF'}
+                {certPreparing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
+                {certPreparing ? 'Generating PDF...' : 'Download Certificate'}
               </button>
             )}
 
@@ -331,29 +296,18 @@ const QuizView = () => {
             You have already cleared this Certification Exam.
           </p>
           <p className="text-slate-600 mb-8 max-w-md mx-auto">
-            {certReady
-              ? 'Your certificate is ready to download. You do not need to take this exam again.'
-              : 'Your certificate record already exists. The PDF is being prepared so repeated requests do not overload the server.'}
+            Your certificate is securely recorded. You can download your official PDF copy directly below.
           </p>
 
           <div className="flex justify-center gap-4 flex-wrap">
-            {existingCert && certReady && (
+            {existingCert && generatedCertId && (
               <button
-                onClick={() => window.open(`${API_BASE}/certificates/download/${existingCert.certificateId}`, '_blank')}
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition-colors shadow-md shadow-blue-500/20 flex items-center gap-2"
-              >
-                <Download className="w-5 h-5" /> Download Certificate
-              </button>
-            )}
-
-            {existingCert && !certReady && (
-              <button
-                onClick={() => prepareCertificate(existingCert.certificateId)}
+                onClick={() => handleClientDownload(generatedCertId)}
                 disabled={certPreparing}
-                className="px-6 py-3 bg-amber-500 hover:bg-amber-400 disabled:bg-amber-300 text-white rounded-xl font-bold transition-colors shadow-md shadow-amber-500/20 flex items-center gap-2"
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-400 text-white rounded-xl font-bold transition-colors shadow-md shadow-blue-500/20 flex items-center gap-2"
               >
-                <Loader2 className={`w-5 h-5 ${certPreparing ? 'animate-spin' : ''}`} />
-                {certPreparing ? `Preparing PDF${certRetryAfter > 0 ? ` (${certRetryAfter}s)` : ''}` : 'Prepare Certificate PDF'}
+                {certPreparing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
+                {certPreparing ? 'Generating PDF...' : 'Download Certificate'}
               </button>
             )}
 
@@ -510,6 +464,19 @@ const QuizView = () => {
             </button>
           </div>
         </form>
+      )}
+
+      {/* Hidden local template for compiling PDFs visually on client thread */}
+      {exportCertData && (
+        <CertificateTemplate
+          ref={certTemplateRef}
+          studentName={user?.name || 'Student'}
+          courseTitle={exportCertData.course?.title || 'Certification'}
+          certificateId={exportCertData.certificateId}
+          issueDate={new Date(exportCertData.issueDate).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric'})}
+          verifyUrl={`${window.location.origin}/verify/${exportCertData.certificateId}`}
+          isEvent={exportCertData.isEvent}
+        />
       )}
     </div>
   );

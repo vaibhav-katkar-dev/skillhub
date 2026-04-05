@@ -23,12 +23,13 @@ const CertificateTemplate = forwardRef(
       <div
         aria-hidden="true"
         style={{
-          position: 'absolute',
-          top: '-10000px',
-          left: '-10000px',
-          // Keep opacity at 1 so html-to-image can read it correctly.
-          // The off-screen position already hides it from users.
-          opacity: 1,
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          zIndex: -9999,
+          // Keep opacity at 0.01 so the browser actively paints it, but it's practically invisible.
+          // Mobile browsers aggressively cull elements at -10000px which causes html-to-image to fail.
+          opacity: 0.01,
           pointerEvents: 'none',
         }}
       >

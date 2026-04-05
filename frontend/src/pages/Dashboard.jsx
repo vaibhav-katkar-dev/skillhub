@@ -276,8 +276,8 @@ const CertCard = ({ cert, onDownload, copyMsg, onCopy, prepState }) => {
               disabled={prepState?.busy}
               className={`flex-1 relative overflow-hidden text-xs font-bold py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-[.98] ${primaryBtn}`}
             >
-              {cert.pdfReady ? <Download className="w-3.5 h-3.5" /> : <Loader2 className={`w-3.5 h-3.5 ${cert.pdfStatus === 'generating' || cert.pdfStatus === 'queued' ? 'animate-spin' : ''}`} />}
-              {cert.pdfReady ? 'Download PDF' : prepState?.busy ? `Preparing${prepState.seconds > 0 ? ` (${prepState.seconds}s)` : ''}` : cert.pdfStatus === 'failed' ? 'Retry PDF' : 'Prepare PDF'}
+              {prepState?.busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : (cert.pdfReady ? <Download className="w-3.5 h-3.5" /> : <Loader2 className={`w-3.5 h-3.5 ${cert.pdfStatus === 'generating' || cert.pdfStatus === 'queued' ? 'animate-spin' : ''}`} />)}
+              {prepState?.busy ? 'Generating...' : (cert.pdfReady ? 'Download PDF' : cert.pdfStatus === 'failed' ? 'Retry PDF' : 'Prepare PDF')}
             </button>
 
             <button

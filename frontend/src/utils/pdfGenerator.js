@@ -24,25 +24,22 @@ export const generatePDFFromDOM = async (elementRef, fileName) => {
     // 2. Give React one additional animation frame to ensure layout is settled.
     await new Promise((resolve) => requestAnimationFrame(resolve));
 
-    // 3. Detect mobile devices for memory optimization
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    const pRatio = isMobile ? 1.5 : 2; // Reduce pixel ratio on mobile to prevent memory errors/crashes
-    const useQuality = isMobile ? 0.85 : 0.95; // Use JPEG compression
+    // 3. Render the element → high-resolution JPEG via html-to-image.
+    // toJpeg resolves mobile memory crashes.
+    // 1.56 ratio applied to A4 (1123x794) = exactly 150 DPI. We use 1.6 to be safe and crisp.
+    const pRatio = 1.6;
+    const useQuality = 0.90;
 
-    // 4. Render the element → high-resolution JPEG via html-to-image.
-    // toJpeg is significantly faster and creates much smaller data URIs than toPng,
-    // which prevents Android browsers from silently crashing during base64 creation.
     const dataUrl = await toJpeg(el, {
-      cacheBust: true,      // avoid stale cached sub-resources
-      pixelRatio: pRatio,   // dynamic for print-quality vs memory balance
+      pixelRatio: pRatio,
       quality: useQuality,
       width: 1123,
       height: 794,
       style: {
-        // In case any ancestor has opacity/visibility set, force them visible
+        // Force the element to be fully opaque for drawing, since we made it 0.01 in the DOM
         opacity: '1',
         visibility: 'visible',
-        backgroundColor: '#F8FAFC', // Ensure JPEG background doesn't default to black
+        backgroundColor: '#F8FAFC',
       },
       // Skip any elements that shouldn't appear in the PDF
       filter: (node) => {
