@@ -18,11 +18,15 @@ export const generatePDFFromDOM = async (elementRef, fileName) => {
   const el = elementRef.current;
 
   try {
-    // 1. Wait for all fonts (Inter, etc.) to be fully loaded by the browser.
-    await document.fonts.ready;
+    // 1. Wait for all fonts (Inter, etc.) to be fully loaded by the browser, 
+    // but with a 1.5s timeout so Android browsers don't hang indefinitely.
+    await Promise.race([
+      document.fonts.ready,
+      new Promise(resolve => setTimeout(resolve, 1500))
+    ]);
 
-    // 2. Give React one additional animation frame to ensure layout is settled.
-    await new Promise((resolve) => requestAnimationFrame(resolve));
+    // 2. Give React time to ensure layout and image DOM nodes are settled on mobile.
+    await new Promise((resolve) => setTimeout(resolve, 300));
 
     // 3. Render the element → high-resolution JPEG via html-to-image.
     // toJpeg resolves mobile memory crashes.
@@ -66,6 +70,6 @@ export const generatePDFFromDOM = async (elementRef, fileName) => {
     return true;
   } catch (error) {
     console.error('PDF Client Generation Error:', error);
-    return false;
+    throw new Error(error.message || 'Unknown generation error');
   }
 };

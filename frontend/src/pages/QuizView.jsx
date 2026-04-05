@@ -45,8 +45,7 @@ const QuizView = () => {
     setTimeout(async () => {
       try {
         const fileName = `${course?.isEvent ? 'JobSimCertificate' : 'Certificate'}-${certId}`;
-        const success = await generatePDFFromDOM(certTemplateRef, fileName);
-        if (!success) throw new Error('Failed to generate PDF.');
+        await generatePDFFromDOM(certTemplateRef, fileName);
         setCertPreparing(false);
         setExportCertData(null);
         setCertStatusMessage('Certificate downloaded successfully!');
@@ -54,7 +53,7 @@ const QuizView = () => {
         console.error(err);
         setCertPreparing(false);
         setExportCertData(null);
-        setCertStatusMessage('Failed to download. Please try again.');
+        setCertStatusMessage(`Failed to download: ${err.message || 'Please try again.'}`);
       }
     }, 500);
   };

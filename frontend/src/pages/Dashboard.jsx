@@ -515,11 +515,7 @@ const Dashboard = () => {
       try {
         const fileName = `${cert.isEvent ? 'JobSimCertificate' : 'Certificate'}-${cert.certificateId}`;
 
-        const success = await generatePDFFromDOM(certTemplateRef, fileName);
-
-        if (!success) {
-          throw new Error('Failed to generate PDF. Please try again.');
-        }
+        await generatePDFFromDOM(certTemplateRef, fileName);
 
         // Clean up: hide the template and clear loading state
         setExportCert(null);

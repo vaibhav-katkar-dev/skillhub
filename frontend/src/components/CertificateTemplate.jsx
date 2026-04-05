@@ -236,7 +236,7 @@ const CertificateTemplate = forwardRef(
             {/* ── Logo row ── */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 40 }}>
               {/* Image Logo */}
-              <img src="/logo.svg" alt="SkillValix Logo" width="80" height="80" style={{ objectFit: 'contain', position: 'relative', zIndex: 10 }} />
+              <img src="/logo.svg" crossOrigin="anonymous" alt="SkillValix Logo" width="80" height="80" style={{ objectFit: 'contain', position: 'relative', zIndex: 10 }} />
 
               {/* Wordmark */}
               <div style={{ display: 'flex', flexDirection: 'column', marginLeft: -8, position: 'relative', zIndex: 0 }}>
