@@ -79,9 +79,4 @@ img {
   height: auto;
 }
 
-/* Prevent non-composited animation CLS — force GPU layer on animated elements */
-[class*='animate-'],
-[style*='animation'] {
-  will-change: transform, opacity;
-  transform: translateZ(0);
-}
+

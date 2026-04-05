@@ -115,6 +115,27 @@ export default function PublicProfile() {
   const seoTitle = `${profile.name} - Professional Portfolio | SkillValix`;
   const seoDesc = profile.bio ? (profile.bio.length > 155 ? profile.bio.slice(0, 150) + '...' : profile.bio) : `Explore ${profile.name}'s verified professional portfolio, technical projects, and ${certCount} certified skills on SkillValix.`;
 
+  const renderRecruiterVerified = (className = "") => (
+    <section className={`bg-indigo-600 rounded-[2rem] p-8 text-white shadow-2xl shadow-indigo-500/20 relative overflow-hidden group ${className}`}>
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-700" />
+        <h3 className="text-xl font-black mb-3">Recruiter Verified</h3>
+        <p className="text-indigo-100 text-xs sm:text-sm leading-relaxed mb-6 font-medium">
+            All credentials shown in this portfolio are graded by SkillValix algorithms and algorithmically verified for authenticity.
+        </p>
+        <div className="flex bg-white/10 p-1 rounded-xl gap-2">
+          <button onClick={() => window.print()} className="flex-1 py-3 bg-white text-indigo-600 rounded-lg font-bold text-xs flex items-center justify-center gap-2 transition-transform active:scale-95 shadow-lg relative z-10">
+              <Download className="w-4 h-4" /> Save PDF
+          </button>
+          <button onClick={() => {
+            navigator.clipboard.writeText(window.location.href);
+            alert("Portfolio Link Copied!");
+          }} className="flex-1 py-3 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.6)] bg-white/20 border border-white/30 hover:bg-white/30 hover:shadow-[0_0_30px_rgba(255,255,255,0.8)] relative z-10">
+              <Share2 className="w-4 h-4" /> Share
+          </button>
+        </div>
+    </section>
+  );
+
   const schemaJSON = {
     "@context": "https://schema.org",
     "@type": "ProfilePage",
@@ -160,8 +181,8 @@ export default function PublicProfile() {
       
       <nav className={`fixed top-0 left-0 right-0 z-50 px-6 py-4 transition-all duration-500 pointer-events-none ${showNav ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}`}>
         <div className="max-w-6xl mx-auto flex justify-between items-center">
-            <div className="pointer-events-auto filter brightness-0 invert opacity-80 mix-blend-difference">
-                <Logo size="sm" linkTo="/" />
+            <div className="pointer-events-auto opacity-90 hover:opacity-100 transition-opacity">
+                <Logo size="sm" linkTo="/" theme={isDark ? 'dark' : 'light'} />
             </div>
             <div className="hidden sm:block pointer-events-auto">
                <Link to="/register" className="text-[10px] font-black uppercase tracking-widest bg-indigo-600/90 backdrop-blur-md text-white border border-indigo-500 px-4 py-2 rounded-full shadow-lg hover:bg-indigo-500 transition-all">
@@ -269,14 +290,6 @@ export default function PublicProfile() {
                 )}
               </div>
 
-              {profile.bio && (
-                <div className={`border-t pt-8 max-w-3xl mx-auto ${isDark ? 'border-slate-800/80' : 'border-slate-200'}`}>
-                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-indigo-500 mb-4">About Me</h3>
-                  <p className={`text-sm sm:text-base lg:text-lg leading-relaxed md:leading-loose font-medium whitespace-pre-line ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-                    {profile.bio}
-                  </p>
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -343,28 +356,23 @@ export default function PublicProfile() {
               </section>
             )}
 
-            <section className="bg-indigo-600 rounded-[2rem] p-8 text-white shadow-2xl shadow-indigo-500/20 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-700" />
-                <h3 className="text-xl font-black mb-3">Recruiter Verified</h3>
-                <p className="text-indigo-100 text-xs sm:text-sm leading-relaxed mb-6 font-medium">
-                    All credentials shown in this portfolio are graded by SkillValix algorithms and algorithmically verified for authenticity.
-                </p>
-                <div className="flex bg-white/10 p-1 rounded-xl">
-                  <button onClick={() => window.print()} className="flex-1 py-3 bg-white text-indigo-600 rounded-lg font-bold text-xs flex items-center justify-center gap-2 transition-transform active:scale-95 shadow-lg">
-                      <Download className="w-4 h-4" /> Save PDF
-                  </button>
-                  <button onClick={() => {
-                    navigator.clipboard.writeText(window.location.href);
-                    alert("Portfolio Link Copied!");
-                  }} className="flex-1 py-3 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-2 hover:bg-white/10 transition-colors">
-                      <Share2 className="w-4 h-4" /> Share
-                  </button>
-                </div>
-            </section>
+            {renderRecruiterVerified("hidden lg:block")}
         </aside>
 
         {/* RIGHT COLUMN */}
         <div className="lg:col-span-8 space-y-12">
+            
+            {/* About Me Standalone Section */}
+            {profile.bio && (
+              <section className={`border rounded-[2rem] p-6 md:p-8 ${bgCard}`}>
+                <h2 className={`text-xl font-black flex items-center gap-2 mb-4 ${textHead}`}>
+                  <FileText className="w-5 h-5 text-indigo-500" /> About Me
+                </h2>
+                <p className={`text-sm sm:text-base leading-relaxed md:leading-loose font-medium whitespace-pre-line ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                  {profile.bio}
+                </p>
+              </section>
+            )}
             
             {/* Skills Array */}
             {allSkills.length > 0 && (
@@ -480,6 +488,8 @@ export default function PublicProfile() {
                   </div>
               )}
             </section>
+            
+            {renderRecruiterVerified("block lg:hidden")}
         </div>
       </main>
       

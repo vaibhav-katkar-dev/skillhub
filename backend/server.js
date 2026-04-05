@@ -15,6 +15,7 @@ import certRoutes from './routes/certificates.js';
 import paymentRoutes from './routes/payments.js';
 import eventRoutes from './routes/events.js';
 import hostRoutes from './routes/hostRoutes.js';
+import User from './models/User.js';
 
 dotenv.config();
 
@@ -200,6 +201,28 @@ app.get('/api/health', (req, res) => {
     databaseReady: mongoose.connection.readyState === 1,
     timestamp: new Date().toISOString(),
   });
+});
+
+app.get('/api/sitemap-profiles.xml', ensureDatabaseConnection, async (req, res) => {
+  try {
+    const users = await User.find({ role: 'student' }, '_id username updatedAt').lean();
+    
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`;
+
+    for (const user of users) {
+      const identifier = user.username || user._id;
+      const date = user.updatedAt ? new Date(user.updatedAt).toISOString() : new Date().toISOString();
+      xml += `\n  <url>\n    <loc>https://skillvalix.com/u/${identifier}</loc>\n    <lastmod>${date}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>`;
+    }
+
+    xml += `\n</urlset>`;
+
+    res.header('Content-Type', 'application/xml');
+    res.send(xml);
+  } catch (err) {
+    console.error('[Sitemap Error]', err);
+    res.status(500).send('Error generating sitemap');
+  }
 });
 
 app.use('/api/auth', ensureDatabaseConnection);

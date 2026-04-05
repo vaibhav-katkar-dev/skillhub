@@ -26,3 +26,4 @@ Disallow: /reset-password
 # Sitemaps
 Sitemap: https://www.skillvalix.com/sitemap.xml
 Sitemap: https://www.skillvalix.com/sitemap-lessons.xml
+Sitemap: https://api.skillvalix.com/api/sitemap-profiles.xml

@@ -86,9 +86,9 @@ const Footer = () => {
 
           {/* Brand Column */}
           <div className="lg:col-span-4 space-y-6">
-            {/* Logo — filter makes dark text light on dark footer bg */}
-            <div style={{ filter: 'brightness(0) invert(1)' }}>
-              <Logo size="lg" tagline linkTo="/" />
+            {/* Logo */}
+            <div>
+              <Logo size="lg" tagline linkTo="/" theme="dark" />
             </div>
 
             {/* Tagline */}

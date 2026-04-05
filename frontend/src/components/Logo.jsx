@@ -6,6 +6,7 @@ export default function Logo({
   tagline = false,
   linkTo = '/',
   className = '',
+  theme = 'light',
 }) {
   const sizes = {
     sm: { img: 32, text: 'text-xl', tag: 'invisible hidden' },
@@ -18,7 +19,7 @@ export default function Logo({
     <div className={`inline-flex items-center gap-0 ${className}`}>
       <img src="/logo.svg" alt="SkillValix Logo" width={s.img} height={s.img} className="object-contain drop-shadow-md z-10 relative" />
       <div className="flex flex-col justify-center -ml-2 relative z-0">
-        <span className={`font-black tracking-tight leading-none text-slate-900 ${s.text} font-sans`}>
+        <span className={`font-black tracking-tight leading-none ${theme === 'dark' ? 'text-white' : 'text-slate-900'} ${s.text} font-sans`}>
           kill<span className="text-blue-600">Valix</span>
         </span>
         {tagline &&
