@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { normalizeHtmlContent, normalizeDisplayText } from '../utils/text';
 import { Link, useParams, useNavigate } from 'react-router-dom';
@@ -18,6 +18,13 @@ const BlogPost = () => {
   const relatedPosts = post
     ? blogPosts.filter(p => p.id !== post.id && p.category === post.category).slice(0, 2)
     : [];
+
+  // Get other posts for the sidebar to fill space
+  const otherPosts = post 
+    ? blogPosts.filter(p => p.id !== post.id && !relatedPosts.some(rp => rp.id === p.id))
+    : [];
+    
+  const [showMoreSidebar, setShowMoreSidebar] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -132,7 +139,7 @@ const BlogPost = () => {
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent" />
 
-        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12 max-w-4xl mx-auto">
+        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12 max-w-7xl mx-auto">
           {/* Breadcrumb nav (semantic + SEO) */}
           <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-slate-400 text-xs mb-4">
             <Link to="/" className="hover:text-white transition-colors">Home</Link>
@@ -174,10 +181,10 @@ const BlogPost = () => {
       </div>
 
       {/* ── Body ────────────────────────────────────────────────────────────── */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 grid grid-cols-1 lg:grid-cols-12 gap-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 grid grid-cols-1 lg:grid-cols-12 gap-10">
 
         {/* Main Article */}
-        <article className="lg:col-span-8 bg-white p-8 md:p-12 rounded-2xl shadow-sm border border-slate-200">
+        <article className="lg:col-span-8 xl:col-span-9 bg-white p-8 md:p-12 rounded-2xl shadow-sm border border-slate-200">
           <div
             className="prose prose-slate prose-lg md:prose-xl max-w-none prose-headings:font-bold prose-headings:text-slate-900 prose-a:text-blue-600 prose-img:rounded-xl prose-code:text-blue-700 prose-pre:bg-slate-900 prose-pre:text-slate-100"
             dangerouslySetInnerHTML={{ __html: normalizeHtmlContent(post.content) }}
@@ -214,7 +221,7 @@ const BlogPost = () => {
         </article>
 
         {/* Sidebar */}
-        <aside className="lg:col-span-4 space-y-8">
+        <aside className="lg:col-span-4 xl:col-span-3 space-y-8">
           {/* Hackathon CTA for hackathon posts, Course CTA for others */}
           {post.tags?.some(t => ['Hackathon', 'Host Hackathon India', 'Online Hackathon India', 'Corporate Hackathon', 'Coding Competition'].includes(t)) ? (
             <div className="rounded-2xl overflow-hidden bg-gradient-to-br from-indigo-700 via-indigo-800 to-violet-900 shadow-xl p-6 relative sticky top-8">
@@ -266,7 +273,7 @@ const BlogPost = () => {
 
           {/* Related Posts */}
           {relatedPosts.length > 0 && (
-            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm sticky top-8 md:static">
               <h3 className="text-base font-bold text-slate-900 mb-4 uppercase tracking-wide">Related Articles</h3>
               <div className="space-y-4">
                 {relatedPosts.map(rp => (
@@ -277,7 +284,7 @@ const BlogPost = () => {
                       className="w-16 h-16 rounded-lg object-cover flex-shrink-0 group-hover:opacity-80 transition-opacity"
                     />
                     <div>
-                      <p className="text-sm font-semibold text-slate-800 group-hover:text-blue-600 leading-snug transition-colors">
+                      <p className="text-sm font-semibold text-slate-800 group-hover:text-blue-600 leading-snug transition-colors line-clamp-2">
                         {rp.title}
                       </p>
                       <p className="text-xs text-slate-400 mt-1">{rp.readTime}</p>
@@ -285,6 +292,35 @@ const BlogPost = () => {
                   </Link>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* More Articles & Lessons (fills empty space) */}
+          {otherPosts.length > 0 && (
+            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+              <h3 className="text-base font-bold text-slate-900 mb-4 uppercase tracking-wide">More Resources</h3>
+              <div className="flex flex-col gap-3">
+                {otherPosts.slice(0, showMoreSidebar ? 12 : 4).map(op => (
+                  <Link key={op.id} to={`/blog/${op.id}`} className="group block pb-3 border-b border-slate-100 last:border-0 last:pb-0">
+                    <p className="text-sm font-semibold text-slate-700 group-hover:text-blue-600 leading-snug transition-colors line-clamp-2">
+                      {op.title}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{op.category}</span>
+                      <span className="text-slate-300">•</span>
+                      <span className="text-[10px] text-slate-400">{op.readTime}</span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+              {otherPosts.length > 4 && (
+                <button 
+                  onClick={() => setShowMoreSidebar(!showMoreSidebar)}
+                  className="w-full mt-4 py-2 text-sm font-bold text-slate-500 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors"
+                >
+                  {showMoreSidebar ? 'Show Less' : 'Show All Resources'}
+                </button>
+              )}
             </div>
           )}
         </aside>

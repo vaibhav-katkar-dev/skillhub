@@ -52,7 +52,7 @@ function getCoursePracticeConfig(slug) {
 
   if (lower.includes('ultimate-python')) {
     return {
-      showLab: true,
+      showLab: false,
       runnerEnabled: false,
       modes: [],
       defaultMode: null,
@@ -72,7 +72,7 @@ function getCoursePracticeConfig(slug) {
 
   if (lower.includes('ultimate-java') || lower.includes('artificial-intelligence')) {
     return {
-      showLab: true,
+      showLab: false,
       runnerEnabled: false,
       modes: [],
       defaultMode: null,
