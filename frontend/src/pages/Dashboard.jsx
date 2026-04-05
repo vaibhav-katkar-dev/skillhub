@@ -240,7 +240,7 @@ const CertCard = ({ cert, onDownload, copyMsg, onCopy, prepState }) => {
   const dateCls = isJobSim ? "text-teal-400" : "text-amber-400";
   const boxBgCls = isJobSim ? "bg-slate-800 border-slate-700" : "bg-slate-50 border-slate-100";
   const boxTextCls = isJobSim ? "text-slate-300" : "text-slate-600";
-  const primaryBtn = isJobSim ? (cert.pdfReady ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-amber-500 hover:bg-amber-400 text-white') : (cert.pdfReady ? 'bg-slate-900 hover:bg-slate-800 text-white' : 'bg-amber-500 hover:bg-amber-400 text-white');
+  const primaryBtn = isJobSim ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-slate-900 hover:bg-slate-800 text-white';
   const copyBtnBg = isJobSim ? (copyMsg === cert.certificateId ? 'bg-emerald-900/40 border-emerald-500/50 text-emerald-400 scale-[0.98]' : 'bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-300') : (copyMsg === cert.certificateId ? 'bg-emerald-50 border-emerald-300 text-emerald-600 scale-[0.98]' : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-600');
 
   return (
@@ -276,8 +276,8 @@ const CertCard = ({ cert, onDownload, copyMsg, onCopy, prepState }) => {
               disabled={prepState?.busy}
               className={`flex-1 relative overflow-hidden text-xs font-bold py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-[.98] ${primaryBtn}`}
             >
-              {prepState?.busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : (cert.pdfReady ? <Download className="w-3.5 h-3.5" /> : <Loader2 className={`w-3.5 h-3.5 ${cert.pdfStatus === 'generating' || cert.pdfStatus === 'queued' ? 'animate-spin' : ''}`} />)}
-              {prepState?.busy ? 'Generating...' : (cert.pdfReady ? 'Download PDF' : cert.pdfStatus === 'failed' ? 'Retry PDF' : 'Prepare PDF')}
+              {prepState?.busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+              {prepState?.busy ? 'Generating...' : 'Download PDF'}
             </button>
 
             <button
@@ -316,9 +316,9 @@ const CertCard = ({ cert, onDownload, copyMsg, onCopy, prepState }) => {
           </div>
         </div>
 
-        {!cert.pdfReady && (
-          <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
-            {prepState?.message || 'Click prepare once. We will generate your PDF safely in the background, then you can download it.'}
+        {prepState?.message && prepState?.busy === false && (
+          <p className="mt-3 text-[11px] font-medium leading-relaxed text-red-500">
+            {prepState.message}
           </p>
         )}
       </div>
@@ -448,23 +448,7 @@ const Dashboard = () => {
     })();
   }, [isAuthenticated, authLoading, navigate]);
 
-  useEffect(() => {
-    if (!isAuthenticated || certs.length === 0) return undefined;
-    const hasPendingPdf = certs.some(cert => !cert.pdfReady);
-    if (!hasPendingPdf) return undefined;
-
-    const intervalId = setInterval(async () => {
-      try {
-        clearCache('certs_mine');
-        const res = await api.get('/certificates/mine');
-        setCerts(res.data);
-      } catch (err) {
-        console.error('Certificate polling failed', err);
-      }
-    }, 5000);
-
-    return () => clearInterval(intervalId);
-  }, [certs, isAuthenticated]);
+  // Backend PDF polling is deprecated completely as generation is handled exclusively client-side
 
   useEffect(() => {
     const hasCountdown = Object.values(prepStates).some(state => state?.seconds > 0);
@@ -485,18 +469,7 @@ const Dashboard = () => {
     return () => clearInterval(timerId);
   }, [prepStates]);
 
-  useEffect(() => {
-    if (!certs.length) return;
-    setPrepStates(prev => {
-      const next = { ...prev };
-      certs.forEach((cert) => {
-        if (cert.pdfReady && next[cert.certificateId]) {
-          delete next[cert.certificateId];
-        }
-      });
-      return next;
-    });
-  }, [certs]);
+  // Backend PDF state sync is deprecated
 
   const dl = async (cert) => {
     const certId = cert?.certificateId;

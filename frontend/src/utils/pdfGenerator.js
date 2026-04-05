@@ -39,6 +39,7 @@ export const generatePDFFromDOM = async (elementRef, fileName) => {
       quality: useQuality,
       width: 1123,
       height: 794,
+      skipFonts: true, // Prevents Android normalizeFontFamily undefined trim() crash
       style: {
         // Force the element to be fully opaque for drawing, since we made it 0.01 in the DOM
         opacity: '1',
