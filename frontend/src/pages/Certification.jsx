@@ -11,7 +11,7 @@ import {
    DATA
 ───────────────────────────────────────────── */
 const CERT_STEPS = [
-  { step:'01', title:'Choose Your Course',       desc:'Pick any free course — HTML, CSS, JavaScript, Python, Java, or AI. Every one of them ends with a certificate waiting for you.',                         color:'#6366f1', bg:'#eef2ff', icon:BookOpen },
+  { step:'01', title:'Choose Your Course',       desc:'Pick any free course — HTML, CSS, JavaScript, Python, Java, C, C++, or AI. Every one of them ends with a certificate waiting for you.',                         color:'#6366f1', bg:'#eef2ff', icon:BookOpen },
   { step:'02', title:'Master the Lessons',       desc:'Work through every lesson at your pace. Code-rich, beginner-first content that genuinely teaches — not just watches you click "next".',               color:'#8b5cf6', bg:'#f5f3ff', icon:GraduationCap },
   { step:'03', title:'Pass the Exam',            desc:'A server-graded exam that tests real understanding. It\'s meant to be challenging — which is exactly what makes the certificate worth having.',      color:'#0ea5e9', bg:'#f0f9ff', icon:Target },
   { step:'04', title:'Earn Your Certificate',    desc:'Pass and your verified certificate is ready. Download it. Add it to LinkedIn. Share the verification link. Show the world you did the work.',       color:'#10b981', bg:'#ecfdf5', icon:Award },
@@ -33,6 +33,8 @@ const COURSES_CERTS = [
   { slug:'ultimate-python-masterclass',                       name:'Python for Beginners',  color:'#10b981', bg:'#ecfdf5', border:'#a7f3d0', time:'6 hrs' },
   { slug:'ultimate-java-masterclass',                         name:'Java Programming',       color:'#8b5cf6', bg:'#f5f3ff', border:'#ddd6fe', time:'7 hrs' },
   { slug:'basics-of-artificial-intelligence-beginners',       name:'AI for Beginners',      color:'#ef4444', bg:'#fef2f2', border:'#fecaca', time:'5 hrs' },
+  { slug:'ultimate-c-programming',                            name:'C Programming',         color:'#64748b', bg:'#f8fafc', border:'#e2e8f0', time:'6 hrs' },
+  { slug:'modern-cpp-mastery',                                name:'Modern C++',            color:'#4338ca', bg:'#eef2ff', border:'#c7d2fe', time:'8 hrs' },
 ];
 
 const SOCIAL_PROOF = [
@@ -244,7 +246,7 @@ export default function Certification() {
         <div className="wrap">
           <div style={{ textAlign:'center', marginBottom:44 }}>
             <h2 style={{ fontSize:'clamp(1.8rem,4vw,2.4rem)', fontWeight:900, color:'#0f172a', marginBottom:10 }}>
-              6 Certificates You Can <span className="cert-shimmer">Earn Right Now</span>
+              8 Certificates You Can <span className="cert-shimmer">Earn Right Now</span>
             </h2>
             <p style={{ fontSize:15, color:'#64748b', maxWidth:480, margin:'0 auto', lineHeight:1.7 }}>
               Each of these is a real, verifiable credential — not a participation badge.

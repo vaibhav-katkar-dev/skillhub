@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import {
@@ -321,6 +321,8 @@ export default function Home() {
               { "@type": "Course", "name": "JavaScript for Beginners: Complete JS Masterclass", "url": "https://skillvalix.com/courses/ultimate-javascript-masterclass", "isAccessibleForFree": true },
               { "@type": "Course", "name": "Python for Beginners: Complete Python Programming Masterclass", "url": "https://skillvalix.com/courses/ultimate-python-masterclass", "isAccessibleForFree": true },
               { "@type": "Course", "name": "Java Programming Masterclass: Beginner to Advanced", "url": "https://skillvalix.com/courses/ultimate-java-masterclass", "isAccessibleForFree": true },
+              { "@type": "Course", "name": "Ultimate C Programming: Hardware to High Performance", "url": "https://skillvalix.com/courses/ultimate-c-programming", "isAccessibleForFree": true },
+              { "@type": "Course", "name": "Modern C++: Powerful Object-Oriented Development", "url": "https://skillvalix.com/courses/modern-cpp-mastery", "isAccessibleForFree": true },
               { "@type": "Course", "name": "Artificial Intelligence for Beginners: AI & Machine Learning Fundamentals", "url": "https://skillvalix.com/courses/basics-of-artificial-intelligence-beginners", "isAccessibleForFree": true }
             ]
           }

@@ -16,6 +16,8 @@ const COURSES = [
   { slug: 'ultimate-javascript-masterclass', title: 'JavaScript for Beginners', level: 'Beginner', duration: '6 hrs', modules: 14, rating: 4.9, tag: 'Hot 🔥', tagColor: '#f59e0b', tagBg: '#fffbeb', accent: '#f59e0b', accentBg: '#fffbeb', accentBorder: '#fde68a', skills: ['ES6+', 'DOM', 'Events', 'Async JS'], desc: 'The skill that opens every door. Learn JavaScript — variables, functions, DOM, async — and become the developer companies are hiring.' },
   { slug: 'ultimate-python-masterclass', title: 'Python for Beginners', level: 'Beginner', duration: '6 hrs', modules: 15, rating: 4.8, tag: 'New', tagColor: '#10b981', tagBg: '#ecfdf5', accent: '#10b981', accentBg: '#ecfdf5', accentBorder: '#a7f3d0', skills: ['Python 3', 'OOP', 'File I/O', 'Libraries'], desc: 'The most beginner-friendly language in the world. Used by data scientists, AI engineers, and automation pros. Start here.' },
   { slug: 'ultimate-java-masterclass', title: 'Java Programming', level: 'Beginner', duration: '7 hrs', modules: 16, rating: 4.7, tag: 'Beginner', tagColor: '#8b5cf6', tagBg: '#f5f3ff', accent: '#8b5cf6', accentBg: '#f5f3ff', accentBorder: '#ddd6fe', skills: ['Java', 'OOP', 'Collections', 'Streams'], desc: 'Structured, powerful, in-demand. Java gives you backend, Android, and enterprise-level credibility. Build it here.' },
+  { slug: 'ultimate-c-programming', title: 'C Programming', level: 'Beginner', duration: '6 hrs', modules: 12, rating: 4.8, tag: 'Hardware', tagColor: '#64748b', tagBg: '#f8fafc', accent: '#64748b', accentBg: '#f8fafc', accentBorder: '#e2e8f0', skills: ['C', 'Pointers', 'Memory', 'Embedded'], desc: 'Master the mother of all modern programming languages. Learn memory management and low-level systems programming.' },
+  { slug: 'modern-cpp-mastery', title: 'Modern C++', level: 'Intermediate', duration: '8 hrs', modules: 14, rating: 4.9, tag: 'Advanced', tagColor: '#4338ca', tagBg: '#eef2ff', accent: '#4338ca', accentBg: '#eef2ff', accentBorder: '#c7d2fe', skills: ['C++', 'OOP', 'STL', 'Performance'], desc: 'Level up from C to C++. Learn Object-Oriented Principles, the STL, and advanced memory safety.' },
   { slug: 'basics-of-artificial-intelligence-beginners', title: 'AI for Beginners', level: 'Beginner', duration: '5 hrs', modules: 11, rating: 4.9, tag: 'Trending', tagColor: '#ef4444', tagBg: '#fef2f2', accent: '#ef4444', accentBg: '#fef2f2', accentBorder: '#fecaca', skills: ['AI Concepts', 'ML Basics', 'Neural Nets', 'Use Cases'], desc: 'AI is the defining skill of this decade. Understand it, talk about it, build with it — before everyone else does.' },
 ];
 
@@ -205,7 +207,9 @@ export default function FreeCourses() {
             Start with <Link to="/courses/ultimate-html-masterclass" style={{ color:'#4f46e5', fontWeight:600 }}>HTML</Link>, stack on <Link to="/courses/css-for-beginners-learn-web-styling-zero-to-pro" style={{ color:'#4f46e5', fontWeight:600 }}>CSS</Link> and
             <Link to="/courses/ultimate-javascript-masterclass" style={{ color:'#4f46e5', fontWeight:600 }}> JavaScript</Link>, then level up with
             <Link to="/courses/ultimate-python-masterclass" style={{ color:'#4f46e5', fontWeight:600 }}> Python</Link>,
-            <Link to="/courses/ultimate-java-masterclass" style={{ color:'#4f46e5', fontWeight:600 }}> Java</Link>, or
+            <Link to="/courses/ultimate-java-masterclass" style={{ color:'#4f46e5', fontWeight:600 }}> Java</Link>,
+            <Link to="/courses/ultimate-c-programming" style={{ color:'#4f46e5', fontWeight:600 }}> C</Link>,
+            <Link to="/courses/modern-cpp-mastery" style={{ color:'#4f46e5', fontWeight:600 }}> C++</Link>, or
             <Link to="/courses/basics-of-artificial-intelligence-beginners" style={{ color:'#4f46e5', fontWeight:600 }}> AI</Link>.
             Each course has a final exam — pass it, and a certificate with your name lands in your hands.
           </p>
@@ -221,7 +225,7 @@ export default function FreeCourses() {
           <div style={{ textAlign:'center', marginBottom:52 }}>
             <span style={{ display:'inline-block', background:'#eef2ff', color:'#4f46e5', border:'1px solid #c7d2fe', borderRadius:100, padding:'5px 16px', fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:16 }}>Learn Free</span>
             <h2 style={{ fontSize:'clamp(1.8rem,4vw,2.6rem)', fontWeight:900, color:'#0f172a', lineHeight:1.15, marginBottom:12 }}>
-              6 Courses. All Free.<br /><span className="fc-shimmer">Every one comes with a certificate.</span>
+              8 Courses. All Free.<br /><span className="fc-shimmer">Every one comes with a certificate.</span>
             </h2>
             <p style={{ fontSize:16, color:'#64748b', maxWidth:540, margin:'0 auto', lineHeight:1.7 }}>
               Pick any course, study at your pace, pass the exam — and earn a credential that actually means something.
@@ -267,7 +271,7 @@ export default function FreeCourses() {
           </div>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))', gap:20 }}>
             {[
-              { step:'01', title:'Pick Your Course',           desc:'Choose any of the 6 free courses — HTML, CSS, JS, Python, Java, or AI. All free, all beginner-friendly.', color:'#6366f1', bg:'#eef2ff', icon:BookOpen },
+              { step:'01', title:'Pick Your Course',           desc:'Choose any of the 8 free courses — HTML, CSS, JS, Python, Java, C, C++, or AI. All free, all beginner-friendly.', color:'#6366f1', bg:'#eef2ff', icon:BookOpen },
               { step:'02', title:'Study at Your Own Pace',     desc:'No deadlines, no cohort, no pressure. Go lesson by lesson whenever you have time. Progress is always saved.', color:'#8b5cf6', bg:'#f5f3ff', icon:GraduationCap },
               { step:'03', title:'Pass the Final Exam',        desc:'A real, server-graded exam that tests what you actually learned. Not easy — which is exactly why the certificate means something.', color:'#0ea5e9', bg:'#f0f9ff', icon:Target },
               { step:'04', title:'Unlock Your Certificate',    desc:'Pass the exam and earn your verified certificate — shareable, verifiable, and ready for LinkedIn the moment you get it.', color:'#10b981', bg:'#ecfdf5', icon:Award },

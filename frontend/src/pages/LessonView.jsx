@@ -70,7 +70,7 @@ function getCoursePracticeConfig(slug) {
     };
   }
 
-  if (lower.includes('ultimate-java') || lower.includes('artificial-intelligence')) {
+  if (lower.includes('ultimate-java') || lower.includes('artificial-intelligence') || lower.includes('ultimate-c-programming') || lower.includes('modern-cpp-mastery')) {
     return {
       showLab: false,
       runnerEnabled: false,
