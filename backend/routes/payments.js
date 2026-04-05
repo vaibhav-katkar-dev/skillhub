@@ -23,7 +23,7 @@ router.post('/razorpay-order', authOptions, async (req, res) => {
     }
 
     const isAdminTestMode = user.role === 'admin';
-    const amountToCharge = isAdminTestMode ? 100 : 4900;
+    const amountToCharge = isAdminTestMode ? 100 : 9900;
 
     const rzp = new Razorpay({
       key_id: process.env.RAZORPAY_KEY_ID,
@@ -79,7 +79,7 @@ router.post('/razorpay-verify', authOptions, async (req, res) => {
       }
       const order = await rzp.orders.fetch(razorpay_order_id);
       const expectedReceipt = `receipt_${courseId}_${req.user.id}`.substring(0, 40);
-      const expectedAmount = user.role === 'admin' ? 100 : 4900;
+      const expectedAmount = user.role === 'admin' ? 100 : 9900;
 
       if (!order || order.receipt !== expectedReceipt || order.amount !== expectedAmount) {
         return res.status(400).json({ success: false, message: 'Payment does not match this course unlock request' });

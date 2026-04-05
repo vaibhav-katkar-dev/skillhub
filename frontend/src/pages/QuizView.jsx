@@ -186,6 +186,7 @@ const QuizView = () => {
         order_id: order.id,
         handler: async function (response) {
           try {
+            setPaying(true);
             await api.post('/payments/razorpay-verify', {
               ...response,
               courseId: course._id,
@@ -198,6 +199,8 @@ const QuizView = () => {
             setError(null);
           } catch (err) {
             alert('Verification failed. Please contact support.');
+          } finally {
+            setPaying(false);
           }
         },
         prefill: {
@@ -205,16 +208,21 @@ const QuizView = () => {
           email: user?.email || '',
         },
         theme: { color: '#4f46e5' },
+        modal: {
+          ondismiss: function() {
+            setPaying(false);
+          }
+        }
       };
 
       const rzp = new window.Razorpay(options);
       rzp.on('payment.failed', function (response) {
         alert('Payment failed: ' + response.error.description);
+        setPaying(false);
       });
       rzp.open();
     } catch (err) {
       alert('Failed to initialize payment.');
-    } finally {
       setPaying(false);
     }
   };
@@ -388,13 +396,13 @@ const QuizView = () => {
             <div className="flex items-end justify-center gap-3 mb-8 w-full bg-slate-50 py-4 rounded-2xl border border-slate-100">
               {user?.role === 'admin' ? (
                 <>
-                  <span className="line-through text-slate-400 text-xl font-bold mb-1">Rs. 49</span>
+                  <span className="line-through text-slate-400 text-xl font-bold mb-1">Rs. 99</span>
                   <span className="text-5xl font-black text-slate-900 tracking-tight">Rs. 1</span>
                 </>
               ) : (
                 <>
                   <span className="line-through text-slate-400 text-xl font-bold mb-1">Rs. 499</span>
-                  <span className="text-5xl font-black text-slate-900 tracking-tight">Rs. 49</span>
+                  <span className="text-5xl font-black text-slate-900 tracking-tight">Rs. 99</span>
                 </>
               )}
             </div>
@@ -497,7 +505,8 @@ const QuizView = () => {
               disabled={submitting}
               className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-xl font-bold text-lg shadow-md shadow-blue-500/20 disabled:opacity-50 transition-all active:scale-[0.98]"
             >
-              {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Submit Exam'}
+              {submitting && <Loader2 className="w-5 h-5 animate-spin" />}
+              {submitting ? 'Submitting...' : 'Submit Exam'}
             </button>
           </div>
         </form>
