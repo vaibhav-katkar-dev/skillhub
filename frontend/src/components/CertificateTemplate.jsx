@@ -139,7 +139,6 @@ const CertificateTemplate = forwardRef(
                   borderRadius: '50%',
                   backgroundColor: '#FFFFFF',
                   opacity: s.opacity,
-                  filter: `blur(${s.blur}px)`,
                 }}
               />
             ))}
@@ -194,7 +193,6 @@ const CertificateTemplate = forwardRef(
                 height="500"
                 style={{
                   objectFit: 'contain',
-                  filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.2))'
                 }}
               />
             </div>
