@@ -8,7 +8,6 @@ const navLinks = [
   { to: '/', label: 'Home' },
   { to: '/courses', label: 'Courses' },
   { to: '/hackathons', label: 'Hackathons' },
-  { to: '/host', label: 'Host a Hackathon' },
   { to: '/blog', label: 'Blog' },
   { to: '/verify', label: 'Verify Certificate' },
 ];
@@ -77,7 +76,7 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-20">
 
           {/* Logo */}
-          <Logo size="lg" linkTo="/" />
+          <Logo size="md" linkTo="/" />
 
           {/* Desktop Nav — center links, always visible, never wrap */}
           <div className="hidden md:flex items-center gap-1 flex-1 justify-center">

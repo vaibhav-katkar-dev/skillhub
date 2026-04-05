@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { api, useAuthStore, cachedGet, clearCache } from '../store/authStore';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { getCourseList } from '../data/courseLoader';
+import { generatePDFFromDOM } from '../utils/pdfGenerator';
+import CertificateTemplate from '../components/CertificateTemplate';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://api.skillvalix.com/api';
 import {
@@ -350,7 +352,20 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [copyMsg, setCopyMsg] = useState('');
   const [prepStates, setPrepStates] = useState({});
-  const [activeTab, setActiveTab] = useState('learning'); // new tab state
+  const [exportCert, setExportCert] = useState(null); // Local PDF export state
+  const certTemplateRef = useRef(null); // Reference to the hidden template
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const initialTab = searchParams.get('tab') || 'learning';
+  const [activeTab, setActiveTab] = useState(initialTab); // new tab state
+
+  // Sync tab state with URL search param
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab && (tab === 'learning' || tab === 'certificates' || tab === 'profile')) {
+      setActiveTab(tab);
+    }
+  }, [location.search]);
   const [editingProfile, setEditingProfile] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileData, setProfileData] = useState({
@@ -483,99 +498,40 @@ const Dashboard = () => {
     });
   }, [certs]);
 
-  // Fetch stored PDF bytes & trigger browser save — no custom request headers to avoid CORS preflight
-  const triggerBlobDownload = async (cert) => {
-    const endpoint = cert.isEvent
-      ? `/events/certificates/download/${cert.certificateId}`
-      : `/certificates/download/${cert.certificateId}`;
-    const res = await api.get(endpoint, { responseType: 'blob' });
-    const blob = new Blob([res.data], { type: 'application/pdf' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${cert.isEvent ? 'JobSimCertificate' : 'Certificate'}-${cert.certificateId}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    await new Promise(resolve => setTimeout(resolve, 800));
-    setTimeout(() => URL.revokeObjectURL(url), 10000);
-  };
-
   const dl = async (cert) => {
     const certId = cert?.certificateId;
     if (!certId) return;
 
-    if (cert.isEvent) {
-      // Event certs: call prepare first (generates+saves PDF), then download stored PDF
-      setPrepStates(prev => ({ ...prev, [certId]: { busy: true, seconds: 0, message: 'Generating PDF...' } }));
+    // 1. Mark as loading locally
+    setPrepStates(prev => ({ ...prev, [certId]: { busy: true, seconds: 0, message: 'Preparing your certificate PDF…' } }));
+
+    // 2. Mount the hidden certificate template into the DOM
+    setExportCert(cert);
+
+    // 3. Wait for React to finish rendering the hidden template AND for the Inter
+    //    font to be confirmed loaded, then use html-to-image to capture it.
+    //    300 ms gives React two full render cycles plus font-load confirmation.
+    setTimeout(async () => {
       try {
-        await api.post(`/events/certificates/prepare/${certId}`);
-        setPrepStates(prev => ({ ...prev, [certId]: { busy: true, seconds: 0, message: 'Downloading...' } }));
-        await triggerBlobDownload(cert);
-      } catch (e) {
-        const msg = e.response?.data?.message || 'Failed to download event certificate.';
-        setPrepStates(prev => ({ ...prev, [certId]: { busy: false, seconds: 0, message: msg } }));
-      } finally {
+        const fileName = `${cert.isEvent ? 'JobSimCertificate' : 'Certificate'}-${cert.certificateId}`;
+
+        const success = await generatePDFFromDOM(certTemplateRef, fileName);
+
+        if (!success) {
+          throw new Error('Failed to generate PDF. Please try again.');
+        }
+
+        // Clean up: hide the template and clear loading state
+        setExportCert(null);
         setPrepStates(prev => { const next = { ...prev }; delete next[certId]; return next; });
+      } catch (err) {
+        setExportCert(null);
+        setPrepStates(prev => ({
+          ...prev,
+          [certId]: { busy: false, seconds: 0, message: err.message || 'Generation failed. Please try again.' },
+        }));
       }
-      return;
-    }
-
-    try {
-      const statusRes = await api.get(`/certificates/status/${certId}`);
-      if (statusRes.data?.pdfReady) {
-        clearCache('certs_mine');
-        setPrepStates(prev => ({ ...prev, [certId]: { busy: true, seconds: 0, message: 'Downloading...' } }));
-        await triggerBlobDownload(cert);
-        setPrepStates(prev => {
-          const next = { ...prev };
-          delete next[certId];
-          return next;
-        });
-        return;
-      }
-    } catch (err) {
-      // If status check fails, fall back to prepare flow below.
-    }
-
-    try {
-      const prepareRes = await api.post(`/certificates/prepare/${certId}`);
-      if (prepareRes.data?.pdfReady) {
-        clearCache('certs_mine');
-        const refreshed = await api.get('/certificates/mine');
-        setCerts(refreshed.data);
-        setPrepStates(prev => ({ ...prev, [certId]: { busy: true, seconds: 0, message: 'Downloading...' } }));
-        await triggerBlobDownload(cert);
-        setPrepStates(prev => {
-          const next = { ...prev };
-          delete next[certId];
-          return next;
-        });
-        return;
-      }
-
-      const waitSeconds = prepareRes.data?.retryAfterSeconds || 10;
-      setPrepStates(prev => ({
-        ...prev,
-        [certId]: {
-          busy: true,
-          seconds: waitSeconds,
-          message: 'Preparing your certificate PDF. Please wait a few seconds, then click download again.',
-        },
-      }));
-      clearCache('certs_mine');
-      const refreshed = await api.get('/certificates/mine');
-      setCerts(refreshed.data);
-    } catch (err) {
-      setPrepStates(prev => ({
-        ...prev,
-        [certId]: {
-          busy: false,
-          seconds: 0,
-          message: err.response?.data?.message || 'Failed to prepare the certificate PDF.',
-        },
-      }));
-    }
+    }, 300);
   };
 
   const copy = (cert) => {
@@ -604,6 +560,19 @@ const Dashboard = () => {
         .animate-shimmer { animation: shimmer 1.8s infinite linear; }
       `}</style>
       <Helmet><title>My Dashboard | SkillValix</title></Helmet>
+
+      {/* Hidden local template for compiling PDFs visually on client thread */}
+      {exportCert && (
+        <CertificateTemplate 
+           ref={certTemplateRef}
+           studentName={userData?.name || 'Student'}
+           courseTitle={exportCert.course?.title || 'Certification'}
+           certificateId={exportCert.certificateId}
+           issueDate={new Date(exportCert.issueDate || Date.now()).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric'})}
+           verifyUrl={`${window.location.origin}/verify/${exportCert.certificateId}`}
+           isEvent={exportCert.isEvent}
+        />
+      )}
 
       {/* ── HERO ── */}
       <div className="bg-gradient-to-br from-indigo-700 via-violet-700 to-purple-800 pt-10 pb-28 relative overflow-hidden">

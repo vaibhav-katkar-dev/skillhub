@@ -561,6 +561,29 @@ const LessonView = () => {
     <>
       <Helmet>
         <title>{lesson.title} | {course?.title} | SkillValix</title>
+        <meta name="description" content={lesson.description || `Learn ${lesson.title} in the ${course?.title} course on SkillValix. Free, interactive, and project-based technical training.`} />
+        
+        {/* Course Instance JSON-LD for Search Indexing */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "CourseInstance",
+            "name": lesson.title,
+            "description": lesson.description || lesson.title,
+            "courseMode": "Online",
+            "educationalLevel": course?.level || "Beginner",
+            "isPartOf": {
+              "@type": "Course",
+              "name": course?.title,
+              "description": course?.description,
+              "publisher": {
+                "@type": "Organization",
+                "name": "SkillValix",
+                "url": "https://www.skillvalix.com"
+              }
+            }
+          })}
+        </script>
       </Helmet>
 
       <style>{`

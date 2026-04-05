@@ -1,4 +1,4 @@
-# SkillValix robots.txt — Updated 2026-04-04
+# SkillValix robots.txt — Updated 2026-04-05
 # Allow all legit crawlers
 
 User-agent: *
@@ -10,6 +10,8 @@ Allow: /hackathons/
 Allow: /free-courses
 Allow: /certification
 Allow: /campus-ambassador
+Allow: /job-simulation/
+Allow: /host
 
 # Block private/authenticated areas from indexing
 Disallow: /admin
@@ -21,5 +23,6 @@ Disallow: /register
 Disallow: /forgot-password
 Disallow: /reset-password
 
-# Sitemap
-Sitemap: https://skillvalix.com/sitemap.xml
+# Sitemaps
+Sitemap: https://www.skillvalix.com/sitemap.xml
+Sitemap: https://www.skillvalix.com/sitemap-lessons.xml

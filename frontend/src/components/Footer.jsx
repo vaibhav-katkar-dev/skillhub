@@ -21,20 +21,21 @@ const NAV_COLUMNS = [
     heading: 'Learn',
     icon: GraduationCap,
     links: [
-      { to: '/free-courses',                                          label: 'Free Courses' },
-      { to: '/courses/ultimate-html-masterclass',                     label: 'HTML Masterclass' },
+      { to: '/free-courses', label: 'Free Courses' },
+      { to: '/courses/ultimate-html-masterclass', label: 'HTML Masterclass' },
       { to: '/courses/css-for-beginners-learn-web-styling-zero-to-pro', label: 'CSS Fundamentals' },
-      { to: '/courses/ultimate-javascript-masterclass',                 label: 'JavaScript Basics' },
+      { to: '/courses/ultimate-javascript-masterclass', label: 'JavaScript Basics' },
     ],
   },
   {
     heading: 'Resources',
     icon: BookMarked,
     links: [
-      { to: '/certification',  label: 'Certification' },
-      { to: '/verify',         label: 'Verify Certificate' },
-      { to: '/hackathons',     label: 'Student Hackathons' },
-      { to: '/blog',           label: 'Blog' },
+      { to: '/certification', label: 'Certification' },
+      { to: '/verify', label: 'Verify Certificate' },
+      { to: '/hackathons', label: 'Student Hackathons' },
+      { to: '/blog/how-to-build-powerful-public-portfolio-2026', label: '🚀 Public Portfolio Guide', highlight: true },
+      { to: '/blog', label: 'Blog' },
     ],
   },
   {
@@ -42,32 +43,32 @@ const NAV_COLUMNS = [
     icon: Building2,
     links: [
       { to: '/campus-ambassador', label: '🎓 Campus Ambassador', highlight: true },
-      { to: '/host',           label: 'Host a Hackathon' },
-      { to: '/dashboard',      label: 'Student Dashboard' },
+      { to: '/host', label: 'Host a Hackathon' },
+      { to: '/dashboard', label: 'Student Dashboard' },
       { to: '/privacy-policy', label: 'Privacy Policy' },
-      { to: '/terms',          label: 'Terms of Service' },
+      { to: '/terms', label: 'Terms of Service' },
     ],
   },
 ];
 
 const STATS = [
-  { value: '12+',  label: 'Modules' },
-  { value: '25',   label: 'Quizzes' },
+  { value: '12+', label: 'Modules' },
+  { value: '25', label: 'Quizzes' },
   { value: '100%', label: 'Free' },
-  { value: '∞',    label: 'Skills' },
+  { value: '∞', label: 'Skills' },
 ];
 
 const SOCIAL = [
   { icon: Linkedin, href: 'https://www.linkedin.com/company/skillvalix/', label: 'LinkedIn' },
   { icon: Instagram, href: 'https://www.instagram.com/skillvalix/', label: 'Instagram' },
-  { icon: Mail,     href: 'mailto:skillvalix@gmail.com', label: 'Email'    },
+  { icon: Mail, href: 'mailto:skillvalix@gmail.com', label: 'Email' },
 ];
 
 const LEGAL_LINKS = [
-  { to: '/privacy-policy', label: 'Privacy Policy'  },
-  { to: '/terms',          label: 'Terms of Service' },
-  { to: '/refund-policy',  label: 'Refund Policy'   },
-  { to: '/cookie-policy',  label: 'Cookie Policy'   },
+  { to: '/privacy-policy', label: 'Privacy Policy' },
+  { to: '/terms', label: 'Terms of Service' },
+  { to: '/refund-policy', label: 'Refund Policy' },
+  { to: '/cookie-policy', label: 'Cookie Policy' },
 ];
 
 /* ─────────────── component ─────────────── */
@@ -163,11 +164,10 @@ const Footer = () => {
                     <li key={label}>
                       <Link
                         to={to}
-                        className={`group inline-flex items-center gap-1.5 text-sm transition-colors duration-150 ${
-                          highlight
+                        className={`group inline-flex items-center gap-1.5 text-sm transition-colors duration-150 ${highlight
                             ? 'text-amber-400 hover:text-amber-300 font-semibold'
                             : 'text-slate-400 hover:text-blue-400'
-                        }`}
+                          }`}
                       >
                         <ChevronRight
                           className="w-3 h-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-150 text-blue-500"

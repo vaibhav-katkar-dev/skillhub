@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useAuthStore } from '../store/authStore';
 import axios from 'axios';
+import CertificateTemplate from '../components/CertificateTemplate';
+import { generatePDFFromDOM } from '../utils/pdfGenerator';
 import {
   ArrowDownToLine,
   ArrowLeft,
@@ -12,7 +14,6 @@ import {
   CheckCircle2,
   ClipboardList,
   Clock3,
-  Download,
   Laptop,
   Lock,
   Palette,
@@ -60,9 +61,9 @@ export default function JobSimulation() {
   const [sim, setSim] = useState(null);
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
-  const [certId, setCertId] = useState(null);
-  const [downloading, setDownloading] = useState(false);
-  const [downloadLabel, setDownloadLabel] = useState('');
+  const [certData, setCertData] = useState(null);
+  const [generatingPdf, setGeneratingPdf] = useState(false);
+  const certTemplateRef = useRef(null);
   const [err, setErr] = useState('');
   
   // Interactive Task tracking
@@ -86,9 +87,7 @@ export default function JobSimulation() {
       apiClient.get('/certificates/mine')
         .then(res => {
           const existing = res.data.find(c => c.isEvent && c.eventType === 'job-simulation' && c.eventTitle === sim.title);
-          if (existing) {
-            setCertId(existing.certificateId);
-          }
+          if (existing) setCertData(existing);
         })
         .catch(err => console.error(err));
         
@@ -253,9 +252,7 @@ export default function JobSimulation() {
               razorpay_signature: response.razorpay_signature,
             });
             const newCertId = res.data.certificateId;
-            setCertId(newCertId);
-            // Automatically prepare the PDF in background after payment
-            apiClient.post(`/events/certificates/prepare/${newCertId}`).catch(() => {});
+            setCertData({ certificateId: newCertId, issueDate: res.data.issueDate || new Date() });
           } catch (e) {
             setErr(e.response?.data?.message || 'Verification failed. Contact support.');
           } finally {
@@ -278,44 +275,42 @@ export default function JobSimulation() {
     }
   };
 
-  const handleDownload = async () => {
-    if (!certId || downloading) return;
+  const certId = certData?.certificateId;
 
-    setDownloading(true);
+  const handleClientDownload = () => {
+    if (!certId || generatingPdf) return;
+    setGeneratingPdf(true);
     setErr('');
-    try {
-      // Step 1: Prepare (generate + save PDF if not already ready)
-      setDownloadLabel('Generating PDF...');
-      await apiClient.post(`/events/certificates/prepare/${certId}`);
-
-      // Step 2: Download the stored PDF
-      setDownloadLabel('Downloading...');
-      const res = await apiClient.get(`/events/certificates/download/${certId}`, {
-        responseType: 'blob',
-        headers: { 'Cache-Control': 'no-cache' },
-      });
-
-      const blob = new Blob([res.data], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      const anchor = document.createElement('a');
-      anchor.href = url;
-      anchor.download = `JobSimCertificate-${certId}.pdf`;
-      document.body.appendChild(anchor);
-      anchor.click();
-      document.body.removeChild(anchor);
-      setTimeout(() => URL.revokeObjectURL(url), 10000);
-      setDownloadLabel('');
-    } catch (e) {
-      const msg = e.response?.data?.message || e.message || 'Unknown error';
-      setErr(`Download failed: ${msg}`);
-      setDownloadLabel('');
-    } finally {
-      setDownloading(false);
-    }
+    setTimeout(async () => {
+      try {
+        const success = await generatePDFFromDOM(certTemplateRef, `JobSimCertificate-${certId}`);
+        if (!success) throw new Error('PDF generation failed. Please try again.');
+      } catch (e) {
+        setErr(e.message || 'Download failed. Please try again.');
+      } finally {
+        setGeneratingPdf(false);
+      }
+    }, 300);
   };
 
   return (
     <>
+      {/* Hidden certificate canvas for client-side PDF export */}
+      {certId && (
+        <CertificateTemplate
+          ref={certTemplateRef}
+          studentName={user?.name || 'Student'}
+          courseTitle={sim.title}
+          certificateId={certId}
+          issueDate={
+            certData?.issueDate
+              ? new Date(certData.issueDate).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })
+              : new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })
+          }
+          verifyUrl={`${window.location.origin}/verify/${certId}`}
+          isEvent={true}
+        />
+      )}
       <Helmet>
         <title>{sim.title} - SkillValix Events</title>
         <meta name="description" content={sim.about} />
@@ -432,19 +427,19 @@ export default function JobSimulation() {
                   </span>
                 </div>
                 <button
-                  onClick={handleDownload}
-                  disabled={downloading}
+                  onClick={handleClientDownload}
+                  disabled={generatingPdf}
                   className={`w-full py-3 rounded-xl font-bold text-sm transition-all shadow-sm ${
-                    downloading 
-                      ? 'bg-emerald-50 text-emerald-600 border border-emerald-200 cursor-wait' 
+                    generatingPdf
+                      ? 'bg-emerald-50 text-emerald-600 border border-emerald-200 cursor-wait'
                       : 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:opacity-90 shadow-emerald-500/25'
                   }`}
                 >
                   <span className="inline-flex items-center gap-2">
-                    {downloading ? (
+                    {generatingPdf ? (
                       <>
                         <div className="w-4 h-4 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
-                        {downloadLabel || 'Please wait...'}
+                        Generating PDF...
                       </>
                     ) : (
                       <>
@@ -454,11 +449,11 @@ export default function JobSimulation() {
                     )}
                   </span>
                 </button>
-                {downloading && (
+                {generatingPdf && (
                   <div className="mt-3 p-3 rounded-xl bg-amber-50 border border-amber-200 text-center animate-pulse">
                     <p className="text-xs text-amber-800 font-semibold leading-relaxed">
-                       Preparing your high-quality PDF certificate.<br/>
-                       This can safely take 5-10 seconds...
+                      Generating your PDF certificate.<br/>
+                      This takes 3–5 seconds...
                     </p>
                   </div>
                 )}

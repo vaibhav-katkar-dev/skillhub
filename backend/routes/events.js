@@ -1796,7 +1796,7 @@ router.post('/certificates/generate', authOptions, async (req, res) => {
       console.error('[Events] PDF build error:', pdfErr.message);
     }
 
-    res.json({ message: 'Certificate generated.', certificateId: cert.certificateId });
+    res.json({ message: 'Certificate generated.', certificateId: cert.certificateId, issueDate: cert.issueDate });
   } catch (err) {
     console.error('[Events] Generate cert error:', err);
     res.status(500).json({ message: 'Server error.' });

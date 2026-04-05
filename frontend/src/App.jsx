@@ -1,5 +1,5 @@
 import React, { useEffect, lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { Analytics } from '@vercel/analytics/react';
 import { useAuthStore } from './store/authStore';
@@ -63,6 +63,37 @@ function PageLoader() {
   );
 }
 
+// Redirects logged-in users away from guest-only pages (login, register)
+const GuestRoute = ({ children }) => {
+  const { isAuthenticated, loading } = useAuthStore();
+  const location = useLocation();
+
+  if (loading) return <PageLoader />;
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return children;
+};
+
+// Protects routes that require authentication
+const ProtectedRoute = ({ children, adminOnly = false }) => {
+  const { isAuthenticated, loading, user } = useAuthStore();
+  const location = useLocation();
+
+  if (loading) return <PageLoader />;
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (adminOnly && user?.role !== 'admin') {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return children;
+};
+
+
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => {
@@ -107,18 +138,18 @@ function AppContent() {
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password/:token" element={<ResetPassword />} />
+            <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
+            <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
+            <Route path="/forgot-password" element={<GuestRoute><ForgotPassword /></GuestRoute>} />
+            <Route path="/reset-password/:token" element={<GuestRoute><ResetPassword /></GuestRoute>} />
             <Route path="/courses" element={<Courses />} />
             <Route path="/courses/:slug" element={<CourseDetail />} />
             <Route path="/courses/:slug/lesson/:lessonId" element={<LessonView />} />
             <Route path="/courses/:slug/quiz" element={<QuizView />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/u/:id" element={<PublicProfile />} />
-            <Route path="/admin" element={<AdminPanel />} />
-            <Route path="/admin/upload" element={<AdminPanel />} />
+            <Route path="/admin" element={<ProtectedRoute adminOnly><AdminPanel /></ProtectedRoute>} />
+            <Route path="/admin/upload" element={<ProtectedRoute adminOnly><AdminPanel /></ProtectedRoute>} />
             <Route path="/verify" element={<VerifyCert />} />
             <Route path="/verify/:certId" element={<VerifyCert />} />
             <Route path="/blog" element={<Blog />} />
