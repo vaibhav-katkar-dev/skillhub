@@ -1,17 +1,12 @@
-import { toPng } from 'html-to-image';
+import { toPng, toJpeg } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 
 /**
  * Generate a landscape A4 PDF from a React ref element.
  *
- * Uses `html-to-image` (toPng) instead of html2canvas because:
- *  - It handles modern CSS including oklch() color functions natively.
- *  - It correctly inlines loaded web-fonts (Inter, etc.) as base64.
- *  - It supports CSS transforms, blur filters, and box-shadows faithfully.
- *  - The output is pixel-perfect matching the on-screen rendering.
- *
- * The CertificateTemplate is positioned off-screen at opacity:1, so
- * html-to-image can read its fully computed styles without any hacks.
+ * Uses `html-to-image` (toPng/toJpeg) instead of html2canvas because:
+ *  - It handles modern CSS natively.
+ *  - Computes web fonts and transforms.
  *
  * @param {React.RefObject} elementRef  - ref to the root certificate div
  * @param {string}          fileName    - desired filename without .pdf extension
@@ -24,23 +19,30 @@ export const generatePDFFromDOM = async (elementRef, fileName) => {
 
   try {
     // 1. Wait for all fonts (Inter, etc.) to be fully loaded by the browser.
-    //    Without this, text may render in a fallback system font.
     await document.fonts.ready;
 
     // 2. Give React one additional animation frame to ensure layout is settled.
     await new Promise((resolve) => requestAnimationFrame(resolve));
 
-    // 3. Render the element → high-resolution PNG via html-to-image.
-    //    pixelRatio:2 provides 2× resolution for crisp print quality.
-    const dataUrl = await toPng(el, {
+    // 3. Detect mobile devices for memory optimization
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const pRatio = isMobile ? 1.5 : 2; // Reduce pixel ratio on mobile to prevent memory errors/crashes
+    const useQuality = isMobile ? 0.85 : 0.95; // Use JPEG compression
+
+    // 4. Render the element → high-resolution JPEG via html-to-image.
+    // toJpeg is significantly faster and creates much smaller data URIs than toPng,
+    // which prevents Android browsers from silently crashing during base64 creation.
+    const dataUrl = await toJpeg(el, {
       cacheBust: true,      // avoid stale cached sub-resources
-      pixelRatio: 2,        // 2× for print-quality sharpness
+      pixelRatio: pRatio,   // dynamic for print-quality vs memory balance
+      quality: useQuality,
       width: 1123,
       height: 794,
       style: {
         // In case any ancestor has opacity/visibility set, force them visible
         opacity: '1',
         visibility: 'visible',
+        backgroundColor: '#F8FAFC', // Ensure JPEG background doesn't default to black
       },
       // Skip any elements that shouldn't appear in the PDF
       filter: (node) => {
@@ -50,18 +52,18 @@ export const generatePDFFromDOM = async (elementRef, fileName) => {
       },
     });
 
-    // 4. Build an A4 landscape PDF and embed the PNG at full bleed.
+    // 5. Build an A4 landscape PDF and embed the JPEG at full bleed.
     const pdf = new jsPDF({
       orientation: 'landscape',
       unit: 'mm',
       format: 'a4',
-      compress: true,
+      compress: true, // Compress PDF output
     });
 
     const pdfWidth = pdf.internal.pageSize.getWidth();   // 297 mm
     const pdfHeight = pdf.internal.pageSize.getHeight(); // 210 mm
 
-    pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    pdf.addImage(dataUrl, 'JPEG', 0, 0, pdfWidth, pdfHeight);
     pdf.save(`${fileName}.pdf`);
 
     return true;
