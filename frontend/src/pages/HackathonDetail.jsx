@@ -434,6 +434,29 @@ export default function HackathonDetail() {
         <meta name="twitter:title" content={`${hack.title} | SkillValix Hackathon`} />
         <meta name="twitter:description" content={hack.tagline || hack.description?.slice(0, 155) || ''} />
         {hack.image && <meta name="twitter:image" content={hack.image} />}
+
+        {/* ── JSON-LD: Event ──────────────────────────────────── */}
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Event",
+          "name": hack.title,
+          "description": hack.tagline || hack.description?.slice(0, 155) || "Participate in this Hackathon on SkillValix.",
+          "startDate": hack.startDate || hack.createdAt || new Date().toISOString(),
+          "endDate": hack.endDate || hack.submissionDeadline || hack.registrationDeadline || new Date(Date.now() + 86400000 * 30).toISOString(),
+          "eventAttendanceMode": "https://schema.org/OnlineEventAttendanceMode",
+          "eventStatus": "https://schema.org/EventScheduled",
+          "location": { "@type": "VirtualLocation", "url": canonicalUrl },
+          "image": hack.image ? [hack.image] : [],
+          "organizer": { "@type": "Organization", "name": "SkillValix", "url": "https://skillvalix.com" },
+          "performer": { "@type": "Organization", "name": "SkillValix" },
+          "offers": { 
+             "@type": "Offer", 
+             "price": hack?.paymentConfig?.amountInr ? String(hack.paymentConfig.amountInr) : "0", 
+             "priceCurrency": "INR", 
+             "availability": "https://schema.org/InStock", 
+             "url": canonicalUrl 
+          }
+        })}</script>
       </Helmet>
 
       {/* ── Hero Section ── */}

@@ -82,10 +82,13 @@ export default function Events() {
           "name": "SkillValix Student Hackathon Series",
           "description": "Free online hackathons for students and beginners. Build real projects, collaborate with peers, and earn verifiable certificates on SkillValix.",
           "url": "https://skillvalix.com/hackathons",
+          "startDate": new Date().toISOString(),
+          "endDate": new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(),
           "eventAttendanceMode": "https://schema.org/OnlineEventAttendanceMode",
           "eventStatus": "https://schema.org/EventScheduled",
           "isAccessibleForFree": true,
           "organizer": { "@type": "Organization", "name": "SkillValix", "url": "https://skillvalix.com" },
+          "performer": { "@type": "Organization", "name": "SkillValix" },
           "location": { "@type": "VirtualLocation", "url": "https://skillvalix.com/hackathons" },
           "offers": { "@type": "Offer", "price": "0", "priceCurrency": "INR", "availability": "https://schema.org/InStock", "url": "https://skillvalix.com/hackathons" },
           "audience": { "@type": "Audience", "audienceType": "Students, Beginners, Developers aged 16-30" }
