@@ -21,8 +21,8 @@ export default defineConfig({
           'vendor-ui': ['lucide-react'],
           // Auth & state — changes independently of UI
           'vendor-auth': ['@react-oauth/google', 'zustand'],
-          // HTTP & analytics
-          'vendor-utils': ['axios', '@vercel/analytics'],
+          // HTTP utils
+          'vendor-utils': ['axios'],
         },
       },
     },
