@@ -79,17 +79,18 @@ export default function Events() {
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Event",
-          "name": "SkillValix Student Hackathon Series",
+          "name": "Student Hackathons",
           "description": "Free online hackathons for students and beginners. Build real projects, collaborate with peers, and earn verifiable certificates on SkillValix.",
           "url": "https://skillvalix.com/hackathons",
-          "startDate": new Date().toISOString(),
-          "endDate": new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(),
+          "startDate": "2025-01-01T00:00:00+05:30",
+          "endDate": "2027-12-31T23:59:59+05:30",
           "eventAttendanceMode": "https://schema.org/OnlineEventAttendanceMode",
           "eventStatus": "https://schema.org/EventScheduled",
           "isAccessibleForFree": true,
           "organizer": { "@type": "Organization", "name": "SkillValix", "url": "https://skillvalix.com" },
           "performer": { "@type": "Organization", "name": "SkillValix" },
           "location": { "@type": "VirtualLocation", "url": "https://skillvalix.com/hackathons" },
+          "image": ["https://skillvalix.com/og-home.png"],
           "offers": { "@type": "Offer", "price": "0", "priceCurrency": "INR", "availability": "https://schema.org/InStock", "url": "https://skillvalix.com/hackathons" },
           "audience": { "@type": "Audience", "audienceType": "Students, Beginners, Developers aged 16-30" }
         })}</script>
@@ -239,18 +240,123 @@ export default function Events() {
         </div>
       </section>
 
-      <section className="py-16 px-6 bg-gradient-to-r from-indigo-600 to-violet-600">
-        <div className="max-w-3xl mx-auto text-center text-white">
-          <h2 className="text-3xl font-black mb-3">Job Simulations Coming Soon</h2>
-          <p className="text-indigo-200 mb-8">The simulations stay visible, but the launch flow is locked for now while we rebuild the heavy CPU path.</p>
-          <button
-            type="button"
-            disabled
-            className="inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-white/20 text-white font-bold text-sm cursor-not-allowed border border-white/20 shadow-lg"
-          >
-            <Lock className="w-4 h-4" aria-hidden="true" />
-            Coming Soon
-          </button>
+      {/* ══ SEO CONTENT SECTION ════════════════════════════════════════════ */}
+      <section className="py-20 px-6 bg-slate-50 border-t border-slate-100">
+        <div className="max-w-4xl mx-auto">
+
+          {/* What is a hackathon */}
+          <div className="mb-14">
+            <h2 className="text-3xl font-black text-slate-900 mb-4">What Is a Student Hackathon?</h2>
+            <p className="text-slate-600 text-lg leading-relaxed mb-4">
+              A <strong>student hackathon</strong> is a time-limited building competition where participants — individually or in teams — solve a real-world problem by creating a working software project. Hackathons typically run for 24–72 hours and end with project submissions that are evaluated by judges.
+            </p>
+            <p className="text-slate-600 leading-relaxed mb-4">
+              On SkillValix, hackathons are designed specifically for students and beginners aged 16–30. They're <strong>100% free to enter</strong>, fully online, and structured around beginner-friendly themes like EdTech, Social Impact, Health Tech, and Web Development. You don't need to be a senior developer to participate — you need curiosity, commitment, and a willingness to build.
+            </p>
+            <p className="text-slate-600 leading-relaxed">
+              Every hackathon on SkillValix comes with a verified participation certificate. Winners receive merit certificates that appear on their public SkillValix profile — verifiable by any employer or university.
+            </p>
+          </div>
+
+          {/* Why join */}
+          <div className="mb-14">
+            <h2 className="text-3xl font-black text-slate-900 mb-6">Why Join a Hackathon? 7 Reasons That Matter</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {[
+                { num: '01', title: 'Build Real Projects', desc: 'Hackathons force you to build something complete under time pressure — the most effective way to consolidate everything you\'ve learned in courses.' },
+                { num: '02', title: 'Earn a Verified Certificate', desc: 'Every SkillValix hackathon participant earns a certificate. Winners get a merit certificate visible on their public profile and verifiable by employers.' },
+                { num: '03', title: 'Stand Out in Applications', desc: 'Hackathon participation shows recruiters you can build, not just learn. It\'s the portfolio evidence that separates you from 90% of applicants.' },
+                { num: '04', title: 'Learn Faster Under Pressure', desc: 'Time constraints accelerate learning. You\'ll figure out in 48 hours what might take weeks in a classroom — because you have a real goal to ship.' },
+                { num: '05', title: 'Network with Peers', desc: 'Meet other students and developers from across India who are building in the same space. Communities formed in hackathons often turn into co-founders and collaborators.' },
+                { num: '06', title: 'Free to Enter', desc: 'No registration fee. No hidden charges. SkillValix hackathons are 100% free for all students. Your only investment is time and effort.' },
+                { num: '07', title: 'Beginner-Friendly Themes', desc: 'Themes are chosen specifically for beginners. You don\'t need to know machine learning or blockchain — a well-built web app solves real problems and wins.' },
+              ].map(({ num, title, desc }) => (
+                <div key={num} style={{ background: '#fff', border: '1.5px solid #e2e8f0', borderRadius: 16, padding: '24px' }}>
+                  <div style={{ fontSize: 11, fontWeight: 900, color: '#6366f1', letterSpacing: '0.1em', marginBottom: 8 }}>REASON {num}</div>
+                  <h3 className="text-slate-900 font-bold text-base mb-2">{title}</h3>
+                  <p className="text-slate-500 text-sm leading-relaxed">{desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* How it works */}
+          <div className="mb-14">
+            <h2 className="text-3xl font-black text-slate-900 mb-6">How SkillValix Hackathons Work</h2>
+            <ol className="space-y-4">
+              {[
+                { step: '1', title: 'Create a Free Account', desc: 'Register on SkillValix — it\'s free and takes under 2 minutes. No credit card required.' },
+                { step: '2', title: 'Browse Open Hackathons', desc: 'Visit this page to see all active, upcoming, and past hackathons. Each listing shows the theme, deadline, prize, and eligibility.' },
+                { step: '3', title: 'Register Before the Deadline', desc: 'Click "View Details & Register" on the hackathon you want to join. Complete the registration form as a solo participant or with your team.' },
+                { step: '4', title: 'Build Your Project', desc: 'Work on your solution during the hackathon window. Use any tech stack — HTML/CSS/JS, React, Python, or any language you\'re comfortable with.' },
+                { step: '5', title: 'Submit Before the Deadline', desc: 'Submit your project via the hackathon submission form. Include a demo link, GitHub repo, and a short description of the problem you solved.' },
+                { step: '6', title: 'Receive Your Certificate', desc: 'All valid submissions receive a participation certificate. Top submissions get merit certificates and are featured on the SkillValix platform.' },
+              ].map(({ step, title, desc }) => (
+                <li key={step} className="flex gap-4 items-start">
+                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#eef2ff', border: '1.5px solid #c7d2fe', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, color: '#4f46e5', fontSize: 14, flexShrink: 0 }}>{step}</div>
+                  <div>
+                    <p className="font-bold text-slate-900 mb-0.5">{title}</p>
+                    <p className="text-slate-500 text-sm leading-relaxed">{desc}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          {/* Internal links to courses */}
+          <div className="mb-14 p-8 rounded-2xl" style={{ background: 'linear-gradient(135deg, #eef2ff, #f5f3ff)', border: '1.5px solid #c7d2fe' }}>
+            <h2 className="text-2xl font-black text-slate-900 mb-3">Prepare for Your First Hackathon</h2>
+            <p className="text-slate-600 mb-5 text-sm leading-relaxed">
+              Not sure if your skills are ready? The fastest way to get hackathon-ready is to complete one of our free courses. Most hackathon winners started with these exact resources.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              {[
+                { label: 'JavaScript Course →', to: '/courses/ultimate-javascript-masterclass' },
+                { label: 'Python Course →', to: '/courses/ultimate-python-masterclass' },
+                { label: 'HTML Course →', to: '/courses/ultimate-html-masterclass' },
+                { label: 'CSS Course →', to: '/courses/css-for-beginners-learn-web-styling-zero-to-pro' },
+                { label: 'AI Course →', to: '/courses/basics-of-artificial-intelligence-beginners' },
+              ].map(({ label, to }) => (
+                <Link key={to} to={to} style={{ background: '#fff', color: '#4f46e5', border: '1.5px solid #c7d2fe', borderRadius: 10, padding: '10px 18px', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
+                  {label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* FAQ */}
+          <div className="mb-10">
+            <h2 className="text-3xl font-black text-slate-900 mb-6">Frequently Asked Questions</h2>
+            <div className="space-y-4">
+              {[
+                { q: 'Are SkillValix hackathons free for students?', a: 'Yes. All hackathons on SkillValix are 100% free to enter. There is no registration fee, no hidden charges, and no payment required at any step. Every participant receives a verified certificate.' },
+                { q: 'Can complete beginners participate in hackathons on SkillValix?', a: 'Absolutely. SkillValix hackathons are specifically designed for students and beginners aged 16–30. Hackathon themes are chosen to be accessible to participants who have basic coding knowledge. If you\'ve completed even one free course on SkillValix, you have enough foundation to participate.' },
+                { q: 'What kind of projects can I build in a SkillValix hackathon?', a: 'You can build any software project — a web app, a mobile app, a data analysis tool, or an AI prototype — as long as it responds to the hackathon\'s theme. Most winning projects are simple, well-executed ideas that clearly solve a real problem.' },
+                { q: 'Do I get a certificate for participating even if I don\'t win?', a: 'Yes. Every participant who submits a valid project receives a verified participation certificate. Winners receive a special merit certificate that highlights their achievement. Both certificates are verifiable on the SkillValix platform.' },
+                { q: 'Can I participate solo or do I need a team?', a: 'Both solo and team participation are supported. Check the specific hackathon details page for team size requirements. Solo participation is fully competitive — many of our strongest submissions come from individual participants.' },
+                { q: 'How is the hackathon evaluated?', a: 'Projects are evaluated by SkillValix judges on four criteria: (1) problem clarity — is a real problem clearly defined; (2) solution quality — does the project actually address it; (3) technical execution — does the product work; (4) impact potential — could this scale or help real users.' },
+              ].map(({ q, a }) => (
+                <details key={q} className="bg-white rounded-xl border border-slate-200 overflow-hidden group" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+                  <summary className="flex items-center justify-between gap-4 px-6 py-5 cursor-pointer font-bold text-slate-800 text-sm list-none select-none">
+                    {q}
+                    <span style={{ flexShrink: 0, width: 24, height: 24, borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, color: '#64748b', fontWeight: 400 }}>+</span>
+                  </summary>
+                  <p className="px-6 pb-5 text-sm text-slate-500 leading-relaxed">{a}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+
+          {/* Blog links */}
+          <div>
+            <h2 className="text-xl font-black text-slate-900 mb-4">Learn More About Hackathons</h2>
+            <div className="flex flex-wrap gap-3">
+              <Link to="/blog/how-to-win-a-hackathon-beginner-guide-2026" style={{ color: '#4f46e5', fontSize: 13, fontWeight: 600, textDecoration: 'none', background: '#f8faff', border: '1px solid #e0e7ff', borderRadius: 8, padding: '8px 14px' }}>How to Win a Hackathon: Beginner Guide →</Link>
+              <Link to="/blog/web-development-roadmap-2026-beginners" style={{ color: '#4f46e5', fontSize: 13, fontWeight: 600, textDecoration: 'none', background: '#f8faff', border: '1px solid #e0e7ff', borderRadius: 8, padding: '8px 14px' }}>Web Development Roadmap 2026 →</Link>
+              <Link to="/blog/free-online-courses-with-certificate-india-2026" style={{ color: '#4f46e5', fontSize: 13, fontWeight: 600, textDecoration: 'none', background: '#f8faff', border: '1px solid #e0e7ff', borderRadius: 8, padding: '8px 14px' }}>Free Courses with Certificate India →</Link>
+            </div>
+          </div>
+
         </div>
       </section>
     </>

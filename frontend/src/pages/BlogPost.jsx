@@ -49,12 +49,19 @@ const BlogPost = () => {
   // ── JSON-LD: Article Schema ───────────────────────────────────────────────
   const articleSchema = {
     '@context': 'https://schema.org',
-    '@type': 'Article',
+    '@type': 'BlogPosting',
     headline: post.title,
     description: post.metaDescription,
-    image: post.imageUrl,
+    image: {
+      '@type': 'ImageObject',
+      url: post.imageUrl,
+      width: 1200,
+      height: 630,
+    },
     datePublished: post.publishedDate,
-    dateModified: post.modifiedDate,
+    dateModified: post.modifiedDate || post.publishedDate,
+    inLanguage: 'en-IN',
+    isAccessibleForFree: true,
     author: {
       '@type': 'Person',
       name: post.author,
@@ -63,9 +70,12 @@ const BlogPost = () => {
     publisher: {
       '@type': 'Organization',
       name: SITE_NAME,
+      url: 'https://skillvalix.com',
       logo: {
         '@type': 'ImageObject',
         url: LOGO_URL,
+        width: 200,
+        height: 60,
       },
     },
     mainEntityOfPage: {
