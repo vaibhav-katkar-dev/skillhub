@@ -245,19 +245,19 @@ export default function Home() {
         <title>SkillValix – Free Online Courses & Student Hackathons | Skill-Based Certification Platform</title>
         <meta name="description" content="SkillValix: Learn free online courses in HTML, CSS, JavaScript, Python & more. Join student hackathons, earn verified skill certificates, and build a career. 2,800+ learners. Start free today!" />
         <meta name="keywords" content="SkillValix, free online courses for students, student hackathons, online hackathon platform, skill based certification platform, online certification platform, free courses India, student hackathons with certificate, online hackathon for beginners, learn skills online free, free courses and hackathons for students, free web development course, online certification India" />
-        <link rel="canonical" href="https://skillvalix.com/" />
+        <link rel="canonical" href="https://www.skillvalix.com/" />
         <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
         <meta name="author" content="SkillValix" />
         <meta name="rating" content="general" />
 
         {/* ── Open Graph (Facebook / LinkedIn / WhatsApp) ── */}
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://skillvalix.com/" />
+        <meta property="og:url" content="https://www.skillvalix.com/" />
         <meta property="og:site_name" content="SkillValix" />
         <meta property="og:locale" content="en_IN" />
         <meta property="og:title" content="SkillValix – Free Online Courses & Student Hackathons" />
         <meta property="og:description" content="Learn HTML, CSS, JavaScript, Python & AI — free. Join student hackathons. Earn verified skill certificates and launch your tech career on SkillValix." />
-        <meta property="og:image" content="https://skillvalix.com/og-home.png" />
+        <meta property="og:image" content="https://www.skillvalix.com/og-home.png" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:image:alt" content="SkillValix – Free Online Courses, Hackathons & Certificates" />
@@ -268,20 +268,20 @@ export default function Home() {
         <meta name="twitter:creator" content="@SkillValix" />
         <meta name="twitter:title" content="SkillValix – Free Online Courses & Student Hackathons" />
         <meta name="twitter:description" content="Learn HTML, CSS, JS, Python & more for free. Join student hackathons. Earn verified skill certificates. 2,800+ learners on SkillValix. Start today." />
-        <meta name="twitter:image" content="https://skillvalix.com/og-home.png" />
+        <meta name="twitter:image" content="https://www.skillvalix.com/og-home.png" />
 
         {/* ── JSON-LD: WebSite + Sitelinks Search Box ─────── */}
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "WebSite",
           "name": "SkillValix",
-          "url": "https://skillvalix.com",
+          "url": "https://www.skillvalix.com",
           "description": "Free online coding courses with certificates. Learn HTML, CSS, JavaScript, Python, Java and AI for free.",
           "potentialAction": {
             "@type": "SearchAction",
             "target": {
               "@type": "EntryPoint",
-              "urlTemplate": "https://skillvalix.com/courses?q={search_term_string}"
+              "urlTemplate": "https://www.skillvalix.com/courses?q={search_term_string}"
             },
             "query-input": "required name=search_term_string"
           }
@@ -292,8 +292,8 @@ export default function Home() {
           "@context": "https://schema.org",
           "@type": "Organization",
           "name": "SkillValix",
-          "url": "https://skillvalix.com",
-          "logo": "https://skillvalix.com/logo.svg",
+          "url": "https://www.skillvalix.com",
+          "logo": "https://www.skillvalix.com/logo.svg",
           "sameAs": [
             "https://www.linkedin.com/company/skillvalix",
             "https://twitter.com/skillvalix"
@@ -310,20 +310,20 @@ export default function Home() {
           "@context": "https://schema.org",
           "@type": "EducationalOrganization",
           "name": "SkillValix",
-          "url": "https://skillvalix.com",
+          "url": "https://www.skillvalix.com",
           "description": "SkillValix is a 100% free online learning platform offering structured web development and programming courses with verifiable certificates.",
           "hasOfferCatalog": {
             "@type": "OfferCatalog",
             "name": "Free Online Coding Courses",
             "itemListElement": [
-              { "@type": "Course", "name": "HTML for Beginners: Complete HTML5 Masterclass", "url": "https://skillvalix.com/courses/ultimate-html-masterclass", "isAccessibleForFree": true },
-              { "@type": "Course", "name": "CSS for Beginners — Zero to Pro", "url": "https://skillvalix.com/courses/css-for-beginners-learn-web-styling-zero-to-pro", "isAccessibleForFree": true },
-              { "@type": "Course", "name": "JavaScript for Beginners: Complete JS Masterclass", "url": "https://skillvalix.com/courses/ultimate-javascript-masterclass", "isAccessibleForFree": true },
-              { "@type": "Course", "name": "Python for Beginners: Complete Python Programming Masterclass", "url": "https://skillvalix.com/courses/ultimate-python-masterclass", "isAccessibleForFree": true },
-              { "@type": "Course", "name": "Java Programming Masterclass: Beginner to Advanced", "url": "https://skillvalix.com/courses/ultimate-java-masterclass", "isAccessibleForFree": true },
-              { "@type": "Course", "name": "Ultimate C Programming: Hardware to High Performance", "url": "https://skillvalix.com/courses/ultimate-c-programming", "isAccessibleForFree": true },
-              { "@type": "Course", "name": "Modern C++: Powerful Object-Oriented Development", "url": "https://skillvalix.com/courses/modern-cpp-mastery", "isAccessibleForFree": true },
-              { "@type": "Course", "name": "Artificial Intelligence for Beginners: AI & Machine Learning Fundamentals", "url": "https://skillvalix.com/courses/basics-of-artificial-intelligence-beginners", "isAccessibleForFree": true }
+              { "@type": "Course", "name": "HTML for Beginners: Complete HTML5 Masterclass", "url": "https://www.skillvalix.com/courses/ultimate-html-masterclass", "isAccessibleForFree": true },
+              { "@type": "Course", "name": "CSS for Beginners — Zero to Pro", "url": "https://www.skillvalix.com/courses/css-for-beginners-learn-web-styling-zero-to-pro", "isAccessibleForFree": true },
+              { "@type": "Course", "name": "JavaScript for Beginners: Complete JS Masterclass", "url": "https://www.skillvalix.com/courses/ultimate-javascript-masterclass", "isAccessibleForFree": true },
+              { "@type": "Course", "name": "Python for Beginners: Complete Python Programming Masterclass", "url": "https://www.skillvalix.com/courses/ultimate-python-masterclass", "isAccessibleForFree": true },
+              { "@type": "Course", "name": "Java Programming Masterclass: Beginner to Advanced", "url": "https://www.skillvalix.com/courses/ultimate-java-masterclass", "isAccessibleForFree": true },
+              { "@type": "Course", "name": "Ultimate C Programming: Hardware to High Performance", "url": "https://www.skillvalix.com/courses/ultimate-c-programming", "isAccessibleForFree": true },
+              { "@type": "Course", "name": "Modern C++: Powerful Object-Oriented Development", "url": "https://www.skillvalix.com/courses/modern-cpp-mastery", "isAccessibleForFree": true },
+              { "@type": "Course", "name": "Artificial Intelligence for Beginners: AI & Machine Learning Fundamentals", "url": "https://www.skillvalix.com/courses/basics-of-artificial-intelligence-beginners", "isAccessibleForFree": true }
             ]
           }
         })}</script>

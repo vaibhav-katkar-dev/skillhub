@@ -562,6 +562,7 @@ const LessonView = () => {
       <Helmet>
         <title>{lesson.title} | {course?.title} | SkillValix</title>
         <meta name="description" content={lesson.description || `Learn ${lesson.title} in the ${course?.title} course on SkillValix. Free, interactive, and project-based technical training.`} />
+        <link rel="canonical" href={`https://www.skillvalix.com/courses/${slug}/lesson/${lessonId}`} />
         
         {/* Course Instance JSON-LD for Search Indexing */}
         <script type="application/ld+json">

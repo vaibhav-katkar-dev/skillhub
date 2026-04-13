@@ -171,7 +171,7 @@ export const blogPosts = [
       The core semantic tags have not changed — <code>&lt;header&gt;</code>, <code>&lt;main&gt;</code>, <code>&lt;article&gt;</code>, <code>&lt;nav&gt;</code>, <code>&lt;aside&gt;</code>, <code>&lt;section&gt;</code>, <code>&lt;figure&gt;</code>, <code>&lt;time&gt;</code> are all still the standard. What has evolved is Google's ability to parse and leverage them. In 2026, Google's understanding of semantic structure is far more nuanced — making correct usage even more impactful for rankings than it was even 3 years ago.</p>
     `,
     author: 'Arjun Mehta',
-    authorUrl: 'https://skillvalix.com/blog',
+    authorUrl: 'https://www.skillvalix.com/blog',
     publishedDate: '2026-03-15T09:00:00+05:30',
     modifiedDate: '2026-03-15T09:00:00+05:30',
     date: 'March 15, 2026',
@@ -181,7 +181,7 @@ export const blogPosts = [
     tags: ['HTML5', 'SEO', 'Semantic HTML', 'Web Development', 'Accessibility', 'HTML5 Tutorial', 'On-Page SEO'],
     imageUrl: 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&q=80&w=1200',
     imageAlt: 'HTML5 code on a computer screen showing semantic tags',
-    canonicalUrl: 'https://skillvalix.com/blog/mastering-html5-semantic-tags-seo',
+    canonicalUrl: 'https://www.skillvalix.com/blog/mastering-html5-semantic-tags-seo',
     relatedCourse: {
       title: 'The Ultimate HTML Masterclass for Beginners',
       slug: 'ultimate-html-masterclass',
@@ -366,7 +366,7 @@ export const blogPosts = [
       CSS Subgrid (the <code>subgrid</code> value for <code>grid-template-columns</code>) allows nested grid items to align to the parent grid's columns. It is fully supported in all modern browsers as of 2023 and is extremely useful for card grids where you want inner elements (titles, descriptions, buttons) to align across different-sized cards. Yes, use it.</p>
     `,
     author: 'Neha Sharma',
-    authorUrl: 'https://skillvalix.com/blog',
+    authorUrl: 'https://www.skillvalix.com/blog',
     publishedDate: '2026-03-12T09:00:00+05:30',
     modifiedDate: '2026-04-05T18:00:00+05:30',
     date: 'March 12, 2026',
@@ -376,7 +376,7 @@ export const blogPosts = [
     tags: ['CSS Grid', 'Flexbox', 'CSS Layout', 'Responsive Design', 'Web Design', 'CSS Tutorial 2026'],
     imageUrl: 'https://images.unsplash.com/photo-1507721999472-8ed4421c4af2?auto=format&fit=crop&q=80&w=1200',
     imageAlt: 'CSS code on screen showing grid and flexbox layout examples',
-    canonicalUrl: 'https://skillvalix.com/blog/css-grid-vs-flexbox-modern-web',
+    canonicalUrl: 'https://www.skillvalix.com/blog/css-grid-vs-flexbox-modern-web',
     relatedCourse: {
       title: 'CSS for Beginners: Learn Web Styling from Zero to Pro',
       slug: 'css-for-beginners-learn-web-styling-zero-to-pro',
@@ -612,7 +612,7 @@ document.querySelectorAll('img[data-src]').forEach(img => {
       <code>event.stopPropagation()</code> stops the event from bubbling up to parent elements. Use it sparingly — it can break event delegation patterns and make debugging difficult. The only valid case is when you genuinely need to prevent a parent handler from firing for a specific child interaction, like a delete button inside a clickable card.</p>
     `,
     author: 'Amit Patel',
-    authorUrl: 'https://skillvalix.com/blog',
+    authorUrl: 'https://www.skillvalix.com/blog',
     publishedDate: '2026-03-08T09:00:00+05:30',
     modifiedDate: '2026-04-05T18:00:00+05:30',
     date: 'March 08, 2026',
@@ -622,7 +622,7 @@ document.querySelectorAll('img[data-src]').forEach(img => {
     tags: ['JavaScript DOM', 'Vanilla JavaScript', 'Web Performance', 'Frontend Development', 'JavaScript Tutorial 2026', 'Event Delegation'],
     imageUrl: 'https://images.unsplash.com/photo-1555099962-4199c345e5dd?auto=format&fit=crop&w=1200&q=80',
     imageAlt: 'JavaScript code on a dark editor screen showing DOM manipulation techniques',
-    canonicalUrl: 'https://skillvalix.com/blog/javascript-dom-manipulation-secrets',
+    canonicalUrl: 'https://www.skillvalix.com/blog/javascript-dom-manipulation-secrets',
     relatedCourse: {
       title: 'Ultimate JavaScript Masterclass',
       slug: 'ultimate-javascript-masterclass',
@@ -738,7 +738,7 @@ for i, fruit in enumerate(fruits):
       Yes. Python 3.11 and later versions improved error messages and performance, but the language-level patterns remain identical. Using <code>is None</code> instead of <code>== None</code>, avoiding bare except, and using context managers are timeless Python best practices that apply to every version from 3.8 to 3.13+.</p>
     `,
     author: 'Riya Desai',
-    authorUrl: 'https://skillvalix.com/blog',
+    authorUrl: 'https://www.skillvalix.com/blog',
     publishedDate: '2026-03-17T09:00:00+05:30',
     modifiedDate: '2026-04-05T18:00:00+05:30',
     date: 'March 17, 2026',
@@ -748,7 +748,7 @@ for i, fruit in enumerate(fruits):
     tags: ['Python', 'Python Tips', 'Beginner Python', 'Clean Code', 'Pythonic Code', 'Python Best Practices', 'Programming'],
     imageUrl: 'https://images.unsplash.com/photo-1526379095098-d400fd0bf935?auto=format&fit=crop&w=1200&q=80',
     imageAlt: 'Python code on a laptop screen with a dark theme',
-    canonicalUrl: 'https://skillvalix.com/blog/python-beginner-mistakes-to-avoid',
+    canonicalUrl: 'https://www.skillvalix.com/blog/python-beginner-mistakes-to-avoid',
     relatedCourse: {
       title: 'Python Basics',
       slug: 'ultimate-python-masterclass',
@@ -976,7 +976,7 @@ names.forEach(System.out::println);</code></pre>
       Code review is the best teacher. After writing any Java code, go through this list as a checklist. Better yet, set up SonarQube or IntelliJ's inspection warnings — they flag most of these mistakes automatically. And enroll in the <a href="/courses/ultimate-java-masterclass">Ultimate Java Masterclass</a> for structured, mentor-level guidance.</p>
     `,
     author: 'Riya Desai',
-    authorUrl: 'https://skillvalix.com/blog',
+    authorUrl: 'https://www.skillvalix.com/blog',
     publishedDate: '2026-03-23T09:00:00+05:30',
     modifiedDate: '2026-04-05T18:00:00+05:30',
     date: 'March 23, 2026',
@@ -986,7 +986,7 @@ names.forEach(System.out::println);</code></pre>
     tags: ['Java', 'Java Tips', 'Beginner Java', 'Clean Code', 'OOP', 'Java Interview', 'Java Mistakes', 'Programming'],
     imageUrl: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=1200&q=80',
     imageAlt: 'Java code on a laptop screen with a dark editor theme showing OOP concepts',
-    canonicalUrl: 'https://skillvalix.com/blog/java-beginner-mistakes-to-avoid',
+    canonicalUrl: 'https://www.skillvalix.com/blog/java-beginner-mistakes-to-avoid',
     relatedCourse: {
       title: 'The Ultimate Java Masterclass: From Beginner to Advanced',
       slug: 'ultimate-java-masterclass',
@@ -1094,7 +1094,7 @@ names.forEach(System.out::println);</code></pre>
       AI is replacing specific tasks, not the role of programmer. In 2026, AI tools write boilerplate, suggest code, find bugs, and generate tests. Programmers who use these tools are dramatically more productive than those who do not. The programmers most at risk are those who do repetitive, low-complexity coding — exactly the work AI tools handle. Learning AI makes you the developer who builds those tools, not the one replaced by them.</p>
     `,
     author: 'Arjun Mehta',
-    authorUrl: 'https://skillvalix.com/blog',
+    authorUrl: 'https://www.skillvalix.com/blog',
     publishedDate: '2026-03-26T09:00:00+05:30',
     modifiedDate: '2026-04-05T18:00:00+05:30',
     date: 'March 26, 2026',
@@ -1104,7 +1104,7 @@ names.forEach(System.out::println);</code></pre>
     tags: ['Artificial Intelligence', 'Machine Learning', 'Python for AI', 'Data Science', 'AI Career 2026', 'Deep Learning', 'Technology'],
     imageUrl: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=1200&q=80',
     imageAlt: 'Futuristic AI neural network concept with glowing connections',
-    canonicalUrl: 'https://skillvalix.com/blog/why-learn-ai-machine-learning-2026',
+    canonicalUrl: 'https://www.skillvalix.com/blog/why-learn-ai-machine-learning-2026',
     relatedCourse: {
       title: 'Artificial Intelligence & Machine Learning Fundamentals',
       slug: 'basics-of-artificial-intelligence-beginners',
@@ -1226,7 +1226,7 @@ names.forEach(System.out::println);</code></pre>
       <p>At <a href="/">SkillValix</a>, every course in this list is 100% free. No subscription, no trial, no credit card. All courses end with a verified certificate tied to a unique ID — something you can link directly on LinkedIn and your resume. The only investment required is your time and consistency.</p>
     `,
     author: 'Neha Sharma',
-    authorUrl: 'https://skillvalix.com/blog',
+    authorUrl: 'https://www.skillvalix.com/blog',
     publishedDate: '2026-03-27T09:00:00+05:30',
     modifiedDate: '2026-04-05T18:00:00+05:30',
     date: 'March 27, 2026',
@@ -1236,7 +1236,7 @@ names.forEach(System.out::println);</code></pre>
     tags: ['Student Resources', 'Career Advice', 'Free Courses', 'Learn to Code', 'Programming', 'Technology 2026', 'HTML CSS JavaScript'],
     imageUrl: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80',
     imageAlt: 'Students studying together with laptops',
-    canonicalUrl: 'https://skillvalix.com/blog/top-skills-students-learn-online-free',
+    canonicalUrl: 'https://www.skillvalix.com/blog/top-skills-students-learn-online-free',
     relatedCourse: {
       title: 'The Ultimate HTML Masterclass for Beginners',
       slug: 'ultimate-html-masterclass',
@@ -1290,7 +1290,7 @@ names.forEach(System.out::println);</code></pre>
       <p>Stop sending scattered links. Start sending a professional legacy. Build your portfolio for free at <a href="https://www.skillvalix.com" target="_blank">SkillValix</a>.</p>
     `,
     author: 'Arjun Mehta',
-    authorUrl: 'https://skillvalix.com/blog',
+    authorUrl: 'https://www.skillvalix.com/blog',
     publishedDate: '2026-04-05T10:00:00+05:30',
     modifiedDate: '2026-04-05T10:00:00+05:30',
     date: 'April 05, 2026',
@@ -1300,7 +1300,7 @@ names.forEach(System.out::println);</code></pre>
     tags: ['Portfolio', 'Career Development', 'Recruitment', 'Personal Branding', 'Web Development'],
     imageUrl: 'https://images.unsplash.com/photo-1547014762-3a94fb4df70a?auto=format&fit=crop&w=1200&q=80',
     imageAlt: 'Professional developer portfolio on a high-resolution monitor',
-    canonicalUrl: 'https://skillvalix.com/blog/how-to-build-powerful-public-portfolio-2026',
+    canonicalUrl: 'https://www.skillvalix.com/blog/how-to-build-powerful-public-portfolio-2026',
     relatedCourse: {
       title: 'The Ultimate HTML Masterclass for Beginners',
       slug: 'ultimate-html-masterclass',
@@ -1372,7 +1372,7 @@ names.forEach(System.out::println);</code></pre>
       <p>Your tech career in 2026 waits for no one. Stop just "learning" and start <strong>validating</strong>. Build your portfolio, earn your credentials, and show the world what you are capable of at <a href="https://www.skillvalix.com" target="_blank">SkillValix.com</a>.</p>
     `,
     author: 'Arjun Mehta',
-    authorUrl: 'https://skillvalix.com/blog',
+    authorUrl: 'https://www.skillvalix.com/blog',
     publishedDate: '2026-04-05T11:00:00+05:30',
     modifiedDate: '2026-04-05T11:00:00+05:30',
     date: 'April 05, 2026',
@@ -1382,7 +1382,7 @@ names.forEach(System.out::println);</code></pre>
     tags: ['SkillValix', 'Career Development', 'Free Courses', 'Education', 'Personal Branding'],
     imageUrl: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1200&q=80',
     imageAlt: 'Young professionals collaborating in a modern tech environment',
-    canonicalUrl: 'https://skillvalix.com/blog/what-is-skillvalix-complete-guide',
+    canonicalUrl: 'https://www.skillvalix.com/blog/what-is-skillvalix-complete-guide',
     relatedCourse: {
       title: 'Ultimate HTML Masterclass',
       slug: 'ultimate-html-masterclass',
@@ -1462,7 +1462,7 @@ names.forEach(System.out::println);</code></pre>
       <p>Ready to unlock these <strong>SkillValix benefits</strong>? Your professional legacy starts here. Join thousands of other students who are building their future today at <a href="https://www.skillvalix.com" target="_blank">SkillValix.com</a>.</p>
     `,
     author: 'Arjun Mehta',
-    authorUrl: 'https://skillvalix.com/blog',
+    authorUrl: 'https://www.skillvalix.com/blog',
     publishedDate: '2026-04-05T11:30:00+05:30',
     modifiedDate: '2026-04-05T11:30:00+05:30',
     date: 'April 05, 2026',
@@ -1472,7 +1472,7 @@ names.forEach(System.out::println);</code></pre>
     tags: ['SkillValix Benefits', 'Job Ready', 'Student Career', 'Engineering Students India', 'Career Advice'],
     imageUrl: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80',
     imageAlt: 'Engineering students in India collaborating on a tech project',
-    canonicalUrl: 'https://skillvalix.com/blog/how-skillvalix-helps-students-become-job-ready',
+    canonicalUrl: 'https://www.skillvalix.com/blog/how-skillvalix-helps-students-become-job-ready',
     relatedCourse: {
       title: 'Ultimate React Masterclass',
       slug: 'ultimate-react-masterclass',
@@ -1596,7 +1596,7 @@ names.forEach(System.out::println);</code></pre>
       Your personal portfolio website. It serves double duty: it is a project that demonstrates your HTML/CSS/JS skills, AND it is the live URL you send to every employer. Build it with HTML and CSS only first. Then add JavaScript animations and interactivity as you learn. Then eventually rebuild it in React. It grows with you as your skills grow.</p>
     `,
     author: 'Arjun Mehta',
-    authorUrl: 'https://skillvalix.com/blog',
+    authorUrl: 'https://www.skillvalix.com/blog',
     publishedDate: '2026-03-28T09:00:00+05:30',
     modifiedDate: '2026-04-05T18:00:00+05:30',
     date: 'March 28, 2026',
@@ -1606,7 +1606,7 @@ names.forEach(System.out::println);</code></pre>
     tags: ['Web Development', 'Career Roadmap', 'Beginners', 'Frontend Developer', 'Full Stack', 'Free Courses', 'Learn to Code 2026'],
     imageUrl: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80',
     imageAlt: 'Developer working on laptop with HTML CSS JavaScript code on screen',
-    canonicalUrl: 'https://skillvalix.com/blog/how-to-become-web-developer-2026-roadmap',
+    canonicalUrl: 'https://www.skillvalix.com/blog/how-to-become-web-developer-2026-roadmap',
     relatedCourse: {
       title: 'Ultimate HTML Masterclass',
       slug: 'ultimate-html-masterclass',
@@ -1978,7 +1978,7 @@ names.forEach(System.out::println);</code></pre>
       <p>Ready to build stunning, animated interfaces from the ground up? Start with the free <a href="/courses/css-for-beginners-learn-web-styling-zero-to-pro">CSS for Beginners course on SkillValix</a> — no fees, no gatekeeping, just real skills with a verifiable certificate.</p>
     `,
     author: 'Neha Sharma',
-    authorUrl: 'https://skillvalix.com/blog',
+    authorUrl: 'https://www.skillvalix.com/blog',
     publishedDate: '2026-03-29T09:00:00+05:30',
     modifiedDate: '2026-04-05T18:00:00+05:30',
     date: 'March 29, 2026',
@@ -1988,7 +1988,7 @@ names.forEach(System.out::println);</code></pre>
     tags: ['CSS Micro Animations', 'CSS Animations', 'CSS Transitions', 'UI Design', 'Web Development', 'Micro-Interactions', 'CSS Performance', 'UX Design'],
     imageUrl: 'https://images.unsplash.com/photo-1545235617-9465d2a55698?auto=format&fit=crop&w=1200&q=80',
     imageAlt: 'CSS micro animations and interactive UI design patterns on screen',
-    canonicalUrl: 'https://skillvalix.com/blog/css-animations-micro-interactions-guide',
+    canonicalUrl: 'https://www.skillvalix.com/blog/css-animations-micro-interactions-guide',
     relatedCourse: {
       title: 'CSS for Beginners — Zero to Pro',
       slug: 'css-for-beginners-learn-web-styling-zero-to-pro',
@@ -2035,7 +2035,7 @@ names.forEach(System.out::println);</code></pre>
       <p>The skills you need to start are available free today at <a href="https://www.skillvalix.com/courses" target="_blank">SkillValix Courses</a>.</p>
     `,
     author: 'Rahul Mehta',
-    authorUrl: 'https://skillvalix.com/blog',
+    authorUrl: 'https://www.skillvalix.com/blog',
     publishedDate: '2026-03-30T09:00:00+05:30',
     modifiedDate: '2026-03-30T09:00:00+05:30',
     date: 'March 30, 2026',
@@ -2045,7 +2045,7 @@ names.forEach(System.out::println);</code></pre>
     tags: ['Freelancing', 'Web Development', 'Career', 'Beginners', 'Income'],
     imageUrl: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80',
     imageAlt: 'Freelancer working remotely on laptop at a coffee shop',
-    canonicalUrl: 'https://skillvalix.com/blog/freelancing-as-developer-beginners-guide',
+    canonicalUrl: 'https://www.skillvalix.com/blog/freelancing-as-developer-beginners-guide',
     relatedCourse: {
       title: 'Ultimate JavaScript Masterclass',
       slug: 'ultimate-javascript-masterclass',
@@ -2093,7 +2093,7 @@ names.forEach(System.out::println);</code></pre>
       <p>Build the skills that fill your resume at <a href="https://www.skillvalix.com/courses" target="_blank">SkillValix</a> — completely free with certified exams.</p>
     `,
     author: 'Priya Sharma',
-    authorUrl: 'https://skillvalix.com/blog',
+    authorUrl: 'https://www.skillvalix.com/blog',
     publishedDate: '2026-04-01T09:00:00+05:30',
     modifiedDate: '2026-04-01T09:00:00+05:30',
     date: 'April 1, 2026',
@@ -2103,7 +2103,7 @@ names.forEach(System.out::println);</code></pre>
     tags: ['Resume Tips', 'Job Search', 'Developer Career', 'Portfolio', 'Freshers'],
     imageUrl: 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=1200&q=80',
     imageAlt: 'Developer reviewing resume and portfolio on desk',
-    canonicalUrl: 'https://skillvalix.com/blog/developer-resume-portfolio-tips-2026',
+    canonicalUrl: 'https://www.skillvalix.com/blog/developer-resume-portfolio-tips-2026',
     relatedCourse: {
       title: 'Ultimate JavaScript Masterclass',
       slug: 'ultimate-javascript-masterclass',
@@ -2156,7 +2156,7 @@ names.forEach(System.out::println);</code></pre>
       <p>Understanding how AI and Machine Learning work under the hood makes you a significantly better user of these tools. Explore the free <a href="https://www.skillvalix.com/courses/basics-of-artificial-intelligence-beginners" target="_blank">AI & Machine Learning Fundamentals</a> course on SkillValix.</p>
     `,
     author: 'Arjun Mehta',
-    authorUrl: 'https://skillvalix.com/blog',
+    authorUrl: 'https://www.skillvalix.com/blog',
     publishedDate: '2026-04-02T09:00:00+05:30',
     modifiedDate: '2026-04-02T09:00:00+05:30',
     date: 'April 2, 2026',
@@ -2166,7 +2166,7 @@ names.forEach(System.out::println);</code></pre>
     tags: ['AI Tools', 'Developer Productivity', 'GitHub Copilot', 'Machine Learning', 'Technology 2026'],
     imageUrl: 'https://images.unsplash.com/photo-1677442135703-1787eea5ce01?auto=format&fit=crop&w=1200&q=80',
     imageAlt: 'AI code generation interface on a developer screen',
-    canonicalUrl: 'https://skillvalix.com/blog/ai-tools-every-developer-should-use-2026',
+    canonicalUrl: 'https://www.skillvalix.com/blog/ai-tools-every-developer-should-use-2026',
 relatedCourse: {
       title: 'AI & Machine Learning Fundamentals',
       slug: 'basics-of-artificial-intelligence-beginners',
@@ -2219,7 +2219,7 @@ relatedCourse: {
       <p>Ready to run India's next great hackathon? <a href="https://www.skillvalix.com/host" target="_blank">Submit your hosting request here</a> and let's make it happen.</p>
     `,
     author: 'Arjun Mehta',
-    authorUrl: 'https://skillvalix.com/blog',
+    authorUrl: 'https://www.skillvalix.com/blog',
     publishedDate: '2026-04-02T10:00:00+05:30',
     modifiedDate: '2026-04-02T10:00:00+05:30',
     date: 'April 2, 2026',
@@ -2229,7 +2229,7 @@ relatedCourse: {
     tags: ['Hackathon', 'Host Hackathon India', 'Event Management', 'Coding Events', 'Tech Community'],
     imageUrl: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1200&q=80',
     imageAlt: 'Developers collaborating at a hackathon event in India',
-    canonicalUrl: 'https://skillvalix.com/blog/how-to-host-hackathon-in-india-2026',
+    canonicalUrl: 'https://www.skillvalix.com/blog/how-to-host-hackathon-in-india-2026',
     relatedCourse: {
       title: 'The Ultimate JavaScript Masterclass',
       slug: 'ultimate-javascript-masterclass',
@@ -2281,7 +2281,7 @@ relatedCourse: {
       <p>Register, form your team, and start building. Your next win is one hackathon away.</p>
     `,
     author: 'Neha Sharma',
-    authorUrl: 'https://skillvalix.com/blog',
+    authorUrl: 'https://www.skillvalix.com/blog',
     publishedDate: '2026-04-02T11:00:00+05:30',
     modifiedDate: '2026-04-02T11:00:00+05:30',
     date: 'April 2, 2026',
@@ -2291,7 +2291,7 @@ relatedCourse: {
     tags: ['Hackathon', 'Online Hackathon India', 'Coding Competition', 'Student Career', 'Win Prizes'],
     imageUrl: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=1200&q=80',
     imageAlt: 'Team of young Indian developers working together at a hackathon',
-    canonicalUrl: 'https://skillvalix.com/blog/best-online-hackathons-india-2026',
+    canonicalUrl: 'https://www.skillvalix.com/blog/best-online-hackathons-india-2026',
     relatedCourse: {
       title: 'Ultimate Python Masterclass',
       slug: 'ultimate-python-masterclass',
@@ -2347,7 +2347,7 @@ relatedCourse: {
       <p>If you are a startup, a scale-up, or an established tech company looking for your next great engineer, stop relying on resume screening and LeetCode. <a href="https://www.skillvalix.com/host" target="_blank">Submit a hosting request on SkillValix</a> and run your first corporate hackathon this quarter.</p>
     `,
     author: 'Arjun Mehta',
-    authorUrl: 'https://skillvalix.com/blog',
+    authorUrl: 'https://www.skillvalix.com/blog',
     publishedDate: '2026-04-02T12:00:00+05:30',
     modifiedDate: '2026-04-02T12:00:00+05:30',
     date: 'April 2, 2026',
@@ -2357,7 +2357,7 @@ relatedCourse: {
     tags: ['Corporate Hackathon', 'Tech Hiring India', 'Recruitment', 'Hackathon Platform', 'Startups India'],
     imageUrl: 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?auto=format&fit=crop&w=1200&q=80',
     imageAlt: 'Corporate team evaluating developer hackathon submissions in India',
-    canonicalUrl: 'https://skillvalix.com/blog/corporate-hackathon-platform-india-hiring',
+    canonicalUrl: 'https://www.skillvalix.com/blog/corporate-hackathon-platform-india-hiring',
     relatedCourse: {
       title: 'AI & Machine Learning Fundamentals',
       slug: 'basics-of-artificial-intelligence-beginners',
@@ -2420,7 +2420,7 @@ relatedCourse: {
         <li>Enter the course name as the Certificate Name</li>
         <li>Set Issuing Organization to <strong>SkillValix</strong></li>
         <li>Enter your certificate's unique ID in the Credential ID field</li>
-        <li>Add the verification URL: <strong>https://skillvalix.com/verify/[your-certificate-id]</strong></li>
+        <li>Add the verification URL: <strong>https://www.skillvalix.com/verify/[your-certificate-id]</strong></li>
       </ol>
       <p>This makes your certificate independently verifiable — any recruiter can click the URL and instantly confirm your achievement.</p>
 
@@ -2442,7 +2442,7 @@ relatedCourse: {
       Absolutely. SkillValix is open to all students across India — Tier-1, Tier-2, and Tier-3 colleges. The platform was specifically built to give equal opportunity to students who don't have access to premium coaching or expensive courses.</p>
     `,
     author: 'Neha Sharma',
-    authorUrl: 'https://skillvalix.com/blog',
+    authorUrl: 'https://www.skillvalix.com/blog',
     publishedDate: '2026-04-06T09:00:00+05:30',
     modifiedDate: '2026-04-08T09:00:00+05:30',
     date: 'April 6, 2026',
@@ -2452,7 +2452,7 @@ relatedCourse: {
     tags: ['Free Courses India', 'Free Certificate India', 'Online Learning India', 'SkillValix', 'Student Skills', 'Certification'],
     imageUrl: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1200&q=80',
     imageAlt: 'Indian student studying online on laptop with free course certificate on screen',
-    canonicalUrl: 'https://skillvalix.com/blog/free-online-courses-with-certificate-india-2026',
+    canonicalUrl: 'https://www.skillvalix.com/blog/free-online-courses-with-certificate-india-2026',
     relatedCourse: {
       title: 'Free Online Courses — All Subjects',
       slug: 'ultimate-html-masterclass',
@@ -2545,7 +2545,7 @@ relatedCourse: {
       On SkillValix, every participant who submits a valid project receives a verified participation certificate. Winners receive special merit certificates. Both are verifiable on your public SkillValix profile.</p>
     `,
     author: 'Amit Patel',
-    authorUrl: 'https://skillvalix.com/blog',
+    authorUrl: 'https://www.skillvalix.com/blog',
     publishedDate: '2026-04-07T09:00:00+05:30',
     modifiedDate: '2026-04-08T09:00:00+05:30',
     date: 'April 7, 2026',
@@ -2555,7 +2555,7 @@ relatedCourse: {
     tags: ['Hackathon Tips', 'How to Win Hackathon', 'Beginner Hackathon', 'Online Hackathon India', 'Student Hackathon', 'Hackathon Strategy'],
     imageUrl: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1200&q=80',
     imageAlt: 'Students collaborating on a hackathon project with laptops in a bright workspace',
-    canonicalUrl: 'https://skillvalix.com/blog/how-to-win-a-hackathon-beginner-guide-2026',
+    canonicalUrl: 'https://www.skillvalix.com/blog/how-to-win-a-hackathon-beginner-guide-2026',
     relatedCourse: {
       title: 'Ultimate JavaScript Masterclass',
       slug: 'ultimate-javascript-masterclass',
@@ -2659,7 +2659,7 @@ relatedCourse: {
       Yes, if you supplement them with real projects. The free HTML, CSS, and JavaScript courses on SkillValix — combined with 3–5 portfolio projects and a hackathon participation — give you everything you need to apply for junior frontend roles.</p>
     `,
     author: 'Riya Desai',
-    authorUrl: 'https://skillvalix.com/blog',
+    authorUrl: 'https://www.skillvalix.com/blog',
     publishedDate: '2026-04-08T09:00:00+05:30',
     modifiedDate: '2026-04-08T09:00:00+05:30',
     date: 'April 8, 2026',
@@ -2669,7 +2669,7 @@ relatedCourse: {
     tags: ['Web Development Roadmap', 'Learn Web Development', 'Frontend Development', 'HTML CSS JavaScript', 'Web Dev 2026', 'Beginner Guide'],
     imageUrl: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80',
     imageAlt: 'Developer looking at web development roadmap on dual monitor setup',
-    canonicalUrl: 'https://skillvalix.com/blog/web-development-roadmap-2026-beginners',
+    canonicalUrl: 'https://www.skillvalix.com/blog/web-development-roadmap-2026-beginners',
     relatedCourse: {
       title: 'The Ultimate HTML Masterclass',
       slug: 'ultimate-html-masterclass',
@@ -2776,7 +2776,7 @@ const { role = 'user' } = options;</code></pre>
       Day 1–5: Core concepts (closures, hoisting, this, prototype). Day 6–10: Async JavaScript (Promises, async/await, event loop). Day 11–14: Build 2 small projects from scratch and do mock interviews explaining your code.</p>
     `,
     author: 'Arjun Mehta',
-    authorUrl: 'https://skillvalix.com/blog',
+    authorUrl: 'https://www.skillvalix.com/blog',
     publishedDate: '2026-04-08T10:00:00+05:30',
     modifiedDate: '2026-04-08T10:00:00+05:30',
     date: 'April 8, 2026',
@@ -2786,7 +2786,7 @@ const { role = 'user' } = options;</code></pre>
     tags: ['JavaScript Interview', 'JS Interview Questions', 'JavaScript 2026', 'Fresher Interview', 'Coding Interview', 'JavaScript Concepts'],
     imageUrl: 'https://images.unsplash.com/photo-1516116216624-53e697fedbea?auto=format&fit=crop&w=1200&q=80',
     imageAlt: 'JavaScript code on screen with interview preparation notes on desk',
-    canonicalUrl: 'https://skillvalix.com/blog/javascript-interview-questions-2026',
+    canonicalUrl: 'https://www.skillvalix.com/blog/javascript-interview-questions-2026',
     relatedCourse: {
       title: 'Ultimate JavaScript Masterclass',
       slug: 'ultimate-javascript-masterclass',
@@ -2885,7 +2885,7 @@ const { role = 'user' } = options;</code></pre>
       Python is the foundation, but employers also want: SQL (for database queries), data visualization skills, and knowledge of at least one ML framework. The combination of Python + SQL + Tableau/Power BI is enough for most junior data analyst roles in India.</p>
     `,
     author: 'Riya Desai',
-    authorUrl: 'https://skillvalix.com/blog',
+    authorUrl: 'https://www.skillvalix.com/blog',
     publishedDate: '2026-04-08T11:00:00+05:30',
     modifiedDate: '2026-04-08T11:00:00+05:30',
     date: 'April 8, 2026',
@@ -2895,7 +2895,7 @@ const { role = 'user' } = options;</code></pre>
     tags: ['Python Data Science', 'Data Science Beginners', 'Python Machine Learning', 'NumPy Pandas', 'AI Python 2026', 'Learn Data Science India'],
     imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80',
     imageAlt: 'Data science charts and Python code on a computer screen',
-    canonicalUrl: 'https://skillvalix.com/blog/python-for-data-science-beginners-2026',
+    canonicalUrl: 'https://www.skillvalix.com/blog/python-for-data-science-beginners-2026',
     relatedCourse: {
       title: 'Ultimate Python Masterclass',
       slug: 'ultimate-python-masterclass',

@@ -122,6 +122,7 @@ const Courses = () => {
       <Helmet>
         <title>Explore Courses | SkillValix</title>
         <meta name="description" content="Browse courses on HTML, CSS, JavaScript and more. All free." />
+        <link rel="canonical" href="https://www.skillvalix.com/courses" />
       </Helmet>
 
       {/* ── HERO ── */}

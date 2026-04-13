@@ -165,7 +165,7 @@ export default function CampusAmbassador() {
           content="Join the SkillValix Campus Ambassador Program. Represent SkillValix at your college, host events, earn exclusive prizes, a verified certificate, LinkedIn features, and free premium course access. Apply now via email."
         />
         <meta name="robots" content="index, follow" />
-        <link rel="canonical" href="https://skillvalix.com/campus-ambassador" />
+        <link rel="canonical" href="https://www.skillvalix.com/campus-ambassador" />
 
         {/* Open Graph */}
         <meta property="og:title" content="SkillValix Campus Ambassador Program – Apply Now" />
@@ -173,7 +173,7 @@ export default function CampusAmbassador() {
           property="og:description"
           content="Become the first SkillValix Campus Ambassador at your college. Earn prizes, certificates, LinkedIn features & free premium courses."
         />
-        <meta property="og:url" content="https://skillvalix.com/campus-ambassador" />
+        <meta property="og:url" content="https://www.skillvalix.com/campus-ambassador" />
         <meta property="og:type" content="website" />
 
         {/* Twitter */}
@@ -190,11 +190,11 @@ export default function CampusAmbassador() {
           '@type': 'EducationalOccupationalProgram',
           name: 'SkillValix Campus Ambassador Program',
           description: 'A student-led campus ambassador initiative by SkillValix that rewards college students for spreading digital skills education across India.',
-          url: 'https://skillvalix.com/campus-ambassador',
+          url: 'https://www.skillvalix.com/campus-ambassador',
           provider: {
             '@type': 'Organization',
             name: 'SkillValix',
-            url: 'https://skillvalix.com',
+            url: 'https://www.skillvalix.com',
           },
           educationalProgramMode: 'online',
           offers: {

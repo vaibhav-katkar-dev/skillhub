@@ -111,7 +111,7 @@ export default function PublicProfile() {
   const textBadge = isDark ? "text-slate-300" : "text-slate-700";
 
   // SEO Configurations
-  const canonicalUrl = `https://skillvalix.com/u/${profile.username || id}`;
+  const canonicalUrl = `https://www.skillvalix.com/u/${profile.username || id}`;
   const seoTitle = `${profile.name} - Professional Portfolio | SkillValix`;
   const seoDesc = profile.bio ? (profile.bio.length > 155 ? profile.bio.slice(0, 150) + '...' : profile.bio) : `Explore ${profile.name}'s verified professional portfolio, technical projects, and ${certCount} certified skills on SkillValix.`;
 
@@ -157,7 +157,7 @@ export default function PublicProfile() {
         "recognizedBy": {
           "@type": "EducationalOrganization",
           "name": "SkillValix",
-          "url": "https://skillvalix.com"
+          "url": "https://www.skillvalix.com"
         }
       }))
     }

@@ -44,18 +44,18 @@ export default function Events() {
         <title>Free Student Hackathons with Certificate | SkillValix Online Hackathon Platform</title>
         <meta name="description" content="Join free online hackathons for students on SkillValix. Build real projects, win prizes, and earn verified certificates. Beginner-friendly. Register today — 100% free!" />
         <meta name="keywords" content="student hackathons, free hackathons for students with certificates, online hackathon platform, online hackathon for beginners, SkillValix hackathons, free hackathon India, hackathon with certificate, coding competition for students, free tech events students, programming contest beginners" />
-        <link rel="canonical" href="https://skillvalix.com/hackathons" />
+        <link rel="canonical" href="https://www.skillvalix.com/hackathons" />
         <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
         <meta name="author" content="SkillValix" />
 
         {/* ── Open Graph ───────────────────────────────────── */}
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://skillvalix.com/hackathons" />
+        <meta property="og:url" content="https://www.skillvalix.com/hackathons" />
         <meta property="og:site_name" content="SkillValix" />
         <meta property="og:locale" content="en_IN" />
         <meta property="og:title" content="Free Student Hackathons with Certificate | SkillValix" />
         <meta property="og:description" content="Build real projects, compete with peers, and earn free verified certificates. Join SkillValix hackathons — open to all beginners. 100% free to enter." />
-        <meta property="og:image" content="https://skillvalix.com/og-home.png" />
+        <meta property="og:image" content="https://www.skillvalix.com/og-home.png" />
         <meta property="og:image:alt" content="SkillValix – Free Online Hackathons for Students" />
 
         {/* ── Twitter Card ─────────────────────────────────── */}
@@ -63,15 +63,15 @@ export default function Events() {
         <meta name="twitter:site" content="@SkillValix" />
         <meta name="twitter:title" content="Free Student Hackathons with Certificate | SkillValix" />
         <meta name="twitter:description" content="Join SkillValix free online hackathons for students. Build projects, earn verified certificates, get recognized. Register now." />
-        <meta name="twitter:image" content="https://skillvalix.com/og-home.png" />
+        <meta name="twitter:image" content="https://www.skillvalix.com/og-home.png" />
 
         {/* ── JSON-LD: Organization ─────────────────────────── */}
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Organization",
           "name": "SkillValix",
-          "url": "https://skillvalix.com",
-          "logo": "https://skillvalix.com/logo.svg",
+          "url": "https://www.skillvalix.com",
+          "logo": "https://www.skillvalix.com/logo.svg",
           "sameAs": ["https://www.linkedin.com/company/skillvalix", "https://www.instagram.com/skillvalix"]
         })}</script>
 
@@ -81,17 +81,17 @@ export default function Events() {
           "@type": "Event",
           "name": "Student Hackathons",
           "description": "Free online hackathons for students and beginners. Build real projects, collaborate with peers, and earn verifiable certificates on SkillValix.",
-          "url": "https://skillvalix.com/hackathons",
+          "url": "https://www.skillvalix.com/hackathons",
           "startDate": "2025-01-01T00:00:00+05:30",
           "endDate": "2027-12-31T23:59:59+05:30",
           "eventAttendanceMode": "https://schema.org/OnlineEventAttendanceMode",
           "eventStatus": "https://schema.org/EventScheduled",
           "isAccessibleForFree": true,
-          "organizer": { "@type": "Organization", "name": "SkillValix", "url": "https://skillvalix.com" },
+          "organizer": { "@type": "Organization", "name": "SkillValix", "url": "https://www.skillvalix.com" },
           "performer": { "@type": "Organization", "name": "SkillValix" },
-          "location": { "@type": "VirtualLocation", "url": "https://skillvalix.com/hackathons" },
-          "image": ["https://skillvalix.com/og-home.png"],
-          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "INR", "availability": "https://schema.org/InStock", "url": "https://skillvalix.com/hackathons" },
+          "location": { "@type": "VirtualLocation", "url": "https://www.skillvalix.com/hackathons" },
+          "image": ["https://www.skillvalix.com/og-home.png"],
+          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "INR", "availability": "https://schema.org/InStock", "url": "https://www.skillvalix.com/hackathons" },
           "audience": { "@type": "Audience", "audienceType": "Students, Beginners, Developers aged 16-30" }
         })}</script>
 

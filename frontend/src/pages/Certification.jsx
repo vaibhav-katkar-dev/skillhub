@@ -81,28 +81,28 @@ export default function Certification() {
         <title>Skill-Based Online Certification Platform | Earn a Verified Certificate – SkillValix</title>
         <meta name="description" content="SkillValix is a skill-based online certification platform. Complete a free course, pass the exam, and earn a verified certificate that employers can confirm in seconds. Join 2,800+ certified students." />
         <meta name="keywords" content="online certification platform, skill based certification platform, get certificate fast, earn verified certificate online, online certificate for students, SkillValix certification, programming certificate online, skill certification India, verified certificate platform, best certification platform India" />
-        <link rel="canonical" href="https://skillvalix.com/certification" />
+        <link rel="canonical" href="https://www.skillvalix.com/certification" />
         <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
         <meta name="author" content="SkillValix" />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://skillvalix.com/certification" />
+        <meta property="og:url" content="https://www.skillvalix.com/certification" />
         <meta property="og:site_name" content="SkillValix" />
         <meta property="og:title" content="Skill-Based Online Certification Platform | SkillValix" />
         <meta property="og:description" content="Earn a verified skill certificate on SkillValix. Complete a course, pass the exam, unlock a credential employers trust. Instantly verifiable. Trusted by 2,800+ learners." />
-        <meta property="og:image" content="https://skillvalix.com/og-home.png" />
+        <meta property="og:image" content="https://www.skillvalix.com/og-home.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:site" content="@SkillValix" />
         <meta name="twitter:title" content="Skill-Based Online Certification Platform | SkillValix" />
         <meta name="twitter:description" content="Pass the exam. Earn the certificate. Prove your skills. SkillValix — India's skill-based certification platform for students." />
-        <meta name="twitter:image" content="https://skillvalix.com/og-home.png" />
+        <meta name="twitter:image" content="https://www.skillvalix.com/og-home.png" />
 
         <script type="application/ld+json">{JSON.stringify({
           "@context":"https://schema.org",
           "@type":"EducationalOccupationalProgram",
           "name":"SkillValix Skill-Based Certification Program",
           "description":"A skill-based online certification platform. Complete a course, pass the exam, and earn an instantly verifiable certificate.",
-          "url":"https://skillvalix.com/certification",
-          "provider":{"@type":"Organization","name":"SkillValix","url":"https://skillvalix.com"},
+          "url":"https://www.skillvalix.com/certification",
+          "provider":{"@type":"Organization","name":"SkillValix","url":"https://www.skillvalix.com"},
           "educationalCredentialAwarded":"Verified Certificate of Completion",
           "occupationalCredentialAwarded":"Skill-Based Certificate",
           "timeToComplete":"P1D",
@@ -117,8 +117,8 @@ export default function Certification() {
         <script type="application/ld+json">{JSON.stringify({
           "@context":"https://schema.org","@type":"BreadcrumbList",
           "itemListElement":[
-            {"@type":"ListItem","position":1,"name":"Home","item":"https://skillvalix.com"},
-            {"@type":"ListItem","position":2,"name":"Certification","item":"https://skillvalix.com/certification"}
+            {"@type":"ListItem","position":1,"name":"Home","item":"https://www.skillvalix.com"},
+            {"@type":"ListItem","position":2,"name":"Certification","item":"https://www.skillvalix.com/certification"}
           ]
         })}</script>
 

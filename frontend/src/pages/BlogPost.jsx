@@ -5,9 +5,9 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Calendar, User, Clock, ArrowLeft, BookOpen, ArrowRight, Tag, Trophy, Rocket } from 'lucide-react';
 import { blogPosts } from '../data/blogs';
 
-const SITE_URL = 'https://skillvalix.com';
+const SITE_URL = 'https://www.skillvalix.com';
 const SITE_NAME = 'SkillValix';
-const LOGO_URL = 'https://skillvalix.com/logo.svg';
+const LOGO_URL = 'https://www.skillvalix.com/logo.svg';
 
 const BlogPost = () => {
   const { slug } = useParams();
@@ -70,7 +70,7 @@ const BlogPost = () => {
     publisher: {
       '@type': 'Organization',
       name: SITE_NAME,
-      url: 'https://skillvalix.com',
+      url: 'https://www.skillvalix.com',
       logo: {
         '@type': 'ImageObject',
         url: LOGO_URL,

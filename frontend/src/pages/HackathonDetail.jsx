@@ -414,7 +414,7 @@ export default function HackathonDetail() {
 
   // SEO canonical URL
   const canonicalPath = hack.slug ? `/hackathons/${hack.slug}` : `/hackathons/${hack._id}`;
-  const canonicalUrl = `https://skillvalix.com${canonicalPath}`;
+  const canonicalUrl = `https://www.skillvalix.com${canonicalPath}`;
 
   return (
     <>
@@ -447,7 +447,7 @@ export default function HackathonDetail() {
           "eventStatus": "https://schema.org/EventScheduled",
           "location": { "@type": "VirtualLocation", "url": canonicalUrl },
           "image": hack.image ? [hack.image] : [],
-          "organizer": { "@type": "Organization", "name": "SkillValix", "url": "https://skillvalix.com" },
+          "organizer": { "@type": "Organization", "name": "SkillValix", "url": "https://www.skillvalix.com" },
           "performer": { "@type": "Organization", "name": "SkillValix" },
           "offers": { 
              "@type": "Offer", 

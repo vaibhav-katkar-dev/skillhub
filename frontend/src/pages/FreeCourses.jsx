@@ -73,34 +73,34 @@ export default function FreeCourses() {
         <title>Free Online Courses for Students | Earn a Verified Certificate – SkillValix</title>
         <meta name="description" content="SkillValix offers 100% free online courses in HTML, CSS, JavaScript, Python, Java & AI. Learn at your pace, pass the exam, and earn a verified certificate. Trusted by 2,800+ students. Start now." />
         <meta name="keywords" content="free online courses for students, free courses with certificate, skill based certification platform, learn skills online free, free web development course India, online courses for beginners, free programming courses, student certification platform, SkillValix free courses, best free courses India" />
-        <link rel="canonical" href="https://skillvalix.com/free-courses" />
+        <link rel="canonical" href="https://www.skillvalix.com/free-courses" />
         <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
         <meta name="author" content="SkillValix" />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://skillvalix.com/free-courses" />
+        <meta property="og:url" content="https://www.skillvalix.com/free-courses" />
         <meta property="og:site_name" content="SkillValix" />
         <meta property="og:title" content="Free Online Courses for Students | Earn a Verified Certificate – SkillValix" />
         <meta property="og:description" content="Learn HTML, CSS, JavaScript, Python, Java & AI — free. Pass the exam, earn a verified certificate, and stand out. 2,800+ learners on SkillValix." />
-        <meta property="og:image" content="https://skillvalix.com/og-home.png" />
+        <meta property="og:image" content="https://www.skillvalix.com/og-home.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:site" content="@SkillValix" />
         <meta name="twitter:title" content="Free Online Courses for Students | Earn a Verified Certificate – SkillValix" />
         <meta name="twitter:description" content="Free courses in HTML, CSS, JavaScript, Python & AI. Learn, pass the exam, unlock your certificate. 2,800+ students on SkillValix." />
-        <meta name="twitter:image" content="https://skillvalix.com/og-home.png" />
+        <meta name="twitter:image" content="https://www.skillvalix.com/og-home.png" />
 
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "ItemList",
           "name": "Free Online Courses on SkillValix",
           "description": "Learn HTML, CSS, JavaScript, Python, Java and AI for free on SkillValix. Earn a verified certificate on completion.",
-          "url": "https://skillvalix.com/free-courses",
+          "url": "https://www.skillvalix.com/free-courses",
           "numberOfItems": COURSES.length,
           "itemListElement": COURSES.map((c, i) => ({
             "@type": "ListItem", "position": i + 1,
             "item": {
               "@type": "Course", "name": c.title, "description": c.desc,
-              "url": `https://skillvalix.com/courses/${c.slug}`,
-              "provider": { "@type": "Organization", "name": "SkillValix", "url": "https://skillvalix.com" },
+              "url": `https://www.skillvalix.com/courses/${c.slug}`,
+              "provider": { "@type": "Organization", "name": "SkillValix", "url": "https://www.skillvalix.com" },
               "isAccessibleForFree": true, "educationalLevel": "Beginner",
               "hasCourseInstance": { "@type": "CourseInstance", "courseMode": "online" }
             }
@@ -115,8 +115,8 @@ export default function FreeCourses() {
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org", "@type": "BreadcrumbList",
           "itemListElement": [
-            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://skillvalix.com" },
-            { "@type": "ListItem", "position": 2, "name": "Free Courses", "item": "https://skillvalix.com/free-courses" }
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.skillvalix.com" },
+            { "@type": "ListItem", "position": 2, "name": "Free Courses", "item": "https://www.skillvalix.com/free-courses" }
           ]
         })}</script>
 

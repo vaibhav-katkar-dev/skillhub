@@ -74,6 +74,7 @@ const CourseDetail = () => {
       <Helmet>
         <title>{course.title} | SkillValix</title>
         <meta name="description" content={course.description.substring(0, 155)} />
+        <link rel="canonical" href={`https://www.skillvalix.com/courses/${slug}`} />
       </Helmet>
 
       {/* Hero */}

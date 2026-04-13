@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Calendar, Clock, ArrowRight, Search, Filter, X, BookOpen } from 'lucide-react';
 import { blogPosts } from '../data/blogs';
 
-const SITE_URL  = 'https://skillvalix.com';
+const SITE_URL  = 'https://www.skillvalix.com';
 const SITE_NAME = 'SkillValix';
 
 // JSON-LD: Blog listing as ItemList

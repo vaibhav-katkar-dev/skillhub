@@ -314,6 +314,7 @@ export default function JobSimulation() {
       <Helmet>
         <title>{sim.title} - SkillValix Events</title>
         <meta name="description" content={sim.about} />
+        <link rel="canonical" href={`https://www.skillvalix.com/job-simulation/${id}`} />
       </Helmet>
 
       <section className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-20 px-6 overflow-hidden">
