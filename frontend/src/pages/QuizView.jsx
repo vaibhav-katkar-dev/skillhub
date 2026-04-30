@@ -1,9 +1,9 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api, useAuthStore, clearCache } from '../store/authStore';
 import { getCourseBySlug } from '../data/courseLoader';
-import { Award, Loader2, AlertCircle, Download, CreditCard, CheckCircle } from 'lucide-react';
+import { Award, Loader2, AlertCircle, Download, CreditCard, CheckCircle, Tag, X, Percent } from 'lucide-react';
 import { generatePDFFromDOM } from '../utils/pdfGenerator';
 import CertificateTemplate from '../components/CertificateTemplate';
 
@@ -29,6 +29,12 @@ const QuizView = () => {
   const [certStatusMessage, setCertStatusMessage] = useState('');
   const [exportCertData, setExportCertData] = useState(null);
   const certTemplateRef = useRef(null);
+
+  // ── Coupon state ──────────────────────────────────────
+  const [couponInput, setCouponInput]       = useState('');
+  const [couponLoading, setCouponLoading]   = useState(false);
+  const [couponResult, setCouponResult]     = useState(null); // { valid, ...data } | null
+  const [couponError, setCouponError]       = useState('');
 
   const handleClientDownload = async (certId) => {
     if (!certId) return;
@@ -132,7 +138,8 @@ const QuizView = () => {
     } catch (err) {
       if (err.response?.data?.requirePayment) {
         setQuiz(prev => ({ ...prev, requirePayment: true }));
-        setError('Payment required to access exam.');
+        // Do NOT setError here — the payment card UI below handles this state.
+        // Setting error would trigger the early-return and hide the payment card.
       } else {
         setError('Error submitting quiz.');
       }
@@ -141,10 +148,39 @@ const QuizView = () => {
     }
   };
 
+  // ── Validate coupon against backend ───────────────────
+  const handleValidateCoupon = useCallback(async () => {
+    const code = couponInput.trim().toUpperCase();
+    if (!code) { setCouponError('Please enter a coupon code.'); return; }
+    setCouponLoading(true);
+    setCouponError('');
+    setCouponResult(null);
+    try {
+      const res = await api.post('/coupons/validate', { code, courseId: course._id });
+      setCouponResult(res.data);   // { valid:true, discountedAmountRupees, ... }
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Invalid or expired coupon.';
+      setCouponError(msg);
+      setCouponResult(null);
+    } finally {
+      setCouponLoading(false);
+    }
+  }, [couponInput, course]);
+
+  const handleRemoveCoupon = () => {
+    setCouponResult(null);
+    setCouponError('');
+    setCouponInput('');
+  };
+
   const handlePayment = async () => {
     setPaying(true);
     try {
-      const res = await api.post('/payments/razorpay-order', { courseId: course._id });
+      const appliedCode = couponResult?.valid ? couponResult.code : undefined;
+      const res = await api.post('/payments/razorpay-order', {
+        courseId: course._id,
+        couponCode: appliedCode,
+      });
       const order = res.data;
       setPaymentInfo(order);
 
@@ -155,7 +191,9 @@ const QuizView = () => {
         name: 'SkillValix Certification',
         description: order.isAdminTestMode
           ? 'Admin Test Mode Exam Unlock'
-          : 'Unlock Lifetime Exam Access and Unlimited Retakes',
+          : order.appliedCoupon
+            ? `Exam Unlock — Coupon: ${order.appliedCoupon.code}`
+            : 'Unlock Lifetime Exam Access and Unlimited Retakes',
         order_id: order.id,
         handler: async function (response) {
           try {
@@ -163,6 +201,7 @@ const QuizView = () => {
             await api.post('/payments/razorpay-verify', {
               ...response,
               courseId: course._id,
+              couponCode: appliedCode,
             });
             setQuiz(prev => ({
               ...prev,
@@ -182,10 +221,10 @@ const QuizView = () => {
         },
         theme: { color: '#4f46e5' },
         modal: {
-          ondismiss: function() {
+          ondismiss: function () {
             setPaying(false);
-          }
-        }
+          },
+        },
       };
 
       const rzp = new window.Razorpay(options);
@@ -195,7 +234,8 @@ const QuizView = () => {
       });
       rzp.open();
     } catch (err) {
-      alert('Failed to initialize payment.');
+      const msg = err.response?.data?.message || 'Failed to initialize payment.';
+      alert(msg);
       setPaying(false);
     }
   };
@@ -328,6 +368,7 @@ const QuizView = () => {
         </div>
       ) : quiz?.requirePayment ? (
         <div className="bg-white border-2 border-indigo-100 rounded-3xl max-w-md mx-auto mt-8 shadow-2xl relative overflow-hidden flex flex-col">
+          {/* ── Header ── */}
           <div className="bg-gradient-to-br from-indigo-600 to-violet-700 p-8 text-center text-white relative">
             <div className="absolute top-0 right-0 bg-rose-500 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-bl-xl shadow-sm">
               {user?.role === 'admin' ? 'Admin Test' : 'Limited Time'}
@@ -335,9 +376,7 @@ const QuizView = () => {
             <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-5 backdrop-blur-sm border border-white/30 shadow-inner">
               <Award className="w-8 h-8 text-white" />
             </div>
-            <h2 className="text-2xl font-extrabold mb-2 text-white">
-              Unlock {course?.title}
-            </h2>
+            <h2 className="text-2xl font-extrabold mb-2 text-white">Unlock {course?.title}</h2>
             <p className="text-indigo-100 text-sm font-medium leading-relaxed max-w-xs mx-auto">
               {user?.role === 'admin'
                 ? 'Admin test mode: unlock this certification exam for Rs. 1 only.'
@@ -346,12 +385,25 @@ const QuizView = () => {
           </div>
 
           <div className="p-8 flex flex-col items-center bg-white">
-            <div className="flex items-end justify-center gap-3 mb-8 w-full bg-slate-50 py-4 rounded-2xl border border-slate-100">
+
+            {/* ── Price display ── */}
+            <div className="flex items-end justify-center gap-3 mb-6 w-full bg-slate-50 py-4 rounded-2xl border border-slate-100">
               {user?.role === 'admin' ? (
                 <>
                   <span className="line-through text-slate-400 text-xl font-bold mb-1">Rs. 99</span>
                   <span className="text-5xl font-black text-slate-900 tracking-tight">Rs. 1</span>
                 </>
+              ) : couponResult?.valid ? (
+                <div className="flex flex-col items-center">
+                  <div className="flex items-center gap-3">
+                    <span className="line-through text-slate-400 text-xl font-bold">Rs. {couponResult.originalAmountRupees}</span>
+                    <span className="text-5xl font-black text-emerald-600 tracking-tight">Rs. {couponResult.discountedAmountRupees}</span>
+                  </div>
+                  <span className="mt-1.5 inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full">
+                    <Percent className="w-3 h-3" />
+                    You save Rs. {couponResult.savedAmountRupees}!
+                  </span>
+                </div>
               ) : (
                 <>
                   <span className="line-through text-slate-400 text-xl font-bold mb-1">Rs. 499</span>
@@ -360,12 +412,71 @@ const QuizView = () => {
               )}
             </div>
 
+            {/* ── Admin notice ── */}
             {user?.role === 'admin' && (
-              <div className="w-full mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                Admin-only test mode is active for this course. Your passing score is 30% and your exam unlock fee is Rs. 1.
+              <div className="w-full mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                Admin-only test mode is active. Passing score is 30% and unlock fee is Rs. 1.
               </div>
             )}
 
+            {/* ── Coupon input (non-admin only) ── */}
+            {user?.role !== 'admin' && (
+              <div className="w-full mb-6">
+                {couponResult?.valid ? (
+                  /* Applied coupon badge */
+                  <div className="flex items-center justify-between gap-2 border border-emerald-300 bg-emerald-50 rounded-xl px-4 py-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Tag className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span className="text-sm font-black text-emerald-700 truncate">{couponResult.code}</span>
+                      <span className="text-xs text-emerald-600 truncate hidden sm:block">
+                        — {couponResult.discountType === 'percentage'
+                          ? `${couponResult.discountValue}% off`
+                          : `Rs. ${couponResult.discountValue} off`}
+                      </span>
+                    </div>
+                    <button
+                      onClick={handleRemoveCoupon}
+                      className="shrink-0 p-1.5 rounded-lg hover:bg-emerald-100 text-emerald-700 transition"
+                      title="Remove coupon"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  /* Coupon entry row */
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Have a coupon?</label>
+                    <div className="flex gap-2">
+                      <input
+                        id="coupon-code-input"
+                        type="text"
+                        value={couponInput}
+                        onChange={e => { setCouponInput(e.target.value.toUpperCase()); setCouponError(''); }}
+                        onKeyDown={e => e.key === 'Enter' && handleValidateCoupon()}
+                        placeholder="Enter coupon code"
+                        maxLength={30}
+                        className="flex-1 border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-mono font-bold tracking-widest focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent uppercase placeholder:font-normal placeholder:tracking-normal placeholder:text-slate-400"
+                      />
+                      <button
+                        onClick={handleValidateCoupon}
+                        disabled={couponLoading || !couponInput.trim()}
+                        className="px-4 py-2.5 rounded-xl bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-bold text-sm transition disabled:opacity-50 flex items-center gap-1.5 whitespace-nowrap"
+                      >
+                        {couponLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Tag className="w-4 h-4" />}
+                        Apply
+                      </button>
+                    </div>
+                    {couponError && (
+                      <p className="text-xs text-rose-600 font-semibold flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5" /> {couponError}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── What's included ── */}
             <div className="w-full mb-8">
               <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">What&apos;s included</p>
               <ul className="text-sm text-slate-700 space-y-3.5 font-medium">
@@ -388,6 +499,7 @@ const QuizView = () => {
               </ul>
             </div>
 
+            {/* ── Pay button ── */}
             <button
               onClick={handlePayment}
               disabled={paying}
@@ -395,9 +507,13 @@ const QuizView = () => {
             >
               {paying ? <Loader2 className="w-6 h-6 animate-spin" /> : <CreditCard className="w-6 h-6 group-hover:scale-110 transition-transform" />}
               <span>
-                {user?.role === 'admin'
-                  ? `Pay Rs. ${paymentInfo?.displayAmountRupees || 1} for Test Access`
-                  : 'Pay Safely Now'}
+                {paying
+                  ? 'Processing...'
+                  : user?.role === 'admin'
+                    ? `Pay Rs. ${paymentInfo?.displayAmountRupees || 1} for Test Access`
+                    : couponResult?.valid
+                      ? `Pay Rs. ${couponResult.discountedAmountRupees} Now`
+                      : 'Pay Rs. 99 Now'}
               </span>
             </button>
             <p className="text-[10px] text-slate-400 mt-5 font-semibold uppercase tracking-widest text-center">

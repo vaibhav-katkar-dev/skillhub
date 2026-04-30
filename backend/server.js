@@ -15,6 +15,7 @@ import certRoutes from './routes/certificates.js';
 import paymentRoutes from './routes/payments.js';
 import eventRoutes from './routes/events.js';
 import hostRoutes from './routes/hostRoutes.js';
+import couponRoutes from './routes/coupons.js';
 import User from './models/User.js';
 
 dotenv.config();
@@ -133,10 +134,20 @@ const certLimiter = rateLimit({
   message: { message: 'Too many certificate requests, please try again in an hour.' },
 });
 
+// Prevent brute-force guessing of coupon codes
+const couponValidateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Too many coupon attempts, please try again after 15 minutes.' },
+});
+
 app.use('/api/', generalLimiter);
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 app.use('/api/certificates/download', certLimiter);
+app.use('/api/coupons/validate', couponValidateLimiter);
 
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/skillvalix';
@@ -232,6 +243,7 @@ app.use('/api/certificates', ensureDatabaseConnection);
 app.use('/api/payments', ensureDatabaseConnection);
 app.use('/api/events', ensureDatabaseConnection);
 app.use('/api/host', ensureDatabaseConnection);
+app.use('/api/coupons', ensureDatabaseConnection);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
@@ -241,6 +253,7 @@ app.use('/api/certificates', certRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/host', hostRoutes);
+app.use('/api/coupons', couponRoutes);
 
 app.use((err, req, res, next) => {
   console.error('[Global Error]', err?.message || err);
