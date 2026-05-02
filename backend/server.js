@@ -143,12 +143,22 @@ const couponValidateLimiter = rateLimit({
   message: { message: 'Too many coupon attempts, please try again after 15 minutes.' },
 });
 
+// Prevent admin from accidentally blasting emails too frequently
+const adminEmailLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 5, // max 5 send-email calls per hour per admin IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Too many email campaigns sent. Please wait before sending again.' },
+});
+
 app.use('/api/', generalLimiter);
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 app.use('/api/auth/resend-verification', authLimiter);
 app.use('/api/certificates/download', certLimiter);
 app.use('/api/coupons/validate', couponValidateLimiter);
+app.use('/api/admin/send-email', adminEmailLimiter);
 
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/skillvalix';

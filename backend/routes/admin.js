@@ -5,6 +5,7 @@ import Quiz from '../models/Quiz.js';
 import Certificate from '../models/Certificate.js';
 import { authOptions, adminCheck } from '../middleware/auth.js';
 import { COURSE_JSON_PATH, getAllCoursesFromJSON } from '../utils/courseData.js';
+import { sendEmail } from '../utils/mailer.js';
 
 const router = express.Router();
 
@@ -35,6 +36,90 @@ function normalizeId(value) {
 
   return null;
 }
+
+router.get('/users', authOptions, adminCheck, async (req, res) => {
+  try {
+    const { search = '', limit = 50 } = req.query;
+    const query = {};
+    
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const users = await User.find(query)
+      .select('name email role createdAt isVerified')
+      .sort({ createdAt: -1 })
+      .limit(Number(limit))
+      .lean();
+
+    res.json(users);
+  } catch (err) {
+    console.error('[Admin] Fetch users error:', err);
+    res.status(500).json({ message: 'Failed to fetch users' });
+  }
+});
+
+router.post('/send-email', authOptions, adminCheck, async (req, res) => {
+  try {
+    const { target, userIds, subject, html } = req.body;
+
+    if (!subject?.trim() || !html?.trim()) {
+      return res.status(400).json({ message: 'Subject and HTML content are required' });
+    }
+
+    let recipients = [];
+
+    if (target === 'all') {
+      // Only send to verified users when targeting all
+      const users = await User.find({ isVerified: true }).select('email').lean();
+      recipients = users.map(u => u.email).filter(Boolean);
+    } else if (target === 'selected' && Array.isArray(userIds) && userIds.length > 0) {
+      const users = await User.find({ _id: { $in: userIds } }).select('email').lean();
+      recipients = users.map(u => u.email).filter(Boolean);
+    } else {
+      return res.status(400).json({ message: 'Invalid target or missing userIds' });
+    }
+
+    if (recipients.length === 0) {
+      return res.status(404).json({ message: 'No eligible recipients found' });
+    }
+
+    // Hard cap to prevent accidental email floods
+    const MAX_RECIPIENTS = 500;
+    if (recipients.length > MAX_RECIPIENTS) {
+      return res.status(400).json({
+        message: `Cannot send to more than ${MAX_RECIPIENTS} users at once. Use filtered selection to narrow the list.`
+      });
+    }
+
+    // Send individually to protect recipient privacy (no exposed email lists in To/CC)
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const email of recipients) {
+      try {
+        await sendEmail({ to: email, subject, html });
+        successCount++;
+      } catch (err) {
+        failCount++;
+        console.error(`[Admin Email] Failed to send to ${email}:`, err.message);
+      }
+    }
+
+    res.json({
+      message: `Done. Sent: ${successCount}, Failed: ${failCount} out of ${recipients.length} recipients.`,
+      successCount,
+      failCount,
+      total: recipients.length
+    });
+  } catch (err) {
+    console.error('[Admin] Send email error:', err);
+    res.status(500).json({ message: 'Failed to send custom emails' });
+  }
+});
 
 router.get('/users/export', authOptions, adminCheck, async (req, res) => {
   try {
@@ -92,6 +177,8 @@ router.get('/analytics', authOptions, adminCheck, async (req, res) => {
       recentCertificates,
       quizDocs,
       usersForAttempts,
+      userGrowthRaw,
+      certificateGrowthRaw
     ] = await Promise.all([
       User.countDocuments(),
       User.countDocuments({ role: 'student' }),
@@ -130,7 +217,41 @@ router.get('/analytics', authOptions, adminCheck, async (req, res) => {
         .lean(),
       Quiz.find().select('course questions updatedAt').lean(),
       User.find().select('quizAttempts completedCourses').lean(),
+      User.aggregate([
+        {
+          $group: {
+            _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
+            count: { $sum: 1 }
+          }
+        },
+        { $sort: { _id: 1 } },
+        { $limit: 12 }
+      ]),
+      Certificate.aggregate([
+        {
+          $group: {
+            _id: { $dateToString: { format: "%Y-%m", date: { $ifNull: ["$issueDate", "$createdAt"] } } },
+            count: { $sum: 1 }
+          }
+        },
+        { $sort: { _id: 1 } },
+        { $limit: 12 }
+      ])
     ]);
+
+    const formatGrowthData = (rawData) => {
+      return rawData.filter(d => d._id).map(d => {
+        const [year, month] = d._id.split('-');
+        const date = new Date(year, month - 1);
+        return {
+          name: date.toLocaleString('default', { month: 'short', year: '2-digit' }),
+          count: d.count
+        };
+      });
+    };
+
+    const userGrowth = formatGrowthData(userGrowthRaw);
+    const certificateGrowth = formatGrowthData(certificateGrowthRaw);
 
     const quizCourseIds = new Set(quizDocs.map(quiz => normalizeId(quiz.course)).filter(Boolean));
     const certificates = await Certificate.find().select('course student issueDate certificateId').lean();
@@ -310,6 +431,10 @@ router.get('/analytics', authOptions, adminCheck, async (req, res) => {
         studentEmail: cert.student?.email || '',
         courseTitle: courseTitleById.get(normalizeId(cert.course)) || cert.courseTitleSnapshot || `Course ID: ${normalizeId(cert.course) || 'Unknown'}`,
       })),
+      charts: {
+        userGrowth,
+        certificateGrowth
+      }
     });
   } catch (err) {
     console.error('[Admin Analytics] Error:', err);

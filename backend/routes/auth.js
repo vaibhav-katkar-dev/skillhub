@@ -7,7 +7,7 @@ import Certificate from '../models/Certificate.js';
 import EventCertificate from '../models/EventCertificate.js';
 import { authOptions } from '../middleware/auth.js';
 import { OAuth2Client } from 'google-auth-library';
-import { Resend } from 'resend';
+import { sendEmail } from '../utils/mailer.js';
 import crypto from 'crypto';
 import { isDisposableEmail, isValidEmailFormat } from '../utils/emailValidator.js';
 
@@ -24,21 +24,7 @@ const getJwtSecret = () => {
 // Google OAuth client (Requires process.env.GOOGLE_CLIENT_ID)
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-// Resend email helper — uses RESEND_API_KEY from env
-const sendEmail = async ({ to, subject, html }) => {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    console.warn('[Email] RESEND_API_KEY not set — skipping send. Email was:', { to, subject });
-    return;
-  }
-  const resend = new Resend(apiKey);
-  const from = process.env.EMAIL_FROM || 'SkillValix <no-reply@skillvalix.com>';
-  const { error } = await resend.emails.send({ from, to, subject, html });
-  if (error) {
-    console.error('[Email] Resend error:', error);
-    throw new Error(error.message || 'Failed to send email via Resend');
-  }
-};
+
 
 // Get current user details
 router.get('/me', authOptions, async (req, res) => {
@@ -80,14 +66,13 @@ router.post('/register', async (req, res) => {
 
     await user.save();
 
-    // Send Verification Email
-    const frontendUrl = process.env.FRONTEND_URL || 'https://skillvalix.com';
-    const verifyUrl = `${frontendUrl}/verify-email/${verificationToken}`;
-
-    await sendEmail({
-      to: user.email,
-      subject: 'Verify Your Email — SkillValix',
-      html: `
+    // Send Verification Email — wrapped separately so a failed email doesn't
+    // roll back an already-saved user account.
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: 'Verify Your Email — SkillValix',
+        html: `
         <!DOCTYPE html>
         <html lang="en">
         <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -120,9 +105,16 @@ router.post('/register', async (req, res) => {
           </table>
         </body></html>
       `,
-    });
+      });
+    } catch (emailErr) {
+      // Account is saved — just let the user know to use "Resend Verification"
+      console.error('[Register] Failed to send verification email:', emailErr.message);
+      return res.status(201).json({
+        message: 'Account created, but we could not send a verification email right now. Please use "Resend Verification Link" on the login page to get a new link.',
+      });
+    }
 
-    res.json({ message: 'Registration successful! Please check your email to verify your account.' });
+    res.status(201).json({ message: 'Registration successful! Please check your email to verify your account.' });
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');

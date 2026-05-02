@@ -9,8 +9,9 @@ import {
   ClipboardList, Edit3, RefreshCw, BarChart3, Users,
   Award, Activity, Lock, Database, Eye, Star,
   Trophy, Link2, ExternalLink, Filter, Crown,
-  Tag, Trash2, ToggleLeft, ToggleRight, Percent
+  Tag, Trash2, ToggleLeft, ToggleRight, Percent, Mail, Search, Send
 } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
 const QUIZ_TEMPLATE = {
   passingScore: 60,
@@ -93,6 +94,16 @@ const AdminPanel = () => {
   const [winnerConfigHackId, setWinnerConfigHackId] = useState('');
   const [winnerConfigNote, setWinnerConfigNote] = useState('');
   const [winnerConfigSaving, setWinnerConfigSaving] = useState(false);
+
+  // ── Email Campaign state ──────────────────────────────────────────
+  const [emailUsers, setEmailUsers] = useState([]);
+  const [emailUsersLoading, setEmailUsersLoading] = useState(false);
+  const [emailSearch, setEmailSearch] = useState('');
+  const [selectedEmails, setSelectedEmails] = useState(new Set());
+  const [emailForm, setEmailForm] = useState({ subject: '', html: '' });
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailMsg, setEmailMsg] = useState({ type: '', text: '' });
+  const [selectAllUsers, setSelectAllUsers] = useState(false);
 
   useEffect(() => {
     getCourseList().then(setCourses).catch(console.error);
@@ -264,11 +275,79 @@ const AdminPanel = () => {
     finally { setDeletingCouponId(''); }
   };
 
+  const loadEmailUsers = async (search = '') => {
+    setEmailUsersLoading(true);
+    try {
+      const params = new URLSearchParams({ limit: '100' });
+      if (search) params.set('search', search);
+      const res = await api.get(`/admin/users?${params.toString()}`);
+      setEmailUsers(res.data);
+    } catch {
+      setEmailMsg({ type: 'error', text: 'Failed to load users.' });
+    } finally {
+      setEmailUsersLoading(false);
+    }
+  };
+
+  const handleSendEmail = async (e) => {
+    e.preventDefault();
+    if (selectedEmails.size === 0 && !selectAllUsers) {
+      setEmailMsg({ type: 'error', text: 'Please select at least one user or choose "Select All".' });
+      return;
+    }
+    
+    setEmailSending(true);
+    setEmailMsg({ type: '', text: '' });
+    
+    try {
+      const payload = {
+        subject: emailForm.subject,
+        html: emailForm.html,
+        target: selectAllUsers ? 'all' : 'selected',
+        userIds: Array.from(selectedEmails)
+      };
+      
+      const res = await api.post('/admin/send-email', payload);
+      setEmailMsg({ type: 'success', text: res.data.message || 'Emails queued successfully.' });
+      setEmailForm({ subject: '', html: '' });
+      setSelectedEmails(new Set());
+      setSelectAllUsers(false);
+    } catch (err) {
+      setEmailMsg({ type: 'error', text: err.response?.data?.message || 'Failed to send emails.' });
+    } finally {
+      setEmailSending(false);
+    }
+  };
+
+  const toggleEmailSelection = (userId) => {
+    const newSet = new Set(selectedEmails);
+    if (newSet.has(userId)) newSet.delete(userId);
+    else newSet.add(userId);
+    setSelectedEmails(newSet);
+  };
+
   useEffect(() => {
     if (tab === 'hackathons') loadHacks();
     if (tab === 'host-requests') loadHostRequests();
     if (tab === 'coupons') loadCoupons();
+    if (tab === 'email') {
+      // Reset stale state when entering the email tab
+      setEmailMsg({ type: '', text: '' });
+      setEmailSearch('');
+      setSelectedEmails(new Set());
+      setSelectAllUsers(false);
+      loadEmailUsers('');
+    }
   }, [tab]);
+
+  // Debounce email search — only fires API after 400ms of no typing
+  useEffect(() => {
+    if (tab !== 'email') return;
+    const debounceTimer = setTimeout(() => {
+      loadEmailUsers(emailSearch);
+    }, 400);
+    return () => clearTimeout(debounceTimer);
+  }, [emailSearch]);
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'admin') return;
@@ -499,6 +578,7 @@ const AdminPanel = () => {
               { key: 'hackathons', label: 'Hackathons', icon: Award },
               { key: 'host-requests', label: 'Host Requests', icon: Users },
               { key: 'coupons', label: 'Coupons', icon: Tag },
+              { key: 'email', label: 'Email Campaign', icon: Mail },
               { key: 'guide', label: 'Course Guide', icon: BookOpen },
             ].map(({ key, label, icon: Icon }) => (
               <button
@@ -660,6 +740,40 @@ const AdminPanel = () => {
                     </div>
                   </div>
                 </div>
+
+                {analytics?.charts && (
+                  <div className="mt-8 grid grid-cols-1 gap-6">
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-700 mb-4 uppercase tracking-wide">User Growth</h3>
+                      <div className="h-64 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart data={analytics.charts.userGrowth} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                            <Line type="monotone" dataKey="count" stroke="#4f46e5" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                            <CartesianGrid stroke="#e2e8f0" strokeDasharray="5 5" vertical={false} />
+                            <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} dy={10} />
+                            <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} dx={-10} />
+                            <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' }} />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                    
+                    <div className="pt-6 border-t border-slate-100">
+                      <h3 className="text-sm font-bold text-slate-700 mb-4 uppercase tracking-wide">Certificates Issued</h3>
+                      <div className="h-64 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={analytics.charts.certificateGrowth} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                            <CartesianGrid stroke="#e2e8f0" strokeDasharray="5 5" vertical={false} />
+                            <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} dy={10} />
+                            <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} dx={-10} />
+                            <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' }} cursor={{fill: '#f1f5f9'}} />
+                            <Bar dataKey="count" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={50} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
@@ -955,6 +1069,115 @@ const AdminPanel = () => {
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+        {tab === 'email' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-6">
+              <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <Mail className="w-5 h-5 text-indigo-600" />
+                Custom Email Campaign
+              </h2>
+              <p className="text-sm text-slate-500 mb-6">Send customized emails, announcements, or discount codes to your users.</p>
+
+              {emailMsg.text && (
+                <div className={`mb-4 p-3 rounded-xl border ${emailMsg.type === 'error' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-emerald-50 border-emerald-200 text-emerald-700'}`}>
+                  {emailMsg.text}
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* User Selection */}
+                <div className="border border-slate-200 rounded-xl flex flex-col h-[500px]">
+                  <div className="p-4 border-b border-slate-200 bg-slate-50">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Search className="w-4 h-4 text-slate-400" />
+                      <input 
+                        type="text"
+                        placeholder="Search users by name or email..."
+                        className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                        value={emailSearch}
+                        onChange={(e) => setEmailSearch(e.target.value)}
+                      />
+                    </div>
+                    <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold text-slate-700 select-none">
+                      <input 
+                        type="checkbox" 
+                        className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500"
+                        checked={selectAllUsers}
+                        onChange={(e) => {
+                          setSelectAllUsers(e.target.checked);
+                          if (e.target.checked) setSelectedEmails(new Set());
+                        }}
+                      />
+                      Select All Users
+                      {emailUsers.length > 0 && (
+                        <span className="ml-1 text-xs font-normal text-slate-500">({emailUsers.length} loaded)</span>
+                      )}
+                    </label>
+                  </div>
+                  
+                  <div className="flex-1 overflow-y-auto p-2">
+                    {emailUsersLoading ? (
+                      <div className="flex justify-center p-4"><Loader2 className="w-6 h-6 animate-spin text-indigo-500" /></div>
+                    ) : (
+                      emailUsers.map(u => (
+                        <label key={u._id} className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-slate-50 transition ${selectedEmails.has(u._id) ? 'bg-indigo-50 border border-indigo-100' : 'border border-transparent'}`}>
+                          <input 
+                            type="checkbox"
+                            className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500"
+                            checked={selectAllUsers || selectedEmails.has(u._id)}
+                            disabled={selectAllUsers}
+                            onChange={() => toggleEmailSelection(u._id)}
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-slate-900 text-sm truncate">{u.name}</p>
+                            <p className="text-xs text-slate-500 truncate">{u.email}</p>
+                          </div>
+                          {u.isVerified && <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-full">Verified</span>}
+                        </label>
+                      ))
+                    )}
+                    {!emailUsersLoading && emailUsers.length === 0 && (
+                      <div className="text-center p-4 text-slate-500 text-sm">No users found.</div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Email Form */}
+                <form onSubmit={handleSendEmail} className="flex flex-col h-[500px]">
+                  <div className="mb-4">
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Subject</label>
+                    <input 
+                      type="text"
+                      required
+                      placeholder="e.g. Special Discount Inside!"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none"
+                      value={emailForm.subject}
+                      onChange={(e) => setEmailForm({...emailForm, subject: e.target.value})}
+                    />
+                  </div>
+                  <div className="flex-1 flex flex-col mb-4">
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Email Body (HTML supported)</label>
+                    <textarea 
+                      required
+                      placeholder="<h1>Hello!</h1><p>Here is your discount code...</p>"
+                      className="w-full flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none font-mono text-sm resize-none"
+                      value={emailForm.html}
+                      onChange={(e) => setEmailForm({...emailForm, html: e.target.value})}
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={emailSending}
+                    className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition"
+                  >
+                    {emailSending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                    {emailSending ? 'Sending...' : 'Send Email'}
+                  </button>
+                </form>
               </div>
             </div>
           </div>
