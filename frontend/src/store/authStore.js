@@ -104,14 +104,17 @@ export const useAuthStore = create((set, get) => ({
 
   register: async (name, email, password, role) => {
     const res = await api.post('/auth/register', { name, email, password, role });
-    localStorage.setItem('token', res.data.token);
+    return res.data; // Return the message from server
+  },
 
-    const userRes = await api.get('/auth/me', {
-      headers: { Authorization: `Bearer ${res.data.token}` }
-    });
-    sessionStorage.setItem('skillvalix_user', JSON.stringify(userRes.data));
-    clearCache();
-    set({ user: userRes.data, isAuthenticated: true, loading: false });
+  verifyEmail: async (token) => {
+    const res = await api.get(`/auth/verify-email/${token}`);
+    return res.data;
+  },
+
+  resendVerification: async (email) => {
+    const res = await api.post('/auth/resend-verification', { email });
+    return res.data;
   },
 
   logout: () => {

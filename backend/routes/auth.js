@@ -9,6 +9,7 @@ import { authOptions } from '../middleware/auth.js';
 import { OAuth2Client } from 'google-auth-library';
 import { Resend } from 'resend';
 import crypto from 'crypto';
+import { isDisposableEmail, isValidEmailFormat } from '../utils/emailValidator.js';
 
 const router = express.Router();
 
@@ -52,7 +53,16 @@ router.get('/me', authOptions, async (req, res) => {
 // Register
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password } = req.body;
+
+    if (!isValidEmailFormat(email)) {
+      return res.status(400).json({ message: 'Invalid email format' });
+    }
+
+    if (isDisposableEmail(email)) {
+      return res.status(400).json({ message: 'Temporary or disposable emails are not allowed' });
+    }
+
     let user = await User.findOne({ email });
     if (user) return res.status(400).json({ message: 'User already exists' });
 
@@ -63,17 +73,154 @@ router.post('/register', async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(password, salt);
     
+    // Email Verification Token
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    user.verificationToken = crypto.createHash('sha256').update(verificationToken).digest('hex');
+    user.verificationTokenExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+
     await user.save();
 
-    const payload = { user: { id: user.id, role: user.role } };
-    const token = jwt.sign(payload, getJwtSecret(), { expiresIn: '7d' });
+    // Send Verification Email
+    const frontendUrl = process.env.FRONTEND_URL || 'https://skillvalix.com';
+    const verifyUrl = `${frontendUrl}/verify-email/${verificationToken}`;
 
-    res.json({ token });
+    await sendEmail({
+      to: user.email,
+      subject: 'Verify Your Email — SkillValix',
+      html: `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+        <body style="margin:0;padding:0;background:#f8fafc;font-family:Inter,Arial,sans-serif">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;padding:40px 0">
+            <tr><td align="center">
+              <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e2e8f0">
+                <tr><td style="background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:32px 40px;text-align:center">
+                  <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:800;letter-spacing:-0.5px">SkillValix</h1>
+                  <p style="margin:6px 0 0;color:#c7d2fe;font-size:13px">Welcome to the community!</p>
+                </td></tr>
+                <tr><td style="padding:36px 40px">
+                  <p style="color:#334155;font-size:15px;line-height:1.6;margin:0 0 20px">Hi ${user.name},</p>
+                  <p style="color:#475569;font-size:14px;line-height:1.7;margin:0 0 28px">
+                    Thanks for signing up for SkillValix! Please click the button below to verify your email address and activate your account.
+                  </p>
+                  <div style="text-align:center;margin:28px 0">
+                    <a href="${verifyUrl}" style="display:inline-block;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;padding:14px 36px;border-radius:10px">Verify Email Address</a>
+                  </div>
+                  <p style="color:#94a3b8;font-size:12px;line-height:1.6;margin:20px 0 0">
+                    If the button doesn't work, paste this link into your browser:<br/>
+                    <a href="${verifyUrl}" style="color:#6366f1;word-break:break-all">${verifyUrl}</a>
+                  </p>
+                </td></tr>
+                <tr><td style="background:#f8fafc;padding:20px 40px;text-align:center;border-top:1px solid #e2e8f0">
+                  <p style="margin:0;color:#94a3b8;font-size:12px">&copy; ${new Date().getFullYear()} SkillValix. All rights reserved.</p>
+                </td></tr>
+              </table>
+            </td></tr>
+          </table>
+        </body></html>
+      `,
+    });
+
+    res.json({ message: 'Registration successful! Please check your email to verify your account.' });
   } catch (err) {
     console.error(err.message);
-    if (err.message === 'JWT_SECRET is not configured') {
-      return res.status(500).json({ message: 'Authentication is not configured on the server' });
+    res.status(500).send('Server error');
+  }
+});
+
+// Verify Email
+router.get('/verify-email/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    const user = await User.findOne({
+      verificationToken: hashedToken,
+      verificationTokenExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid or expired verification token' });
     }
+
+    user.isVerified = true;
+    user.verificationToken = undefined;
+    user.verificationTokenExpires = undefined;
+    await user.save();
+
+    res.json({ message: 'Email verified successfully! You can now login.' });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+});
+
+// Resend Verification Email
+router.post('/resend-verification', async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: 'No user found with this email' });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({ message: 'This account is already verified. Please login.' });
+    }
+
+    // Generate new token
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    user.verificationToken = crypto.createHash('sha256').update(verificationToken).digest('hex');
+    user.verificationTokenExpires = Date.now() + 24 * 60 * 60 * 1000;
+
+    await user.save();
+
+    const frontendUrl = process.env.FRONTEND_URL || 'https://skillvalix.com';
+    const verifyUrl = `${frontendUrl}/verify-email/${verificationToken}`;
+
+    await sendEmail({
+      to: user.email,
+      subject: 'Verify Your Email — SkillValix',
+      html: `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+        <body style="margin:0;padding:0;background:#f8fafc;font-family:Inter,Arial,sans-serif">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;padding:40px 0">
+            <tr><td align="center">
+              <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e2e8f0">
+                <tr><td style="background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:32px 40px;text-align:center">
+                  <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:800;letter-spacing:-0.5px">SkillValix</h1>
+                  <p style="margin:6px 0 0;color:#c7d2fe;font-size:13px">Account Verification</p>
+                </td></tr>
+                <tr><td style="padding:36px 40px">
+                  <p style="color:#334155;font-size:15px;line-height:1.6;margin:0 0 20px">Hi ${user.name},</p>
+                  <p style="color:#475569;font-size:14px;line-height:1.7;margin:0 0 28px">
+                    We received a request to resend your account verification email. Please click the button below to activate your account.
+                  </p>
+                  <div style="text-align:center;margin:28px 0">
+                    <a href="${verifyUrl}" style="display:inline-block;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;padding:14px 36px;border-radius:10px">Verify Email Address</a>
+                  </div>
+                  <p style="color:#94a3b8;font-size:12px;line-height:1.6;margin:20px 0 0">
+                    If the button doesn't work, paste this link into your browser:<br/>
+                    <a href="${verifyUrl}" style="color:#6366f1;word-break:break-all">${verifyUrl}</a>
+                  </p>
+                </td></tr>
+                <tr><td style="background:#f8fafc;padding:20px 40px;text-align:center;border-top:1px solid #e2e8f0">
+                  <p style="margin:0;color:#94a3b8;font-size:12px">&copy; ${new Date().getFullYear()} SkillValix. All rights reserved.</p>
+                </td></tr>
+              </table>
+            </td></tr>
+          </table>
+        </body></html>
+      `,
+    });
+
+    res.json({ message: 'Verification email resent! Please check your inbox.' });
+  } catch (err) {
+    console.error(err.message);
     res.status(500).send('Server error');
   }
 });
@@ -87,6 +234,10 @@ router.post('/login', async (req, res) => {
     
     if (!user.password) {
        return res.status(400).json({ message: 'Please login using Google' });
+    }
+
+    if (!user.isVerified) {
+      return res.status(400).json({ message: 'Please verify your email before logging in.' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -125,12 +276,14 @@ router.post('/google', async (req, res) => {
         name,
         email,
         googleId,
-        role: 'student'
+        role: 'student',
+        isVerified: true // Google accounts are pre-verified
       });
       await user.save();
     } else if (!user.googleId) {
       // Link Google ID if email exists from standard reg
       user.googleId = googleId;
+      user.isVerified = true; // Auto-verify if they connect Google
       await user.save();
     }
 

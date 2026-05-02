@@ -40,7 +40,12 @@ const userSchema = new mongoose.Schema({
     github: { type: String },
     techStack: [String]
   }],
-  customSkills: [String]
+  customSkills: [String],
+
+  // Email Verification
+  isVerified: { type: Boolean, default: false },
+  verificationToken: { type: String, index: true },
+  verificationTokenExpires: { type: Date }
 }, { timestamps: true });
 
 export default mongoose.model('User', userSchema);

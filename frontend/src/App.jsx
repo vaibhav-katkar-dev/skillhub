@@ -40,6 +40,7 @@ const HostHackathon    = lazy(() => import('./pages/HostHackathon'));
 const CampusAmbassador = lazy(() => import('./pages/CampusAmbassador'));
 const FreeCourses      = lazy(() => import('./pages/FreeCourses'));
 const Certification    = lazy(() => import('./pages/Certification'));
+const VerifyEmail      = lazy(() => import('./pages/VerifyEmail'));
 
 // Lightweight page-transition loader shown during lazy chunk fetch
 function PageLoader() {
@@ -127,7 +128,7 @@ function AppContent() {
   const isCoursesList = location.pathname === '/courses';
   const isQuizPath = location.pathname.includes('/quiz');
   const isPublicProfile = location.pathname.startsWith('/u/');
-  const isVerifyPath = location.pathname.startsWith('/verify/') || location.pathname.startsWith('/verify-event');
+  const isVerifyPath = location.pathname.startsWith('/verify/') || location.pathname.startsWith('/verify-event') || location.pathname.startsWith('/verify-email');
   const isLearningView = (isCoursePath && !isCoursesList) || isQuizPath;
   const isCleanView = isPublicProfile || isVerifyPath;
 
@@ -168,6 +169,7 @@ function AppContent() {
             <Route path="/campus-ambassador" element={<CampusAmbassador />} />
             <Route path="/free-courses" element={<FreeCourses />} />
             <Route path="/certification" element={<Certification />} />
+            <Route path="/verify-email/:token" element={<VerifyEmail />} />
           </Routes>
         </Suspense>
       </main>

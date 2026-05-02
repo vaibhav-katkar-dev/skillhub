@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, Eye, EyeOff } from 'lucide-react';
 import { GoogleLogin } from '@react-oauth/google';
 
 const Register = () => {
@@ -13,6 +13,9 @@ const Register = () => {
   const { register, googleLogin } = useAuthStore();
   const navigate = useNavigate();
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
@@ -25,11 +28,19 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null);
+    setSuccess(null);
+    setLoading(true);
     try {
-      await register(name, email, password, role);
-      navigate('/dashboard');
+      const data = await register(name, email, password, role);
+      setSuccess(data.message || 'Registration successful! Please check your email.');
+      setName('');
+      setEmail('');
+      setPassword('');
     } catch (err) {
       setError(err.response?.data?.message || 'Registration Failed');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -49,8 +60,10 @@ const Register = () => {
         <h2 className="text-2xl font-bold text-center text-slate-900 mb-6">Create Account</h2>
         
         {error && <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-md mb-4 text-sm text-center">{error}</div>}
+        {success && <div className="bg-emerald-50 border border-emerald-200 text-emerald-600 p-3 rounded-md mb-4 text-sm text-center">{success}</div>}
         
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {!success && (
+          <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
             <input 
@@ -73,21 +86,33 @@ const Register = () => {
               placeholder="you@email.com"
             />
           </div>
-          <div>
+          <div className="relative">
             <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
             <input 
-              type="password" 
+              type={showPassword ? 'text' : 'password'} 
               required
               className="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
             />
+            <button
+              type="button"
+              className="absolute right-3 top-[34px] text-slate-500 hover:text-slate-700 transition-colors"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            </button>
           </div>
-          <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg shadow-md shadow-emerald-500/20 transition-all active:scale-[0.98]">
-            Sign Up
+          <button 
+            type="submit" 
+            disabled={loading}
+            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg shadow-md shadow-emerald-500/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Creating Account...' : 'Sign Up'}
           </button>
         </form>
+        )}
 
         <div className="mt-6 flex items-center">
           <div className="flex-1 border-t border-slate-200"></div>
