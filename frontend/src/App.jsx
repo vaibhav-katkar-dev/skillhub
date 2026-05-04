@@ -115,6 +115,38 @@ function ScrollToTop() {
   return null;
 }
 
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error) {
+    if (error?.name === 'ChunkLoadError' || error?.message?.includes('fetch dynamically imported module') || error?.message?.includes('Failed to fetch')) {
+      window.location.reload();
+    }
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-[60vh] flex flex-col items-center justify-center p-8 text-center text-slate-800">
+          <h2 className="text-2xl font-bold mb-4">Oops! Something went wrong.</h2>
+          <p className="text-slate-500 mb-6 max-w-md">We encountered an unexpected error loading this page. This usually happens after an update.</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-colors shadow-sm"
+          >
+            Refresh Page
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 function AppContent() {
   const { loadUser } = useAuthStore();
   const location = useLocation();
@@ -136,42 +168,44 @@ function AppContent() {
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-blue-500/30">
       {!isCleanView && <Navbar />}
       <main className="flex-grow">
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
-            <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
-            <Route path="/forgot-password" element={<GuestRoute><ForgotPassword /></GuestRoute>} />
-            <Route path="/reset-password/:token" element={<GuestRoute><ResetPassword /></GuestRoute>} />
-            <Route path="/courses" element={<Courses />} />
-            <Route path="/courses/:slug" element={<CourseDetail />} />
-            <Route path="/courses/:slug/lesson/:lessonId" element={<LessonView />} />
-            <Route path="/courses/:slug/quiz" element={<QuizView />} />
-            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/u/:id" element={<PublicProfile />} />
-            <Route path="/admin" element={<ProtectedRoute adminOnly><AdminPanel /></ProtectedRoute>} />
-            <Route path="/admin/upload" element={<ProtectedRoute adminOnly><AdminPanel /></ProtectedRoute>} />
-            <Route path="/verify" element={<VerifyCert />} />
-            <Route path="/verify/:certId" element={<VerifyCert />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/blog/:slug" element={<BlogPost />} />
-            <Route path="/hackathons" element={<Events />} />
-            <Route path="/hackathons/:id" element={<HackathonDetail />} />
-            <Route path="/job-simulation/:id" element={<JobSimulation />} />
-            <Route path="/events/job-simulation/:id" element={<JobSimulation />} />
-            <Route path="/verify-event/:certId" element={<VerifyCert />} />
-            <Route path="/verify-event" element={<VerifyCert />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="/terms" element={<TermsOfService />} />
-            <Route path="/refund-policy" element={<RefundPolicy />} />
-            <Route path="/cookie-policy" element={<CookiePolicy />} />
-            <Route path="/host" element={<HostHackathon />} />
-            <Route path="/campus-ambassador" element={<CampusAmbassador />} />
-            <Route path="/free-courses" element={<FreeCourses />} />
-            <Route path="/certification" element={<Certification />} />
-            <Route path="/verify-email/:token" element={<VerifyEmail />} />
-          </Routes>
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
+              <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
+              <Route path="/forgot-password" element={<GuestRoute><ForgotPassword /></GuestRoute>} />
+              <Route path="/reset-password/:token" element={<GuestRoute><ResetPassword /></GuestRoute>} />
+              <Route path="/courses" element={<Courses />} />
+              <Route path="/courses/:slug" element={<CourseDetail />} />
+              <Route path="/courses/:slug/lesson/:lessonId" element={<LessonView />} />
+              <Route path="/courses/:slug/quiz" element={<QuizView />} />
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/u/:id" element={<PublicProfile />} />
+              <Route path="/admin" element={<ProtectedRoute adminOnly><AdminPanel /></ProtectedRoute>} />
+              <Route path="/admin/upload" element={<ProtectedRoute adminOnly><AdminPanel /></ProtectedRoute>} />
+              <Route path="/verify" element={<VerifyCert />} />
+              <Route path="/verify/:certId" element={<VerifyCert />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:slug" element={<BlogPost />} />
+              <Route path="/hackathons" element={<Events />} />
+              <Route path="/hackathons/:id" element={<HackathonDetail />} />
+              <Route path="/job-simulation/:id" element={<JobSimulation />} />
+              <Route path="/events/job-simulation/:id" element={<JobSimulation />} />
+              <Route path="/verify-event/:certId" element={<VerifyCert />} />
+              <Route path="/verify-event" element={<VerifyCert />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/terms" element={<TermsOfService />} />
+              <Route path="/refund-policy" element={<RefundPolicy />} />
+              <Route path="/cookie-policy" element={<CookiePolicy />} />
+              <Route path="/host" element={<HostHackathon />} />
+              <Route path="/campus-ambassador" element={<CampusAmbassador />} />
+              <Route path="/free-courses" element={<FreeCourses />} />
+              <Route path="/certification" element={<Certification />} />
+              <Route path="/verify-email/:token" element={<VerifyEmail />} />
+            </Routes>
+          </Suspense>
+        </ErrorBoundary>
       </main>
       {!isLearningView && !isCleanView && <PreFooterCTA />}
       {!isLearningView && !isCleanView && <Footer />}
