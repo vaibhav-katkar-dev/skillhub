@@ -127,7 +127,81 @@ for (const post of blogPosts) {
   generated++;
 }
 
-// ── 5.  Blog listing ──────────────────────────────────────────────────────────
+// ── 5.  Courses pages ────────────────────────────────────────────────────────
+console.log('\n[prerender] Generating course pages...');
+const coursesPath = path.join(ROOT, 'public/data/all-courses.json');
+if (fs.existsSync(coursesPath)) {
+  const allCourses = JSON.parse(fs.readFileSync(coursesPath, 'utf8'));
+  for (const item of allCourses) {
+    const course = item.course;
+    if (!course || !course.slug) continue;
+    
+    const slug = course.slug;
+    const canonical = `https://www.skillvalix.com/courses/${slug}`;
+    
+    const jsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'Course',
+      name: course.title,
+      description: course.description,
+      provider: {
+        '@type': 'Organization',
+        name: 'SkillValix',
+        sameAs: 'https://www.skillvalix.com'
+      }
+    };
+
+    const head = buildHead({
+      title: `${course.title} | SkillValix Courses`,
+      description: course.description,
+      canonical,
+      ogImage: course.image || '',
+      ogType: 'website',
+      keywords: `${course.title}, free course, skillvalix courses, learn online`,
+      jsonLd,
+    });
+
+    writeRoute(`/courses/${slug}`, injectIntoHtml(indexHtml, head));
+    generated++;
+  }
+}
+
+// ── 6.  Job Simulation pages ──────────────────────────────────────────────────
+console.log('\n[prerender] Generating job simulation pages...');
+const simsPath = path.join(ROOT, 'public/data/job-simulations.json');
+if (fs.existsSync(simsPath)) {
+  const allSims = JSON.parse(fs.readFileSync(simsPath, 'utf8'));
+  for (const sim of allSims) {
+    if (!sim.id) continue;
+    const canonical = `https://www.skillvalix.com/job-simulation/${sim.id}`;
+    
+    const jsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'EducationalOccupationalProgram',
+      name: sim.title,
+      description: sim.about,
+      provider: {
+        '@type': 'Organization',
+        name: 'SkillValix',
+        sameAs: 'https://www.skillvalix.com'
+      }
+    };
+
+    const head = buildHead({
+      title: `${sim.title} - SkillValix Events`,
+      description: sim.about,
+      canonical,
+      ogType: 'website',
+      keywords: `job simulation, ${sim.role}, virtual experience, skillvalix`,
+      jsonLd,
+    });
+
+    writeRoute(`/job-simulation/${sim.id}`, injectIntoHtml(indexHtml, head));
+    generated++;
+  }
+}
+
+// ── 7.  Blog listing ──────────────────────────────────────────────────────────
 console.log('\n[prerender] Generating static pages...');
 writeRoute('/blog', injectIntoHtml(indexHtml, buildHead({
   title:       'Free Online Course Guides & Tech Tutorials | SkillValix Blog',
