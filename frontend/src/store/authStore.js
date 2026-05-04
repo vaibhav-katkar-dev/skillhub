@@ -12,7 +12,7 @@ export const api = axios.create({
 
 // Attach token to every request
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });

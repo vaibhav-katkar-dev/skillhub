@@ -1,0 +1,624 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+
+  <!-- ── Home ─────────────────────────────────────────────────────────────── -->
+  <url>
+    <loc>https://www.skillvalix.com/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- ── Primary SEO Landing Pages ────────────────────────────────────────── -->
+  <url>
+    <loc>https://www.skillvalix.com/free-courses</loc>
+    <lastmod>2026-04-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/certification</loc>
+    <lastmod>2026-04-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/hackathons</loc>
+    <lastmod>2026-04-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- ── Core Pages ────────────────────────────────────────────────────────── -->
+  <url>
+    <loc>https://www.skillvalix.com/courses</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/blog</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/verify</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/campus-ambassador</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- ── Legal Pages ───────────────────────────────────────────────────────── -->
+  <url>
+    <loc>https://www.skillvalix.com/privacy-policy</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/terms</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/refund-policy</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/cookie-policy</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+
+  <!-- ── Courses ───────────────────────────────────────────────────────────── -->
+  <url>
+    <loc>https://www.skillvalix.com/courses/ultimate-html-masterclass</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>The Ultimate HTML Masterclass for Beginners — Free Course | SkillValix</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/courses/css-for-beginners-learn-web-styling-zero-to-pro</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1507721999472-8ed4421c4af2?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>CSS for Beginners: Learn Web Styling from Zero to Pro — Free Course | SkillValix</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/courses/ultimate-javascript-masterclass</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1555099962-4199c345e5dd?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>The Ultimate JavaScript Masterclass for Beginners — Free Course | SkillValix</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/courses/ultimate-python-masterclass</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1526379095098-d400fd0bf935?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>The Ultimate Python Masterclass for Beginners — Free Course | SkillValix</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/courses/ultimate-java-masterclass</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>The Ultimate Java Masterclass for Beginners — Free Course | SkillValix</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/courses/basics-of-artificial-intelligence-beginners</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>AI &amp; Machine Learning Fundamentals — Free Course | SkillValix</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/courses/ultimate-react-masterclass</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://framerusercontent.com/images/N0xefN2fE6CCF4G2YhAg5exTHX8.png</image:loc>
+      <image:title>The Ultimate React.js Masterclass: Beginner to Advanced — Free Course | SkillValix</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/courses/nodejs-express-api-development</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://miro.medium.com/v2/resize:fit:720/format:webp/0*-hi_YN6201aadrIe.png</image:loc>
+      <image:title>Node.js &amp; Express Masterclass: Backend API Development — Free Course | SkillValix</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/courses/cyber-security-basics-introduction</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>Cyber Security Basics: A Beginner's Introduction — Free Course | SkillValix</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/courses/ultimate-c-programming</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>Ultimate C Programming: Hardware to High Performance — Free Course | SkillValix</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/courses/modern-cpp-mastery</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>Modern C++: Powerful Object-Oriented Development — Free Course | SkillValix</image:title>
+    </image:image>
+  </url>
+
+  <!-- ── Blog Posts ─────────────────────────────────────────────────────────── -->
+  <url>
+    <loc>https://www.skillvalix.com/blog/mastering-html5-semantic-tags-seo</loc>
+    <lastmod>2026-03-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <news:news>
+      <news:publication>
+        <news:name>SkillValix Blog</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-03-15</news:publication_date>
+      <news:title>Mastering HTML5 in 2026: Why Semantic Tags Matter for SEO</news:title>
+    </news:news>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>HTML5 code on a computer screen showing semantic tags</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/blog/css-grid-vs-flexbox-modern-web</loc>
+    <lastmod>2026-03-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <news:news>
+      <news:publication>
+        <news:name>SkillValix Blog</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-03-12</news:publication_date>
+      <news:title>CSS Grid vs Flexbox: The Ultimate Guide for Modern Web Design</news:title>
+    </news:news>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1507721999472-8ed4421c4af2?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>CSS code on screen showing grid and flexbox layout examples</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/blog/javascript-dom-manipulation-secrets</loc>
+    <lastmod>2026-03-08</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <news:news>
+      <news:publication>
+        <news:name>SkillValix Blog</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-03-08</news:publication_date>
+      <news:title>JavaScript DOM Manipulation Secrets that Pro Developers Use</news:title>
+    </news:news>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1555099962-4199c345e5dd?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>JavaScript code on a dark editor screen showing DOM manipulation</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/blog/python-beginner-mistakes-to-avoid</loc>
+    <lastmod>2026-03-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <news:news>
+      <news:publication>
+        <news:name>SkillValix Blog</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-03-17</news:publication_date>
+      <news:title>10 Python Mistakes Every Beginner Makes (And How to Fix Them)</news:title>
+    </news:news>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1526379095098-d400fd0bf935?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>Python code on a laptop screen with a dark theme</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/blog/java-beginner-mistakes-to-avoid</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <news:news>
+      <news:publication>
+        <news:name>SkillValix Blog</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-03-20</news:publication_date>
+      <news:title>10 Java Mistakes Every Beginner Makes (And How to Fix Them)</news:title>
+    </news:news>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>Java code on a computer screen showing beginner mistakes</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/blog/why-learn-ai-machine-learning-2026</loc>
+    <lastmod>2026-03-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <news:news>
+      <news:publication>
+        <news:name>SkillValix Blog</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-03-26</news:publication_date>
+      <news:title>Why 2026 is the Best Year to Learn AI &amp; Machine Learning</news:title>
+    </news:news>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>Futuristic AI neural network concept with glowing connections</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/blog/top-skills-students-learn-online-free</loc>
+    <lastmod>2026-03-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <news:news>
+      <news:publication>
+        <news:name>SkillValix Blog</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-03-27</news:publication_date>
+      <news:title>Top Skills Students Can Learn Online (With Free Resources)</news:title>
+    </news:news>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>Students studying together with laptops</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/blog/how-to-become-web-developer-2026-roadmap</loc>
+    <lastmod>2026-03-28</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <news:news>
+      <news:publication>
+        <news:name>SkillValix Blog</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-03-28</news:publication_date>
+      <news:title>How to Become a Web Developer in 2026: The Complete Free Roadmap</news:title>
+    </news:news>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>Developer working on laptop with code on screen</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/blog/css-animations-micro-interactions-guide</loc>
+    <lastmod>2026-03-29</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <news:news>
+      <news:publication>
+        <news:name>SkillValix Blog</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-03-29</news:publication_date>
+      <news:title>CSS Animations &amp; Micro-Interactions: Make Your Website Feel Alive</news:title>
+    </news:news>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1545235617-9465d2a55698?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>Colourful CSS design patterns and animations on screen</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/blog/freelancing-as-developer-beginners-guide</loc>
+    <lastmod>2026-03-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <news:news>
+      <news:publication>
+        <news:name>SkillValix Blog</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-03-30</news:publication_date>
+      <news:title>How to Start Freelancing as a Developer in 2026 (Even as a Beginner)</news:title>
+    </news:news>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>Freelancer working remotely on laptop at a coffee shop</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/blog/developer-resume-portfolio-tips-2026</loc>
+    <lastmod>2026-04-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <news:news>
+      <news:publication>
+        <news:name>SkillValix Blog</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-04-01</news:publication_date>
+      <news:title>7 Things Every Developer Resume Must Have in 2026 (With Examples)</news:title>
+    </news:news>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>Developer reviewing resume and portfolio on desk</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/blog/ai-tools-every-developer-should-use-2026</loc>
+    <lastmod>2026-04-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <news:news>
+      <news:publication>
+        <news:name>SkillValix Blog</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-04-02</news:publication_date>
+      <news:title>10 AI Tools Every Developer Must Use in 2026 to Code Faster</news:title>
+    </news:news>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1677442135703-1787eea5ce01?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>AI code generation interface on a developer screen</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/blog/what-is-skillvalix-complete-guide</loc>
+    <lastmod>2026-04-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+    <news:news>
+      <news:publication>
+        <news:name>SkillValix Blog</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-04-05</news:publication_date>
+      <news:title>What is SkillValix? The Complete Guide to Building Your Career in 2026</news:title>
+    </news:news>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>Young professionals collaborating in a modern tech environment</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/blog/how-to-build-powerful-public-portfolio-2026</loc>
+    <lastmod>2026-04-05</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <news:news>
+      <news:publication>
+        <news:name>SkillValix Blog</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-04-05</news:publication_date>
+      <news:title>How to Build a Powerful Public Portfolio to Get Hired in 2026</news:title>
+    </news:news>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>Professional developer portfolio showing projects and skills</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/blog/how-skillvalix-helps-students-become-job-ready</loc>
+    <lastmod>2026-04-08</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <news:news>
+      <news:publication>
+        <news:name>SkillValix Blog</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-04-05</news:publication_date>
+      <news:title>How SkillValix Helps Students Become Job Ready: 7 Key SkillValix Benefits</news:title>
+    </news:news>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>Engineering students in India collaborating on a tech project</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/host</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- ── Job Simulations ─────────────────────────────────────────────────────── -->
+  <url>
+    <loc>https://www.skillvalix.com/job-simulation/frontend-developer</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&amp;q=80</image:loc>
+      <image:title>Frontend Developer Job Simulation — Free Virtual Internship | SkillValix</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/job-simulation/data-analyst</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&amp;q=80</image:loc>
+      <image:title>Data Analyst Job Simulation — Free Virtual Internship | SkillValix</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/job-simulation/ui-ux-designer</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&amp;q=80</image:loc>
+      <image:title>UI/UX Designer Job Simulation — Free Virtual Internship | SkillValix</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/job-simulation/backend-developer</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&amp;q=80</image:loc>
+      <image:title>Backend Developer Job Simulation — Free Virtual Internship | SkillValix</image:title>
+    </image:image>
+  </url>
+
+  <!-- ── New Blog Posts (April 2026) ──────────────────────────────────────────── -->
+  <url>
+    <loc>https://www.skillvalix.com/blog/free-online-courses-with-certificate-india-2026</loc>
+    <lastmod>2026-04-08</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <news:news>
+      <news:publication>
+        <news:name>SkillValix Blog</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-04-06</news:publication_date>
+      <news:title>Best Free Online Courses with Certificate in India 2026 (No Fee, Verified)</news:title>
+    </news:news>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>Indian student studying online with free course certificate on screen</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/blog/how-to-win-a-hackathon-beginner-guide-2026</loc>
+    <lastmod>2026-04-08</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <news:news>
+      <news:publication>
+        <news:name>SkillValix Blog</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-04-07</news:publication_date>
+      <news:title>How to Win a Hackathon: Complete Beginner Guide (2026)</news:title>
+    </news:news>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>Students collaborating on a hackathon project with laptops</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/blog/web-development-roadmap-2026-beginners</loc>
+    <lastmod>2026-04-08</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <news:news>
+      <news:publication>
+        <news:name>SkillValix Blog</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-04-08</news:publication_date>
+      <news:title>Web Development Roadmap 2026: The Complete Free Guide for Beginners</news:title>
+    </news:news>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>Developer looking at web development roadmap on dual monitor setup</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/blog/javascript-interview-questions-2026</loc>
+    <lastmod>2026-04-08</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <news:news>
+      <news:publication>
+        <news:name>SkillValix Blog</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-04-08</news:publication_date>
+      <news:title>Top 30 JavaScript Interview Questions &amp; Answers for 2026 (Freshers &amp; Experienced)</news:title>
+    </news:news>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1516116216624-53e697fedbea?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>JavaScript code on screen with interview preparation notes</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/blog/python-for-data-science-beginners-2026</loc>
+    <lastmod>2026-04-08</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <news:news>
+      <news:publication>
+        <news:name>SkillValix Blog</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-04-08</news:publication_date>
+      <news:title>Python for Data Science: Beginner Guide 2026 (Free Resources Included)</news:title>
+    </news:news>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>Data science charts and Python code on a computer screen</image:title>
+    </image:image>
+  </url>
+</urlset>

@@ -1,0 +1,475 @@
+[
+  {
+    "id": "frontend-developer",
+    "slug": "frontend-developer",
+    "title": "Frontend Developer Job Simulation",
+    "category": "Job Simulation",
+    "company": "SkillValix Labs",
+    "role": "Frontend Developer Intern",
+    "comingSoon": true,
+    "duration": "5-7 hours",
+    "skills": [
+      "React",
+      "CSS",
+      "HTML",
+      "JavaScript",
+      "Debugging"
+    ],
+    "level": "Beginner",
+    "certCost": 99,
+    "color": "from-blue-600 to-cyan-500",
+    "icon": "Laptop",
+    "image": "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80",
+    "description": "Ship realistic frontend tasks: build reusable components, debug broken flows, integrate APIs, and deploy a working mini-feature.",
+    "about": "This simulation mirrors a junior frontend engineer's sprint in a startup. You will design small components, fix real bugs, and submit production-style links.",
+    "modules": [
+      "Sprint planning and requirement understanding",
+      "Component implementation and refactor",
+      "API integration with loading/error handling",
+      "Bug fixing in a broken codebase",
+      "Deployment and delivery notes"
+    ],
+    "tasks": [
+      {
+        "num": 1,
+        "title": "Build a Responsive Navbar",
+        "description": "Create a responsive navbar with desktop and mobile states. Include keyboard-friendly toggle behavior and active link highlighting.",
+        "time": "50 min",
+        "type": "Coding",
+        "deliverable": "Public repository link with README and at least one screenshot of mobile + desktop view.",
+        "acceptedDomains": [
+          "github.com",
+          "gitlab.com",
+          "codesandbox.io",
+          "stackblitz.com",
+          "replit.com",
+          "docs.google.com",
+          "drive.google.com"
+        ]
+      },
+      {
+        "num": 2,
+        "title": "Reusable Card Component",
+        "description": "Build a React card component that supports props for title, summary, image, tags, and CTA. Add one loading state and one empty state.",
+        "time": "70 min",
+        "type": "Coding",
+        "deliverable": "Repository or sandbox link with reusable component and example usage in 3 variations.",
+        "acceptedDomains": [
+          "github.com",
+          "gitlab.com",
+          "codesandbox.io",
+          "stackblitz.com",
+          "docs.google.com",
+          "drive.google.com"
+        ]
+      },
+      {
+        "num": 3,
+        "title": "API Integration with Pagination",
+        "description": "Fetch users from JSONPlaceholder, render a paginated list, and handle loading/error/empty states. Add search by name.",
+        "time": "70 min",
+        "type": "Coding",
+        "deliverable": "Deployed demo URL plus source repo link. Both links should be public.",
+        "acceptedDomains": [
+          "vercel.app",
+          "netlify.app",
+          "github.com",
+          "gitlab.com",
+          "docs.google.com",
+          "drive.google.com"
+        ]
+      },
+      {
+        "num": 4,
+        "title": "Bug Hunt: 5 Production Bugs",
+        "description": "Fix 5 intentional bugs in routing, state updates, and form validation. Document each bug, root cause, and final fix.",
+        "time": "60 min",
+        "type": "Debugging",
+        "deliverable": "Repository commit history or PR showing fixes plus a short bug report document.",
+        "acceptedDomains": [
+          "github.com",
+          "gitlab.com",
+          "drive.google.com",
+          "docs.google.com"
+        ]
+      },
+      {
+        "num": 5,
+        "title": "Release Notes",
+        "description": "Write concise release notes summarizing features, known limitations, and next sprint improvements.",
+        "time": "30 min",
+        "type": "Communication",
+        "deliverable": "Public document with release notes and roadmap items.",
+        "acceptedDomains": [
+          "docs.google.com",
+          "notion.so",
+          "drive.google.com",
+          "github.com"
+        ]
+      }
+    ],
+    "faq": [
+      {
+        "q": "Is this a live interview?",
+        "a": "No. It is self-paced and project-driven."
+      },
+      {
+        "q": "Do I need to submit code?",
+        "a": "Yes. Most tasks expect a public repo, sandbox, or deployed link."
+      },
+      {
+        "q": "What do I get for INR 99?",
+        "a": "A verified PDF certificate with role and QR verification after completing tasks."
+      },
+      {
+        "q": "Can I use my own stack?",
+        "a": "Yes, as long as your submission proves the required functionality."
+      }
+    ]
+  },
+  {
+    "id": "data-analyst",
+    "slug": "data-analyst",
+    "title": "Data Analyst Job Simulation",
+    "category": "Job Simulation",
+    "company": "SkillValix Labs",
+    "role": "Data Analyst Intern",
+    "comingSoon": true,
+    "duration": "5-7 hours",
+    "skills": [
+      "Python",
+      "Pandas",
+      "SQL",
+      "Data Visualization"
+    ],
+    "level": "Beginner",
+    "certCost": 99,
+    "color": "from-violet-600 to-purple-500",
+    "icon": "BarChart3",
+    "image": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80",
+    "description": "Run a realistic analytics workflow: clean data, analyze trends, visualize results, and present business recommendations.",
+    "about": "You will work like an entry-level analyst handling a noisy dataset and presenting decisions to stakeholders.",
+    "modules": [
+      "Data cleaning and quality checks",
+      "Exploratory analysis",
+      "Visual storytelling",
+      "Business recommendation report"
+    ],
+    "tasks": [
+      {
+        "num": 1,
+        "title": "Dataset Quality Fix",
+        "description": "Clean null values, remove duplicates, standardize date/currency formats, and create a quality report.",
+        "time": "60 min",
+        "type": "Data",
+        "deliverable": "Notebook or repo with before/after stats and cleaned dataset link.",
+        "acceptedDomains": [
+          "github.com",
+          "kaggle.com",
+          "colab.research.google.com",
+          "drive.google.com",
+          "docs.google.com"
+        ]
+      },
+      {
+        "num": 2,
+        "title": "Exploratory Data Analysis",
+        "description": "Identify top trends and anomalies. Add summary statistics and at least 3 investigative questions.",
+        "time": "75 min",
+        "type": "Analysis",
+        "deliverable": "Notebook/report showing findings with reasoning and assumptions.",
+        "acceptedDomains": [
+          "github.com",
+          "kaggle.com",
+          "colab.research.google.com",
+          "docs.google.com",
+          "notion.so",
+          "drive.google.com"
+        ]
+      },
+      {
+        "num": 3,
+        "title": "Visualization Pack",
+        "description": "Create 4 visualizations (trend, distribution, comparison, and correlation). Include chart captions.",
+        "time": "60 min",
+        "type": "Visualization",
+        "deliverable": "Dashboard or report with visuals and business interpretation.",
+        "acceptedDomains": [
+          "tableau.com",
+          "github.com",
+          "kaggle.com",
+          "docs.google.com",
+          "drive.google.com"
+        ]
+      },
+      {
+        "num": 4,
+        "title": "SQL Business Queries",
+        "description": "Write 5 SQL queries for business questions (top customers, retention, revenue trend, etc.).",
+        "time": "45 min",
+        "type": "Analysis",
+        "deliverable": "SQL file and outputs/screenshots with short interpretation.",
+        "acceptedDomains": [
+          "github.com",
+          "drive.google.com",
+          "docs.google.com",
+          "notion.so"
+        ]
+      },
+      {
+        "num": 5,
+        "title": "Executive Summary",
+        "description": "Prepare a one-page summary with risks, opportunities, and prioritized recommendations.",
+        "time": "30 min",
+        "type": "Communication",
+        "deliverable": "Public document with non-technical summary for decision makers.",
+        "acceptedDomains": [
+          "docs.google.com",
+          "notion.so",
+          "drive.google.com",
+          "linkedin.com"
+        ]
+      }
+    ],
+    "faq": [
+      {
+        "q": "What tools can I use?",
+        "a": "Python, SQL, Excel, or BI tools are all accepted."
+      },
+      {
+        "q": "Is there auto-grading?",
+        "a": "No. Validation checks your link quality and completion flow."
+      },
+      {
+        "q": "What do I get for INR 99?",
+        "a": "A verified downloadable PDF certificate with your role."
+      }
+    ]
+  },
+  {
+    "id": "ui-ux-designer",
+    "slug": "ui-ux-designer",
+    "title": "UI/UX Designer Job Simulation",
+    "category": "Job Simulation",
+    "company": "SkillValix Labs",
+    "role": "UI/UX Design Intern",
+    "comingSoon": true,
+    "duration": "4-6 hours",
+    "skills": [
+      "Figma",
+      "User Research",
+      "Wireframing",
+      "Prototyping"
+    ],
+    "level": "Beginner",
+    "certCost": 99,
+    "color": "from-pink-600 to-rose-500",
+    "icon": "Palette",
+    "image": "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&q=80",
+    "description": "Go from research to interactive prototype with practical UX deliverables.",
+    
+    "about": "A realistic design sprint where you define user pain points, map flows, and craft a clickable prototype.",
+    "modules": [
+      "Problem discovery and user intent",
+      "Wireframing and interaction structure",
+      "High-fidelity UI system",
+      "Usability feedback and iteration"
+    ],
+    "tasks": [
+      {
+        "num": 1,
+        "title": "User Research Brief",
+        "description": "Define target users, goals, pain points, and success metrics for a food delivery product.",
+        "time": "45 min",
+        "type": "Research",
+        "deliverable": "Research notes with 2 personas and journey highlights.",
+        "acceptedDomains": [
+          "docs.google.com",
+          "notion.so",
+          "figma.com",
+          "drive.google.com"
+        ]
+      },
+      {
+        "num": 2,
+        "title": "Low-Fidelity Wireframes",
+        "description": "Design wireframes for Home, Search, Product Detail, Cart, and Checkout screens.",
+        "time": "70 min",
+        "type": "Design",
+        "deliverable": "Wireframe file with navigation flow and annotations.",
+        "acceptedDomains": [
+          "figma.com",
+          "canva.com",
+          "invisionapp.com",
+          "drive.google.com",
+          "docs.google.com"
+        ]
+      },
+      {
+        "num": 3,
+        "title": "High-Fidelity Prototype",
+        "description": "Build an interactive prototype with components, typography scale, and color tokens.",
+        "time": "90 min",
+        "type": "Design",
+        "deliverable": "Public prototype link with design system page.",
+        "acceptedDomains": [
+          "figma.com",
+          "invisionapp.com",
+          "dribbble.com",
+          "behance.net",
+          "docs.google.com",
+          "drive.google.com"
+        ]
+      },
+      {
+        "num": 4,
+        "title": "Usability Findings",
+        "description": "Run a quick usability review and document at least 5 issues with fixes and priority.",
+        "time": "40 min",
+        "type": "Analysis",
+        "deliverable": "Issue log with severity labels and improvement proposal.",
+        "acceptedDomains": [
+          "docs.google.com",
+          "notion.so",
+          "drive.google.com",
+          "figma.com"
+        ]
+      }
+    ],
+    "faq": [
+      {
+        "q": "Do I need prior Figma experience?",
+        "a": "Basic knowledge helps, but beginner-level workflows are acceptable."
+      },
+      {
+        "q": "Can I use Adobe XD or Canva?",
+        "a": "Yes, but your submission must include interaction flow and rationale."
+      },
+      {
+        "q": "What do I get for INR 99?",
+        "a": "A verified PDF certificate with role and completion details."
+      }
+    ]
+  },
+  {
+    "id": "backend-developer",
+    "slug": "backend-developer",
+    "title": "Backend Developer Job Simulation",
+    "category": "Job Simulation",
+    "company": "SkillValix Labs",
+    "role": "Backend Developer Intern",
+    "comingSoon": true,
+    "duration": "6-8 hours",
+    "skills": [
+      "Node.js",
+      "REST APIs",
+      "MongoDB",
+      "JWT",
+      "Testing"
+    ],
+    "level": "Intermediate",
+    "certCost": 99,
+    "color": "from-emerald-600 to-teal-500",
+    "icon": "Settings",
+    "image": "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=80",
+    "description": "Design, implement, secure, and test a production-style backend service with realistic engineering tasks.",
+    "about": "This simulation reflects backend sprint work: API contract design, implementation, authentication, debugging, and test reliability.",
+    "modules": [
+      "API contract and endpoint planning",
+      "Implementation and database modeling",
+      "Security hardening with auth",
+      "Debugging production bugs",
+      "Automated testing"
+    ],
+    "tasks": [
+      {
+        "num": 1,
+        "title": "API Contract (OpenAPI)",
+        "description": "Design an OpenAPI spec for a task-management backend with auth, CRUD, pagination, and error responses.",
+        "time": "60 min",
+        "type": "API Design",
+        "deliverable": "Public OpenAPI file or Postman documentation with sample request/response payloads.",
+        "acceptedDomains": [
+          "swagger.io",
+          "postman.com",
+          "github.com",
+          "gitlab.com",
+          "docs.google.com",
+          "drive.google.com"
+        ]
+      },
+      {
+        "num": 2,
+        "title": "Implement Core Endpoints",
+        "description": "Build user/task CRUD with Express + Mongoose. Include validation and proper status codes.",
+        "time": "100 min",
+        "type": "Coding",
+        "deliverable": "Public repository with setup instructions and environment variables guide.",
+        "acceptedDomains": [
+          "github.com",
+          "gitlab.com",
+          "replit.com",
+          "codesandbox.io",
+          "docs.google.com",
+          "drive.google.com"
+        ]
+      },
+      {
+        "num": 3,
+        "title": "Authentication + Authorization",
+        "description": "Add register/login, JWT token verification, and role-based protection for at least one admin route.",
+        "time": "70 min",
+        "type": "Security",
+        "deliverable": "Repository update plus a short auth flow document.",
+        "acceptedDomains": [
+          "github.com",
+          "gitlab.com",
+          "drive.google.com",
+          "docs.google.com"
+        ]
+      },
+      {
+        "num": 4,
+        "title": "Production Bug Fix Pack",
+        "description": "Fix 3 intentional backend bugs: one auth bug, one data validation bug, and one async/await bug.",
+        "time": "70 min",
+        "type": "Debugging",
+        "deliverable": "PR or commit history showing bug fixes with before/after explanation.",
+        "acceptedDomains": [
+          "github.com",
+          "gitlab.com",
+          "drive.google.com",
+          "docs.google.com"
+        ]
+      },
+      {
+        "num": 5,
+        "title": "API Test Suite",
+        "description": "Add Jest + Supertest tests for at least 4 endpoints including one edge case each.",
+        "time": "60 min",
+        "type": "Testing",
+        "deliverable": "Test report or CI run link proving tests pass.",
+        "acceptedDomains": [
+          "github.com",
+          "gitlab.com",
+          "drive.google.com",
+          "docs.google.com"
+        ]
+      }
+    ],
+    "faq": [
+      {
+        "q": "Why am I not asked for Figma here?",
+        "a": "Backend tasks are validated against backend/documentation/testing platforms, not UI design tools."
+      },
+      {
+        "q": "What stack is expected?",
+        "a": "Node.js + Express + MongoDB is recommended, but equivalent backend stacks are acceptable."
+      },
+      {
+        "q": "What do I get for INR 99?",
+        "a": "A verified downloadable certificate with QR verification."
+      }
+    ]
+  }
+]
