@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
   BookOpen, Clock, Loader2,
   ArrowRight, Sparkles, GraduationCap, Star,
@@ -194,6 +194,26 @@ const Courses = () => {
               <span className="text-white text-sm font-bold">Self-Paced</span>
             </div>
           </div>
+
+            <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-w-4xl">
+              {[
+                { to: '/free-courses', label: 'Free Courses Hub', copy: 'Begin with the simpler learning path.' },
+                { to: '/certification', label: 'Certification Guide', copy: 'Learn what you unlock after the exam.' },
+                { to: '/verify', label: 'Verify Certificate', copy: 'Check a credential or share your own.' },
+                { to: '/hackathons', label: 'Hackathons', copy: 'Use your skills on real challenges.' },
+                { to: '/blog', label: 'Blog', copy: 'Read tutorials and career guides.' },
+                { to: '/', label: 'Home', copy: 'Return to the platform overview.' },
+              ].map(({ to, label, copy }) => (
+                <Link
+                  key={to}
+                  to={to}
+                  className="bg-white/10 hover:bg-white/15 border border-white/15 rounded-2xl p-4 text-left transition-all duration-300 backdrop-blur-sm"
+                >
+                  <div className="text-white font-bold text-sm mb-1">{label}</div>
+                  <div className="text-white/70 text-xs leading-relaxed">{copy}</div>
+                </Link>
+              ))}
+            </div>
         </div>
       </div>
 

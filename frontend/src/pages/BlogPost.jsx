@@ -217,6 +217,28 @@ const BlogPost = () => {
             </div>
           )}
 
+          <div className="mt-8 p-5 rounded-2xl border border-indigo-100 bg-indigo-50/60">
+            <h3 className="text-sm font-black uppercase tracking-widest text-indigo-700 mb-3">Keep Exploring</h3>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { to: '/blog', label: 'Blog Home' },
+                { to: '/courses', label: 'All Courses' },
+                { to: '/free-courses', label: 'Free Courses' },
+                { to: '/certification', label: 'Certification' },
+                { to: '/verify', label: 'Verify Certificate' },
+                { to: '/hackathons', label: 'Hackathons' },
+              ].map(({ to, label }) => (
+                <Link
+                  key={to}
+                  to={to}
+                  className="inline-flex items-center rounded-full border border-indigo-200 bg-white px-3 py-1.5 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition-colors"
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
           {/* Author Box */}
           <div className="mt-8 p-5 bg-slate-50 rounded-xl border border-slate-200 flex items-center gap-4">
             <div className="bg-gradient-to-br from-blue-500 to-indigo-600 w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0">

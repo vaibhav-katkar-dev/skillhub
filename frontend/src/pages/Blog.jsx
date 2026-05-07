@@ -180,6 +180,31 @@ const Blog = () => {
         </div>
       </div>
 
+      {/* ── INTERNAL NAV HUB ── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 relative z-10">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 sm:p-5">
+          <div className="flex flex-wrap gap-2">
+            {[
+              { to: '/free-courses', label: 'Free Courses' },
+              { to: '/courses', label: 'All Courses' },
+              { to: '/certification', label: 'Certification' },
+              { to: '/verify', label: 'Verify Certificate' },
+              { to: '/hackathons', label: 'Hackathons' },
+              { to: '/blog', label: 'Blog Home' },
+              { to: '/', label: 'Home' },
+            ].map(({ to, label }) => (
+              <Link
+                key={to}
+                to={to}
+                className="inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition-colors"
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* ── BLOG GRID ── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 pt-6">
         {/* Results count */}

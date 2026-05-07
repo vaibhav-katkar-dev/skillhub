@@ -271,6 +271,26 @@ const CourseDetail = () => {
           </div>
         </div>
 
+        <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[
+            { to: '/courses', title: 'Back to Courses', copy: 'Browse the full course library again.' },
+            { to: '/free-courses', title: 'Free Courses Hub', copy: 'See the top starting points for beginners.' },
+            { to: '/certification', title: 'Certification', copy: 'Understand the certificate path before you take the exam.' },
+            { to: '/verify', title: 'Verify a Certificate', copy: 'Check how public certificate verification works.' },
+            { to: '/hackathons', title: 'Hackathons', copy: 'Put your skills into real project challenges.' },
+            { to: '/blog', title: 'Learning Blog', copy: 'Read supporting tutorials and roadmaps.' },
+          ].map(({ to, title, copy }) => (
+            <Link
+              key={to}
+              to={to}
+              className="block rounded-2xl border border-slate-200 bg-white p-4 shadow-sm hover:shadow-md hover:border-blue-300 transition-all"
+            >
+              <div className="text-xs font-black uppercase tracking-widest text-blue-600 mb-2">{title}</div>
+              <p className="text-sm text-slate-500 leading-relaxed mb-0">{copy}</p>
+            </Link>
+          ))}
+        </div>
+
         {/* ── Recommendations ── */}
         {recommended.length > 0 && (
           <div className="mt-16 pt-12 border-t-2 border-dashed border-slate-200">

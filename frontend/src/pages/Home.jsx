@@ -757,6 +757,53 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ══ INTERNAL LINK HUB ════════════════════════════════ */}
+      <section style={{ background: '#f8faff', padding: '88px 0', borderTop: '1.5px solid #e2e8f0' }} className="section-divider">
+        <div className="section-wrap" style={{ maxWidth: 960 }}>
+          <SectionHeader
+            pill="Explore More"
+            pillColor="#4f46e5"
+            pillBg="#eef2ff"
+            pillBorder="#c7d2fe"
+            title={<>Keep moving through the <span className="shimmer-text">full learning path</span>.</>}
+            subtitle="Every major page on SkillValix connects to the next step so visitors can move naturally from learning to certification to community."
+          />
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 18 }}>
+            {[
+              { to: '/free-courses', title: 'Free Courses', desc: 'Start with beginner-friendly lessons and build your foundation.' },
+              { to: '/courses', title: 'All Courses', desc: 'Browse the full curriculum and jump into any topic.' },
+              { to: '/certification', title: 'Certification', desc: 'See how certificates work and what you earn after passing.' },
+              { to: '/verify', title: 'Verify a Certificate', desc: 'Check a certificate ID and confirm a learner’s achievement.' },
+              { to: '/hackathons', title: 'Hackathons', desc: 'Move from theory to real projects and competition.' },
+              { to: '/blog', title: 'Blog', desc: 'Read tutorials, roadmaps, and learning guides.' },
+            ].map(({ to, title, desc }) => (
+              <Link
+                key={to}
+                to={to}
+                style={{
+                  display: 'block',
+                  background: '#fff',
+                  border: '1.5px solid #e2e8f0',
+                  borderRadius: 18,
+                  padding: '22px 20px',
+                  textDecoration: 'none',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.04)',
+                  transition: 'transform .2s ease, box-shadow .2s ease, border-color .2s ease',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 12px 28px rgba(79,70,229,0.10)'; e.currentTarget.style.borderColor = '#c7d2fe'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.04)'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
+              >
+                <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#4f46e5', marginBottom: 8 }}>
+                  {title}
+                </div>
+                <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: '#64748b' }}>{desc}</p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
           TESTIMONIALS
       â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}

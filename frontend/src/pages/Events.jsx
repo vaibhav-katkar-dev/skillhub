@@ -131,6 +131,25 @@ export default function Events() {
           <p className="text-lg text-slate-300 max-w-2xl mx-auto">
             Open each hackathon for full details, team registration, secure payment, and submission workflow.
           </p>
+
+          <div className="mt-8 flex flex-wrap justify-center gap-2.5">
+            {[
+              { to: '/courses', label: 'Courses' },
+              { to: '/free-courses', label: 'Free Courses' },
+              { to: '/certification', label: 'Certification' },
+              { to: '/verify', label: 'Verify Certificate' },
+              { to: '/blog', label: 'Blog' },
+              { to: '/host', label: 'Host a Hackathon' },
+            ].map(({ to, label }) => (
+              <Link
+                key={to}
+                to={to}
+                className="inline-flex items-center rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-xs font-bold text-white/90 hover:bg-white/15 transition-colors backdrop-blur-sm"
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
