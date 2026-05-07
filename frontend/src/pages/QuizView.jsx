@@ -36,6 +36,9 @@ const QuizView = () => {
   const [couponResult, setCouponResult]     = useState(null); // { valid, ...data } | null
   const [couponError, setCouponError]       = useState('');
 
+  // ── Course price state ────────────────────────────────
+  const [coursePriceRupees, setCoursePriceRupees] = useState(99); // default ₹99
+
   const handleClientDownload = async (certId) => {
     if (!certId) return;
     setCertPreparing(true);
@@ -83,6 +86,16 @@ const QuizView = () => {
 
         const quizRes = await api.get(`/quizzes/${courseId}`);
         setQuiz(quizRes.data);
+
+        // Fetch per-course price (falls back to ₹99 default on the backend)
+        try {
+          const priceRes = await api.get(`/prices/${courseId}`);
+          if (priceRes.data?.priceRupees != null) {
+            setCoursePriceRupees(priceRes.data.priceRupees);
+          }
+        } catch {
+          // Keep default ₹99
+        }
 
         try {
           const certRes = await api.get('/certificates/mine');
@@ -390,7 +403,7 @@ const QuizView = () => {
             <div className="flex items-end justify-center gap-3 mb-6 w-full bg-slate-50 py-4 rounded-2xl border border-slate-100">
               {user?.role === 'admin' ? (
                 <>
-                  <span className="line-through text-slate-400 text-xl font-bold mb-1">Rs. 99</span>
+                  <span className="line-through text-slate-400 text-xl font-bold mb-1">Rs. {coursePriceRupees}</span>
                   <span className="text-5xl font-black text-slate-900 tracking-tight">Rs. 1</span>
                 </>
               ) : couponResult?.valid ? (
@@ -406,8 +419,8 @@ const QuizView = () => {
                 </div>
               ) : (
                 <>
-                  <span className="line-through text-slate-400 text-xl font-bold mb-1">Rs. 499</span>
-                  <span className="text-5xl font-black text-slate-900 tracking-tight">Rs. 99</span>
+                  <span className="line-through text-slate-400 text-xl font-bold mb-1">Rs. {Math.round(coursePriceRupees * 5)}</span>
+                  <span className="text-5xl font-black text-slate-900 tracking-tight">Rs. {coursePriceRupees}</span>
                 </>
               )}
             </div>
@@ -513,7 +526,7 @@ const QuizView = () => {
                     ? `Pay Rs. ${paymentInfo?.displayAmountRupees || 1} for Test Access`
                     : couponResult?.valid
                       ? `Pay Rs. ${couponResult.discountedAmountRupees} Now`
-                      : 'Pay Rs. 99 Now'}
+                      : `Pay Rs. ${coursePriceRupees} Now`}
               </span>
             </button>
             <p className="text-[10px] text-slate-400 mt-5 font-semibold uppercase tracking-widest text-center">

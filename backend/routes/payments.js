@@ -3,7 +3,28 @@ import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import User from '../models/User.js';
 import DiscountCoupon from '../models/DiscountCoupon.js';
+import CoursePrice from '../models/CoursePrice.js';
 import { authOptions } from '../middleware/auth.js';
+
+// Default price in paise (₹99) used when no custom price is set for a course
+const DEFAULT_PRICE_PAISE = 9900;
+
+/**
+ * Look up per-course price. Returns paise.
+ * Falls back to DEFAULT_PRICE_PAISE if no active custom price exists.
+ */
+async function getCoursePricePaise(courseId) {
+  if (!courseId) return DEFAULT_PRICE_PAISE;
+  try {
+    const doc = await CoursePrice.findOne({ courseId: String(courseId), isActive: true }).lean();
+    if (doc && Number.isInteger(doc.pricePaise) && doc.pricePaise >= 100) {
+      return doc.pricePaise;
+    }
+  } catch {
+    // Swallow — fall back to default
+  }
+  return DEFAULT_PRICE_PAISE;
+}
 
 const router = express.Router();
 
@@ -32,14 +53,16 @@ router.post('/razorpay-order', authOptions, async (req, res) => {
     }
 
     const user = await User.findById(req.user.id);
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
     const isAdminTestMode = user.role === 'admin';
 
-    // Base amount: admin = ₹1, others = ₹99
-    let amountToCharge = isAdminTestMode ? 100 : 9900;
+    // Base amount: admin = ₹1, others = per-course price (falls back to ₹99)
+    const basePaise = isAdminTestMode ? 100 : await getCoursePricePaise(courseId);
+    let amountToCharge = basePaise;
     let appliedCoupon = null;
     let savedAmountPaise = 0;
 
@@ -93,6 +116,7 @@ router.post('/razorpay-order', authOptions, async (req, res) => {
       ...order,
       isAdminTestMode,
       displayAmountRupees: amountToCharge / 100,
+      originalAmountRupees: basePaise / 100,
       appliedCoupon,
       savedAmountRupees: savedAmountPaise / 100,
     });
@@ -106,16 +130,6 @@ router.post('/razorpay-order', authOptions, async (req, res) => {
 // POST /api/payments/razorpay-verify
 // Body: { razorpay_order_id, razorpay_payment_id, razorpay_signature,
 //         courseId, couponCode? }
-//
-// Security model:
-//  1. Signature check  → proves Razorpay actually processed this payment
-//  2. Receipt check    → proves this order belongs to this user+course
-//  3. Amount check     → proves the discount was applied correctly
-//
-// NOTE: We do NOT re-run coupon.isValid() here.  The coupon was
-// validated at order-creation time.  Re-validating here would wrongly
-// reject a legitimate payment if the coupon happened to expire or
-// reach its limit between order creation and the Razorpay callback.
 // ──────────────────────────────────────────────────────────────────
 router.post('/razorpay-verify', authOptions, async (req, res) => {
   try {
@@ -176,7 +190,8 @@ router.post('/razorpay-verify', authOptions, async (req, res) => {
     // WITHOUT calling isValid() — the legitimacy of the payment is
     // already proven by the signature + receipt above.
     const isAdminTestMode = user.role === 'admin';
-    let expectedAmount = isAdminTestMode ? 100 : 9900;
+    const coursePaise = isAdminTestMode ? 100 : await getCoursePricePaise(courseId);
+    let expectedAmount = coursePaise;
     let couponDoc = null;
 
     if (!isAdminTestMode) {
@@ -186,9 +201,8 @@ router.post('/razorpay-verify', authOptions, async (req, res) => {
         if (couponDoc) {
           expectedAmount = couponDoc.applyDiscount(expectedAmount);
         } else {
-          // Coupon code claimed but not found — amount must still match
-          // (it won't, so the check below will reject it)
-          expectedAmount = 9900; // falls back to full price
+          // Coupon code claimed but not found — amount must still match full price
+          expectedAmount = coursePaise;
         }
       }
     }
@@ -201,8 +215,6 @@ router.post('/razorpay-verify', authOptions, async (req, res) => {
     }
 
     // ── Step 4: Atomically record coupon usage ───────────────────
-    // Only increment after the amount check passes, so a tampered
-    // couponCode that causes a mismatch never burns a real usage slot.
     if (couponDoc) {
       await DiscountCoupon.findByIdAndUpdate(
         couponDoc._id,

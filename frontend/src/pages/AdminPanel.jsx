@@ -9,7 +9,8 @@ import {
   ClipboardList, Edit3, RefreshCw, BarChart3, Users,
   Award, Activity, Lock, Database, Eye, Star,
   Trophy, Link2, ExternalLink, Filter, Crown,
-  Tag, Trash2, ToggleLeft, ToggleRight, Percent, Mail, Search, Send
+  Tag, Trash2, ToggleLeft, ToggleRight, Percent, Mail, Search, Send,
+  IndianRupee
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
@@ -80,6 +81,21 @@ const AdminPanel = () => {
     maxUsageLimit: '', validFrom: '', validUntil: '', description: '',
   });
   const [deletingCouponId, setDeletingCouponId] = useState('');
+  const [editingCouponId, setEditingCouponId] = useState(''); // coupon._id being edited inline
+  const [editCouponForm, setEditCouponForm] = useState({
+    discountType: 'percentage', discountValue: '',
+    maxUsageLimit: '', validFrom: '', validUntil: '', description: '',
+  });
+  const [editCouponSaving, setEditCouponSaving] = useState(false);
+
+  // ── Course Pricing manager state ─────────────────────────────────
+  const [prices, setPrices] = useState([]);          // list from DB
+  const [defaultPricePaise, setDefaultPricePaise] = useState(9900);
+  const [pricesLoading, setPricesLoading] = useState(false);
+  const [priceSaving, setPriceSaving] = useState(''); // courseId being saved
+  const [priceMsg, setPriceMsg] = useState({ type: '', text: '' });
+  // Local edits: { [courseId]: rupeeString }
+  const [priceEdits, setPriceEdits] = useState({});
   // Submissions viewer state
   const [submissionsViewHackId, setSubmissionsViewHackId] = useState('');
   const [submissionsData, setSubmissionsData] = useState(null);
@@ -230,6 +246,63 @@ const AdminPanel = () => {
     finally { setCouponsLoading(false); }
   };
 
+  // ── Course Pricing handlers ───────────────────────────────────────
+  const loadPrices = async () => {
+    setPricesLoading(true);
+    try {
+      const r = await api.get('/prices/admin/all');
+      setPrices(r.data.prices || []);
+      setDefaultPricePaise(r.data.defaultPricePaise || 9900);
+    } catch { setPrices([]); }
+    finally { setPricesLoading(false); }
+  };
+
+  const handleSetPrice = async (courseId, courseTitle) => {
+    const rupeeStr = priceEdits[courseId];
+    const rupees = parseFloat(rupeeStr);
+    if (!rupeeStr || isNaN(rupees) || rupees < 1) {
+      setPriceMsg({ type: 'error', text: 'Price must be at least ₹1.' });
+      return;
+    }
+    const paiseParsed = Math.round(rupees * 100);
+    if (!Number.isInteger(paiseParsed) || paiseParsed < 100) {
+      setPriceMsg({ type: 'error', text: 'Invalid price value.' });
+      return;
+    }
+    setPriceSaving(courseId);
+    setPriceMsg({ type: '', text: '' });
+    try {
+      await api.put(`/prices/admin/${courseId}`, { pricePaise: paiseParsed, courseTitle });
+      setPriceMsg({ type: 'success', text: `Price for "${courseTitle}" set to ₹${rupees}.` });
+      setPriceEdits(prev => { const n = { ...prev }; delete n[courseId]; return n; });
+      loadPrices();
+    } catch (err) {
+      setPriceMsg({ type: 'error', text: err.response?.data?.message || 'Failed to set price.' });
+    } finally {
+      setPriceSaving('');
+    }
+  };
+
+  const handleDeletePrice = async (courseId, courseTitle) => {
+    if (!window.confirm(`Remove custom price for "${courseTitle}"? It will revert to the default ₹${defaultPricePaise / 100}.`)) return;
+    try {
+      await api.delete(`/prices/admin/${courseId}`);
+      setPriceMsg({ type: 'success', text: `Custom price removed for "${courseTitle}". Using default.` });
+      loadPrices();
+    } catch (err) {
+      setPriceMsg({ type: 'error', text: err.response?.data?.message || 'Failed to remove price.' });
+    }
+  };
+
+  const handleTogglePrice = async (courseId) => {
+    try {
+      await api.patch(`/prices/admin/${courseId}/toggle`);
+      loadPrices();
+    } catch (err) {
+      setPriceMsg({ type: 'error', text: err.response?.data?.message || 'Failed to toggle price.' });
+    }
+  };
+
   const handleCreateCoupon = async (e) => {
     e.preventDefault();
     setCouponSaving(true);
@@ -273,6 +346,41 @@ const AdminPanel = () => {
       setCouponMsg({ type: 'success', text: `Coupon "${code}" deleted.` });
     } catch { setCouponMsg({ type: 'error', text: 'Failed to delete coupon.' }); }
     finally { setDeletingCouponId(''); }
+  };
+
+  const handleStartEditCoupon = (coupon) => {
+    setEditingCouponId(coupon._id);
+    setEditCouponForm({
+      discountType: coupon.discountType,
+      discountValue: String(coupon.discountValue),
+      maxUsageLimit: coupon.maxUsageLimit !== null ? String(coupon.maxUsageLimit) : '',
+      validFrom: coupon.validFrom ? new Date(coupon.validFrom).toISOString().slice(0, 16) : '',
+      validUntil: coupon.validUntil ? new Date(coupon.validUntil).toISOString().slice(0, 16) : '',
+      description: coupon.description || '',
+    });
+  };
+
+  const handleSaveEditCoupon = async (couponId) => {
+    setEditCouponSaving(true);
+    setCouponMsg({ type: '', text: '' });
+    try {
+      const payload = {
+        discountType: editCouponForm.discountType,
+        discountValue: Number(editCouponForm.discountValue),
+        maxUsageLimit: editCouponForm.maxUsageLimit ? Number(editCouponForm.maxUsageLimit) : null,
+        validFrom: editCouponForm.validFrom || null,
+        validUntil: editCouponForm.validUntil || null,
+        description: editCouponForm.description,
+      };
+      await api.patch(`/coupons/admin/${couponId}`, payload);
+      setCouponMsg({ type: 'success', text: 'Coupon updated successfully.' });
+      setEditingCouponId('');
+      loadCoupons();
+    } catch (err) {
+      setCouponMsg({ type: 'error', text: err.response?.data?.message || 'Failed to update coupon.' });
+    } finally {
+      setEditCouponSaving(false);
+    }
   };
 
   const loadEmailUsers = async (search = '') => {
@@ -330,6 +438,7 @@ const AdminPanel = () => {
     if (tab === 'hackathons') loadHacks();
     if (tab === 'host-requests') loadHostRequests();
     if (tab === 'coupons') loadCoupons();
+    if (tab === 'pricing') loadPrices();
     if (tab === 'email') {
       // Reset stale state when entering the email tab
       setEmailMsg({ type: '', text: '' });
@@ -578,6 +687,7 @@ const AdminPanel = () => {
               { key: 'hackathons', label: 'Hackathons', icon: Award },
               { key: 'host-requests', label: 'Host Requests', icon: Users },
               { key: 'coupons', label: 'Coupons', icon: Tag },
+              { key: 'pricing', label: 'Course Pricing', icon: IndianRupee },
               { key: 'email', label: 'Email Campaign', icon: Mail },
               { key: 'guide', label: 'Course Guide', icon: BookOpen },
             ].map(({ key, label, icon: Icon }) => (
@@ -2284,6 +2394,16 @@ const AdminPanel = () => {
 
                           {/* Right: actions */}
                           <div className="flex items-center gap-2 shrink-0">
+                            {/* Edit */}
+                            <button
+                              onClick={() => editingCouponId === coupon._id ? setEditingCouponId('') : handleStartEditCoupon(coupon)}
+                              title="Edit coupon"
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 transition"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                              {editingCouponId === coupon._id ? 'Cancel' : 'Edit'}
+                            </button>
+
                             {/* Toggle active */}
                             <button
                               onClick={() => handleToggleCoupon(coupon._id)}
@@ -2314,9 +2434,315 @@ const AdminPanel = () => {
                             </button>
                           </div>
                         </div>
+
+                        {/* ── Inline edit panel ── */}
+                        {editingCouponId === coupon._id && (
+                          <div className="mt-4 pt-4 border-t border-amber-200 bg-amber-50/60 rounded-xl p-4">
+                            <p className="text-xs font-bold text-amber-700 uppercase tracking-wide mb-3">Edit Coupon: {coupon.code}</p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <div className="flex flex-col gap-1">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Discount Type</label>
+                                <select
+                                  value={editCouponForm.discountType}
+                                  onChange={e => setEditCouponForm(p => ({ ...p, discountType: e.target.value }))}
+                                  className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                                >
+                                  <option value="percentage">Percentage (%) off</option>
+                                  <option value="flat">Flat (₹) off</option>
+                                </select>
+                              </div>
+                              <div className="flex flex-col gap-1">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+                                  {editCouponForm.discountType === 'percentage' ? 'Discount %' : 'Flat ₹ off'}
+                                </label>
+                                <input
+                                  type="number" min="1" step="0.01"
+                                  value={editCouponForm.discountValue}
+                                  onChange={e => setEditCouponForm(p => ({ ...p, discountValue: e.target.value }))}
+                                  className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                                />
+                              </div>
+                              <div className="flex flex-col gap-1">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Usage Limit</label>
+                                <input
+                                  type="number" min="1" placeholder="Unlimited"
+                                  value={editCouponForm.maxUsageLimit}
+                                  onChange={e => setEditCouponForm(p => ({ ...p, maxUsageLimit: e.target.value }))}
+                                  className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                                />
+                              </div>
+                              <div className="flex flex-col gap-1">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Valid Until (Expiry)</label>
+                                <input
+                                  type="datetime-local"
+                                  value={editCouponForm.validUntil}
+                                  onChange={e => setEditCouponForm(p => ({ ...p, validUntil: e.target.value }))}
+                                  className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                                />
+                              </div>
+                              <div className="flex flex-col gap-1">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Valid From</label>
+                                <input
+                                  type="datetime-local"
+                                  value={editCouponForm.validFrom}
+                                  onChange={e => setEditCouponForm(p => ({ ...p, validFrom: e.target.value }))}
+                                  className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                                />
+                              </div>
+                              <div className="flex flex-col gap-1">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Description</label>
+                                <input
+                                  type="text" maxLength={200} placeholder="Internal notes..."
+                                  value={editCouponForm.description}
+                                  onChange={e => setEditCouponForm(p => ({ ...p, description: e.target.value }))}
+                                  className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                                />
+                              </div>
+                            </div>
+                            <div className="flex gap-2 mt-4">
+                              <button
+                                onClick={() => handleSaveEditCoupon(coupon._id)}
+                                disabled={editCouponSaving}
+                                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow transition disabled:opacity-60"
+                              >
+                                {editCouponSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
+                                {editCouponSaving ? 'Saving...' : 'Save Changes'}
+                              </button>
+                              <button
+                                onClick={() => setEditingCouponId('')}
+                                className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs transition"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
+                </div>
+              )}
+            </div>
+
+          </div>
+        )}
+
+        {/* ══════════════ COURSE PRICING TAB ══════════════ */}
+        {tab === 'pricing' && (
+          <div className="space-y-8">
+
+            {/* Feedback banner */}
+            {priceMsg.text && (
+              <div className={`flex items-start gap-3 p-4 rounded-2xl border text-sm font-medium ${
+                priceMsg.type === 'success'
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                  : 'bg-rose-50 border-rose-200 text-rose-800'
+              }`}>
+                {priceMsg.type === 'success'
+                  ? <CheckCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                  : <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />}
+                <span>{priceMsg.text}</span>
+                <button onClick={() => setPriceMsg({ type: '', text: '' })} className="ml-auto shrink-0"><X className="w-4 h-4" /></button>
+              </div>
+            )}
+
+            {/* Info card */}
+            <div className="bg-gradient-to-br from-indigo-50 to-violet-50 rounded-2xl border border-indigo-200 p-6">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center shrink-0">
+                  <IndianRupee className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-black text-slate-900">Course Exam Pricing</h2>
+                  <p className="text-sm text-slate-600 mt-1 max-w-xl">
+                    Set a custom price for each course's certification exam unlock. If no custom price is set,
+                    the default of <strong>₹{defaultPricePaise / 100}</strong> applies.
+                    Prices are validated server-side — students cannot bypass them.
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-3">
+                    <div className="flex items-center gap-2 bg-white rounded-xl border border-indigo-200 px-3 py-2">
+                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">System Default</span>
+                      <span className="font-black text-indigo-700 text-lg">₹{defaultPricePaise / 100}</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-white rounded-xl border border-emerald-200 px-3 py-2">
+                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Custom Prices Set</span>
+                      <span className="font-black text-emerald-700 text-lg">{prices.length}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Course list with price controls */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+              <div className="flex items-center justify-between gap-4 mb-6">
+                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <IndianRupee className="w-5 h-5 text-indigo-600" />
+                  All Courses — Exam Prices
+                </h2>
+                <button
+                  onClick={loadPrices}
+                  disabled={pricesLoading}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${pricesLoading ? 'animate-spin' : ''}`} />
+                  Refresh
+                </button>
+              </div>
+
+              {courses.length === 0 ? (
+                <div className="text-center text-slate-400 py-12">
+                  <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3" />
+                  <p className="text-sm">Loading courses...</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {courses.map(course => {
+                    const courseId = course._id;
+                    const customPrice = prices.find(p => p.courseId === courseId);
+                    const hasCustom = !!customPrice;
+                    const isActive = customPrice?.isActive ?? false;
+                    const displayPaise = hasCustom && isActive
+                      ? customPrice.pricePaise
+                      : defaultPricePaise;
+                    const isEditing = courseId in priceEdits;
+                    const isSaving = priceSaving === courseId;
+
+                    return (
+                      <div key={courseId} className={`rounded-xl border p-4 transition-all ${
+                        hasCustom && isActive
+                          ? 'border-indigo-200 bg-indigo-50/40'
+                          : hasCustom && !isActive
+                            ? 'border-slate-200 bg-slate-50 opacity-70'
+                            : 'border-slate-200 bg-white'
+                      }`}>
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+
+                          {/* Left: course info + price badge */}
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2 mb-1">
+                              <span className="font-bold text-slate-900 text-sm truncate max-w-xs">{course.title}</span>
+                              {hasCustom && isActive && (
+                                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700">Custom</span>
+                              )}
+                              {hasCustom && !isActive && (
+                                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-slate-200 text-slate-500">Inactive</span>
+                              )}
+                              {!hasCustom && (
+                                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Default</span>
+                              )}
+                            </div>
+                            <p className="text-xs text-slate-400 font-mono mb-2">{courseId}</p>
+
+                            {/* Current effective price */}
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-slate-500">Exam Price:</span>
+                              <span className={`text-lg font-black ${hasCustom && isActive ? 'text-indigo-700' : 'text-slate-500'}`}>
+                                ₹{displayPaise / 100}
+                              </span>
+                              {hasCustom && !isActive && (
+                                <span className="text-xs text-slate-400">(inactive — defaulting to ₹{defaultPricePaise / 100})</span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Right: edit controls */}
+                          <div className="flex flex-wrap items-center gap-2 shrink-0">
+
+                            {/* Price input + save */}
+                            <div className="flex items-center gap-1.5">
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold">₹</span>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  step="0.01"
+                                  placeholder={String(displayPaise / 100)}
+                                  value={priceEdits[courseId] ?? ''}
+                                  onChange={e => setPriceEdits(prev => ({ ...prev, [courseId]: e.target.value }))}
+                                  className="w-28 pl-7 pr-3 py-1.5 border border-slate-300 rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                                />
+                              </div>
+                              <button
+                                onClick={() => handleSetPrice(courseId, course.title)}
+                                disabled={isSaving || !priceEdits[courseId]}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition disabled:opacity-50"
+                              >
+                                {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
+                                Set
+                              </button>
+                            </div>
+
+                            {/* Toggle active (only if custom price exists) */}
+                            {hasCustom && (
+                              <button
+                                onClick={() => handleTogglePrice(courseId)}
+                                title={isActive ? 'Deactivate custom price (revert to default)' : 'Activate custom price'}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition border ${
+                                  isActive
+                                    ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'
+                                    : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                                }`}
+                              >
+                                {isActive ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
+                                {isActive ? 'Active' : 'Inactive'}
+                              </button>
+                            )}
+
+                            {/* Delete custom price */}
+                            {hasCustom && (
+                              <button
+                                onClick={() => handleDeletePrice(courseId, course.title)}
+                                title="Remove custom price (revert to default)"
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 transition"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                Reset
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Preview when editing */}
+                        {isEditing && priceEdits[courseId] && parseFloat(priceEdits[courseId]) > 0 && (
+                          <div className="mt-3 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs text-indigo-800 flex items-center gap-2">
+                            <IndianRupee className="w-3.5 h-3.5 shrink-0" />
+                            <span>
+                              New price for <strong>{course.title}</strong>: <strong>₹{parseFloat(priceEdits[courseId])}</strong>
+                              {' '}= ₹{Math.round(parseFloat(priceEdits[courseId]) * 100)} paise
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Custom prices summary */}
+              {prices.length > 0 && (
+                <div className="mt-6 pt-4 border-t border-slate-100">
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">Custom Price Records in Database</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {prices.map(p => (
+                      <div key={p._id} className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs">
+                        <div className="min-w-0">
+                          <span className="font-bold text-slate-800 truncate block">{p.courseTitle || p.courseId}</span>
+                          <span className="text-slate-400 font-mono text-[10px]">{p.courseId}</span>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className={`font-black text-sm ${p.isActive ? 'text-indigo-700' : 'text-slate-400'}`}>
+                            ₹{p.pricePaise / 100}
+                          </span>
+                          <span className={`text-[10px] font-black uppercase px-1.5 py-0.5 rounded-full ${
+                            p.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'
+                          }`}>
+                            {p.isActive ? 'Active' : 'Off'}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

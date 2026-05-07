@@ -1,17 +1,20 @@
 import express from 'express';
 import DiscountCoupon from '../models/DiscountCoupon.js';
+import CoursePrice from '../models/CoursePrice.js';
 import { authOptions, adminCheck } from '../middleware/auth.js';
 
 const router = express.Router();
 
 // ─────────────────────────────────────────────────────────
 // PUBLIC  POST /api/coupons/validate
-// Body: { code, courseId }  (courseId kept for future per-course coupons)
-// Returns: discount details if valid
+// Body: { code, courseId }
+// Returns: discount details if valid, calculated against the real course price
 // ─────────────────────────────────────────────────────────
 router.post('/validate', authOptions, async (req, res) => {
   try {
     const code = (req.body.code || '').toString().trim().toUpperCase();
+    const { courseId } = req.body;
+
     if (!code) {
       return res.status(400).json({ valid: false, message: 'Coupon code is required.' });
     }
@@ -32,8 +35,21 @@ router.post('/validate', authOptions, async (req, res) => {
       return res.status(400).json({ valid: false, message: reason });
     }
 
-    // Original amount for a regular student is ₹99 = 9900 paise
-    const BASE_PAISE = 9900;
+    // ── Dynamic course price lookup ─────────────────────────────
+    // Default ₹99 if no course-specific price is set
+    const DEFAULT_PAISE = 9900;
+    let BASE_PAISE = DEFAULT_PAISE;
+    if (courseId) {
+      try {
+        const priceDoc = await CoursePrice.findOne({ courseId: String(courseId), isActive: true }).lean();
+        if (priceDoc && Number.isInteger(priceDoc.pricePaise) && priceDoc.pricePaise >= 100) {
+          BASE_PAISE = priceDoc.pricePaise;
+        }
+      } catch {
+        // fall back to default
+      }
+    }
+
     const discountedPaise = coupon.applyDiscount(BASE_PAISE);
     const savedPaise = BASE_PAISE - discountedPaise;
 
@@ -109,8 +125,9 @@ router.post('/admin', authOptions, adminCheck, async (req, res) => {
     if (discountType === 'percentage' && dv > 100) {
       return res.status(400).json({ message: 'Percentage discount cannot exceed 100.' });
     }
-    if (discountType === 'flat' && dv >= 99) {
-      return res.status(400).json({ message: 'Flat discount cannot be ≥ ₹99 (original price).' });
+    if (discountType === 'flat' && dv >= 10000) {
+      // Flat discount cap: ₹10,000 (prevents creating a coupon that makes everything free)
+      return res.status(400).json({ message: 'Flat discount cannot be ≥ ₹10,000.' });
     }
 
     const existing = await DiscountCoupon.findOne({ code: cleanCode });
@@ -173,4 +190,62 @@ router.delete('/admin/:id', authOptions, adminCheck, async (req, res) => {
   }
 });
 
+// ─────────────────────────────────────────────────────────
+// ADMIN  PATCH /api/coupons/admin/:id
+// Edit an existing coupon's mutable fields.
+// IMPORTANT: Must be declared AFTER /admin/:id/toggle so
+// Express does not match "toggle" as the :id param.
+// ─────────────────────────────────────────────────────────
+router.patch('/admin/:id', authOptions, adminCheck, async (req, res) => {
+  try {
+    const coupon = await DiscountCoupon.findById(req.params.id);
+    if (!coupon) return res.status(404).json({ message: 'Coupon not found.' });
+
+    const {
+      discountType,
+      discountValue,
+      maxUsageLimit,
+      validFrom,
+      validUntil,
+      description,
+      isActive,
+    } = req.body;
+
+    if (discountType !== undefined) {
+      if (!['percentage', 'flat'].includes(discountType)) {
+        return res.status(400).json({ message: 'discountType must be "percentage" or "flat".' });
+      }
+      coupon.discountType = discountType;
+    }
+    if (discountValue !== undefined) {
+      const dv = Number(discountValue);
+      if (isNaN(dv) || dv <= 0) return res.status(400).json({ message: 'discountValue must be a positive number.' });
+      if (coupon.discountType === 'percentage' && dv > 100) return res.status(400).json({ message: 'Percentage discount cannot exceed 100.' });
+      coupon.discountValue = dv;
+    }
+    if (maxUsageLimit !== undefined) {
+      coupon.maxUsageLimit = maxUsageLimit ? Number(maxUsageLimit) : null;
+    }
+    if (validFrom !== undefined) {
+      coupon.validFrom = validFrom ? new Date(validFrom) : null;
+    }
+    if (validUntil !== undefined) {
+      coupon.validUntil = validUntil ? new Date(validUntil) : null;
+    }
+    if (description !== undefined) {
+      coupon.description = String(description).slice(0, 200);
+    }
+    if (isActive !== undefined) {
+      coupon.isActive = Boolean(isActive);
+    }
+
+    await coupon.save();
+    res.json({ message: 'Coupon updated successfully.', coupon });
+  } catch (err) {
+    console.error('[Coupons] Edit error:', err);
+    res.status(500).json({ message: 'Failed to update coupon.' });
+  }
+});
+
 export default router;
+
