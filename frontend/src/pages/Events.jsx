@@ -10,6 +10,7 @@ import {
   Rocket,
   Star,
   Trophy,
+  Target,
 } from 'lucide-react';
 import { api } from '../store/authStore';
 
@@ -256,6 +257,44 @@ export default function Events() {
               })}
             </div>
           )}
+        </div>
+      </section>
+
+      {/* ══ SKILL EXAMS PROMO (Hackathons Cross-Sell) ════════════════════ */}
+      <section className="py-16 px-6 bg-white border-t border-slate-100">
+        <div className="max-w-5xl mx-auto rounded-3xl p-8 md:p-12 text-center relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 45%, #1e3a5f 100%)', boxShadow: '0 10px 40px -10px rgba(49, 46, 129, 0.4)' }}>
+          <div style={{ position: 'absolute', top: '-15%', right: '-5%', width: 500, height: 500, borderRadius: '50%', background: 'rgba(16,185,129,0.15)', filter: 'blur(80px)', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', bottom: '-15%', left: '-5%', width: 300, height: 300, borderRadius: '50%', background: 'rgba(99,102,241,0.15)', filter: 'blur(60px)', pointerEvents: 'none' }} />
+          
+          <div style={{ position: 'relative', zIndex: 10 }}>
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-widest mb-6">
+              <Target className="w-3.5 h-3.5" /> Direct Certification
+            </div>
+            
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-6 leading-tight">
+              Don't want to wait for the next<br className="hidden sm:block" />
+              <span className="text-emerald-400">Hackathon to prove your skills?</span>
+            </h2>
+            
+            <p className="text-slate-300 text-base md:text-lg mb-8 max-w-2xl mx-auto leading-relaxed">
+              Verify your skills instantly by taking a direct Skill Exam. Score 70% or higher and get an employer-verifiable certificate today — no full course required.
+            </p>
+            
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              <Link
+                to="/skill-exams"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold text-sm md:text-base px-8 py-4 rounded-xl shadow-[0_8px_20px_rgba(16,185,129,0.3)] hover:shadow-[0_12px_25px_rgba(16,185,129,0.4)] transition-all hover:-translate-y-1"
+              >
+                Take an Exam Instantly <ArrowRight className="w-5 h-5" />
+              </Link>
+              <Link
+                to="/blog/online-skill-exam-certificate-validate-programming-skills"
+                className="inline-flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white font-semibold text-sm md:text-base px-8 py-4 rounded-xl border border-white/10 transition-all"
+              >
+                How it works
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
 

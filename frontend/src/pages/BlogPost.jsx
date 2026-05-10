@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { normalizeHtmlContent, normalizeDisplayText } from '../utils/text';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { Calendar, User, Clock, ArrowLeft, BookOpen, ArrowRight, Tag, Trophy, Rocket } from 'lucide-react';
+import { Calendar, User, Clock, ArrowLeft, BookOpen, ArrowRight, Tag, Trophy, Rocket, Target } from 'lucide-react';
 import { blogPosts } from '../data/blogs';
 
 const SITE_URL = 'https://www.skillvalix.com';
@@ -286,19 +286,25 @@ const BlogPost = () => {
               </div>
             </div>
           ) : post.relatedCourse ? (
-            <div className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl p-6 text-white shadow-lg sticky top-8">
+            <div className={`rounded-2xl p-6 text-white shadow-lg sticky top-8 ${!post.relatedCourse.slug ? 'bg-gradient-to-br from-emerald-600 to-teal-700' : 'bg-gradient-to-br from-indigo-600 to-blue-700'}`}>
               <div className="bg-white/20 w-12 h-12 rounded-xl flex items-center justify-center mb-5 backdrop-blur-sm">
-                <BookOpen className="w-6 h-6 text-white" />
+                {!post.relatedCourse.slug ? <Target className="w-6 h-6 text-white" /> : <BookOpen className="w-6 h-6 text-white" />}
               </div>
-              <h3 className="text-xl font-bold mb-2">Master this topic completely</h3>
-              <p className="text-blue-100 text-sm mb-6 leading-relaxed">
-                Take the full, certified course: <strong>{post.relatedCourse.title}</strong>
+              <h3 className="text-xl font-bold mb-2">
+                {!post.relatedCourse.slug ? 'Validate your skills instantly' : 'Master this topic completely'}
+              </h3>
+              <p className={`${!post.relatedCourse.slug ? 'text-emerald-100' : 'text-blue-100'} text-sm mb-6 leading-relaxed`}>
+                {!post.relatedCourse.slug ? (
+                  post.relatedCourse.description || post.relatedCourse.title
+                ) : (
+                  <>Take the full, certified course: <strong>{post.relatedCourse.title}</strong></>
+                )}
               </p>
               <Link
-                to={`/courses/${post.relatedCourse.slug}`}
-                className="block w-full text-center bg-white text-blue-700 hover:bg-slate-50 font-bold py-3 px-4 rounded-xl transition-colors shadow-md"
+                to={!post.relatedCourse.slug ? '/skill-exams' : `/courses/${post.relatedCourse.slug}`}
+                className={`block w-full text-center bg-white ${!post.relatedCourse.slug ? 'text-emerald-700' : 'text-blue-700'} hover:bg-slate-50 font-bold py-3 px-4 rounded-xl transition-colors shadow-md`}
               >
-                View Free Course <ArrowRight className="inline w-4 h-4 ml-1 -mt-0.5" />
+                {!post.relatedCourse.slug ? 'Browse Skill Exams' : 'View Free Course'} <ArrowRight className="inline w-4 h-4 ml-1 -mt-0.5" />
               </Link>
             </div>
           ) : null}

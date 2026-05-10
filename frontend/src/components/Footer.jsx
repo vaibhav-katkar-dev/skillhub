@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable no-unused-vars */
 import React from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -10,6 +12,9 @@ import {
   ChevronRight,
   Shield,
   Instagram,
+  Sparkles,
+  Target,
+  ArrowRight,
 } from 'lucide-react';
 import Logo from './Logo';
 
@@ -31,10 +36,10 @@ const NAV_COLUMNS = [
     heading: 'Resources',
     icon: BookMarked,
     links: [
+      { to: '/skill-exams', label: 'Skill Exams', sparkle: true },
       { to: '/certification', label: 'Certification' },
       { to: '/verify', label: 'Verify Certificate' },
       { to: '/hackathons', label: 'Student Hackathons' },
-      { to: '/blog/how-to-build-powerful-public-portfolio-2026', label: '🚀 Public Portfolio Guide', highlight: true },
       { to: '/blog', label: 'Blog' },
     ],
   },
@@ -51,12 +56,6 @@ const NAV_COLUMNS = [
   },
 ];
 
-const STATS = [
-  { value: '12+', label: 'Modules' },
-  { value: '25', label: 'Quizzes' },
-  { value: '100%', label: 'Free' },
-  { value: '∞', label: 'Skills' },
-];
 
 const SOCIAL = [
   { icon: Linkedin, href: 'https://www.linkedin.com/company/skillvalix/', label: 'LinkedIn' },
@@ -123,25 +122,22 @@ const Footer = () => {
               Join WhatsApp Group
             </a>
 
-            {/* Newsletter */}
-            <div className="rounded-xl border border-slate-700/60 bg-slate-900/60 p-5 space-y-3">
-              <p className="text-xs font-semibold text-slate-300 uppercase tracking-widest">
-                Stay Updated
-              </p>
-              <p className="text-xs text-slate-500">Get course updates and career tips.</p>
-              <div className="flex gap-2">
-                <input
-                  type="email"
-                  placeholder="your@email.com"
-                  aria-label="Email address"
-                  className="flex-1 min-w-0 bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-                />
-                <button
-                  type="button"
-                  className="shrink-0 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors duration-200"
+            {/* Direct Certification Promo */}
+            <div className="rounded-xl border border-emerald-700/30 bg-emerald-950/20 p-5 relative overflow-hidden group">
+              <div className="absolute -top-6 -right-6 w-24 h-24 bg-emerald-500/10 blur-xl rounded-full pointer-events-none group-hover:bg-emerald-500/20 transition-colors duration-500" />
+              <div className="relative z-10">
+                <p className="text-xs font-black text-emerald-400 uppercase tracking-widest flex items-center gap-1.5 mb-2.5">
+                  <Target className="w-3.5 h-3.5" /> Skip the Course
+                </p>
+                <p className="text-sm text-slate-300 font-medium leading-relaxed mb-4">
+                  Already know how to code? Take a direct Skill Exam and earn an employer-verified certificate instantly.
+                </p>
+                <Link
+                  to="/skill-exams"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 px-4 py-2.5 rounded-lg transition-colors shadow-lg shadow-emerald-900/50"
                 >
-                  Subscribe
-                </button>
+                  Browse Exams <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
               </div>
             </div>
           </div>
@@ -160,21 +156,39 @@ const Footer = () => {
                 </h3>
 
                 <ul className="space-y-3" role="list">
-                  {links.map(({ to, label, highlight }) => (
+                  {links.map(({ to, label, highlight, sparkle }) => (
                     <li key={label}>
-                      <Link
-                        to={to}
-                        className={`group inline-flex items-center gap-1.5 text-sm transition-colors duration-150 ${highlight
-                            ? 'text-amber-400 hover:text-amber-300 font-semibold'
-                            : 'text-slate-400 hover:text-blue-400'
-                          }`}
-                      >
-                        <ChevronRight
-                          className="w-3 h-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-150 text-blue-500"
-                          aria-hidden="true"
-                        />
-                        {label}
-                      </Link>
+                      {sparkle ? (
+                        <Link
+                          to={to}
+                          className="group inline-flex items-center gap-1.5 text-sm font-semibold transition-all duration-150"
+                          style={{
+                            color: '#6ee7b7',
+                            animation: 'footer-sparkle 2.8s ease-in-out infinite',
+                          }}
+                        >
+                          <Sparkles
+                            className="w-3 h-3 flex-shrink-0"
+                            style={{ color: '#34d399', animation: 'footer-sparkle 2s ease-in-out infinite 0.4s' }}
+                            aria-hidden="true"
+                          />
+                          {label}
+                        </Link>
+                      ) : (
+                        <Link
+                          to={to}
+                          className={`group inline-flex items-center gap-1.5 text-sm transition-colors duration-150 ${highlight
+                              ? 'text-amber-400 hover:text-amber-300 font-semibold'
+                              : 'text-slate-400 hover:text-blue-400'
+                            }`}
+                        >
+                          <ChevronRight
+                            className="w-3 h-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-150 text-blue-500"
+                            aria-hidden="true"
+                          />
+                          {label}
+                        </Link>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -184,19 +198,6 @@ const Footer = () => {
         </div>
       </div>
 
-      {/* ── Stats Strip ── */}
-      <div className="border-t border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <dl className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
-            {STATS.map(({ value, label }) => (
-              <div key={label}>
-                <dt className="text-2xl font-black text-white">{value}</dt>
-                <dd className="mt-1 text-[11px] text-slate-500 uppercase tracking-wider">{label}</dd>
-              </div>
-            ))}
-          </dl>
-        </div>
-      </div>
 
       {/* ── Bottom Bar ── */}
       <div className="border-t border-slate-800/60">

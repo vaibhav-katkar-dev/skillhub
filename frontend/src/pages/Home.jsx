@@ -757,8 +757,73 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ══ INTERNAL LINK HUB ════════════════════════════════ */}
-      <section style={{ background: '#f8faff', padding: '88px 0', borderTop: '1.5px solid #e2e8f0' }} className="section-divider">
+      {/* ── SKILL EXAMS PROMO ─────────────────────────────────────────────────── */}
+      <section style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 45%, #1e3a5f 100%)', padding: '80px 0', position: 'relative', overflow: 'hidden' }} className="section-divider">
+        <div style={{ position: 'absolute', top: '-15%', right: '-5%', width: 500, height: 500, borderRadius: '50%', background: 'rgba(99,102,241,0.15)', filter: 'blur(80px)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: '-10%', left: '-5%', width: 400, height: 400, borderRadius: '50%', background: 'rgba(16,185,129,0.10)', filter: 'blur(80px)', pointerEvents: 'none' }} />
+        <div className="section-wrap" style={{ position: 'relative', zIndex: 10 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 56, alignItems: 'center' }}>
+            <div>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: 100, padding: '6px 16px', marginBottom: 24 }}>
+                <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#10b981', display: 'block', flexShrink: 0, boxShadow: '0 0 8px #10b981' }} />
+                <span style={{ fontSize: 11, fontWeight: 800, color: '#6ee7b7', letterSpacing: '0.1em', textTransform: 'uppercase' }}>2,800+ Students Already Certified</span>
+              </div>
+              <h2 style={{ fontSize: 'clamp(1.8rem,4vw,2.8rem)', fontWeight: 900, color: '#fff', lineHeight: 1.1, letterSpacing: '-0.02em', marginBottom: 16 }}>
+                Your Peers Are Getting<br/>
+                <span style={{ color: '#a5f3fc' }}>Certified Right Now.</span>
+              </h2>
+              <p style={{ fontSize: 16, color: '#cbd5e1', lineHeight: 1.8, marginBottom: 8, maxWidth: 460 }}>
+                Already know HTML, CSS, JavaScript, Python or Java? <strong style={{ color: '#fff' }}>Don't waste months re-studying.</strong> Take a direct skill exam, score 70%+, and download your verifiable certificate — today.
+              </p>
+              <p style={{ fontSize: 13, color: '#94a3b8', lineHeight: 1.7, marginBottom: 28, maxWidth: 460 }}>
+                Recruiters shortlist candidates with proof. Every week without a certificate, someone else with your exact skill set gets the interview instead.
+              </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 28 }}>
+                {[{ label: 'Instant Certificate', color: '#10b981' }, { label: '70% to Pass', color: '#f59e0b' }, { label: 'Employer-Verifiable', color: '#818cf8' }, { label: 'Unlimited Retakes', color: '#38bdf8' }].map(({ label, color }) => (
+                  <span key={label} style={{ fontSize: 11, fontWeight: 700, color, background: color + '18', border: `1px solid ${color}35`, padding: '5px 12px', borderRadius: 100 }}>{label}</span>
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <Link to="/skill-exams" id="home-skill-exams-cta" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff', fontWeight: 800, fontSize: 15, padding: '15px 32px', borderRadius: 12, textDecoration: 'none', boxShadow: '0 8px 28px rgba(16,185,129,0.4)', transition: 'transform .2s, box-shadow .2s' }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 14px 36px rgba(16,185,129,0.55)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 8px 28px rgba(16,185,129,0.4)'; }}
+                >
+                  <Target size={17} /> Browse Skill Exams <ArrowRight size={17} />
+                </Link>
+                <Link to="/blog/online-skill-exam-certificate-validate-programming-skills" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.07)', color: '#e2e8f0', fontWeight: 600, fontSize: 14, padding: '14px 24px', borderRadius: 12, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.12)', transition: 'all .2s' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; }}
+                >
+                  <BookOpen size={15} /> How It Works
+                </Link>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              {[
+                { title: 'HTML5', sub: 'Semantic tags, forms, SEO', color: '#e34c26' },
+                { title: 'CSS3', sub: 'Flexbox, Grid, animations', color: '#2965f1' },
+                { title: 'JavaScript', sub: 'ES6+, DOM, async/await', color: '#f0db4f' },
+                { title: 'Python', sub: 'OOP, libraries, data', color: '#3776ab' },
+                { title: 'Java', sub: 'OOP, streams, collections', color: '#8b5cf6' },
+                { title: 'AI & ML', sub: 'Neural nets, ML basics', color: '#7c3aed' },
+                { title: 'C / C++', sub: 'Pointers, memory, STL', color: '#0ea5e9' },
+                { title: 'React.js', sub: 'Hooks, state, components', color: '#38bdf8' },
+              ].map(({ title, sub, color }) => (
+                <Link key={title} to="/skill-exams" style={{ display: 'block', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 12, padding: '14px 16px', textDecoration: 'none', transition: 'all .2s' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.10)'; e.currentTarget.style.borderColor = color + '50'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.09)'; e.currentTarget.style.transform = ''; }}
+                >
+                  <div style={{ fontSize: 12, fontWeight: 900, color, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>{title}</div>
+                  <div style={{ fontSize: 11, color: '#94a3b8', lineHeight: 1.4 }}>{sub}</div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── COURSES ──────────────────────────────────────────────────────────── */}
+      <section style={{ background: '#f8faff', padding: '96px 0' }} className="section-divider">
         <div className="section-wrap" style={{ maxWidth: 960 }}>
           <SectionHeader
             pill="Explore More"

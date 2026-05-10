@@ -40,6 +40,7 @@ const HostHackathon    = lazy(() => import('./pages/HostHackathon'));
 const CampusAmbassador = lazy(() => import('./pages/CampusAmbassador'));
 const FreeCourses      = lazy(() => import('./pages/FreeCourses'));
 const Certification    = lazy(() => import('./pages/Certification'));
+const SkillExams       = lazy(() => import('./pages/SkillExams'));
 const VerifyEmail      = lazy(() => import('./pages/VerifyEmail'));
 
 // Lightweight page-transition loader shown during lazy chunk fetch
@@ -202,6 +203,7 @@ function AppContent() {
               <Route path="/campus-ambassador" element={<CampusAmbassador />} />
               <Route path="/free-courses" element={<FreeCourses />} />
               <Route path="/certification" element={<Certification />} />
+              <Route path="/skill-exams" element={<SkillExams />} />
               <Route path="/verify-email/:token" element={<VerifyEmail />} />
             </Routes>
           </Suspense>

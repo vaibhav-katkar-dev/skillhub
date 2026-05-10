@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { Menu, X, ChevronRight } from 'lucide-react';
+import { Menu, X, ChevronRight, Sparkles } from 'lucide-react';
 import Logo from './Logo';
 
 const navLinks = [
   { to: '/', label: 'Home' },
   { to: '/courses', label: 'Courses' },
+  { to: '/skill-exams', label: 'Skill Exams', highlight: true },
   { to: '/hackathons', label: 'Hackathons' },
   { to: '/blog', label: 'Blog' },
   { to: '/verify', label: 'Verify Certificate' },
@@ -64,6 +65,17 @@ const Navbar = () => {
   }, [hideOnScroll]);
 
   return (
+    <>
+      <style>{`
+        @keyframes nav-sparkle {
+          0%,100% { box-shadow: 0 0 0px rgba(52,211,153,0); color: #10b981; }
+          50%      { box-shadow: 0 0 10px 2px rgba(52,211,153,0.25); color: #34d399; }
+        }
+        @keyframes footer-sparkle {
+          0%,100% { opacity: 0.75; }
+          50%      { opacity: 1; text-shadow: 0 0 8px rgba(52,211,153,0.5); }
+        }
+      `}</style>
     <nav
       className={`
         bg-white/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50
@@ -80,21 +92,48 @@ const Navbar = () => {
 
           {/* Desktop Nav — center links, always visible, never wrap */}
           <div className="hidden md:flex items-center gap-1 flex-1 justify-center">
-            {navLinks.map(({ to, label }) => (
-              <NavLink
-                key={to}
-                to={to}
-                end={to === '/'}
-                className={({ isActive }) =>
-                  `px-4 py-2 rounded-lg text-sm whitespace-nowrap ${
-                    isActive
-                      ? 'text-blue-600 font-semibold bg-blue-50'
-                      : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50 font-medium transition-colors'
-                  }`
-                }
-              >
-                {label}
-              </NavLink>
+            {navLinks.map(({ to, label, highlight }) => (
+              highlight ? (
+                <NavLink
+                  key={to}
+                  to={to}
+                  end={false}
+                  style={({ isActive }) => ({
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 5,
+                    padding: '6px 13px',
+                    borderRadius: 8,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    whiteSpace: 'nowrap',
+                    textDecoration: 'none',
+                    background: isActive ? 'rgba(52,211,153,0.15)' : 'rgba(52,211,153,0.08)',
+                    border: `1px solid ${isActive ? 'rgba(52,211,153,0.4)' : 'rgba(52,211,153,0.2)'}`,
+                    color: isActive ? '#059669' : '#10b981',
+                    animation: 'nav-sparkle 2.5s ease-in-out infinite',
+                    transition: 'background .2s, border-color .2s',
+                  })}
+                >
+                  <Sparkles size={12} style={{ flexShrink: 0, opacity: 0.85 }} />
+                  {label}
+                </NavLink>
+              ) : (
+                <NavLink
+                  key={to}
+                  to={to}
+                  end={to === '/'}
+                  className={({ isActive }) =>
+                    `px-4 py-2 rounded-lg text-sm whitespace-nowrap ${
+                      isActive
+                        ? 'text-blue-600 font-semibold bg-blue-50'
+                        : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50 font-medium transition-colors'
+                    }`
+                  }
+                >
+                  {label}
+                </NavLink>
+              )
             ))}
           </div>
 
@@ -159,23 +198,52 @@ const Navbar = () => {
       {/* Mobile Dropdown Menu */}
       {isMenuOpen && (
         <div className="md:hidden border-t border-slate-100 bg-white px-4 py-3 space-y-1 shadow-lg">
-          {navLinks.map(({ to, label }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={to === '/'}
-              onClick={() => setIsMenuOpen(false)}
-              className={({ isActive }) =>
-                `flex items-center justify-between px-4 py-3 rounded-xl text-sm ${
-                  isActive
-                    ? 'bg-blue-50 text-blue-700 font-bold'
-                    : 'text-slate-700 hover:bg-slate-50 font-medium'
-                }`
-              }
-            >
-              {label}
-              <ChevronRight className="w-4 h-4 opacity-40" />
-            </NavLink>
+          {navLinks.map(({ to, label, highlight }) => (
+            highlight ? (
+              <NavLink
+                key={to}
+                to={to}
+                end={false}
+                onClick={() => setIsMenuOpen(false)}
+                style={({ isActive }) => ({
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '12px 16px',
+                  borderRadius: 12,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  background: isActive ? 'rgba(52,211,153,0.12)' : 'rgba(52,211,153,0.07)',
+                  border: `1px solid ${isActive ? 'rgba(52,211,153,0.35)' : 'rgba(52,211,153,0.18)'}`,
+                  color: isActive ? '#059669' : '#10b981',
+                  animation: 'nav-sparkle 2.5s ease-in-out infinite',
+                })}
+              >
+                <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                  <Sparkles size={13} style={{ flexShrink: 0, opacity: 0.85 }} />
+                  {label}
+                </span>
+                <ChevronRight className="w-4 h-4 opacity-40" />
+              </NavLink>
+            ) : (
+              <NavLink
+                key={to}
+                to={to}
+                end={to === '/'}
+                onClick={() => setIsMenuOpen(false)}
+                className={({ isActive }) =>
+                  `flex items-center justify-between px-4 py-3 rounded-xl text-sm ${
+                    isActive
+                      ? 'bg-blue-50 text-blue-700 font-bold'
+                      : 'text-slate-700 hover:bg-slate-50 font-medium'
+                  }`
+                }
+              >
+                {label}
+                <ChevronRight className="w-4 h-4 opacity-40" />
+              </NavLink>
+            )
           ))}
 
           <div className="pt-3 border-t border-slate-100 space-y-2">
@@ -226,6 +294,7 @@ const Navbar = () => {
         </div>
       )}
     </nav>
+    </>
   );
 };
 

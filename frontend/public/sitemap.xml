@@ -26,6 +26,17 @@
   </url>
 
   <url>
+    <loc>https://www.skillvalix.com/skill-exams</loc>
+    <lastmod>2026-05-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>Online Skill Exams — Validate Your Programming Skills and Get Certified | SkillValix</image:title>
+    </image:image>
+  </url>
+
+  <url>
     <loc>https://www.skillvalix.com/hackathons</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
@@ -734,6 +745,26 @@
     <image:image>
       <image:loc>https://images.unsplash.com/photo-1526379095098-d400fd0bf935?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
       <image:title>Python and JavaScript code comparison on split screen</image:title>
+    </image:image>
+  </url>
+
+  <!-- ── Skill Exams Blog Post (May 2026) ──────────────────────────── -->
+  <url>
+    <loc>https://www.skillvalix.com/blog/online-skill-exam-certificate-validate-programming-skills</loc>
+    <lastmod>2026-05-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.95</priority>
+    <news:news>
+      <news:publication>
+        <news:name>SkillValix Blog</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-05-10</news:publication_date>
+      <news:title>How to Get a Programming Certificate by Taking an Online Skill Exam (Without Studying a Full Course)</news:title>
+    </news:news>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>Developer taking an online skill exam to earn a programming certificate</image:title>
     </image:image>
   </url>
 

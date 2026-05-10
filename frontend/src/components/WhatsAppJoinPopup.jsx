@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { X, Zap, Users, TrendingUp, BookOpen, Briefcase, Trophy, Target } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 
 const WHATSAPP_GROUP_LINK = 'https://chat.whatsapp.com/HxtxKbZCw39BNGzy7hXVSt?mode=gi_t';
 const POPUP_SEEN_KEY = 'skillvalix_whatsapp_popup_seen';
@@ -49,7 +51,7 @@ const WhatsAppJoinPopup = () => {
       `}</style>
 
       <div
-        className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center p-4"
+        className="fixed inset-0 z-[120] flex items-center justify-center p-4"
         style={{ background: 'rgba(2,6,23,0.65)', backdropFilter: 'blur(4px)' }}
         onClick={closePopup}
       >
@@ -61,24 +63,21 @@ const WhatsAppJoinPopup = () => {
           {/* Top Header */}
           <div style={{
             background: 'linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%)',
-            padding: '18px 20px 14px',
+            padding: '20px 20px 16px',
             position: 'relative',
+            textAlign: 'center'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-              <span className="wa-pulse" style={{
-                width: 8, height: 8, borderRadius: '50%', background: '#fff',
-                display: 'inline-block', boxShadow: '0 0 0 3px rgba(255,255,255,0.3)'
-              }} />
-              <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.9)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                4,200+ Members Active
-              </span>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+               <div style={{ background: '#fff', borderRadius: '50%', width: 52, height: 52, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                  <FontAwesomeIcon icon={faWhatsapp} style={{ fontSize: 34, color: '#25D366' }} />
+               </div>
             </div>
 
-            <h2 style={{ margin: 0, fontSize: 19, fontWeight: 900, color: '#fff', lineHeight: 1.25 }}>
-              Level Up Your Career<br />With Industry Skills
+            <h2 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: '#fff', lineHeight: 1.2, letterSpacing: '-0.02em' }}>
+              Don't Learn Alone!
             </h2>
-            <p style={{ margin: '6px 0 0', fontSize: 13, color: 'rgba(255,255,255,0.85)', fontWeight: 500 }}>
-              Free community. Zero spam. Career-focused content.
+            <p style={{ margin: '8px 0 0', fontSize: 13, color: 'rgba(255,255,255,0.9)', fontWeight: 600 }}>
+              Join our fast-growing private community.
             </p>
 
             <button
@@ -86,60 +85,32 @@ const WhatsAppJoinPopup = () => {
               onClick={closePopup}
               aria-label="Close"
               style={{
-                position: 'absolute', top: 14, right: 14,
+                position: 'absolute', top: 12, right: 12,
                 background: 'rgba(255,255,255,0.2)', border: 'none',
-                borderRadius: 8, padding: '4px 5px', cursor: 'pointer',
+                borderRadius: 8, padding: '6px', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', color: '#fff',
+                transition: 'background 0.2s'
               }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.3)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
             >
-              <X size={15} />
+              <X size={16} strokeWidth={2.5} />
             </button>
           </div>
 
           {/* Body */}
-          <div style={{ padding: '16px 20px' }}>
-
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              background: '#f0fdf4', border: '1px solid #bbf7d0',
-              borderRadius: 10, padding: '8px 12px', marginBottom: 14,
-            }}>
-              <Users size={14} style={{ color: '#059669', flexShrink: 0 }} />
-              <span style={{ fontSize: 12, color: '#065f46', fontWeight: 600 }}>
-                Students from 200+ colleges have already joined
-              </span>
-            </div>
-
+          <div style={{ padding: '20px' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {[
-                { Icon: BookOpen, bold: 'Free Courses & Certificates', sub: 'HTML, CSS, JS, Python, React, AI' },
-                { Icon: Briefcase, bold: 'Job Simulations', sub: 'Platform projects for your resume' },
-                { Icon: Trophy, bold: 'Hackathon Alerts', sub: 'Win prizes and get noticed by recruiters' },
-                { Icon: Target, bold: 'Career Growth Tips', sub: 'Resume structuring, LinkedIn updates, and interview prep' },
-                { Icon: Users, bold: 'Referrals & Opportunities', sub: 'Internships and jobs shared by the community' },
-              ].map(({ Icon, bold, sub }) => (
-                <div key={bold} style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                  <div style={{ padding: 6, background: '#f1f5f9', borderRadius: 8, color: '#059669', flexShrink: 0, marginTop: 1 }}>
-                    <Icon size={16} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', lineHeight: 1.2 }}>{bold}</div>
-                    <div style={{ fontSize: 11.5, color: '#64748b', marginTop: 2 }}>{sub}</div>
-                  </div>
+                { Icon: BookOpen, text: 'Instant updates on Free Courses' },
+                { Icon: Trophy, text: 'Exclusive Hackathon Alerts' },
+                { Icon: Briefcase, text: 'Internship & Job Referrals' },
+              ].map(({ Icon, text }) => (
+                <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#f8fafc', padding: '10px 14px', borderRadius: 12 }}>
+                  <Icon size={18} style={{ color: '#059669', flexShrink: 0 }} />
+                  <div style={{ fontSize: 13.5, fontWeight: 700, color: '#1e293b' }}>{text}</div>
                 </div>
               ))}
-            </div>
-
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              margin: '16px 0 0',
-              background: '#fffbeb', border: '1px solid #fde68a',
-              borderRadius: 8, padding: '7px 11px',
-            }}>
-              <TrendingUp size={13} style={{ color: '#d97706', flexShrink: 0 }} />
-              <span style={{ fontSize: 11.5, color: '#92400e', fontWeight: 600 }}>
-                47 people joined today! The community is growing fast.
-              </span>
             </div>
           </div>
 
@@ -151,25 +122,19 @@ const WhatsAppJoinPopup = () => {
               rel="noopener noreferrer"
               onClick={closePopup}
               style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', gap: 8,
                 background: 'linear-gradient(135deg, #25d366, #128c7e)',
                 color: '#fff', textDecoration: 'none',
-                padding: '13px 20px', borderRadius: 12,
+                padding: '14px 20px', borderRadius: 12,
                 fontSize: 15, fontWeight: 800,
-                boxShadow: '0 4px 18px rgba(37,211,102,0.35)',
+                boxShadow: '0 4px 18px rgba(37,211,102,0.3)',
                 transition: 'transform .15s, box-shadow .15s',
               }}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 6px 22px rgba(37,211,102,0.45)'; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 4px 18px rgba(37,211,102,0.35)'; }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 22px rgba(37,211,102,0.4)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 4px 18px rgba(37,211,102,0.3)'; }}
             >
-              <img
-                src="https://cdn.cdnlogo.com/logos/w/10/whatsapp.svg"
-                alt="WhatsApp"
-                style={{ width: 20, height: 20, flexShrink: 0 }}
-                onError={e => { e.currentTarget.style.display = 'none'; }}
-              />
-              <Zap size={15} />
-              Join WhatsApp Group For Free
+              <Zap size={16} />
+              Join WhatsApp Free
             </a>
 
             <button
@@ -181,8 +146,8 @@ const WhatsAppJoinPopup = () => {
                 padding: '4px 0', textAlign: 'center',
               }}
             >
-              No thanks, I will figure it out alone
-            </button>
+                No thanks, I'll learn alone
+              </button>
           </div>
         </div>
       </div>

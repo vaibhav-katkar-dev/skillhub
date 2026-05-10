@@ -68,3 +68,17 @@ export async function getCourseBySlug(slug) {
 export function preloadCourses() {
   _load().catch(() => {}); // fire and forget
 }
+
+/**
+ * Get courses with lesson metadata for the Skill Exams page.
+ * Returns each course with lessonCount and first 6 lesson titles.
+ * @returns {Promise<Array<{course: object, lessonCount: number, lessonTitles: string[]}>>}
+ */
+export async function getCourseListWithMeta() {
+  const all = await _load();
+  return all.map(entry => ({
+    course: entry.course,
+    lessonCount: entry.lessons?.length || 0,
+    lessonTitles: (entry.lessons || []).slice(0, 6).map(l => l.title || '').filter(Boolean),
+  }));
+}

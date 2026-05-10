@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Rocket, ArrowRight, GraduationCap } from 'lucide-react';
+import { Rocket, ArrowRight, GraduationCap, Target } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 
 const PreFooterCTA = () => {
@@ -36,7 +36,7 @@ const PreFooterCTA = () => {
               Ready to continue your <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-500">learning journey</span>?
             </h2>
             <p className="text-lg sm:text-xl text-slate-600 mb-8 sm:mb-10 max-w-2xl mx-auto font-medium">
-              Welcome back, {user?.name?.split(' ')[0] || 'Student'}! Jump right back into your courses or explore new skills to master today.
+              Welcome back, {user?.name?.split(' ')[0] || 'Student'}! Jump right back into your courses, or if you're feeling confident, take a direct <Link to="/skill-exams" className="text-emerald-600 font-bold hover:underline">Skill Exam</Link> to get certified instantly.
             </p>
           </>
         ) : (
@@ -45,7 +45,7 @@ const PreFooterCTA = () => {
               Ready to kickstart your <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-500">development career</span>?
             </h2>
             <p className="text-lg sm:text-xl text-slate-600 mb-8 sm:mb-10 max-w-2xl mx-auto font-medium">
-              Join thousands of students who are already learning highly sought-after skills for free on SkillValix. No credit card required, ever.
+              Join thousands of students learning sought-after skills for free on SkillValix. Already know how to code? Skip the lessons and take a <Link to="/skill-exams" className="text-emerald-600 font-bold hover:underline">Skill Exam</Link> to get certified instantly.
             </p>
           </>
         )}
@@ -71,6 +71,12 @@ const PreFooterCTA = () => {
             className="w-full sm:w-auto px-8 py-3.5 sm:py-4 bg-white hover:bg-slate-50 text-slate-700 font-bold rounded-xl shadow-sm border border-slate-200 transition-all duration-300 text-center"
           >
             Explore Courses
+          </Link>
+          <Link
+            to="/skill-exams"
+            className="w-full sm:w-auto px-8 py-3.5 sm:py-4 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold rounded-xl shadow-sm border border-emerald-200 transition-all duration-300 text-center flex items-center justify-center gap-2"
+          >
+            <Target className="w-4 h-4" /> Take Skill Exam
           </Link>
         </div>
       </div>
