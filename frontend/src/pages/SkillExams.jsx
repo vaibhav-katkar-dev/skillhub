@@ -7,7 +7,7 @@ import {
   Award, CheckCircle, Zap, ArrowRight, Loader2,
   ShieldCheck, Trophy, Target, BookOpen, AlertCircle,
   FileText, ChevronDown, ChevronUp, Book, Clock, Medal,
-  GraduationCap, BarChart2, Layers, CheckSquare
+  GraduationCap, BarChart2, Layers, CheckSquare, Download
 } from 'lucide-react';
 
 /* ── Colour palette per domain keyword ─────────────────── */
@@ -233,7 +233,7 @@ function ExamCard({ item, cert, isAuthenticated }) {
               onClick={handleExamClick}
               className="flex-1 py-2.5 rounded-xl font-bold text-xs bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors flex items-center justify-center gap-1.5 border border-emerald-200"
             >
-              <Award size={14} /> Improve Score
+              <Download size={14} /> Download
             </button>
             <Link
               to={`/courses/${course.slug}`}

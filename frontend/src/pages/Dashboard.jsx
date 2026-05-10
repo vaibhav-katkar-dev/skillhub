@@ -644,10 +644,10 @@ const Dashboard = () => {
           {/* TAB: LEARNING PATH */}
           {activeTab === 'learning' && (
             <div className="space-y-10 animate-fade-in">
-              {/* Completed Courses */}
+              {/* Passed Exams */}
               <section>
               <SectionHead
-                icon={CheckCircle} title="Completed Courses"
+                icon={CheckCircle} title="Passed Exams"
                 iconCls="bg-emerald-100 text-emerald-600"
                 count={!loading ? `${completed.length} done` : undefined}
                 countCls="bg-emerald-100 text-emerald-700"
@@ -657,8 +657,8 @@ const Dashboard = () => {
                   <Sk cls="h-36" /><Sk cls="h-36" />
                 </div>
               ) : completed.length === 0 ? (
-                <Empty icon={Sparkles} title="No completed courses yet"
-                  sub="Pass a quiz to earn your first certificate!" />
+                <Empty icon={Sparkles} title="No passed exams yet"
+                  sub="Pass a Skill Exam to earn your first certificate!" />
               ) : (
                 <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,320px))] justify-center gap-4">
                   {completed.map(c => (
