@@ -49,6 +49,7 @@ const NAV_COLUMNS = [
     links: [
       { to: '/campus-ambassador', label: '🎓 Campus Ambassador', highlight: true },
       { to: '/host', label: 'Host a Hackathon' },
+      { to: '/dashboard?tab=profile', label: 'Create Free Portfolio' },
       { to: '/dashboard', label: 'Student Dashboard' },
       { to: '/privacy-policy', label: 'Privacy Policy' },
       { to: '/terms', label: 'Terms of Service' },
