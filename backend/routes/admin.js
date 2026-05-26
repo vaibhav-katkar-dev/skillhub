@@ -38,16 +38,42 @@ function normalizeId(value) {
   return null;
 }
 
+function escapeRegExp(value = '') {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 router.get('/users', authOptions, adminCheck, async (req, res) => {
   try {
     const { search = '', limit = 50, hasPortfolio = 'false', hasCertificate = 'false' } = req.query;
     const query = {};
+    const normalizedSearch = String(search).trim();
     
-    if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } }
-      ];
+    if (normalizedSearch) {
+      const searchRegex = new RegExp(escapeRegExp(normalizedSearch), 'i');
+
+      // Portfolio URL matching also checks a normalized identifier form.
+      if (hasPortfolio === 'true') {
+        const normalizedUrlIdentifier = normalizedSearch
+          .toLowerCase()
+          .replace(/^https?:\/\//, '')
+          .replace(/^www\./, '')
+          .replace(/^u\//, '')
+          .replace(/^@/, '');
+        const portfolioRegex = new RegExp(escapeRegExp(normalizedUrlIdentifier), 'i');
+
+        query.$or = [
+          { name: searchRegex },
+          { email: searchRegex },
+          { portfolio: searchRegex },
+          { portfolio: portfolioRegex }
+        ];
+      } else {
+        // Name/email behavior remains unchanged (case-insensitive).
+        query.$or = [
+          { name: searchRegex },
+          { email: searchRegex }
+        ];
+      }
     }
 
     // Filter for users with portfolio
