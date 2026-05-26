@@ -42,6 +42,14 @@ const AdminPanel = () => {
   const [analyticsError, setAnalyticsError] = useState('');
   const [tab, setTab] = useState('analytics');
 
+  // User Tracker state
+  const [trackerUsers, setTrackerUsers] = useState([]);
+  const [trackerLoading, setTrackerLoading] = useState(false);
+  const [trackerSearch, setTrackerSearch] = useState('');
+  const [trackerSelectedUser, setTrackerSelectedUser] = useState(null);
+  const [trackerDetails, setTrackerDetails] = useState(null);
+  const [trackerDetailsLoading, setTrackerDetailsLoading] = useState(false);
+
   // Hackathon manager state
   const [hacks, setHacks] = useState([]);
   const [hacksLoading, setHacksLoading] = useState(false);
@@ -439,6 +447,10 @@ const AdminPanel = () => {
     if (tab === 'host-requests') loadHostRequests();
     if (tab === 'coupons') loadCoupons();
     if (tab === 'pricing') loadPrices();
+    if (tab === 'users') {
+      setTrackerSearch('');
+      loadTrackerUsers('');
+    }
     if (tab === 'email') {
       // Reset stale state when entering the email tab
       setEmailMsg({ type: '', text: '' });
@@ -457,6 +469,42 @@ const AdminPanel = () => {
     }, 400);
     return () => clearTimeout(debounceTimer);
   }, [emailSearch]);
+
+  const loadTrackerUsers = async (search = '') => {
+    setTrackerLoading(true);
+    try {
+      const params = new URLSearchParams({ limit: '100' });
+      if (search) params.set('search', search);
+      const res = await api.get(`/admin/users?${params.toString()}`);
+      setTrackerUsers(res.data);
+    } catch {
+      // ignore
+    } finally {
+      setTrackerLoading(false);
+    }
+  };
+
+  const handleViewTrackerDetails = async (user) => {
+    setTrackerSelectedUser(user);
+    setTrackerDetailsLoading(true);
+    setTrackerDetails(null);
+    try {
+      const res = await api.get(`/admin/users/${user._id}/details`);
+      setTrackerDetails(res.data);
+    } catch {
+      // ignore
+    } finally {
+      setTrackerDetailsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (tab !== 'users') return;
+    const debounceTimer = setTimeout(() => {
+      loadTrackerUsers(trackerSearch);
+    }, 400);
+    return () => clearTimeout(debounceTimer);
+  }, [trackerSearch]);
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'admin') return;
@@ -683,6 +731,7 @@ const AdminPanel = () => {
           <div className="flex flex-wrap gap-2 mt-8">
             {[
               { key: 'analytics', label: 'Analytics', icon: BarChart3 },
+              { key: 'users', label: 'User Tracker', icon: Users },
               { key: 'quiz', label: 'Quiz Manager', icon: ClipboardList },
               { key: 'hackathons', label: 'Hackathons', icon: Award },
               { key: 'host-requests', label: 'Host Requests', icon: Users },
@@ -1031,156 +1080,174 @@ const AdminPanel = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-              <div className="xl:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                  <Database className="w-5 h-5 text-indigo-600" />
-                  Hosting Capacity Report
-                </h2>
-                <p className="text-sm text-slate-500 mt-1">
-                  Practical estimate for the current Vercel + MongoDB free-tier style deployment based on this codebase and content footprint.
-                </p>
+            </div>
+          </div>
+        )}
+        {tab === 'users' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-6">
+              <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <Users className="w-5 h-5 text-indigo-600" />
+                User Tracker
+              </h2>
+              <p className="text-sm text-slate-500 mb-6">Search users, view their login stats, traffic sources, and portfolio details.</p>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5">
-                  <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
-                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Content Footprint</p>
-                    <div className="mt-3 space-y-2 text-sm">
-                      <div className="flex items-center justify-between"><span className="text-slate-500">Course JSON</span><span className="font-bold text-slate-900">{formatSize(analytics?.contentFootprint?.courseJsonBytes)}</span></div>
-                      <div className="flex items-center justify-between"><span className="text-slate-500">Courses</span><span className="font-bold text-slate-900">{analytics?.contentFootprint?.staticCourses ?? '-'}</span></div>
-                      <div className="flex items-center justify-between"><span className="text-slate-500">Lessons</span><span className="font-bold text-slate-900">{analytics?.contentFootprint?.staticLessons ?? '-'}</span></div>
-                      <div className="flex items-center justify-between"><span className="text-slate-500">Embedded JSON quizzes</span><span className="font-bold text-slate-900">{analytics?.contentFootprint?.staticEmbeddedQuizzes ?? '-'}</span></div>
-                    </div>
-                  </div>
-
-                  <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
-                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Concurrency Estimate</p>
-                    <div className="mt-3 space-y-2 text-sm">
-                      <div className="flex items-center justify-between gap-3"><span className="text-slate-500">Browsing visitors</span><span className="font-bold text-slate-900 text-right">{analytics?.capacityEstimate?.frontendOnlyConcurrentVisitors ?? '-'}</span></div>
-                      <div className="flex items-center justify-between gap-3"><span className="text-slate-500">Active full-stack users</span><span className="font-bold text-slate-900 text-right">{analytics?.capacityEstimate?.fullStackActiveConcurrentUsers ?? '-'}</span></div>
-                      <div className="flex items-center justify-between gap-3"><span className="text-slate-500">Short burst traffic</span><span className="font-bold text-slate-900 text-right">{analytics?.capacityEstimate?.shortBurstConcurrentUsers ?? '-'}</span></div>
-                      <div className="flex items-center justify-between gap-3"><span className="text-slate-500">Certificate jobs</span><span className="font-bold text-slate-900 text-right">{analytics?.capacityEstimate?.certificateGenerationConcurrency ?? '-'}</span></div>
-                    </div>
-                  </div>
-
-                  <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
-                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Platform Shape</p>
-                    <div className="mt-3 space-y-2 text-sm text-slate-600">
-                      <p><span className="font-semibold text-slate-900">Frontend:</span> {analytics?.infrastructure?.frontend?.delivery || '-'}</p>
-                      <p><span className="font-semibold text-slate-900">Backend:</span> {analytics?.infrastructure?.backend?.runtime || '-'}</p>
-                      <p><span className="font-semibold text-slate-900">Database:</span> {analytics?.infrastructure?.database?.provider || '-'}</p>
-                    </div>
-                  </div>
-
-                  <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
-                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Free Tier Estimate</p>
-                    <div className="mt-3 space-y-2 text-sm">
-                      <div className="flex items-center justify-between"><span className="text-slate-500">MongoDB storage</span><span className="font-bold text-slate-900">{analytics?.freeTierEstimate?.mongodbStorageMb ? `${analytics.freeTierEstimate.mongodbStorageMb} MB` : '-'}</span></div>
-                      <div className="flex items-center justify-between"><span className="text-slate-500">Approx DB ops/sec</span><span className="font-bold text-slate-900">{analytics?.freeTierEstimate?.mongodbApproxOpsPerSecond ?? '-'}</span></div>
-                    </div>
-                    <p className="text-sm text-slate-500 mt-3">
-                      {analytics?.freeTierEstimate?.mongodbLikelyFirstLimit || 'No estimate available.'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-                  <p className="text-xs font-bold uppercase tracking-wide text-amber-700">Primary Bottleneck</p>
-                  <p className="mt-2 text-sm text-amber-900 font-medium">
-                    {analytics?.capacityEstimate?.practicalBottleneck || 'No bottleneck estimate available yet.'}
-                  </p>
-                </div>
-
-                <div className="mt-5 rounded-2xl border border-indigo-200 bg-indigo-50 p-5">
-                  <p className="text-xs font-bold uppercase tracking-wide text-indigo-700">Certificate Strategy</p>
-                  <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div className="rounded-xl border border-rose-200 bg-white p-4">
-                      <p className="font-semibold text-slate-900">Previous flow</p>
-                      <p className="mt-2 text-slate-600">
-                        {analytics?.certificateArchitecture?.previousFlow || 'No previous flow summary available.'}
-                      </p>
-                    </div>
-                    <div className="rounded-xl border border-emerald-200 bg-white p-4">
-                      <p className="font-semibold text-slate-900">Current flow</p>
-                      <p className="mt-2 text-slate-600">
-                        {analytics?.certificateArchitecture?.currentFlow || 'No current flow summary available.'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
-                    {analytics?.certificateArchitecture?.mainWins?.length ? analytics.certificateArchitecture.mainWins.map((item) => (
-                      <div key={item} className="rounded-xl border border-indigo-200 bg-white p-4 text-sm text-slate-700">
-                        {item}
-                      </div>
-                    )) : (
-                      <div className="rounded-xl border border-dashed border-indigo-200 bg-white p-4 text-sm text-slate-500 md:col-span-3">
-                        Improvement notes are not available yet.
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="mt-4 rounded-xl border border-amber-200 bg-white p-4">
-                    <p className="text-xs font-bold uppercase tracking-wide text-amber-700">Scaling Limit</p>
-                    <p className="mt-2 text-sm text-slate-700">
-                      {analytics?.certificateArchitecture?.scalingLimit || 'No scaling-limit note available.'}
-                    </p>
-                  </div>
-                </div>
+              <div className="flex items-center gap-2 mb-6">
+                <Search className="w-4 h-4 text-slate-400" />
+                <input 
+                  type="text"
+                  placeholder="Search users by name or email..."
+                  className="flex-1 bg-white border border-slate-200 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none max-w-md"
+                  value={trackerSearch}
+                  onChange={(e) => setTrackerSearch(e.target.value)}
+                />
               </div>
 
-              <div className="space-y-6">
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-                  <h2 className="text-lg font-bold text-slate-900 mb-4">Upgrade Order</h2>
-                  <div className="space-y-3">
-                    {analytics?.freeTierEstimate?.recommendationOrder?.length ? analytics.freeTierEstimate.recommendationOrder.map((item, idx) => (
-                      <div key={item} className="rounded-xl border border-slate-200 p-4">
-                        <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Step {idx + 1}</p>
-                        <p className="text-sm font-semibold text-slate-900 mt-1">{item}</p>
-                      </div>
-                    )) : (
-                      <div className="rounded-xl border border-dashed border-slate-200 p-4 text-sm text-slate-500">
-                        Upgrade guidance is not available yet.
-                      </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm whitespace-nowrap">
+                  <thead className="bg-slate-50 text-slate-500 uppercase tracking-wider text-xs">
+                    <tr>
+                      <th className="px-4 py-3 font-semibold rounded-tl-lg">User</th>
+                      <th className="px-4 py-3 font-semibold">Traffic Source</th>
+                      <th className="px-4 py-3 font-semibold">Login Stats</th>
+                      <th className="px-4 py-3 font-semibold rounded-tr-lg">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {trackerLoading ? (
+                      <tr>
+                        <td colSpan="4" className="text-center py-8 text-slate-500">
+                          <Loader2 className="w-6 h-6 animate-spin mx-auto text-indigo-500" />
+                        </td>
+                      </tr>
+                    ) : trackerUsers.length === 0 ? (
+                      <tr>
+                        <td colSpan="4" className="text-center py-8 text-slate-500">No users found.</td>
+                      </tr>
+                    ) : (
+                      trackerUsers.map(u => (
+                        <tr key={u._id} className="hover:bg-slate-50 transition">
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold shrink-0">
+                                {u.name ? u.name[0].toUpperCase() : '?'}
+                              </div>
+                              <div>
+                                <p className="font-semibold text-slate-900">{u.name}</p>
+                                <p className="text-xs text-slate-500">{u.email}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="px-2 py-1 bg-slate-100 text-slate-700 text-xs font-semibold rounded-lg">
+                              {u.trafficSource || 'direct'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-xs">
+                            <p className="text-slate-900 font-medium">{u.loginCount || 0} logins</p>
+                            <p className="text-slate-500">{u.lastLogin ? formatDate(u.lastLogin) : 'Never'}</p>
+                          </td>
+                          <td className="px-4 py-3">
+                            <button
+                              onClick={() => handleViewTrackerDetails(u)}
+                              className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-xs rounded-lg transition"
+                            >
+                              View Details
+                            </button>
+                          </td>
+                        </tr>
+                      ))
                     )}
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-                  <h2 className="text-lg font-bold text-slate-900 mb-4">Security Review</h2>
-                  <div className="space-y-4">
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">Recently Fixed</p>
-                      <div className="mt-3 space-y-2">
-                        {analytics?.securityReview?.fixedRecently?.length ? analytics.securityReview.fixedRecently.map((item) => (
-                          <div key={item} className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">
-                            {item}
-                          </div>
-                        )) : (
-                          <div className="rounded-xl border border-dashed border-slate-200 p-4 text-sm text-slate-500">
-                            No recent fixes recorded.
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-wide text-amber-700">Watch List</p>
-                      <div className="mt-3 space-y-2">
-                        {analytics?.securityReview?.watchList?.length ? analytics.securityReview.watchList.map((item) => (
-                          <div key={item} className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-                            {item}
-                          </div>
-                        )) : (
-                          <div className="rounded-xl border border-dashed border-slate-200 p-4 text-sm text-slate-500">
-                            No watch list items available.
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                  </tbody>
+                </table>
               </div>
             </div>
+
+            {/* User Details Modal */}
+            {trackerSelectedUser && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm overflow-y-auto">
+                <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+                  <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50 sticky top-0 z-10">
+                    <h3 className="font-bold text-slate-900 flex items-center gap-2">
+                      <Eye className="w-5 h-5 text-indigo-600" />
+                      User Tracking Details
+                    </h3>
+                    <button onClick={() => setTrackerSelectedUser(null)} className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-200 transition">
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <div className="p-6 overflow-y-auto flex-1">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                      <div className="space-y-4">
+                        <div>
+                          <p className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1">Basic Info</p>
+                          <p className="font-semibold text-slate-900 text-lg">{trackerSelectedUser.name}</p>
+                          <p className="text-sm text-slate-500">{trackerSelectedUser.email}</p>
+                          <p className="text-xs text-slate-400 mt-1">Joined: {formatDate(trackerSelectedUser.createdAt)}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1">Analytics Tracking</p>
+                          <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 space-y-2 text-sm">
+                            <div className="flex justify-between"><span className="text-slate-500">Traffic Source:</span> <span className="font-semibold text-slate-900">{trackerSelectedUser.trafficSource || 'direct'}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500">Total Logins:</span> <span className="font-semibold text-slate-900">{trackerSelectedUser.loginCount || 0}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500">Last Login:</span> <span className="font-semibold text-slate-900">{trackerSelectedUser.lastLogin ? formatDate(trackerSelectedUser.lastLogin) : 'Never'}</span></div>
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-2">Portfolio & Links</p>
+                        <div className="space-y-2">
+                          {[
+                            { label: 'Portfolio', val: trackerSelectedUser.portfolio, icon: Link2 },
+                            { label: 'GitHub', val: trackerSelectedUser.github, icon: Link2 },
+                            { label: 'LinkedIn', val: trackerSelectedUser.linkedin, icon: Link2 },
+                            { label: 'Resume', val: trackerSelectedUser.resume, icon: FileJson },
+                          ].map((l, i) => (
+                            <div key={i} className="flex items-center gap-2 text-sm">
+                              {React.createElement(l.icon, { className: 'w-4 h-4 text-slate-400' })}
+                              <span className="text-slate-500 w-16">{l.label}:</span>
+                              {l.val ? (
+                                <a href={l.val} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline flex items-center gap-1 truncate">
+                                  {l.val} <ExternalLink className="w-3 h-3" />
+                                </a>
+                              ) : (
+                                <span className="text-slate-400 italic">Not provided</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-3 border-b border-slate-100 pb-2">Certificates Earned</p>
+                      {trackerDetailsLoading ? (
+                        <div className="flex justify-center p-6"><Loader2 className="w-6 h-6 animate-spin text-indigo-500" /></div>
+                      ) : !trackerDetails?.certificates || trackerDetails.certificates.length === 0 ? (
+                        <div className="text-sm text-slate-500 italic p-4 bg-slate-50 rounded-xl border border-slate-100">No certificates earned yet.</div>
+                      ) : (
+                        <div className="space-y-3">
+                          {trackerDetails.certificates.map(cert => (
+                            <div key={cert._id} className="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-xl">
+                              <div>
+                                <p className="font-semibold text-slate-900 text-sm flex items-center gap-2">
+                                  {cert.isEvent ? <Award className="w-4 h-4 text-emerald-500" /> : <BookOpen className="w-4 h-4 text-indigo-500" />}
+                                  {cert.course?.title || cert.courseTitleSnapshot || 'Unknown'}
+                                </p>
+                                <p className="text-xs text-slate-500 mt-1">Issued: {formatDate(cert.issueDate || cert.createdAt)}</p>
+                              </div>
+                              <span className="text-[10px] font-mono bg-slate-100 text-slate-600 px-2 py-1 rounded-lg">
+                                {cert.certificateId}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
         {tab === 'email' && (

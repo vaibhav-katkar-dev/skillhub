@@ -3,6 +3,7 @@ import fs from 'fs/promises';
 import User from '../models/User.js';
 import Quiz from '../models/Quiz.js';
 import Certificate from '../models/Certificate.js';
+import EventCertificate from '../models/EventCertificate.js';
 import { authOptions, adminCheck } from '../middleware/auth.js';
 import { COURSE_JSON_PATH, getAllCoursesFromJSON } from '../utils/courseData.js';
 import { sendEmail } from '../utils/mailer.js';
@@ -50,7 +51,7 @@ router.get('/users', authOptions, adminCheck, async (req, res) => {
     }
 
     const users = await User.find(query)
-      .select('name email role createdAt isVerified')
+      .select('name email role createdAt isVerified trafficSource lastLogin loginCount portfolio github linkedin resume')
       .sort({ createdAt: -1 })
       .limit(Number(limit))
       .lean();
@@ -59,6 +60,29 @@ router.get('/users', authOptions, adminCheck, async (req, res) => {
   } catch (err) {
     console.error('[Admin] Fetch users error:', err);
     res.status(500).json({ message: 'Failed to fetch users' });
+  }
+});
+
+router.get('/users/:id/details', authOptions, adminCheck, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).lean();
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    
+    const stdCerts = await Certificate.find({ student: user._id }).lean();
+    const eventCertsRaw = await EventCertificate.find({ student: user._id }).lean();
+    
+    const eventCerts = eventCertsRaw.map(c => ({
+      ...c,
+      isEvent: true,
+      course: { title: c.eventTitle }
+    }));
+    
+    const allCerts = [...stdCerts, ...eventCerts].sort((a,b) => new Date(b.issueDate || b.createdAt) - new Date(a.issueDate || a.createdAt));
+
+    res.json({ user, certificates: allCerts });
+  } catch (err) {
+    console.error('[Admin] User details error:', err);
+    res.status(500).json({ message: 'Failed to fetch user details' });
   }
 });
 
@@ -347,16 +371,6 @@ router.get('/analytics', authOptions, adminCheck, async (req, res) => {
         averagePdfBytes: Math.round(avgPdfBytes || 0),
         averagePdfKb: Number(((avgPdfBytes || 0) / 1024).toFixed(2)),
       },
-      certificateArchitecture: {
-        previousFlow: 'Each download request could regenerate the certificate PDF synchronously.',
-        currentFlow: 'Certificate records are saved first, PDF generation is queued, and ready PDFs are cached for fast repeat downloads.',
-        mainWins: [
-          'Repeat downloads avoid CPU-heavy regeneration once the PDF is cached.',
-          'Users receive controlled waiting states instead of timeouts during bursts.',
-          'Queue state is persisted in MongoDB so certificate records remain recoverable across retries.',
-        ],
-        scalingLimit: 'This is a strong serverless-safe improvement, but the in-memory queue still runs per warm instance rather than as a fully distributed global queue.',
-      },
       permissions: {
         canViewAnalytics: true,
         canManageQuizzes: true,
@@ -364,63 +378,12 @@ router.get('/analytics', authOptions, adminCheck, async (req, res) => {
         adminAssignment: 'database_only',
         websiteRoleElevation: false,
       },
-      infrastructure: {
-        frontend: {
-          platform: 'Vercel',
-          delivery: 'Static Vite build served by CDN',
-          primaryPayload: 'Frontend assets plus course JSON',
-        },
-        backend: {
-          platform: 'Vercel',
-          runtime: 'Serverless Node/Express API',
-          databaseConnectionMode: 'Cached mongoose connection with pooled maxPoolSize 10',
-          heaviestEndpoints: ['certificate PDF generation', 'quiz submit', 'payment verify', 'admin analytics'],
-        },
-        database: {
-          provider: 'MongoDB Atlas',
-          tierAssumption: 'Free/shared tier baseline estimate',
-          primaryCollections: ['users', 'certificates', 'quizzes'],
-          courseContentStorage: 'Static JSON file, not MongoDB',
-        },
-      },
       contentFootprint: {
         courseJsonBytes: courseJsonStats?.size || 0,
         courseJsonKb: courseJsonStats?.size ? Number((courseJsonStats.size / 1024).toFixed(2)) : 0,
         staticCourses: allEntries.length,
         staticLessons: lessonCount,
         staticEmbeddedQuizzes: embeddedQuizCount,
-      },
-      capacityEstimate: {
-        frontendOnlyConcurrentVisitors: '1000+ browsing visitors',
-        fullStackActiveConcurrentUsers: '20-50 active users',
-        shortBurstConcurrentUsers: '100-300 mixed burst users',
-        certificateGenerationConcurrency: '5-15 simultaneous certificate jobs',
-        practicalBottleneck: 'MongoDB free tier throughput and serverless cold starts before frontend CDN limits',
-      },
-      freeTierEstimate: {
-        mongodbStorageMb: 512,
-        mongodbApproxOpsPerSecond: 100,
-        mongodbLikelyFirstLimit: 'throughput before storage',
-        backendNotes: 'Serverless execution is suitable for early-stage traffic but PDF generation and payment verification are the most expensive requests.',
-        recommendationOrder: [
-          'Upgrade MongoDB first when active exam traffic grows',
-          'Cache analytics and course lookups',
-          'Move certificate generation to a queued or background flow for larger volume',
-          'Upgrade Vercel plan after database bottlenecks are solved',
-        ],
-      },
-      securityReview: {
-        fixedRecently: [
-          'JWT secret fallback removed',
-          'Certificate generation restricted to completed courses',
-          'Payment verification now checks order receipt and amount',
-          'Certificate downloads now prefer cached PDFs over regenerating on every request',
-        ],
-        watchList: [
-          'Lesson and blog HTML rendering should stay trusted or be sanitized before rendering',
-          'Certificate PDF generation is CPU-heavy compared to normal API requests',
-          'Serverless queue coordination is per warm instance, so very large bursts still need a true external queue for best scale',
-        ],
       },
       courseBreakdown: courseBreakdown.slice(0, 8),
       recentUsers,

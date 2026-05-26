@@ -45,7 +45,12 @@ const userSchema = new mongoose.Schema({
   // Email Verification
   isVerified: { type: Boolean, default: false },
   verificationToken: { type: String, index: true },
-  verificationTokenExpires: { type: Date }
+  verificationTokenExpires: { type: Date },
+
+  // Analytics Tracking
+  trafficSource: { type: String, default: 'direct' },
+  lastLogin: { type: Date },
+  loginCount: { type: Number, default: 0 }
 }, { timestamps: true });
 
 export default mongoose.model('User', userSchema);

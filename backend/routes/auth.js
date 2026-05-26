@@ -39,7 +39,7 @@ router.get('/me', authOptions, async (req, res) => {
 // Register
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, trafficSource } = req.body;
 
     if (!isValidEmailFormat(email)) {
       return res.status(400).json({ message: 'Invalid email format' });
@@ -53,7 +53,7 @@ router.post('/register', async (req, res) => {
     if (user) return res.status(400).json({ message: 'User already exists' });
 
     // Always register as 'student' — admin role must be assigned directly in DB
-    user = new User({ name, email, password, role: 'student' });
+    user = new User({ name, email, password, role: 'student', trafficSource: trafficSource || 'direct' });
     
     // Hash password
     const salt = await bcrypt.genSalt(10);
@@ -235,6 +235,10 @@ router.post('/login', async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: 'Invalid Credentials' });
 
+    user.lastLogin = new Date();
+    user.loginCount = (user.loginCount || 0) + 1;
+    await user.save();
+
     const payload = { user: { id: user.id, role: user.role } };
     const token = jwt.sign(payload, getJwtSecret(), { expiresIn: '7d' });
 
@@ -269,13 +273,22 @@ router.post('/google', async (req, res) => {
         email,
         googleId,
         role: 'student',
-        isVerified: true // Google accounts are pre-verified
+        isVerified: true, // Google accounts are pre-verified
+        trafficSource: 'google_oauth',
+        lastLogin: new Date(),
+        loginCount: 1
       });
       await user.save();
     } else if (!user.googleId) {
       // Link Google ID if email exists from standard reg
       user.googleId = googleId;
       user.isVerified = true; // Auto-verify if they connect Google
+      user.lastLogin = new Date();
+      user.loginCount = (user.loginCount || 0) + 1;
+      await user.save();
+    } else {
+      user.lastLogin = new Date();
+      user.loginCount = (user.loginCount || 0) + 1;
       await user.save();
     }
 
