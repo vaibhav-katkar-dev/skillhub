@@ -40,7 +40,7 @@ function normalizeId(value) {
 
 router.get('/users', authOptions, adminCheck, async (req, res) => {
   try {
-    const { search = '', limit = 50 } = req.query;
+    const { search = '', limit = 50, hasPortfolio = 'false', hasCertificate = 'false' } = req.query;
     const query = {};
     
     if (search) {
@@ -48,6 +48,24 @@ router.get('/users', authOptions, adminCheck, async (req, res) => {
         { name: { $regex: search, $options: 'i' } },
         { email: { $regex: search, $options: 'i' } }
       ];
+    }
+
+    // Filter for users with portfolio
+    if (hasPortfolio === 'true') {
+      query.portfolio = { $exists: true, $ne: '', $ne: null };
+    }
+
+    // Filter for users with certificates
+    let userIdsWithCerts = [];
+    if (hasCertificate === 'true') {
+      const stdCerts = await Certificate.find({}).select('student').lean();
+      const eventCerts = await EventCertificate.find({}).select('student').lean();
+      const certUserIds = new Set([
+        ...stdCerts.map(c => c.student?.toString()),
+        ...eventCerts.map(c => c.student?.toString())
+      ]);
+      userIdsWithCerts = Array.from(certUserIds).filter(Boolean);
+      query._id = { $in: userIdsWithCerts };
     }
 
     const users = await User.find(query)

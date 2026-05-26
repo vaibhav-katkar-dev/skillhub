@@ -49,6 +49,8 @@ const AdminPanel = () => {
   const [trackerSelectedUser, setTrackerSelectedUser] = useState(null);
   const [trackerDetails, setTrackerDetails] = useState(null);
   const [trackerDetailsLoading, setTrackerDetailsLoading] = useState(false);
+  const [trackerFilterPortfolio, setTrackerFilterPortfolio] = useState(false);
+  const [trackerFilterCertified, setTrackerFilterCertified] = useState(false);
 
   // Hackathon manager state
   const [hacks, setHacks] = useState([]);
@@ -475,6 +477,8 @@ const AdminPanel = () => {
     try {
       const params = new URLSearchParams({ limit: '100' });
       if (search) params.set('search', search);
+      params.set('hasPortfolio', trackerFilterPortfolio.toString());
+      params.set('hasCertificate', trackerFilterCertified.toString());
       const res = await api.get(`/admin/users?${params.toString()}`);
       setTrackerUsers(res.data);
     } catch {
@@ -505,6 +509,12 @@ const AdminPanel = () => {
     }, 400);
     return () => clearTimeout(debounceTimer);
   }, [trackerSearch]);
+
+  // Reload when filters change
+  useEffect(() => {
+    if (tab !== 'users') return;
+    loadTrackerUsers(trackerSearch);
+  }, [trackerFilterPortfolio, trackerFilterCertified, tab]);
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'admin') return;
@@ -1099,6 +1109,27 @@ const AdminPanel = () => {
                   value={trackerSearch}
                   onChange={(e) => setTrackerSearch(e.target.value)}
                 />
+              </div>
+
+              <div className="flex flex-wrap gap-3 mb-6 pb-4 border-b border-slate-100">
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input 
+                    type="checkbox"
+                    className="w-4 h-4 rounded text-indigo-600 border-slate-300 focus:ring-indigo-500"
+                    checked={trackerFilterPortfolio}
+                    onChange={(e) => setTrackerFilterPortfolio(e.target.checked)}
+                  />
+                  <span className="text-sm font-medium text-slate-700">Has Portfolio</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input 
+                    type="checkbox"
+                    className="w-4 h-4 rounded text-indigo-600 border-slate-300 focus:ring-indigo-500"
+                    checked={trackerFilterCertified}
+                    onChange={(e) => setTrackerFilterCertified(e.target.checked)}
+                  />
+                  <span className="text-sm font-medium text-slate-700">Has Certification</span>
+                </label>
               </div>
 
               <div className="overflow-x-auto">
