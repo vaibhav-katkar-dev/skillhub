@@ -4,6 +4,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import {
   Linkedin,
+  Github,
   Mail,
   MessageCircle,
   GraduationCap,
@@ -60,6 +61,7 @@ const NAV_COLUMNS = [
 
 const SOCIAL = [
   { icon: Linkedin, href: 'https://www.linkedin.com/company/skillvalix/', label: 'LinkedIn' },
+  { icon: Github, href: 'https://github.com/skillvalix', label: 'GitHub' },
   { icon: Instagram, href: 'https://www.instagram.com/skillvalix/', label: 'Instagram' },
   { icon: Mail, href: 'mailto:skillvalix@gmail.com', label: 'Email' },
 ];
