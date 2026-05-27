@@ -1,4 +1,4 @@
-[
+﻿[
   {
     "course": {
       "_id": "69b8ec57dc1649c0c42c9d8d",
@@ -478,7 +478,7 @@
       "description": "A comprehensive, project-driven deep-dive into Tailwind CSS — the utility-first CSS framework that lets you build modern, responsive, accessible UIs without writing custom CSS. Covers core utility classes, responsive design, dark mode, custom theming, component patterns, animations, Tailwind v4 features, and real-world production workflows for React, Next.js, and HTML projects.",
       "image": "https://tailwindcss.com/img/twitter-large-card.png",
       "instructor": "6a166a5f1d270a94a1e1f3ba",
-      "theme": "blue",
+      "theme": "pink",
       "published": true,
       "createdAt": "2026-04-01T08:00:00.000Z",
       "updatedAt": "2026-04-01T12:00:00.000Z",
@@ -1846,7 +1846,7 @@
       "description": "A comprehensive, hands-on course covering the full data analytics pipeline — from data collection, cleaning, and exploratory analysis to advanced visualization techniques using Python, Pandas, Matplotlib, Seaborn, Plotly, and dashboarding tools like Power BI and Tableau. Ideal for aspiring data analysts, business intelligence professionals, and developers who want to turn raw datasets into compelling, decision-driving visual stories.",
       "image": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800",
       "instructor": "b2e4f1a7c3d509b6e1f7a204",
-      "theme": "blue",
+      "theme": "green",
       "published": true,
       "createdAt": "2026-05-27T07:30:00.000Z",
       "updatedAt": "2026-05-27T10:00:00.000Z",
