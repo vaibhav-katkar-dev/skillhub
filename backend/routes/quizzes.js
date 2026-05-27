@@ -7,8 +7,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { getCourseFromJSON } from '../utils/courseData.js';
 
 const router = express.Router();
-const ADMIN_TEST_PASSING_SCORE = 30;
-
 function normalizeId(value) {
   let current = value;
   let depth = 0;
@@ -49,9 +47,6 @@ router.get('/:courseId', authOptions, async (req, res) => {
     quiz.unlockedAttempts = attemptRecord ? attemptRecord.unlockedAttempts : 0;
     quiz.requirePayment = quiz.attemptsUsed >= quiz.unlockedAttempts;
     quiz.isAdminTestMode = req.user?.role === 'admin';
-    if (quiz.isAdminTestMode) {
-      quiz.passingScore = ADMIN_TEST_PASSING_SCORE;
-    }
     
     
     // Remove correct options so students can't cheat
@@ -111,7 +106,7 @@ router.post('/:courseId/submit', authOptions, async (req, res) => {
     });
 
     const score = (correctCount / quiz.questions.length) * 100;
-    const effectivePassingScore = req.user?.role === 'admin' ? ADMIN_TEST_PASSING_SCORE : quiz.passingScore;
+    const effectivePassingScore = quiz.passingScore;
     const passed = score >= effectivePassingScore;
 
     let certificateId = null;
@@ -172,22 +167,40 @@ router.post('/:courseId/submit', authOptions, async (req, res) => {
 });
 
 // Admin: Create/Update Quiz for Course
-router.post('/:courseId', authOptions, adminCheck, async (req, res) => {
+async function upsertQuizForCourse(req, res) {
   try {
-    let quiz = await Quiz.findOne({ course: req.params.courseId });
-    if (quiz) {
-      quiz.questions = req.body.questions;
-      quiz.passingScore = req.body.passingScore || 70;
-      if (req.body.ribbonTheme) quiz.ribbonTheme = req.body.ribbonTheme;
-      await quiz.save();
-    } else {
-      quiz = new Quiz({ course: req.params.courseId, ...req.body });
-      await quiz.save();
+    const questions = Array.isArray(req.body.questions) ? req.body.questions : null;
+    if (!questions) {
+      return res.status(400).json({ message: 'Quiz questions must be an array.' });
     }
-    res.json(quiz);
+
+    const quiz = await Quiz.findOneAndUpdate(
+      { course: req.params.courseId },
+      {
+        $set: {
+          questions,
+          passingScore: req.body.passingScore ?? 70,
+          ribbonTheme: req.body.ribbonTheme || 'blue',
+        },
+        $setOnInsert: {
+          course: req.params.courseId,
+        },
+      },
+      {
+        upsert: true,
+        new: true,
+        runValidators: true,
+        setDefaultsOnInsert: true,
+      }
+    );
+
+    return res.json(quiz);
   } catch (err) {
-    res.status(500).json({ message: 'Server Error', error: err.message });
+    return res.status(500).json({ message: 'Server Error', error: err.message });
   }
-});
+}
+
+router.post('/:courseId', authOptions, adminCheck, upsertQuizForCourse);
+router.put('/:courseId', authOptions, adminCheck, upsertQuizForCourse);
 
 export default router;

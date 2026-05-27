@@ -570,11 +570,11 @@ const QuizView = () => {
             <div>
               <h1 className="text-3xl font-bold mb-2 text-slate-900">Certification Exam</h1>
               <p className="text-slate-600 font-medium">{course?.title} | {quiz?.questions?.length} Questions | {quiz?.passingScore}% required</p>
-              {quiz?.isAdminTestMode && (
-                <p className="mt-2 text-sm font-semibold text-amber-700">
-                  Admin test mode: 30% passing score is active for your account only.
-                </p>
-              )}
+                {quiz?.isAdminTestMode && (
+                  <p className="mt-2 text-sm font-semibold text-amber-700">
+                    Admin account detected. Passing score is controlled by the quiz JSON configuration.
+                  </p>
+                )}
             </div>
             <div className="px-4 py-2 bg-slate-100 rounded-lg text-sm font-bold text-slate-700 border border-slate-200 text-center">
               Attempt<br /><span className="text-lg text-indigo-600">{quiz?.attemptsUsed + 1}</span><span className="text-slate-400">/∞</span>
