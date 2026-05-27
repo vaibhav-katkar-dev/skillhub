@@ -8,6 +8,19 @@ import { generatePDFFromDOM } from '../utils/pdfGenerator';
 import CertificateTemplate from '../components/CertificateTemplate';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://api.skillvalix.com/api';
+const INR_PER_USD = Number(import.meta.env.VITE_INR_PER_USD || 83);
+
+const formatInr = (value) => new Intl.NumberFormat('en-IN', {
+  style: 'currency',
+  currency: 'INR',
+  maximumFractionDigits: 0,
+}).format(Number(value || 0));
+
+const formatUsd = (value) => new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  maximumFractionDigits: 2,
+}).format(Number(value || 0));
 
 const QuizView = () => {
   const { slug } = useParams();
@@ -38,6 +51,18 @@ const QuizView = () => {
 
   // ── Course price state ────────────────────────────────
   const [coursePriceRupees, setCoursePriceRupees] = useState(99); // default ₹99
+  const locale = typeof navigator !== 'undefined' ? (navigator.language || '') : '';
+  const timeZone = typeof Intl !== 'undefined'
+    ? Intl.DateTimeFormat().resolvedOptions().timeZone || ''
+    : '';
+  const isInternationalUser = !/en-IN|hi-IN/i.test(locale) && !/Asia\/Kolkata/i.test(timeZone);
+
+  const inrToUsd = (inr) => Number(inr || 0) / INR_PER_USD;
+  const displayAmount = (inr) => {
+    const inrText = formatInr(inr);
+    if (!isInternationalUser) return inrText;
+    return `${formatUsd(inrToUsd(inr))} (approx) • charged ${inrText}`;
+  };
 
   const handleClientDownload = async (certId) => {
     if (!certId) return;
@@ -392,7 +417,7 @@ const QuizView = () => {
             <h2 className="text-2xl font-extrabold mb-2 text-white">Unlock {course?.title}</h2>
             <p className="text-indigo-100 text-sm font-medium leading-relaxed max-w-xs mx-auto">
               {user?.role === 'admin'
-                ? 'Admin test mode: unlock this certification exam for Rs. 1 only.'
+                ? `Admin test mode: unlock this certification exam for ${displayAmount(1)} only.`
                 : 'One-time fee to permanently unlock the certification exam and earn your credential.'}
             </p>
           </div>
@@ -403,24 +428,24 @@ const QuizView = () => {
             <div className="flex items-end justify-center gap-3 mb-6 w-full bg-slate-50 py-4 rounded-2xl border border-slate-100">
               {user?.role === 'admin' ? (
                 <>
-                  <span className="line-through text-slate-400 text-xl font-bold mb-1">Rs. {coursePriceRupees}</span>
-                  <span className="text-5xl font-black text-slate-900 tracking-tight">Rs. 1</span>
+                  <span className="line-through text-slate-400 text-xl font-bold mb-1">{displayAmount(coursePriceRupees)}</span>
+                  <span className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight text-center">{displayAmount(1)}</span>
                 </>
               ) : couponResult?.valid ? (
                 <div className="flex flex-col items-center">
                   <div className="flex items-center gap-3">
-                    <span className="line-through text-slate-400 text-xl font-bold">Rs. {couponResult.originalAmountRupees}</span>
-                    <span className="text-5xl font-black text-emerald-600 tracking-tight">Rs. {couponResult.discountedAmountRupees}</span>
+                    <span className="line-through text-slate-400 text-xl font-bold">{displayAmount(couponResult.originalAmountRupees)}</span>
+                    <span className="text-3xl sm:text-5xl font-black text-emerald-600 tracking-tight text-center">{displayAmount(couponResult.discountedAmountRupees)}</span>
                   </div>
                   <span className="mt-1.5 inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full">
                     <Percent className="w-3 h-3" />
-                    You save Rs. {couponResult.savedAmountRupees}!
+                    You save {displayAmount(couponResult.savedAmountRupees)}!
                   </span>
                 </div>
               ) : (
                 <>
-                  <span className="line-through text-slate-400 text-xl font-bold mb-1">Rs. {Math.round(coursePriceRupees * 5)}</span>
-                  <span className="text-5xl font-black text-slate-900 tracking-tight">Rs. {coursePriceRupees}</span>
+                  <span className="line-through text-slate-400 text-xl font-bold mb-1">{displayAmount(Math.round(coursePriceRupees * 5))}</span>
+                  <span className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight text-center">{displayAmount(coursePriceRupees)}</span>
                 </>
               )}
             </div>
@@ -428,7 +453,7 @@ const QuizView = () => {
             {/* ── Admin notice ── */}
             {user?.role === 'admin' && (
               <div className="w-full mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                Admin-only test mode is active. Passing score is 30% and unlock fee is Rs. 1.
+                Admin-only test mode is active. Passing score is 30% and unlock fee is {displayAmount(1)}.
               </div>
             )}
 
@@ -444,7 +469,7 @@ const QuizView = () => {
                       <span className="text-xs text-emerald-600 truncate hidden sm:block">
                         — {couponResult.discountType === 'percentage'
                           ? `${couponResult.discountValue}% off`
-                          : `Rs. ${couponResult.discountValue} off`}
+                          : `${displayAmount(couponResult.discountValue)} off`}
                       </span>
                     </div>
                     <button
@@ -523,12 +548,17 @@ const QuizView = () => {
                 {paying
                   ? 'Processing...'
                   : user?.role === 'admin'
-                    ? `Pay Rs. ${paymentInfo?.displayAmountRupees || 1} for Test Access`
+                    ? `Pay ${displayAmount(paymentInfo?.displayAmountRupees || 1)} for Test Access`
                     : couponResult?.valid
-                      ? `Pay Rs. ${couponResult.discountedAmountRupees} Now`
-                      : `Pay Rs. ${coursePriceRupees} Now`}
+                      ? `Pay ${displayAmount(couponResult.discountedAmountRupees)} Now`
+                      : `Pay ${displayAmount(coursePriceRupees)} Now`}
               </span>
             </button>
+            {isInternationalUser && (
+              <p className="text-[11px] text-slate-500 mt-2 text-center">
+                Final charge is processed in INR by Razorpay. Your bank/card may convert to local currency.
+              </p>
+            )}
             <p className="text-[10px] text-slate-400 mt-5 font-semibold uppercase tracking-widest text-center">
               Secured by Razorpay
             </p>

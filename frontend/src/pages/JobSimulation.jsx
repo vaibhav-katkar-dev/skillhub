@@ -24,6 +24,19 @@ import {
 } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
+const INR_PER_USD = Number(import.meta.env.VITE_INR_PER_USD || 83);
+
+const formatInr = (value) => new Intl.NumberFormat('en-IN', {
+  style: 'currency',
+  currency: 'INR',
+  maximumFractionDigits: 0,
+}).format(Number(value || 0));
+
+const formatUsd = (value) => new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  maximumFractionDigits: 2,
+}).format(Number(value || 0));
 
 const ICON_MAP = {
   Laptop,
@@ -198,6 +211,16 @@ export default function JobSimulation() {
   const completedCount = sim.tasks.filter(t => taskStatus[t.num] === 'completed').length;
   const minRequired = Math.max(1, Math.ceil(totalTasks * 0.6));
   const canUnlockCertificate = completedCount >= minRequired;
+  const locale = typeof navigator !== 'undefined' ? (navigator.language || '') : '';
+  const timeZone = typeof Intl !== 'undefined'
+    ? Intl.DateTimeFormat().resolvedOptions().timeZone || ''
+    : '';
+  const isInternationalUser = !/en-IN|hi-IN/i.test(locale) && !/Asia\/Kolkata/i.test(timeZone);
+  const displayAmount = (inr) => {
+    const inrText = formatInr(inr);
+    if (!isInternationalUser) return inrText;
+    return `${formatUsd(Number(inr || 0) / INR_PER_USD)} (approx) • charged ${inrText}`;
+  };
 
   const loadRazorpay = () =>
     new Promise((resolve) => {
@@ -385,13 +408,13 @@ export default function JobSimulation() {
             <div className="text-center">
               <Award className="w-8 h-8 mx-auto mb-1 text-white" aria-hidden="true" />
               <div className="text-white font-bold text-lg">Verified Certificate</div>
-              <div className="text-slate-400 text-sm">Complete tasks, pay INR 99, and get your certificate.</div>
+              <div className="text-slate-400 text-sm">Complete tasks, pay {displayAmount(sim.certCost)}, and get your certificate.</div>
             </div>
 
             <div className="border-t border-white/10 pt-4 space-y-2 text-sm text-slate-300">
               <div className="flex justify-between">
                 <span>Certificate fee</span>
-                <span className="font-bold text-white">INR {sim.certCost}</span>
+                <span className="font-bold text-white">{displayAmount(sim.certCost)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Format</span>
@@ -473,8 +496,14 @@ export default function JobSimulation() {
                   ? `Complete ${minRequired} tasks to unlock (${completedCount}/${totalTasks})`
                   : paying 
                     ? 'Processing...' 
-                    : `Get Certificate for INR ${sim.certCost}`}
+                    : `Get Certificate for ${displayAmount(sim.certCost)}`}
               </button>
+            )}
+
+            {isInternationalUser && (
+              <p className="text-[11px] text-center text-slate-400">
+                Final charge is processed in INR by Razorpay. Your bank/card may convert to local currency.
+              </p>
             )}
 
             {!isAuthenticated && (
