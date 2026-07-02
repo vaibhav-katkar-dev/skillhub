@@ -121,7 +121,7 @@ function getCoursePracticeConfig(slug) {
   }
 
   return {
-    showLab: true,
+    showLab: false,
     runnerEnabled: true,
     modes: ['javascript'],
     defaultMode: 'javascript',
