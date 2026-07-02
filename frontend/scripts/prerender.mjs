@@ -22,8 +22,13 @@ const ROOT      = path.resolve(__dirname, '..');
 const DIST      = path.join(ROOT, 'dist');
 const META_PATH = path.join(__dirname, 'blogMeta.json');
 
+function readJsonFile(filePath) {
+  const raw = fs.readFileSync(filePath, 'utf8');
+  return JSON.parse(raw.replace(/^\uFEFF/, ''));
+}
+
 // ── 1.  Load blog metadata ─────────────────────────────────────────────────────
-const blogPosts = JSON.parse(fs.readFileSync(META_PATH, 'utf8'));
+const blogPosts = readJsonFile(META_PATH);
 console.log(`\n[prerender] Loaded ${blogPosts.length} blog posts from blogMeta.json`);
 
 // ── 2.  Read the Vite build shell ─────────────────────────────────────────────
@@ -131,7 +136,7 @@ for (const post of blogPosts) {
 console.log('\n[prerender] Generating course pages...');
 const coursesPath = path.join(ROOT, 'public/data/all-courses.json');
 if (fs.existsSync(coursesPath)) {
-  const allCourses = JSON.parse(fs.readFileSync(coursesPath, 'utf8'));
+  const allCourses = readJsonFile(coursesPath);
   for (const item of allCourses) {
     const course = item.course;
     if (!course || !course.slug) continue;
@@ -170,7 +175,7 @@ if (fs.existsSync(coursesPath)) {
 console.log('\n[prerender] Generating job simulation pages...');
 const simsPath = path.join(ROOT, 'public/data/job-simulations.json');
 if (fs.existsSync(simsPath)) {
-  const allSims = JSON.parse(fs.readFileSync(simsPath, 'utf8'));
+  const allSims = readJsonFile(simsPath);
   for (const sim of allSims) {
     if (!sim.id) continue;
     const canonical = `https://www.skillvalix.com/job-simulation/${sim.id}`;
