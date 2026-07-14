@@ -37,7 +37,8 @@ const NAV_COLUMNS = [
     heading: 'Resources',
     icon: BookMarked,
     links: [
-      { to: '/skill-exams', label: 'Skill Exams', sparkle: true },
+      { to: '/job-simulations', label: 'Job Simulations', sparkle: true },
+      { to: '/skill-exams', label: 'Skill Exams' },
       { to: '/certification', label: 'Certification' },
       { to: '/verify', label: 'Verify Certificate' },
       { to: '/hackathons', label: 'Student Hackathons' },

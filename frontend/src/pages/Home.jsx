@@ -606,6 +606,18 @@ export default function Home() {
               </h2>
             </div>
             <div style={{ display: 'flex', gap: 12 }}>
+              <Link to="/job-simulations" id="home-view-jobs" style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                fontSize: 14, fontWeight: 700, color: '#059669',
+                background: '#ecfdf5', border: '1.5px solid #a7f3d0',
+                padding: '12px 24px', borderRadius: 12, textDecoration: 'none',
+                transition: 'all .2s', whiteSpace: 'nowrap',
+              }}
+                onMouseEnter={e => { e.currentTarget.style.background = '#d1fae5'; e.currentTarget.style.borderColor = '#34d399'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = '#ecfdf5'; e.currentTarget.style.borderColor = '#a7f3d0'; e.currentTarget.style.transform = ''; }}
+              >
+                Job Simulations
+              </Link>
               <Link to="/blog" id="home-view-blog" style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
                 fontSize: 14, fontWeight: 700, color: '#475569',

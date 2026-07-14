@@ -42,12 +42,14 @@ const Skeleton = () => (
 );
 
 const ALL_CATEGORIES = ['All', 'HTML', 'CSS', 'JavaScript', 'Python', 'Java', 'AI / ML', 'Other'];
+const SIM_TAGS = ['All', 'Frontend', 'Backend', 'Data Analyst', 'UI/UX'];
 
 const Courses = () => {
   const [courses, setCourses]     = useState([]);
   const [loading, setLoading]     = useState(true);
   const [search, setSearch]       = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
+  const [activeSimTag, setActiveSimTag]     = useState('All');
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -87,6 +89,12 @@ const Courses = () => {
     if (!isSims && activeCategory !== 'All') {
       list = list.filter(c => getCourseCategory(c) === activeCategory);
     }
+    if (isSims && activeSimTag !== 'All') {
+      list = list.filter(c => {
+         const searchStr = `${c.title} ${c.role} ${(c.skills || []).join(' ')}`.toLowerCase();
+         return searchStr.includes(activeSimTag.toLowerCase());
+      });
+    }
     if (search.trim()) {
       const q = search.toLowerCase();
       const searchWords = q.split(/\s+/).filter(Boolean);
@@ -101,9 +109,9 @@ const Courses = () => {
       });
     }
     return list;
-  }, [courses, search, activeCategory, isSims]);
+  }, [courses, search, activeCategory, activeSimTag, isSims]);
 
-  const clearFilters = () => { setSearch(''); setActiveCategory('All'); };
+  const clearFilters = () => { setSearch(''); setActiveCategory('All'); setActiveSimTag('All'); };
 
   const heroTheme = isSims
     ? {
@@ -144,66 +152,105 @@ const Courses = () => {
         <div className={`absolute -top-24 -right-24 w-96 h-96 rounded-full ${heroTheme.blobA} blur-3xl pointer-events-none`} />
         <div className={`absolute -bottom-16 -left-16 w-72 h-72 rounded-full ${heroTheme.blobB} blur-3xl pointer-events-none`} />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 pb-32 relative z-10">
-          {/* label */}
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5 mb-5">
-            <GraduationCap className={`w-4 h-4 ${heroTheme.icon}`} />
-            <span className="text-white/80 text-xs font-bold uppercase tracking-widest">SkillValix Library</span>
+        {isSims ? (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 pb-40 relative z-10 flex flex-col items-center text-center">
+            <div className="inline-flex items-center gap-2 bg-cyan-500/10 backdrop-blur-md border border-cyan-500/20 rounded-full px-4 py-2 mb-8">
+              <BriefcaseBusiness className="w-4 h-4 text-cyan-300" />
+              <span className="text-cyan-100 text-xs font-bold uppercase tracking-widest">Experience The Real Work</span>
+            </div>
+            
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-white leading-tight mb-6 tracking-tight">
+              Build your <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-400">career</span><br/>
+              before your first job.
+            </h1>
+            
+            <p className="text-cyan-50/80 text-lg sm:text-xl font-medium max-w-2xl mb-10 leading-relaxed">
+              Complete hands-on tasks mimicking real workplace scenarios. Build features, review code, fix bugs, and prove you are ready for the role.
+            </p>
+
+            <div className="flex bg-slate-900/50 p-1.5 rounded-2xl backdrop-blur-md border border-slate-700 w-fit mb-8 shadow-2xl">
+              <button
+                onClick={() => { setViewMode('courses'); clearFilters(); }}
+                className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm text-slate-300 hover:text-white hover:bg-slate-800 transition-all duration-300"
+              >
+                <GraduationCap className="w-4 h-4" />
+                Free Courses
+              </button>
+              <button
+                onClick={() => { setViewMode('simulations'); clearFilters(); }}
+                className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg shadow-cyan-900/20 transition-all duration-300"
+              >
+                <BriefcaseBusiness className="w-4 h-4 text-cyan-100" />
+                Job Simulations
+              </button>
+            </div>
+            
+            <div className="flex flex-wrap justify-center gap-4">
+              <div className="flex items-center gap-2 text-cyan-100/60 text-sm font-semibold">
+                <Sparkles className="w-4 h-4 text-yellow-400" /> Real Scenarios
+              </div>
+              <div className="flex items-center gap-2 text-cyan-100/60 text-sm font-semibold">
+                <Clock className="w-4 h-4 text-blue-400" /> Self-Paced
+              </div>
+              <div className="flex items-center gap-2 text-cyan-100/60 text-sm font-semibold">
+                <Star className="w-4 h-4 text-amber-400" /> Verified Certificate
+              </div>
+            </div>
           </div>
+        ) : (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 pb-32 relative z-10">
+            {/* label */}
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5 mb-5">
+              <GraduationCap className={`w-4 h-4 ${heroTheme.icon}`} />
+              <span className="text-white/80 text-xs font-bold uppercase tracking-widest">SkillValix Library</span>
+            </div>
 
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-tight mb-4">
-            Explore All{' '}
-            <span className="relative inline-block">
-              <span className={heroTheme.accent}>{isSims ? 'Job Simulations' : 'Courses'}</span>
-              <svg className="absolute -bottom-1 left-0 w-full" viewBox="0 0 200 8" fill="none">
-                <path d="M2 6 Q100 2 198 6" stroke={heroTheme.stroke} strokeWidth="2.5" strokeLinecap="round" opacity="0.7"/>
-              </svg>
-            </span>
-          </h1>
-          <p className={`${heroTheme.copy} text-lg font-medium max-w-2xl mb-7`}>
-            {isSims 
-              ? <>Job simulations are <span className="text-white font-bold">coming soon</span>. They stay visible here, but the launch flow is locked for now while we rebuild the CPU-heavy parts.</>
-              : <>Industry-leading curriculum designed to take you from absolute beginner to professional. All courses are <span className={`text-white font-bold underline ${heroTheme.underline}`}>100% free</span>.</>}
-          </p>
-
-          <div className="flex bg-white/10 p-1.5 rounded-2xl backdrop-blur-sm border border-white/20 w-fit mb-4">
-            <button
-              onClick={() => { setViewMode('courses'); clearFilters(); }}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 ${
-                !isSims ? 'bg-white text-indigo-700 shadow-md' : 'text-white hover:bg-white/10'
-              }`}
-            >
-              <GraduationCap className={`w-4 h-4 ${!isSims ? 'text-indigo-600' : 'text-indigo-200'}`} />
-              Free Courses
-            </button>
-            <button
-              onClick={() => { setViewMode('simulations'); clearFilters(); }}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 ${
-                 isSims ? 'bg-white text-indigo-700 shadow-md' : 'text-white hover:bg-white/10'
-              }`}
-            >
-              <BriefcaseBusiness className={`w-4 h-4 ${isSims ? 'text-indigo-600' : 'text-indigo-200'}`} />
-              Job Simulations
-            </button>
-          </div>
-
-          {/* Stats row */}
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2">
-              <Sparkles className="w-4 h-4 text-yellow-300" />
-              <span className="text-white text-sm font-bold">
-                {loading ? '...' : `${courses.filter(c => (isSims ? c.isJobSimulation : !c.isJobSimulation)).length} ${isSims ? 'Simulations' : 'Courses'}`}
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-tight mb-4">
+              Explore All <span className="relative inline-block">
+                <span className={heroTheme.accent}>Courses</span>
+                <svg className="absolute -bottom-1 left-0 w-full" viewBox="0 0 200 8" fill="none">
+                  <path d="M2 6 Q100 2 198 6" stroke={heroTheme.stroke} strokeWidth="2.5" strokeLinecap="round" opacity="0.7"/>
+                </svg>
               </span>
+            </h1>
+            <p className={`${heroTheme.copy} text-lg font-medium max-w-2xl mb-7`}>
+              Industry-leading curriculum designed to take you from absolute beginner to professional. All courses are <span className={`text-white font-bold underline ${heroTheme.underline}`}>100% free</span>.
+            </p>
+
+            <div className="flex bg-white/10 p-1.5 rounded-2xl backdrop-blur-sm border border-white/20 w-fit mb-4">
+              <button
+                onClick={() => { setViewMode('courses'); clearFilters(); }}
+                className="flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm bg-white text-indigo-700 shadow-md transition-all duration-300"
+              >
+                <GraduationCap className="w-4 h-4 text-indigo-600" />
+                Free Courses
+              </button>
+              <button
+                onClick={() => { setViewMode('simulations'); clearFilters(); }}
+                className="flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm text-white hover:bg-white/10 transition-all duration-300"
+              >
+                <BriefcaseBusiness className="w-4 h-4 text-indigo-200" />
+                Job Simulations
+              </button>
             </div>
-            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2">
-              <Star className="w-4 h-4 text-yellow-300 fill-yellow-300" />
-              <span className="text-white text-sm font-bold">Free Forever</span>
+
+            {/* Stats row */}
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2">
+                <Sparkles className="w-4 h-4 text-yellow-300" />
+                <span className="text-white text-sm font-bold">
+                  {loading ? '...' : `${courses.filter(c => !c.isJobSimulation).length} Courses`}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2">
+                <Star className="w-4 h-4 text-yellow-300 fill-yellow-300" />
+                <span className="text-white text-sm font-bold">Free Forever</span>
+              </div>
+              <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2">
+                <Clock className="w-4 h-4 text-cyan-300" />
+                <span className="text-white text-sm font-bold">Self-Paced</span>
+              </div>
             </div>
-            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2">
-              <Clock className="w-4 h-4 text-cyan-300" />
-              <span className="text-white text-sm font-bold">Self-Paced</span>
-            </div>
-          </div>
 
             <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-w-4xl">
               {[
@@ -224,7 +271,8 @@ const Courses = () => {
                 </Link>
               ))}
             </div>
-        </div>
+          </div>
+        )}
       </div>
 
       {/* ── SEARCH + FILTER BAR (overlaps hero) ── */}
@@ -250,7 +298,7 @@ const Courses = () => {
             </div>
 
             {/* Category Select (Hide if sim) */}
-            {!isSims && (
+            {!isSims ? (
               <div className="relative">
                 <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                 <select
@@ -267,11 +315,28 @@ const Courses = () => {
                   <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                 </div>
               </div>
+            ) : (
+              <div className="relative">
+                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                <select
+                  id="sim-category"
+                  value={activeSimTag}
+                  onChange={e => setActiveSimTag(e.target.value)}
+                  className="w-full sm:w-auto appearance-none pl-9 pr-10 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition cursor-pointer"
+                >
+                  {SIM_TAGS.map(tag => (
+                    <option key={tag} value={tag}>{tag === 'All' ? 'All Roles' : tag}</option>
+                  ))}
+                </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                </div>
+              </div>
             )}
           </div>
 
           {/* Category Pills (Hide if sim) */}
-          {!isSims && (
+          {!isSims ? (
             <div className="flex overflow-x-auto hide-scrollbar gap-2 mt-3 pb-1">
               {ALL_CATEGORIES.map(cat => (
                 <button
@@ -287,6 +352,22 @@ const Courses = () => {
                 </button>
               ))}
             </div>
+          ) : (
+            <div className="flex overflow-x-auto hide-scrollbar gap-2 mt-3 pb-1">
+              {SIM_TAGS.map(tag => (
+                <button
+                  key={tag}
+                  onClick={() => setActiveSimTag(tag)}
+                  className={`whitespace-nowrap px-3 py-1 rounded-full text-xs font-semibold transition-all duration-200 border ${
+                    activeSimTag === tag
+                      ? 'bg-cyan-600 text-white border-cyan-600 shadow-sm'
+                      : 'bg-white text-slate-500 border-slate-200 hover:border-cyan-300 hover:text-cyan-600'
+                  }`}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
           )}
         </div>
       </div>
@@ -298,8 +379,9 @@ const Courses = () => {
           <div className="flex items-center justify-between mb-4">
             <p className="text-slate-500 text-sm">
               Showing <strong className="text-slate-800">{filtered.length}</strong> of {courses.length} courses
-              {activeCategory !== 'All' && <span> in <strong className="text-indigo-600">{activeCategory}</strong></span>}
-              {search && <span> matching "<strong className="text-indigo-600">{search}</strong>"</span>}
+              {activeCategory !== 'All' && !isSims && <span> in <strong className="text-indigo-600">{activeCategory}</strong></span>}
+              {activeSimTag !== 'All' && isSims && <span> in <strong className="text-cyan-600">{activeSimTag}</strong></span>}
+              {search && <span> matching "<strong className={isSims ? "text-cyan-600" : "text-indigo-600"}>{search}</strong>"</span>}
             </p>
             <button
               onClick={clearFilters}

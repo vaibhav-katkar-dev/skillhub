@@ -2810,7 +2810,7 @@ const AdminPanel = () => {
         )}
 
         {/* ══════════════ SIM COUPONS TAB ══════════════ */}
-        {tab === 'sim-simCoupons' && (
+        {tab === 'sim-coupons' && (
           <div className="space-y-8">
 
             {/* Feedback banner */}
