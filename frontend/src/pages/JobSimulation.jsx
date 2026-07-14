@@ -249,6 +249,7 @@ export default function JobSimulation() {
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const [isInternationalUser, setIsInternationalUser] = useState(false);
   const [showGuide, setShowGuide] = useState(true);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
   useEffect(() => {
     const cachedCountry = localStorage.getItem('user_country');
@@ -507,6 +508,11 @@ export default function JobSimulation() {
   };
 
   const handleNavClick = (section, taskIdx = 0) => {
+    if (!isAuthenticated && section === 'task') {
+      setShowLoginPrompt(true);
+      return;
+    }
+    setShowLoginPrompt(false);
     setActiveSection(section);
     if (section === 'task') {
       setActiveTaskIndex(taskIdx);
@@ -772,12 +778,70 @@ export default function JobSimulation() {
             </div>
 
             <div className="mt-10 text-center">
-              <button 
-                onClick={() => handleNavClick('task', 0)}
+              <button
+                onClick={() => {
+                  if (!isAuthenticated) {
+                    setShowLoginPrompt(true);
+                    setTimeout(() => {
+                      document.getElementById('sim-login-prompt')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 50);
+                  } else {
+                    setShowLoginPrompt(false);
+                    handleNavClick('task', 0);
+                  }
+                }}
                 className={`inline-flex items-center gap-2 px-8 py-4 rounded-xl text-white font-bold text-lg bg-gradient-to-r ${sim.color} hover:opacity-90 transition-opacity shadow-lg`}
               >
                 Start Simulation <ArrowRight className="w-5 h-5" />
               </button>
+
+              {/* Login prompt — shown inline when not authenticated */}
+              {showLoginPrompt && (
+                <div
+                  id="sim-login-prompt"
+                  role="alert"
+                  aria-live="polite"
+                  className="relative mt-6 mx-auto max-w-md rounded-2xl border border-indigo-200 bg-indigo-50 p-6 shadow-lg text-left animate-in fade-in slide-in-from-bottom-3 duration-300"
+                >
+                  <button
+                    onClick={() => setShowLoginPrompt(false)}
+                    className="absolute top-3 right-3 p-1 text-slate-400 hover:text-slate-700 transition-colors"
+                    aria-label="Dismiss"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+
+                  <div className="flex items-start gap-4">
+                    <div className="shrink-0 w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center">
+                      <Lock className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-black text-slate-900 mb-1">
+                        Sign in to start your simulation
+                      </h3>
+                      <p className="text-sm text-slate-600 mb-4 leading-relaxed">
+                        Your progress, task completions, and certificate are saved to your account.
+                        It's free to join — create an account in under a minute.
+                      </p>
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <Link
+                          to="/login"
+                          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-sm hover:bg-indigo-700 transition-colors shadow-sm"
+                        >
+                          <UserRound className="w-4 h-4" />
+                          Go to Login
+                        </Link>
+                        <Link
+                          to="/register"
+                          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border border-indigo-300 text-indigo-700 font-bold text-sm bg-white hover:bg-indigo-50 transition-colors"
+                        >
+                          Create free account
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
