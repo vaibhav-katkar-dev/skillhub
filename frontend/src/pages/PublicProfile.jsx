@@ -5,7 +5,8 @@ import {
   Award, Briefcase, Calendar, FileText, 
   Github, Linkedin, CheckCircle, Globe, GraduationCap, 
   Zap, Phone, Download, ExternalLink,
-  ShieldCheck, Share2, Sparkles, Code2, Link as LinkIcon
+  ShieldCheck, Share2, Sparkles, Code2, Link as LinkIcon,
+  Building2, ChevronDown, ChevronUp, ClipboardList
 } from 'lucide-react';
 import { api } from '../store/authStore';
 import Logo from '../components/Logo';
@@ -21,6 +22,8 @@ export default function PublicProfile() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showNav, setShowNav] = useState(true);
+  const [simConfig, setSimConfig] = useState([]); // job-simulations.json data
+  const [openSims, setOpenSims] = useState({}); // accordion open state per simId
   
   // Optimization: Use ref instead of state to trace scroll without triggering continuous re-renders
   const lastScrollY = useRef(0);
@@ -39,9 +42,10 @@ export default function PublicProfile() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const [res, coursesRes] = await Promise.all([
+        const [res, coursesRes, simsRes] = await Promise.all([
           api.get(`/auth/public/${id}`),
-          fetch('/data/all-courses.json')
+          fetch('/data/all-courses.json'),
+          fetch('/data/job-simulations.json'), // fetch sim config for titles/colors
         ]);
         const profileData = res.data;
 
@@ -57,6 +61,12 @@ export default function PublicProfile() {
             };
           });
         }
+
+        if (simsRes.ok) {
+          const simsData = await simsRes.json();
+          setSimConfig(Array.isArray(simsData) ? simsData : []);
+        }
+
         setProfile(profileData);
       } catch (err) {
         console.error(err);
@@ -489,6 +499,210 @@ export default function PublicProfile() {
               )}
             </section>
             
+            {/* Job Simulations Section */}
+            {(() => {
+              const rawSubs = profile.simSubmissions || {};
+              const simIds = Object.keys(rawSubs);
+
+              // Derive which simIds have certificates from eventCerts already in profile
+              const earnedCertMap = {};
+              (profile.certificates || []).forEach(c => {
+                if (c.isEvent && c.eventType === 'job-simulation') {
+                  // match by eventTitle to simConfig
+                  const matched = simConfig.find(s => s.title === c.eventTitle);
+                  if (matched) earnedCertMap[matched.id] = c.certificateId;
+                }
+              });
+
+              return (
+                <section>
+                  <h2 className={`text-xl font-black flex items-center gap-2 mb-6 ${textHead}`}>
+                    <ClipboardList className="w-5 h-5 text-violet-500" /> Job Simulations
+                  </h2>
+
+                  {simIds.length === 0 ? (
+                    <div className={`border-2 border-dashed rounded-[2rem] p-10 text-center ${
+                      isDark ? 'border-slate-700/50 bg-slate-800/20' : 'border-slate-200 bg-white/40'
+                    }`}>
+                      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 ${
+                        isDark ? 'bg-violet-500/10 text-violet-400' : 'bg-violet-50 text-violet-400'
+                      }`}>
+                        <Briefcase className="w-8 h-8" />
+                      </div>
+                      <p className={`text-sm font-medium ${textMuted}`}>No job simulations completed yet.</p>
+                      <Link to="/job-simulations" className="mt-3 inline-block text-xs font-bold text-violet-500 hover:text-violet-400">
+                        Explore Simulations →
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="space-y-5">
+                      {simIds.map(simId => {
+                        const tasks = rawSubs[simId] || [];
+                        const cfg = simConfig.find(s => s.id === simId);
+                        const totalTasks = cfg?.tasks?.length || tasks.length;
+                        const completedCount = tasks.filter(t => t.status === 'completed').length;
+                        const pct = totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
+                        const certId = earnedCertMap[simId];
+                        const isOpen = !!openSims[simId];
+
+                        return (
+                          <div key={simId} className={`border rounded-[1.5rem] overflow-hidden ${
+                            isDark ? 'border-slate-700 bg-slate-800/40' : 'border-slate-200 bg-white'
+                          }`}>
+                            {/* Header */}
+                            <div className="p-5 flex items-start gap-4">
+                              {/* Gradient icon */}
+                              <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br ${
+                                cfg?.color || 'from-violet-500 to-indigo-600'
+                              } text-white shadow-sm`}>
+                                <Building2 className="w-6 h-6" />
+                              </div>
+
+                              <div className="flex-1 min-w-0">
+                                <h3 className={`font-black text-base leading-tight truncate ${textHead}`}>
+                                  {cfg?.title || simId}
+                                </h3>
+                                <p className={`text-xs font-medium mt-0.5 ${textMuted}`}>
+                                  {cfg?.company || 'SkillValix Labs'} · {cfg?.role || 'Simulation'}
+                                </p>
+
+                                {/* Progress bar */}
+                                <div className="mt-3 flex items-center gap-3">
+                                  <div className={`flex-1 h-1.5 rounded-full overflow-hidden ${
+                                    isDark ? 'bg-slate-700' : 'bg-slate-100'
+                                  }`}>
+                                    <div
+                                      className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full transition-all duration-700"
+                                      style={{ width: `${pct}%` }}
+                                    />
+                                  </div>
+                                  <span className={`text-[10px] font-bold whitespace-nowrap ${
+                                    isDark ? 'text-slate-400' : 'text-slate-500'
+                                  }`}>{completedCount}/{totalTasks} tasks</span>
+
+                                  {/* Status pill */}
+                                  {certId ? (
+                                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700">
+                                      ✓ Certified
+                                    </span>
+                                  ) : (
+                                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                                      isDark
+                                        ? 'bg-violet-500/10 border border-violet-500/30 text-violet-300'
+                                        : 'bg-violet-50 border border-violet-200 text-violet-700'
+                                    }`}>
+                                      In Progress
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Right actions */}
+                              <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                                {certId && (
+                                  <Link
+                                    to={`/verify/${certId}`}
+                                    className="inline-flex items-center gap-1 text-[11px] font-black text-emerald-600 hover:text-emerald-500 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl transition-colors"
+                                  >
+                                    <Award className="w-3.5 h-3.5" /> View Certificate
+                                  </Link>
+                                )}
+                                <button
+                                  onClick={() => setOpenSims(p => ({ ...p, [simId]: !isOpen }))}
+                                  className={`inline-flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-xl border transition-colors ${
+                                    isDark
+                                      ? 'border-slate-700 text-slate-400 hover:bg-slate-700'
+                                      : 'border-slate-200 text-slate-500 hover:bg-slate-50'
+                                  }`}
+                                >
+                                  {isOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                                  {isOpen ? 'Hide' : 'Tasks'}
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Expandable task list */}
+                            {isOpen && (
+                              <div className={`border-t px-5 pb-4 pt-3 space-y-2 ${
+                                isDark ? 'border-slate-700' : 'border-slate-100'
+                              }`}>
+                                {tasks.length === 0 ? (
+                                  <p className={`text-xs ${textMuted}`}>No tasks submitted yet.</p>
+                                ) : (
+                                  tasks.map((task, i) => {
+                                    const taskCfg = cfg?.tasks?.find(t => t.num === task.taskNum);
+                                    return (
+                                      <div key={i} className={`flex items-start gap-3 rounded-xl p-3 ${
+                                        isDark ? 'bg-slate-900/40' : 'bg-slate-50'
+                                      }`}>
+                                        {/* Status dot */}
+                                        <div className={`mt-0.5 w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                          task.status === 'completed'
+                                            ? 'bg-emerald-100 text-emerald-600'
+                                            : 'bg-slate-200 text-slate-400'
+                                        }`}>
+                                          {task.status === 'completed'
+                                            ? <CheckCircle className="w-3.5 h-3.5" />
+                                            : <span className="text-[9px] font-black">{task.taskNum}</span>
+                                          }
+                                        </div>
+
+                                        <div className="flex-1 min-w-0">
+                                          <p className={`text-xs font-bold truncate ${textHead}`}>
+                                            Task {task.taskNum}{taskCfg?.title ? ` — ${taskCfg.title}` : ''}
+                                          </p>
+                                          {task.url && (
+                                            <a
+                                              href={task.url}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="inline-flex items-center gap-1 text-[10px] font-medium text-indigo-500 hover:text-indigo-400 mt-0.5 truncate max-w-full"
+                                            >
+                                              <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                                              <span className="truncate">{task.url}</span>
+                                            </a>
+                                          )}
+                                        </div>
+
+                                        {/* Status badge */}
+                                        <span className={`text-[9px] font-black px-2 py-0.5 rounded-full flex-shrink-0 ${
+                                          task.status === 'completed'
+                                            ? isDark
+                                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                                              : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                            : isDark
+                                              ? 'bg-slate-700 text-slate-400 border border-slate-600'
+                                              : 'bg-slate-100 text-slate-500 border border-slate-200'
+                                        }`}>
+                                          {task.status}
+                                        </span>
+                                      </div>
+                                    );
+                                  })
+                                )}
+
+                                {/* Link back to simulation page (read-only in portfolio) */}
+                                {cfg && (
+                                  <div className="pt-1">
+                                    <Link
+                                      to={`/job-simulation/${simId}`}
+                                      className="text-[11px] font-bold text-violet-500 hover:text-violet-400"
+                                    >
+                                      Continue on simulation page →
+                                    </Link>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </section>
+              );
+            })()}
+
             {renderRecruiterVerified("block lg:hidden")}
         </div>
       </main>

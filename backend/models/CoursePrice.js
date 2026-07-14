@@ -46,6 +46,5 @@ const coursePriceSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-coursePriceSchema.index({ courseId: 1 });
 
 export default mongoose.model('CoursePrice', coursePriceSchema);

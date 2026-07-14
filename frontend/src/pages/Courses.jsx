@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import {
   BookOpen, Clock, Loader2,
   ArrowRight, Sparkles, GraduationCap, Star,
@@ -48,10 +48,20 @@ const Courses = () => {
   const [loading, setLoading]     = useState(true);
   const [search, setSearch]       = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
-  const [viewMode, setViewMode]   = useState('courses'); // 'courses' | 'simulations'
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const [viewMode, setViewMode]   = useState(location.pathname === '/job-simulations' ? 'simulations' : 'courses'); // 'courses' | 'simulations'
 
   const isSims = viewMode === 'simulations';
+
+  useEffect(() => {
+    if (location.pathname === '/job-simulations') {
+      setViewMode('simulations');
+    } else if (location.pathname === '/courses') {
+      setViewMode('courses');
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     (async () => {

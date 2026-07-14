@@ -8,5 +8,7 @@ const simulationProgressSchema = new mongoose.Schema({
 
 // Ensure one user has only one progress record per simulation
 simulationProgressSchema.index({ user: 1, simulationId: 1 }, { unique: true });
+// Index for aggregation by simulationId
+simulationProgressSchema.index({ simulationId: 1 });
 
 export default mongoose.model('SimulationProgress', simulationProgressSchema);

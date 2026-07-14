@@ -171,7 +171,7 @@ if (fs.existsSync(coursesPath)) {
   }
 }
 
-// ── 6.  Job Simulation pages ──────────────────────────────────────────────────
+// ── 6.  Job Simulation pages ────────────────────────────────────────────────
 console.log('\n[prerender] Generating job simulation pages...');
 const simsPath = path.join(ROOT, 'public/data/job-simulations.json');
 if (fs.existsSync(simsPath)) {
@@ -179,25 +179,48 @@ if (fs.existsSync(simsPath)) {
   for (const sim of allSims) {
     if (!sim.id) continue;
     const canonical = `https://www.skillvalix.com/job-simulation/${sim.id}`;
-    
+    const simImage  = sim.image || '';
+    const techStack = Array.isArray(sim.techStack) ? sim.techStack : [];
+
     const jsonLd = {
       '@context': 'https://schema.org',
       '@type': 'EducationalOccupationalProgram',
-      name: sim.title,
-      description: sim.about,
+      name: sim.metaTitle || sim.title,
+      description: sim.metaDescription || sim.about,
+      url: canonical,
+      image: simImage,
+      timeToComplete: 'P7D',
+      educationalProgramMode: 'online',
+      programType: 'JobSimulation',
+      occupationalCredentialAwarded: 'Virtual Job Simulation Certificate',
+      competencyRequired: techStack,
       provider: {
         '@type': 'Organization',
         name: 'SkillValix',
-        sameAs: 'https://www.skillvalix.com'
+        sameAs: 'https://www.skillvalix.com',
+        logo: {
+          '@type': 'ImageObject',
+          url: 'https://www.skillvalix.com/logo.png'
+        }
+      },
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'INR',
+        availability: 'https://schema.org/InStock',
+        category: 'Free'
       }
     };
 
     const head = buildHead({
-      title: `${sim.title} - SkillValix Events`,
-      description: sim.about,
+      title: sim.metaTitle || `${sim.title} - Free Job Simulation | SkillValix`,
+      description: sim.metaDescription || sim.about,
       canonical,
+      ogImage: simImage,
       ogType: 'website',
-      keywords: `job simulation, ${sim.role}, virtual experience, skillvalix`,
+      keywords: Array.isArray(sim.keywords)
+        ? sim.keywords.join(', ')
+        : `job simulation, ${sim.title}, virtual internship, work experience, skillvalix`,
       jsonLd,
     });
 
@@ -287,6 +310,38 @@ const STATIC_PAGES = [
     canonical:   'https://www.skillvalix.com/campus-ambassador',
     ogType:      'website',
     keywords:    'campus ambassador program, student leadership, college ambassador India',
+  },
+  {
+    path:        '/skill-exams',
+    title:       'Online Skill Exams — Validate Your Programming Skills | SkillValix',
+    description: 'Take online skill exams in web development, Python, JavaScript and more. Earn a verified certificate without taking a full course on SkillValix.',
+    canonical:   'https://www.skillvalix.com/skill-exams',
+    ogType:      'website',
+    ogImage:     'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&q=80&w=1200',
+    keywords:    'online skill exam, programming certificate, validate coding skills, skill based certification, skillvalix exam',
+  },
+  {
+    path:        '/job-simulations',
+    title:       'Free Job Simulations — Virtual Work Experience for Students | SkillValix',
+    description: 'Gain real work experience with free job simulations in Frontend Dev, Spring Boot, Data Analysis, UI/UX Design & Backend Dev. Build your portfolio and earn a certificate.',
+    canonical:   'https://www.skillvalix.com/job-simulations',
+    ogType:      'website',
+    ogImage:     'https://images.unsplash.com/photo-1623282033815-40b05d96c903?auto=format&fit=crop&q=80&w=1200',
+    keywords:    'job simulation, virtual internship, free work experience, job simulation certificate, frontend developer simulation, data analyst simulation, UI UX designer simulation, backend developer simulation, spring boot simulation, skillvalix',
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      name: 'SkillValix Free Job Simulations',
+      description: 'Free virtual job simulations offering real work experience and completion certificates.',
+      url: 'https://www.skillvalix.com/job-simulations',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Spring Boot Developer Job Simulation', url: 'https://www.skillvalix.com/job-simulation/spring-boot-developer' },
+        { '@type': 'ListItem', position: 2, name: 'Frontend Developer Job Simulation',    url: 'https://www.skillvalix.com/job-simulation/frontend-developer' },
+        { '@type': 'ListItem', position: 3, name: 'Data Analyst Job Simulation',          url: 'https://www.skillvalix.com/job-simulation/data-analyst' },
+        { '@type': 'ListItem', position: 4, name: 'UI/UX Designer Job Simulation',        url: 'https://www.skillvalix.com/job-simulation/ui-ux-designer' },
+        { '@type': 'ListItem', position: 5, name: 'Backend Developer Job Simulation',     url: 'https://www.skillvalix.com/job-simulation/backend-developer' },
+      ],
+    },
   },
   {
     path:        '/privacy-policy',

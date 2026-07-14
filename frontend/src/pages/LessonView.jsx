@@ -598,7 +598,7 @@ const LessonView = () => {
           box-shadow: 0 1px 6px rgba(0,0,0,0.06);
         }
         .lv-topbar-inner {
-          max-width: 1400px; margin: 0 auto;
+          max-width: 100%; margin: 0 auto;
           padding: 0 20px;
           height: 52px;
           display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -641,7 +641,7 @@ const LessonView = () => {
 
         /* ── Two-column grid layout ── */
         .lv-body {
-          max-width:1400px; margin:0 auto; padding:24px 20px 80px;
+          max-width: 100%; margin: 0 auto; padding: 24px 20px 80px;
           display:grid;
           grid-template-columns:1fr 320px;
           gap:24px;

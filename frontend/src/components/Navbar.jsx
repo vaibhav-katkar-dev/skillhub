@@ -7,14 +7,15 @@ import Logo from './Logo';
 const navLinks = [
   { to: '/', label: 'Home' },
   { to: '/courses', label: 'Courses' },
+  { to: '/job-simulations', label: 'Job Simulations' },
   { to: '/skill-exams', label: 'Skill Exams', highlight: true },
   { to: '/hackathons', label: 'Hackathons' },
   { to: '/blog', label: 'Blog' },
-  { to: '/verify', label: 'Verify Certificate' },
+  { to: '/verify', label: 'Verify Certificate', hideOnSmallDesktop: true },
 ];
 
 // Pages where the hide-on-scroll behaviour is active
-const HIDE_ON_SCROLL_PATHS = ['/', '/courses', '/blog'];
+const HIDE_ON_SCROLL_PATHS = ['/', '/courses', '/job-simulations', '/blog'];
 
 const Navbar = () => {
   const { isAuthenticated, user, logout } = useAuthStore();
@@ -92,7 +93,7 @@ const Navbar = () => {
 
           {/* Desktop Nav — center links, always visible, never wrap */}
           <div className="hidden md:flex items-center gap-1 flex-1 justify-center">
-            {navLinks.map(({ to, label, highlight }) => (
+            {navLinks.map(({ to, label, highlight, hideOnSmallDesktop }) => (
               highlight ? (
                 <NavLink
                   key={to}
@@ -124,7 +125,7 @@ const Navbar = () => {
                   to={to}
                   end={to === '/'}
                   className={({ isActive }) =>
-                    `px-4 py-2 rounded-lg text-sm whitespace-nowrap ${
+                    `px-2.5 lg:px-4 py-2 rounded-lg text-sm whitespace-nowrap ${hideOnSmallDesktop ? 'hidden xl:block' : ''} ${
                       isActive
                         ? 'text-blue-600 font-semibold bg-blue-50'
                         : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50 font-medium transition-colors'

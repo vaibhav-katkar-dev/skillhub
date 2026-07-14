@@ -10,7 +10,8 @@ import {
   Award, Activity, Lock, Database, Eye, Star,
   Trophy, Link2, ExternalLink, Filter, Crown,
   Tag, Trash2, ToggleLeft, ToggleRight, Percent, Mail, Search, Send,
-  IndianRupee
+  IndianRupee, Briefcase, TrendingUp, Eye as EyeIcon, EyeOff, BadgeCheck,
+  ChevronRight, Globe
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
@@ -120,6 +121,16 @@ const AdminPanel = () => {
   const [winnerConfigHackId, setWinnerConfigHackId] = useState('');
   const [winnerConfigNote, setWinnerConfigNote] = useState('');
   const [winnerConfigSaving, setWinnerConfigSaving] = useState(false);
+
+  // ── Job Simulation Manager state ─────────────────────────────────────────
+  const [simulations, setSimulations] = useState([]);
+  const [simsLoading, setSimsLoading] = useState(false);
+  const [simMsg, setSimMsg] = useState({ type: '', text: '' });
+  const [simPriceEdits, setSimPriceEdits] = useState({}); // { [simId]: rupeeString }
+  const [simPriceSaving, setSimPriceSaving] = useState(''); // simId being saved
+  const [simTogglingId, setSimTogglingId] = useState(''); // simId being toggled
+  const [simStatsModal, setSimStatsModal] = useState(null); // null | { simId, data }
+  const [simStatsLoading, setSimStatsLoading] = useState(false);
 
   // ── Email Campaign state ──────────────────────────────────────────
   const [emailUsers, setEmailUsers] = useState([]);
@@ -449,6 +460,7 @@ const AdminPanel = () => {
     if (tab === 'host-requests') loadHostRequests();
     if (tab === 'coupons') loadCoupons();
     if (tab === 'pricing') loadPrices();
+    if (tab === 'simulations') loadSimulations();
     if (tab === 'users') {
       setTrackerSearch('');
       loadTrackerUsers('');
@@ -462,6 +474,70 @@ const AdminPanel = () => {
       loadEmailUsers('');
     }
   }, [tab]);
+
+  // ── Simulation Manager handlers ───────────────────────────────────────────
+  const loadSimulations = async () => {
+    setSimsLoading(true);
+    setSimMsg({ type: '', text: '' });
+    try {
+      const r = await api.get('/events/admin/simulations');
+      setSimulations(r.data || []);
+    } catch {
+      setSimulations([]);
+      setSimMsg({ type: 'error', text: 'Failed to load simulations.' });
+    } finally {
+      setSimsLoading(false);
+    }
+  };
+
+  const handleSimPriceSave = async (simId, title) => {
+    const rupeeStr = simPriceEdits[simId];
+    const rupees = parseFloat(rupeeStr);
+    if (!rupeeStr || isNaN(rupees) || rupees < 1) {
+      setSimMsg({ type: 'error', text: 'Price must be at least ₹1.' });
+      return;
+    }
+    setSimPriceSaving(simId);
+    setSimMsg({ type: '', text: '' });
+    try {
+      await api.put(`/events/admin/simulations/${simId}/price`, { certCost: Math.round(rupees) });
+      setSimMsg({ type: 'success', text: `Price for "${title}" updated to ₹${Math.round(rupees)}.` });
+      setSimPriceEdits(prev => { const n = { ...prev }; delete n[simId]; return n; });
+      loadSimulations();
+    } catch (err) {
+      setSimMsg({ type: 'error', text: err.response?.data?.message || 'Failed to update price.' });
+    } finally {
+      setSimPriceSaving('');
+    }
+  };
+
+  const handleSimToggleVisibility = async (simId, title) => {
+    setSimTogglingId(simId);
+    setSimMsg({ type: '', text: '' });
+    try {
+      const r = await api.patch(`/events/admin/simulations/${simId}/toggle-visibility`);
+      setSimMsg({ type: 'success', text: r.data.message });
+      loadSimulations();
+    } catch (err) {
+      setSimMsg({ type: 'error', text: err.response?.data?.message || 'Failed to toggle visibility.' });
+    } finally {
+      setSimTogglingId('');
+    }
+  };
+
+  const handleViewSimStats = async (simId) => {
+    setSimStatsModal({ simId, data: null });
+    setSimStatsLoading(true);
+    try {
+      const r = await api.get(`/events/admin/simulations/${simId}/stats`);
+      setSimStatsModal({ simId, data: r.data });
+    } catch {
+      setSimStatsModal(null);
+      setSimMsg({ type: 'error', text: 'Failed to load simulation stats.' });
+    } finally {
+      setSimStatsLoading(false);
+    }
+  };
 
   // Debounce email search — only fires API after 400ms of no typing
   useEffect(() => {
@@ -745,6 +821,7 @@ const AdminPanel = () => {
               { key: 'quiz', label: 'Quiz Manager', icon: ClipboardList },
               { key: 'hackathons', label: 'Hackathons', icon: Award },
               { key: 'host-requests', label: 'Host Requests', icon: Users },
+              { key: 'simulations', label: 'Job Simulations', icon: Briefcase },
               { key: 'coupons', label: 'Coupons', icon: Tag },
               { key: 'pricing', label: 'Course Pricing', icon: IndianRupee },
               { key: 'email', label: 'Email Campaign', icon: Mail },
@@ -2843,6 +2920,304 @@ const AdminPanel = () => {
               )}
             </div>
 
+          </div>
+        )}
+
+        {/* ─── JOB SIMULATIONS TAB ─── */}
+        {tab === 'simulations' && (
+          <div className="space-y-6">
+
+            {/* Stats Modal */}
+            {simStatsModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm" onClick={() => setSimStatsModal(null)}>
+                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl border border-slate-200 max-h-[90vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+                  <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-indigo-50 to-violet-50">
+                    <div>
+                      <h3 className="font-bold text-slate-900 flex items-center gap-2">
+                        <BarChart3 className="w-5 h-5 text-indigo-600" />
+                        Simulation Analytics
+                      </h3>
+                      {simStatsModal.data && (
+                        <p className="text-xs text-slate-500 mt-0.5">{simStatsModal.data.sim.title}</p>
+                      )}
+                    </div>
+                    <button onClick={() => setSimStatsModal(null)} className="p-2 hover:bg-slate-100 rounded-lg transition">
+                      <X className="w-5 h-5 text-slate-500" />
+                    </button>
+                  </div>
+
+                  <div className="overflow-y-auto flex-1 p-6">
+                    {simStatsLoading ? (
+                      <div className="flex items-center justify-center py-16">
+                        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+                      </div>
+                    ) : simStatsModal.data ? (
+                      <div className="space-y-6">
+                        {/* Stats cards */}
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                          <div className="rounded-xl bg-indigo-50 border border-indigo-100 p-4">
+                            <p className="text-xs font-bold text-indigo-500 uppercase tracking-wide">Total Certs</p>
+                            <p className="text-3xl font-black text-indigo-700 mt-2">{simStatsModal.data.totalCerts}</p>
+                          </div>
+                          <div className="rounded-xl bg-emerald-50 border border-emerald-100 p-4">
+                            <p className="text-xs font-bold text-emerald-500 uppercase tracking-wide">Tasks Done</p>
+                            <p className="text-3xl font-black text-emerald-700 mt-2">{simStatsModal.data.taskBreakdown.reduce((s, t) => s + t.count, 0)}</p>
+                          </div>
+                          <div className="rounded-xl bg-violet-50 border border-violet-100 p-4">
+                            <p className="text-xs font-bold text-violet-500 uppercase tracking-wide">Recent Subs</p>
+                            <p className="text-3xl font-black text-violet-700 mt-2">{simStatsModal.data.recentSubmissions.length}</p>
+                          </div>
+                        </div>
+
+                        {/* Task breakdown */}
+                        {simStatsModal.data.taskBreakdown.length > 0 && (
+                          <div>
+                            <h4 className="text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">Task Completion Breakdown</h4>
+                            <div className="space-y-2">
+                              {simStatsModal.data.taskBreakdown.map(t => (
+                                <div key={t._id} className="flex items-center gap-3">
+                                  <span className="text-xs font-bold text-slate-500 w-16 shrink-0">Task {t._id}</span>
+                                  <div className="flex-1 bg-slate-100 rounded-full h-2">
+                                    <div
+                                      className="bg-indigo-500 rounded-full h-2 transition-all"
+                                      style={{ width: `${Math.min(100, (t.count / Math.max(...simStatsModal.data.taskBreakdown.map(x => x.count))) * 100)}%` }}
+                                    />
+                                  </div>
+                                  <span className="text-xs font-bold text-slate-700 w-8 text-right shrink-0">{t.count}</span>
+                                  <span className="text-xs text-slate-400 w-20 shrink-0">{t.taskType}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Recent submissions */}
+                        {simStatsModal.data.recentSubmissions.length > 0 && (
+                          <div>
+                            <h4 className="text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">Recent Submissions</h4>
+                            <div className="space-y-2 max-h-72 overflow-y-auto">
+                              {simStatsModal.data.recentSubmissions.map((s, i) => (
+                                <div key={i} className="rounded-lg border border-slate-200 p-3 flex items-start justify-between gap-3">
+                                  <div className="min-w-0">
+                                    <p className="text-sm font-semibold text-slate-900 truncate">{s.userName}</p>
+                                    <p className="text-xs text-slate-500 truncate">{s.userEmail}</p>
+                                    <p className="text-xs text-slate-400 mt-1">
+                                      Task {s.taskNum} · {s.taskType} · {new Date(s.submittedAt).toLocaleDateString('en-IN')}
+                                    </p>
+                                  </div>
+                                  <div className="flex items-center gap-2 shrink-0">
+                                    <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${
+                                      s.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                                    }`}>{s.status}</span>
+                                    <a href={s.url} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-800 transition">
+                                      <ExternalLink className="w-3.5 h-3.5" />
+                                    </a>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Header */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                    <Briefcase className="w-5 h-5 text-indigo-600" />
+                    Job Simulation Manager
+                  </h2>
+                  <p className="text-sm text-slate-500 mt-1">
+                    Manage certificate prices, visibility, and view live analytics for all simulations. Price changes update the JSON file immediately.
+                  </p>
+                </div>
+                <button
+                  onClick={loadSimulations}
+                  disabled={simsLoading}
+                  className="flex items-center gap-2 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-sm font-semibold transition shrink-0"
+                >
+                  <RefreshCw className={`w-4 h-4 ${simsLoading ? 'animate-spin' : ''}`} />
+                  Refresh
+                </button>
+              </div>
+
+              {/* Security note */}
+              <div className="mt-4 flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs">
+                <ShieldCheck className="w-4 h-4 mt-0.5 shrink-0 text-amber-600" />
+                <span>
+                  <strong>Secure &amp; Safe:</strong> All changes are admin-only (JWT + role check). Price and visibility edits write atomically to the JSON file using a temp-file swap — no data loss on partial failures. Changes take effect on the next frontend request.
+                </span>
+              </div>
+
+              {simMsg.text && (
+                <div className={`mt-4 flex items-start gap-2 p-3 rounded-xl text-sm ${
+                  simMsg.type === 'success' ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' : 'bg-rose-50 border border-rose-200 text-rose-700'
+                }`}>
+                  {simMsg.type === 'success' ? <CheckCircle className="w-4 h-4 mt-0.5 shrink-0" /> : <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />}
+                  <span>{simMsg.text}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Summary cards */}
+            {!simsLoading && simulations.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  { label: 'Total Simulations', value: simulations.length, tone: 'from-indigo-600 to-blue-600', icon: Briefcase },
+                  { label: 'Total Completions', value: simulations.reduce((s, sim) => s + sim.completionCount, 0), tone: 'from-emerald-600 to-teal-600', icon: BadgeCheck },
+                  { label: 'Certs Issued', value: simulations.reduce((s, sim) => s + sim.certCount, 0), tone: 'from-amber-500 to-orange-500', icon: Award },
+                  { label: 'Active Sims', value: simulations.filter(s => !s.comingSoon).length, tone: 'from-violet-600 to-purple-600', icon: Globe },
+                ].map(({ label, value, tone, icon: Icon }) => (
+                  <div key={label} className={`rounded-2xl bg-gradient-to-br ${tone} p-5 text-white shadow-lg`}>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs uppercase tracking-widest font-bold text-white/70">{label}</p>
+                      <Icon className="w-5 h-5 text-white/80" />
+                    </div>
+                    <p className="mt-3 text-4xl font-black leading-none">{value}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Simulation cards */}
+            {simsLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[1,2,3,4].map(i => <div key={i} className="h-64 rounded-2xl bg-slate-100 animate-pulse" />)}
+              </div>
+            ) : simulations.length === 0 ? (
+              <div className="bg-white rounded-2xl border border-dashed border-slate-200 p-8 text-center text-slate-500">
+                <Briefcase className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                <p className="font-semibold">No simulations found</p>
+                <p className="text-sm mt-1">Check that job-simulations.json is accessible on the backend.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {simulations.map(sim => {
+                  const isEditingPrice = simId => simPriceEdits[simId] !== undefined;
+                  const priceEdit = simPriceEdits[sim.id];
+                  const isSavingPrice = simPriceSaving === sim.id;
+                  const isToggling = simTogglingId === sim.id;
+
+                  return (
+                    <div key={sim.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                      {/* Card header */}
+                      <div className={`h-1.5 w-full bg-gradient-to-r ${sim.color || 'from-indigo-500 to-violet-500'}`} />
+                      <div className="p-5">
+                        <div className="flex items-start justify-between gap-3 mb-4">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="font-bold text-slate-900 text-sm leading-snug">{sim.title}</h3>
+                              <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wide ${
+                                sim.comingSoon
+                                  ? 'bg-amber-100 text-amber-700'
+                                  : 'bg-emerald-100 text-emerald-700'
+                              }`}>
+                                {sim.comingSoon ? 'Hidden' : 'Live'}
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-500 mt-1">{sim.role}</p>
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                              <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-semibold">{sim.level}</span>
+                              <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-semibold">{sim.duration}</span>
+                              <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-semibold">{sim.taskCount} tasks</span>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleViewSimStats(sim.id)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold rounded-lg transition shrink-0"
+                          >
+                            <BarChart3 className="w-3.5 h-3.5" /> Stats
+                          </button>
+                        </div>
+
+                        {/* Live stats row */}
+                        <div className="grid grid-cols-3 gap-2 mb-4">
+                          <div className="rounded-lg bg-slate-50 border border-slate-100 p-2.5 text-center">
+                            <p className="text-[10px] text-slate-400 font-semibold uppercase">Completions</p>
+                            <p className="text-xl font-black text-slate-800 mt-0.5">{sim.completionCount}</p>
+                          </div>
+                          <div className="rounded-lg bg-slate-50 border border-slate-100 p-2.5 text-center">
+                            <p className="text-[10px] text-slate-400 font-semibold uppercase">Certs</p>
+                            <p className="text-xl font-black text-slate-800 mt-0.5">{sim.certCount}</p>
+                          </div>
+                          <div className="rounded-lg bg-slate-50 border border-slate-100 p-2.5 text-center">
+                            <p className="text-[10px] text-slate-400 font-semibold uppercase">Active Users</p>
+                            <p className="text-xl font-black text-slate-800 mt-0.5">{sim.uniqueActiveUsers}</p>
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="space-y-3">
+                          {/* Price editor */}
+                          <div>
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1.5">
+                              Certificate Price (₹)
+                            </label>
+                            <div className="flex items-center gap-2">
+                              <div className="relative flex-1">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">₹</span>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  max="100000"
+                                  value={priceEdit !== undefined ? priceEdit : String(sim.certCost || '')}
+                                  onChange={e => setSimPriceEdits(prev => ({ ...prev, [sim.id]: e.target.value }))}
+                                  className="w-full pl-7 pr-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400 outline-none bg-white"
+                                  placeholder="e.g. 99"
+                                />
+                              </div>
+                              <button
+                                onClick={() => handleSimPriceSave(sim.id, sim.title)}
+                                disabled={isSavingPrice || priceEdit === undefined || priceEdit === String(sim.certCost)}
+                                className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-bold rounded-lg transition flex items-center gap-1.5 shrink-0"
+                              >
+                                {isSavingPrice ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
+                                Save
+                              </button>
+                            </div>
+                            <p className="text-[10px] text-slate-400 mt-1">Current: ₹{sim.certCost ?? 99}</p>
+                          </div>
+
+                          {/* Visibility toggle */}
+                          <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                            <div>
+                              <p className="text-xs font-bold text-slate-700">Visibility</p>
+                              <p className="text-[10px] text-slate-400 mt-0.5">
+                                {sim.comingSoon ? 'Currently hidden — shows Coming Soon badge' : 'Live and accessible to all users'}
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => handleSimToggleVisibility(sim.id, sim.title)}
+                              disabled={isToggling}
+                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                                sim.comingSoon
+                                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                                  : 'bg-amber-500 hover:bg-amber-600 text-white'
+                              } disabled:opacity-60`}
+                            >
+                              {isToggling ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : sim.comingSoon ? (
+                                <Globe className="w-3.5 h-3.5" />
+                              ) : (
+                                <EyeOff className="w-3.5 h-3.5" />
+                              )}
+                              {sim.comingSoon ? 'Make Live' : 'Hide'}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 

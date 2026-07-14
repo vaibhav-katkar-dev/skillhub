@@ -43,6 +43,17 @@
     <priority>0.9</priority>
   </url>
 
+  <url>
+    <loc>https://www.skillvalix.com/job-simulations</loc>
+    <lastmod>2026-07-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.93</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1623282033815-40b05d96c903?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>Free Job Simulations — Virtual Work Experience for Students | SkillValix</image:title>
+    </image:image>
+  </url>
+
   <!-- ── Core Pages ────────────────────────────────────────────────────────── -->
   <url>
     <loc>https://www.skillvalix.com/courses</loc>
@@ -498,41 +509,56 @@
 
   <!-- ── Job Simulations ─────────────────────────────────────────────────────── -->
   <url>
-    <loc>https://www.skillvalix.com/job-simulation/frontend-developer</loc>
+    <loc>https://www.skillvalix.com/job-simulation/spring-boot-developer</loc>
+    <lastmod>2026-07-14</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.88</priority>
     <image:image>
-      <image:loc>https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&amp;q=80</image:loc>
+      <image:loc>https://images.unsplash.com/photo-1623282033815-40b05d96c903?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>Spring Boot Developer Job Simulation — Free Virtual Internship | SkillValix</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/job-simulation/frontend-developer</loc>
+    <lastmod>2026-07-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.88</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1547658719-da2b51169166?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
       <image:title>Frontend Developer Job Simulation — Free Virtual Internship | SkillValix</image:title>
     </image:image>
   </url>
 
   <url>
     <loc>https://www.skillvalix.com/job-simulation/data-analyst</loc>
+    <lastmod>2026-07-14</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.88</priority>
     <image:image>
-      <image:loc>https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&amp;q=80</image:loc>
+      <image:loc>https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
       <image:title>Data Analyst Job Simulation — Free Virtual Internship | SkillValix</image:title>
     </image:image>
   </url>
 
   <url>
     <loc>https://www.skillvalix.com/job-simulation/ui-ux-designer</loc>
+    <lastmod>2026-07-14</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.88</priority>
     <image:image>
-      <image:loc>https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&amp;q=80</image:loc>
+      <image:loc>https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
       <image:title>UI/UX Designer Job Simulation — Free Virtual Internship | SkillValix</image:title>
     </image:image>
   </url>
 
   <url>
     <loc>https://www.skillvalix.com/job-simulation/backend-developer</loc>
+    <lastmod>2026-07-14</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.88</priority>
     <image:image>
-      <image:loc>https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&amp;q=80</image:loc>
+      <image:loc>https://images.unsplash.com/photo-1627398242454-45a1465c2479?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
       <image:title>Backend Developer Job Simulation — Free Virtual Internship | SkillValix</image:title>
     </image:image>
   </url>

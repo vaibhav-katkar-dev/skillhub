@@ -178,6 +178,7 @@ function AppContent() {
               <Route path="/forgot-password" element={<GuestRoute><ForgotPassword /></GuestRoute>} />
               <Route path="/reset-password/:token" element={<GuestRoute><ResetPassword /></GuestRoute>} />
               <Route path="/courses" element={<Courses />} />
+              <Route path="/job-simulations" element={<Courses />} />
               <Route path="/courses/:slug" element={<CourseDetail />} />
               <Route path="/courses/:slug/lesson/:lessonId" element={<LessonView />} />
               <Route path="/courses/:slug/quiz" element={<QuizView />} />

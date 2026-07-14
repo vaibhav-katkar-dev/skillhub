@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import Certificate from '../models/Certificate.js';
 import EventCertificate from '../models/EventCertificate.js';
+import SimulationSubmission from '../models/SimulationSubmission.js';
 import { authOptions } from '../middleware/auth.js';
 import { OAuth2Client } from 'google-auth-library';
 import { sendEmail } from '../utils/mailer.js';
@@ -436,11 +437,18 @@ router.get('/public/:id', async (req, res) => {
 
     if (!user) return res.status(404).json({ message: 'User not found' });
     
-    // Courses are in JSON, we can't populate them in MongoDB. Return raw certs.
-    // Make sure we select the necessary fields
-    const stdCerts = await Certificate.find({ student: user._id }).lean();
-    const eventCertsRaw = await EventCertificate.find({ student: user._id }).lean();
-    
+    // Fetch all data in parallel: standard certs, event certs, and simulation submissions.
+    // Single round-trip per collection — no looping queries.
+    const [stdCerts, eventCertsRaw, simSubmissionsRaw] = await Promise.all([
+      Certificate.find({ student: user._id }).lean(),
+      EventCertificate.find({ student: user._id }).lean(),
+      // Only expose non-sensitive fields: no internal IDs, no other users' data.
+      SimulationSubmission.find({ userId: user._id })
+        .select('simId taskNum taskType url status submittedAt')
+        .sort({ simId: 1, taskNum: 1 })
+        .lean(),
+    ]);
+
     const eventCerts = eventCertsRaw.map(c => ({
       ...c,
       isEvent: true,
@@ -448,6 +456,19 @@ router.get('/public/:id', async (req, res) => {
     }));
     
     const allCerts = [...stdCerts, ...eventCerts].sort((a,b) => new Date(b.issueDate) - new Date(a.issueDate));
+    
+    // Group simulation submissions by simId so the frontend can render per-simulation sections.
+    const simSubmissions = simSubmissionsRaw.reduce((acc, sub) => {
+      if (!acc[sub.simId]) acc[sub.simId] = [];
+      acc[sub.simId].push({
+        taskNum: sub.taskNum,
+        taskType: sub.taskType,
+        url: sub.url,       // validated https:// URL — safe to render as external link
+        status: sub.status,
+        submittedAt: sub.submittedAt,
+      });
+      return acc;
+    }, {});
     
     const payload = {
       name: user.name,
@@ -468,7 +489,9 @@ router.get('/public/:id', async (req, res) => {
       customLinks: user.customLinks,
       projects: user.projects,
       customSkills: user.customSkills,
-      certificates: allCerts
+      certificates: allCerts,
+      // Grouped by simId: { "frontend-developer": [{taskNum, url, status, ...}] }
+      simSubmissions,
     };
     
     publicProfileCache.set(queryParam, { data: payload, timestamp: Date.now() });

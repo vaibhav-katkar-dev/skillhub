@@ -6,16 +6,47 @@ import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const SIM_JSON_PATH = path.resolve(__dirname, '../../frontend/public/data/job-simulations.json');
+
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import Hackathon from '../models/Hackathon.js';
 import HackathonRegistration from '../models/HackathonRegistration.js';
 import EventCertificate from '../models/EventCertificate.js';
 import SimulationProgress from '../models/SimulationProgress.js';
+import SimulationSubmission from '../models/SimulationSubmission.js';
 import User from '../models/User.js';
 import { authOptions, adminCheck } from '../middleware/auth.js';
 
 const router = express.Router();
 const FRONTEND_URL = () => (process.env.FRONTEND_URL || 'https://www.skillvalix.com').replace(/\/$/, '');
 const EVENT_CERT_TEMPLATE_VERSION = 4;
+
+// Rate limiter: max 10 task submissions per user per hour.
+// Uses the authenticated user's ID as the key so banning one user doesn't
+// affect others (unlike IP-based limiting behind a proxy).
+const taskValidateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10,
+  // User-ID as key when authenticated (prevents one user eating others' quota);
+  // falls back to IPv6-safe IP via the official helper when ID is unavailable.
+  keyGenerator: (req) => req.user?.id ? String(req.user.id) : ipKeyGenerator(req),
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { valid: false, message: 'Too many submissions. Please wait before submitting again.' },
+});
+
+// Rate limiter: public cert verify endpoint — max 30 requests per 10 minutes per IP.
+// Prevents brute-force scraping of valid certificate IDs.
+const certVerifyLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { valid: false, message: 'Too many requests. Please try again later.' },
+});
 
 
 const EVENT_CERT_WARM_CONCURRENCY = Math.max(1, Number(process.env.CERT_WARM_CONCURRENCY || 1));
@@ -213,8 +244,7 @@ function normalizeDomainList(values = []) {
 
 function getTaskDomainsFromSimData(simId, taskNum) {
   try {
-    const simsPath = path.resolve(process.cwd(), 'frontend/public/data/job-simulations.json');
-    const raw = fs.readFileSync(simsPath, 'utf-8');
+    const raw = fs.readFileSync(SIM_JSON_PATH, 'utf-8');
     const simulations = JSON.parse(raw);
     const sim = simulations.find((item) => item.id === simId || item.slug === simId);
     if (!sim || !Array.isArray(sim.tasks)) return [];
@@ -1641,8 +1671,7 @@ router.post('/certificates/razorpay-order', authOptions, async (req, res) => {
     let basePrice = 99; // Fallback
     try {
       if (eventType === 'job-simulation') {
-        const simsPath = path.resolve(process.cwd(), 'frontend/public/data/job-simulations.json');
-        const simsData = JSON.parse(fs.readFileSync(simsPath, 'utf-8'));
+        const simsData = JSON.parse(fs.readFileSync(SIM_JSON_PATH, 'utf-8'));
         const matchedSim = simsData.find(s => s.title === eventTitle);
         if (!matchedSim) return res.status(404).json({ message: 'Simulation data not found' });
         
@@ -1737,8 +1766,7 @@ router.post('/certificates/generate', authOptions, async (req, res) => {
     let basePrice = 99; 
     try {
       if (verifiedType === 'job-simulation') {
-        const simsPath = path.resolve(process.cwd(), 'frontend/public/data/job-simulations.json');
-        const simsData = JSON.parse(fs.readFileSync(simsPath, 'utf-8'));
+        const simsData = JSON.parse(fs.readFileSync(SIM_JSON_PATH, 'utf-8'));
         const matchedSim = simsData.find(s => s.title === verifiedTitle);
         if (matchedSim && matchedSim.certCost) basePrice = matchedSim.certCost;
       }
@@ -1890,7 +1918,7 @@ router.get('/certificates/download/:certId', async (req, res) => {
 });
 
 // ─── Verify event certificate (public) ───────────────────────────────────────
-router.get('/certificates/verify/:certId', async (req, res) => {
+router.get('/certificates/verify/:certId', certVerifyLimiter, async (req, res) => {
   try {
     const cert = await EventCertificate.findOne({ certificateId: req.params.certId })
       .populate('student', 'name').lean();
@@ -1921,7 +1949,7 @@ router.get('/certificates/mine', authOptions, async (req, res) => {
 });
 
 // ─── Lightweight Task Validation ──────────────────────────────────────────────
-router.post('/simulations/validate-task', authOptions, async (req, res) => {
+router.post('/simulations/validate-task', authOptions, taskValidateLimiter, async (req, res) => {
   try {
     const { url, taskType, simId, taskNum } = req.body;
     if (!url || !taskType || !simId || !taskNum) {
@@ -2004,10 +2032,26 @@ router.post('/simulations/validate-task', authOptions, async (req, res) => {
       console.warn('[Events] Link probe skipped due to network/platform restrictions:', url, fetchErr?.message);
     }
 
-    // Save to Progress DB
+    // Save to Progress DB (legacy — keeps existing task-completion logic intact)
     await SimulationProgress.findOneAndUpdate(
       { user: req.user.id, simulationId: simId },
       { $addToSet: { completedTasks: numericTaskNum } },
+      { upsert: true, new: true }
+    );
+
+    // Persist the submission record so it can be shown in the user's portfolio.
+    // Upsert on (userId, simId, taskNum) — resubmitting just updates the row,
+    // never creates a duplicate. URL is already validated above so it is safe to store.
+    await SimulationSubmission.findOneAndUpdate(
+      { userId: req.user.id, simId, taskNum: numericTaskNum },
+      {
+        $set: {
+          taskType,
+          url: parsedUrl.href, // normalized, validated URL
+          status: 'completed',
+          submittedAt: new Date(),
+        },
+      },
       { upsert: true, new: true }
     );
 
@@ -2016,6 +2060,43 @@ router.post('/simulations/validate-task', authOptions, async (req, res) => {
   } catch (err) {
     console.error('[Events] Task validation error:', err);
     res.status(500).json({ valid: false, message: 'Server error during validation.' });
+  }
+});
+
+// ─── Get My Submissions for a Simulation ──────────────────────────────────────
+// Returns all task submissions for the authenticated user for one simulation.
+// The frontend uses this to hydrate task status from the DB on load.
+router.get('/simulations/submissions/:simId', authOptions, async (req, res) => {
+  try {
+    const submissions = await SimulationSubmission.find({
+      userId: req.user.id,
+      simId: req.params.simId,
+    })
+      .select('taskNum taskType url status feedback submittedAt reviewedAt')
+      .sort({ taskNum: 1 })
+      .lean();
+    res.setHeader('Cache-Control', 'no-store');
+    res.json(submissions);
+  } catch (err) {
+    console.error('[Events] Fetch submissions error:', err);
+    res.status(500).json({ message: 'Server error fetching submissions.' });
+  }
+});
+
+// ─── Get All My Simulation Submissions (for portfolio) ────────────────────────
+// Returns all task submissions across ALL simulations for the authenticated user
+// in a single query — the profile/dashboard aggregates this without looping.
+router.get('/simulations/submissions', authOptions, async (req, res) => {
+  try {
+    const submissions = await SimulationSubmission.find({ userId: req.user.id })
+      .select('simId taskNum taskType url status submittedAt')
+      .sort({ simId: 1, taskNum: 1 })
+      .lean();
+    res.setHeader('Cache-Control', 'no-store');
+    res.json(submissions);
+  } catch (err) {
+    console.error('[Events] Fetch all submissions error:', err);
+    res.status(500).json({ message: 'Server error fetching submissions.' });
   }
 });
 
@@ -2029,6 +2110,177 @@ router.get('/simulations/progress/:simId', authOptions, async (req, res) => {
     res.json(progress || { simulationId: req.params.simId, completedTasks: [] });
   } catch (err) {
     res.status(500).json({ message: 'Server error fetching progress.' });
+  }
+});
+
+// ─── ADMIN: List all simulations with live stats ──────────────────────────────
+// GET /api/events/admin/simulations
+// Returns each simulation from the JSON file enriched with DB-backed stats:
+//   completionCount (users who completed ≥ 1 task), certCount, submissionCount
+router.get('/admin/simulations', authOptions, adminCheck, async (req, res) => {
+  try {
+    const raw = fs.readFileSync(SIM_JSON_PATH, 'utf-8');
+    const simulations = JSON.parse(raw);
+
+    // Aggregate per-sim stats from DB in one batch each to keep it lightweight.
+    const [progressStats, certStats, submissionStats] = await Promise.all([
+      SimulationProgress.aggregate([
+        { $group: { _id: '$simulationId', completionCount: { $sum: 1 } } }
+      ]),
+      EventCertificate.aggregate([
+        { $match: { eventType: 'job-simulation' } },
+        { $group: { _id: '$eventTitle', certCount: { $sum: 1 } } }
+      ]),
+      SimulationSubmission.aggregate([
+        { $group: { _id: '$simId', submissionCount: { $sum: 1 }, uniqueUsers: { $addToSet: '$userId' } } }
+      ])
+    ]);
+
+    const progressMap = Object.fromEntries(progressStats.map(s => [s._id, s.completionCount]));
+    const certMap = Object.fromEntries(certStats.map(s => [s._id, s.certCount]));
+    const submissionMap = Object.fromEntries(submissionStats.map(s => [
+      s._id, { submissionCount: s.submissionCount, uniqueUsers: s.uniqueUsers?.length || 0 }
+    ]));
+
+    const enriched = simulations.map(sim => ({
+      id: sim.id,
+      title: sim.title,
+      role: sim.role,
+      level: sim.level,
+      duration: sim.duration,
+      certCost: sim.certCost,
+      comingSoon: sim.comingSoon || false,
+      color: sim.color,
+      taskCount: Array.isArray(sim.tasks) ? sim.tasks.length : 0,
+      skills: sim.skills || [],
+      // Live DB stats:
+      completionCount: progressMap[sim.id] || 0,
+      certCount: certMap[sim.title] || 0,
+      submissionCount: submissionMap[sim.id]?.submissionCount || 0,
+      uniqueActiveUsers: submissionMap[sim.id]?.uniqueUsers || 0,
+    }));
+
+    res.json(enriched);
+  } catch (err) {
+    console.error('[Admin Simulations] List error:', err);
+    res.status(500).json({ message: 'Failed to load simulation list.' });
+  }
+});
+
+// ─── ADMIN: Update certCost price for a simulation ────────────────────────────
+// PUT /api/events/admin/simulations/:simId/price
+// Body: { certCost: number }   — price in INR (positive integer)
+// Writes back to job-simulations.json atomically (temp file swap).
+router.put('/admin/simulations/:simId/price', authOptions, adminCheck, async (req, res) => {
+  try {
+    const { simId } = req.params;
+    const { certCost } = req.body;
+
+    const parsed = Number(certCost);
+    if (!Number.isFinite(parsed) || parsed < 1 || parsed > 100000) {
+      return res.status(400).json({ message: 'certCost must be a number between 1 and 100000.' });
+    }
+    const roundedCost = Math.round(parsed);
+
+    const raw = fs.readFileSync(SIM_JSON_PATH, 'utf-8');
+    const simulations = JSON.parse(raw);
+
+    const idx = simulations.findIndex(s => s.id === simId || s.slug === simId);
+    if (idx === -1) return res.status(404).json({ message: `Simulation "${simId}" not found.` });
+
+    simulations[idx].certCost = roundedCost;
+
+    // Atomic write: temp file → rename to prevent partial writes.
+    const tmpPath = SIM_JSON_PATH + '.tmp';
+    fs.writeFileSync(tmpPath, JSON.stringify(simulations, null, 2), 'utf-8');
+    fs.renameSync(tmpPath, SIM_JSON_PATH);
+
+    res.json({
+      message: `Certificate price for "${simulations[idx].title}" updated to ₹${roundedCost}.`,
+      simId,
+      certCost: roundedCost,
+    });
+  } catch (err) {
+    console.error('[Admin Simulations] Price update error:', err);
+    res.status(500).json({ message: 'Failed to update simulation price.' });
+  }
+});
+
+// ─── ADMIN: Toggle comingSoon flag for a simulation ───────────────────────────
+// PATCH /api/events/admin/simulations/:simId/toggle-visibility
+// Flips the comingSoon boolean in the JSON file.
+router.patch('/admin/simulations/:simId/toggle-visibility', authOptions, adminCheck, async (req, res) => {
+  try {
+    const { simId } = req.params;
+
+    const raw = fs.readFileSync(SIM_JSON_PATH, 'utf-8');
+    const simulations = JSON.parse(raw);
+
+    const idx = simulations.findIndex(s => s.id === simId || s.slug === simId);
+    if (idx === -1) return res.status(404).json({ message: `Simulation "${simId}" not found.` });
+
+    simulations[idx].comingSoon = !simulations[idx].comingSoon;
+    const newState = simulations[idx].comingSoon;
+
+    const tmpPath = SIM_JSON_PATH + '.tmp';
+    fs.writeFileSync(tmpPath, JSON.stringify(simulations, null, 2), 'utf-8');
+    fs.renameSync(tmpPath, SIM_JSON_PATH);
+
+    res.json({
+      message: `"${simulations[idx].title}" is now ${newState ? 'hidden (Coming Soon)' : 'live'}.`,
+      simId,
+      comingSoon: newState,
+    });
+  } catch (err) {
+    console.error('[Admin Simulations] Toggle visibility error:', err);
+    res.status(500).json({ message: 'Failed to toggle simulation visibility.' });
+  }
+});
+
+// ─── ADMIN: Get detailed stats for a single simulation ────────────────────────
+// GET /api/events/admin/simulations/:simId/stats
+// Returns task-level completion breakdown and recent submissions.
+router.get('/admin/simulations/:simId/stats', authOptions, adminCheck, async (req, res) => {
+  try {
+    const { simId } = req.params;
+
+    const raw = fs.readFileSync(SIM_JSON_PATH, 'utf-8');
+    const simulations = JSON.parse(raw);
+    const sim = simulations.find(s => s.id === simId || s.slug === simId);
+    if (!sim) return res.status(404).json({ message: `Simulation "${simId}" not found.` });
+
+    const [taskBreakdown, recentSubs, totalCerts] = await Promise.all([
+      SimulationSubmission.aggregate([
+        { $match: { simId } },
+        { $group: { _id: '$taskNum', count: { $sum: 1 }, taskType: { $first: '$taskType' } } },
+        { $sort: { _id: 1 } }
+      ]),
+      SimulationSubmission.find({ simId })
+        .populate({ path: 'userId', model: 'User', select: 'name email' })
+        .select('taskNum taskType url status submittedAt userId')
+        .sort({ submittedAt: -1 })
+        .limit(20)
+        .lean(),
+      EventCertificate.countDocuments({ eventType: 'job-simulation', eventTitle: sim.title }),
+    ]);
+
+    res.json({
+      sim: { id: sim.id, title: sim.title, taskCount: sim.tasks?.length || 0 },
+      taskBreakdown,
+      recentSubmissions: recentSubs.map(s => ({
+        taskNum: s.taskNum,
+        taskType: s.taskType,
+        url: s.url,
+        status: s.status,
+        submittedAt: s.submittedAt,
+        userName: s.userId?.name || 'Unknown',
+        userEmail: s.userId?.email || '',
+      })),
+      totalCerts,
+    });
+  } catch (err) {
+    console.error('[Admin Simulations] Stats error:', err);
+    res.status(500).json({ message: 'Failed to fetch simulation stats.' });
   }
 });
 

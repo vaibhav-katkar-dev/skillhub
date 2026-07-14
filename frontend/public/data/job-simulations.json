@@ -1,13 +1,219 @@
 [
   {
+    "id": "spring-boot-developer",
+    "slug": "spring-boot-developer",
+    "title": "Spring Boot Developer Job Simulation",
+    "category": "Job Simulation",
+    "company": "SkillValix Labs",
+    "role": "Backend Developer Intern (Java / Spring Boot)",
+    "comingSoon": false,
+    "duration": "8-10 hours (self-paced, no rush)",
+    "skills": [
+      "Java",
+      "Spring Boot",
+      "REST APIs",
+      "Spring Security",
+      "JPA / Hibernate",
+      "JUnit & Mockito"
+    ],
+    "level": "Beginner Friendly",
+    "certCost": 999,
+    "color": "from-green-600 to-lime-500",
+    "icon": "Settings",
+    "image": "https://images.unsplash.com/photo-1623282033815-40b05d96c903?w=800&q=80",
+    "description": "Learn Spring Boot step by step by building one small feature at a time: a simple database model, a working REST API, basic login security, and a few tests. No prior job experience needed.",
+    "about": "New to Spring Boot? This simulation is built for you. Instead of one big overwhelming project, you'll build a small 'Library Management' feature in six easy stages. Each stage has a clear goal, a beginner-friendly explanation of the concept, and a simple checklist so you always know what 'done' looks like. By the end, you'll have a real, working Spring Boot project you can show in interviews.",
+    "techStack": [
+      "Java (JDK 17+)",
+      "Spring Boot 3.x",
+      "Spring Data JPA",
+      "Spring Security & JWT",
+      "H2 Database",
+      "JUnit & Mockito",
+      "Maven"
+    ],
+    "submissionGuide": {
+      "title": "GitHub Repository Submission Guide",
+      "steps": [
+        "Create a new public repository on GitHub.",
+        "Commit your local project files and push them to the master/main branch on GitHub.",
+        "Verify your repository is set to 'Public' so our verification scanner can inspect your code.",
+        "Do not include database files; configure the app to run with an in-memory H2 database.",
+        "Copy your GitHub repository URL (e.g., https://github.com/your-username/repo-name) and submit it below."
+      ]
+    },
+    "metaTitle": "Spring Boot Developer Job Simulation - Hands-on Java | SkillValix",
+    "metaDescription": "Build a library management REST API in Java and Spring Boot. Secure endpoints with JWT, design Hibernate database relations, write unit tests, and earn a verified certificate.",
+    "keywords": [
+      "Spring Boot Developer",
+      "Java Spring Boot Simulation",
+      "Spring Security JWT",
+      "Hibernate JPA relations",
+      "JUnit Testing",
+      "Mockito",
+      "REST API Development",
+      "Backend Virtual Experience",
+      "SkillValix Job Simulation"
+    ],
+    "modules": [
+      "Understanding the feature and planning your data (no coding yet — just thinking)",
+      "Building your first working REST API",
+      "Adding simple login and access rules",
+      "Making error messages clean and helpful",
+      "Fixing a few small planted bugs (great practice!)",
+      "Writing your first tests and simple documentation"
+    ],
+    "tasks": [
+      {
+        "num": 1,
+        "title": "Plan Your Data (Books, Authors, Members)",
+        "description": "Before writing any code, let's plan. Imagine a small library app. We need to store Books, Authors, and Members. Draw or list out: what information does each one need (like a book's title, an author's name)? How are they connected (one author can write many books; one member can borrow many books)? Then turn this into simple Java classes using JPA annotations like @Entity, @OneToMany, and @ManyToOne. Don't worry about getting it perfect — this is meant to be a learning step.",
+        "time": "45-60 min",
+        "type": "Design",
+        "deliverable": "A simple diagram or bullet list showing your entities and how they connect, plus your Java entity classes in a public repo. A few sentences explaining your choices is enough — no need for a formal report.",
+        "hints": [
+          "Start on paper or a simple doc before touching code — this makes the coding part much easier.",
+          "It's OK to keep this simple: 3-4 entities with basic fields is a great beginner scope.",
+          "If you're stuck on @OneToMany vs @ManyToMany, a quick search of 'Spring Data JPA relationships example' will help a lot."
+        ],
+        "acceptedDomains": [
+          "github.com",
+          "gitlab.com",
+          "docs.google.com",
+          "drive.google.com",
+          "lucidchart.com"
+        ]
+      },
+      {
+        "num": 2,
+        "title": "Build Your First Working API",
+        "description": "Now let's make it real. Using Spring Boot and Spring Data JPA, build basic Create/Read/Update/Delete (CRUD) endpoints for Books and Members. Use an easy database to start (H2 is perfect for beginners — no installation needed). Add simple pagination (so results come back in pages, not all at once) and make sure each response uses the right HTTP status code (like 200 for success, 404 for not found).",
+        "time": "90-120 min",
+        "type": "Coding",
+        "deliverable": "A public repository with your Spring Boot project that runs with a simple command, a README explaining how to start it, and a couple of example requests (you can just paste a Postman screenshot or example curl commands).",
+        "hints": [
+          "Spring Initializr (start.spring.io) is the easiest way to set up your project — pick Web, JPA, and H2.",
+          "It's totally fine to follow a tutorial structure for your first CRUD API — the goal is understanding, not originality.",
+          "Test each endpoint as you build it (don't wait until the end) — this catches mistakes early."
+        ],
+        "acceptedDomains": [
+          "github.com",
+          "gitlab.com",
+          "replit.com",
+          "docs.google.com",
+          "drive.google.com"
+        ]
+      },
+      {
+        "num": 3,
+        "title": "Add Simple Login & Access Rules",
+        "description": "Let's add basic security — this sounds scary but we'll keep it simple. Add Spring Security with JWT (a type of secure login token). Create two simple roles: MEMBER and ADMIN. Then protect just one or two endpoints so only an ADMIN can use them (like deleting a book). You don't need a fancy login page — a simple login endpoint that returns a token is enough.",
+        "time": "75-90 min",
+        "type": "Security",
+        "deliverable": "Your updated repository, plus a short plain-English explanation (a few lines is fine) of how someone logs in and how the ADMIN-only route is protected.",
+        "hints": [
+          "There are many free 'Spring Boot JWT tutorial' guides — using one as a base is completely fine for this step.",
+          "Test with two accounts: one MEMBER, one ADMIN, and confirm the MEMBER gets blocked from the admin route.",
+          "If JWT feels like too much at first, get a basic username/password login working first, then add JWT on top."
+        ],
+        "acceptedDomains": [
+          "github.com",
+          "gitlab.com",
+          "docs.google.com",
+          "drive.google.com"
+        ]
+      },
+      {
+        "num": 4,
+        "title": "Make Errors Clean and Helpful",
+        "description": "Right now, if something goes wrong, Spring Boot might show a messy default error page. Let's fix that. Add simple validation (like making sure a book title isn't empty) and a global error handler using @ControllerAdvice so every error comes back in the same clean format — no confusing stack traces for the user.",
+        "time": "45-60 min",
+        "type": "Coding",
+        "deliverable": "Your updated repository, plus 2-3 example error responses (a screenshot or pasted JSON is fine) showing a validation error, a 'not found' error, and an 'unauthorized' error.",
+        "hints": [
+          "@Valid + @NotBlank/@NotNull on your fields is a quick beginner-friendly way to add validation.",
+          "One @ExceptionHandler method inside a @ControllerAdvice class can cover most of your error cases.",
+          "Keep your error message format simple and consistent, e.g. { \"error\": \"...\", \"status\": 404 }."
+        ],
+        "acceptedDomains": [
+          "github.com",
+          "gitlab.com",
+          "drive.google.com",
+          "docs.google.com"
+        ]
+      },
+      {
+        "num": 5,
+        "title": "Bug Hunt (Great Learning Practice!)",
+        "description": "We've planted 3 small, common beginner-level bugs for you to find and fix: one related to fetching data inefficiently, one where an endpoint that should be protected isn't, and one small pagination mistake. Finding and fixing bugs is one of the best ways to actually learn a framework — take your time here.",
+        "time": "60 min",
+        "type": "Debugging",
+        "deliverable": "A short list (in your repo README or a doc) explaining each bug you found, why it was a problem, and how you fixed it. Commit history or a simple before/after code snippet is enough proof.",
+        "hints": [
+          "Read error logs carefully — they usually tell you exactly what's wrong.",
+          "It's OK to fix bugs in any order, and it's OK if it takes a few tries.",
+          "If you truly get stuck on one bug, document what you tried — partial credit is fine, this is a learning exercise."
+        ],
+        "acceptedDomains": [
+          "github.com",
+          "gitlab.com",
+          "drive.google.com",
+          "docs.google.com"
+        ]
+      },
+      {
+        "num": 6,
+        "title": "Your First Tests & Simple Docs",
+        "description": "Let's prove your API works with tests, and make it easy for others to understand. Write a few simple JUnit tests for at least 2-3 endpoints (even 1-2 tests per endpoint is a great start). Then add basic API documentation using Swagger/OpenAPI so anyone can see what your API does without reading your code.",
+        "time": "60-75 min",
+        "type": "Testing",
+        "deliverable": "A test report (a screenshot of passing tests is fine) and a link to your Swagger docs, or an exported OpenAPI file in your repo.",
+        "hints": [
+          "springdoc-openapi is a beginner-friendly library that auto-generates Swagger docs from your existing code.",
+          "Start with 'happy path' tests (things working correctly) before trying edge cases.",
+          "A few good tests are much better than many rushed ones — quality over quantity."
+        ],
+        "acceptedDomains": [
+          "github.com",
+          "gitlab.com",
+          "swagger.io",
+          "drive.google.com",
+          "docs.google.com"
+        ]
+      }
+    ],
+    "faq": [
+      {
+        "q": "I'm completely new to Spring Boot. Can I still do this?",
+        "a": "Yes! This simulation is designed for beginners. Each task explains the concept simply and includes hints, and it's totally fine to follow tutorials as a learning aid — the goal is understanding, not memorization."
+      },
+      {
+        "q": "Do I need to use PostgreSQL specifically?",
+        "a": "No. H2 is actually the easiest option for beginners since it needs no separate installation. MySQL or PostgreSQL work too."
+      },
+      {
+        "q": "What if I get stuck on a task?",
+        "a": "That's completely normal when learning something new. Use the hints provided, search for the specific error message, and try to move forward with a partial solution rather than getting stuck for too long."
+      },
+      {
+        "q": "What Java version should I use?",
+        "a": "Java 17 or later, with Spring Boot 3.x, is recommended and works smoothly with Spring Initializr's default setup."
+      },
+      {
+        "q": "What is included with the certificate?",
+        "a": "A verified, downloadable PDF certificate for the Spring Boot Developer simulation, with QR code verification and LinkedIn sharing support."
+      }
+    ]
+  },
+  {
     "id": "frontend-developer",
     "slug": "frontend-developer",
     "title": "Frontend Developer Job Simulation",
     "category": "Job Simulation",
     "company": "SkillValix Labs",
     "role": "Frontend Developer Intern",
-    "comingSoon": true,
-    "duration": "5-7 hours",
+    "comingSoon": false,
+    "duration": "5-7 hours (self-paced, no rush)",
     "skills": [
       "React",
       "CSS",
@@ -15,28 +221,62 @@
       "JavaScript",
       "Debugging"
     ],
-    "level": "Beginner",
-    "certCost": 99,
+    "level": "Beginner Friendly",
+    "certCost": 999,
     "color": "from-blue-600 to-cyan-500",
     "icon": "Laptop",
-    "image": "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80",
-    "description": "Ship realistic frontend tasks: build reusable components, debug broken flows, integrate APIs, and deploy a working mini-feature.",
-    "about": "This simulation mirrors a junior frontend engineer's sprint in a startup. You will design small components, fix real bugs, and submit production-style links.",
+    "image": "https://images.unsplash.com/photo-1547658719-da2b51169166?w=800&q=80",
+    "description": "Build small, real frontend pieces one at a time — a navbar, a reusable card, a page that loads real data, and some bug fixes. Perfect if you know basic React and want real practice.",
+    "about": "This simulation breaks frontend development into small, manageable wins. You don't need to be an expert — just comfortable with basic HTML, CSS, and simple React components. Each task is scoped to be doable in under 90 minutes, with clear examples of what 'good' looks like.",
+    "techStack": [
+      "React (Vite)",
+      "HTML5 (Semantic elements)",
+      "Vanilla CSS / Tailwind",
+      "JavaScript (ES6+)",
+      "Vercel / Netlify"
+    ],
+    "submissionGuide": {
+      "title": "GitHub & Live Deployment Submission Guide",
+      "steps": [
+        "Create a public GitHub repository and push your local React code.",
+        "Deploy your code live to a free service like Vercel or Netlify.",
+        "Ensure your website is responsive and loads correctly without console errors.",
+        "Copy either your GitHub repository URL or your deployed live app URL.",
+        "Submit the URL below for instant validation by our automated scanner."
+      ]
+    },
+    "metaTitle": "Frontend Developer Job Simulation - Learn React | SkillValix",
+    "metaDescription": "Acquire production-grade frontend engineering experience. Design responsive navbars, build reusable card components, integrate pagination with public APIs, and deploy projects live.",
+    "keywords": [
+      "Frontend Job Simulation",
+      "React JS Tutorial",
+      "Responsive CSS",
+      "API Integration React",
+      "JavaScript ES6",
+      "Vercel Deployment",
+      "Software Engineer Portfolio",
+      "SkillValix Frontend Intern"
+    ],
     "modules": [
-      "Sprint planning and requirement understanding",
-      "Component implementation and refactor",
-      "API integration with loading/error handling",
-      "Bug fixing in a broken codebase",
-      "Deployment and delivery notes"
+      "Understanding what you're building before you code",
+      "Building small, reusable components",
+      "Connecting your app to real data",
+      "Fixing bugs in existing code (a key real-world skill)",
+      "Writing simple, clear notes about your work"
     ],
     "tasks": [
       {
         "num": 1,
         "title": "Build a Responsive Navbar",
-        "description": "Create a responsive navbar with desktop and mobile states. Include keyboard-friendly toggle behavior and active link highlighting.",
-        "time": "50 min",
+        "description": "Create a navbar (the menu bar at the top of a website) that looks good on both desktop and mobile. On mobile, it should collapse into a simple menu button (a 'hamburger' icon) that opens and closes. Make sure the current page link is visually highlighted, and that someone using only a keyboard (no mouse) can open the menu with Tab and Enter.",
+        "time": "45-60 min",
         "type": "Coding",
-        "deliverable": "Public repository link with README and at least one screenshot of mobile + desktop view.",
+        "deliverable": "A public repo link with a README explaining how to run it, and one screenshot each of the mobile view and desktop view.",
+        "hints": [
+          "Start with the desktop layout first, then add a media query for smaller screens — building both at once can be confusing.",
+          "You don't need custom icons — a simple '☰' character works fine for the mobile menu button.",
+          "Test keyboard access by just pressing Tab repeatedly and watching where the focus goes."
+        ],
         "acceptedDomains": [
           "github.com",
           "gitlab.com",
@@ -50,10 +290,15 @@
       {
         "num": 2,
         "title": "Reusable Card Component",
-        "description": "Build a React card component that supports props for title, summary, image, tags, and CTA. Add one loading state and one empty state.",
-        "time": "70 min",
+        "description": "Build one React component that can be reused to show different kinds of cards (like a product card or a blog post preview). It should accept a title, a short summary, an image, some tags, and a button (CTA). Also handle two extra situations: what the card looks like while loading, and what it looks like when there's no data to show (empty state).",
+        "time": "60-75 min",
         "type": "Coding",
-        "deliverable": "Repository or sandbox link with reusable component and example usage in 3 variations.",
+        "deliverable": "A repo or CodeSandbox link showing your Card component used in 3 different examples (e.g. different titles/images), plus the loading and empty states.",
+        "hints": [
+          "Use props with sensible defaults so the card doesn't break if some data (like an image) is missing.",
+          "Building 3 example usages first helps you see what props your component actually needs.",
+          "A simple gray placeholder box is a perfectly good 'loading' state — no need for fancy animations."
+        ],
         "acceptedDomains": [
           "github.com",
           "gitlab.com",
@@ -65,11 +310,16 @@
       },
       {
         "num": 3,
-        "title": "API Integration with Pagination",
-        "description": "Fetch users from JSONPlaceholder, render a paginated list, and handle loading/error/empty states. Add search by name.",
-        "time": "70 min",
+        "title": "Load Real Data with Pagination & Search",
+        "description": "Connect your app to a free public API (JSONPlaceholder) to fetch a list of users. Show them in pages (e.g. 5 or 10 per page) instead of all at once. Add a simple search box that filters the list by name. Also handle: what shows while data is loading, what shows if the request fails, and what shows if there are simply no results.",
+        "time": "60-75 min",
         "type": "Coding",
-        "deliverable": "Deployed demo URL plus source repo link. Both links should be public.",
+        "deliverable": "A deployed link (free hosting like Vercel or Netlify works great) plus your source code repo link.",
+        "hints": [
+          "Deploying to Vercel/Netlify is free and usually takes under 5 minutes once your code is on GitHub.",
+          "Build the 'happy path' first (data loads and displays), then add loading/error/empty states one at a time.",
+          "You can filter the search on the frontend (in JavaScript) — you don't need a fancy backend search feature."
+        ],
         "acceptedDomains": [
           "vercel.app",
           "netlify.app",
@@ -81,11 +331,16 @@
       },
       {
         "num": 4,
-        "title": "Bug Hunt: 5 Production Bugs",
-        "description": "Fix 5 intentional bugs in routing, state updates, and form validation. Document each bug, root cause, and final fix.",
-        "time": "60 min",
+        "title": "Bug Hunt: Find & Fix 5 Small Bugs",
+        "description": "We've hidden 5 small bugs in a sample project — things like a broken link, a form that doesn't validate correctly, or a state update that doesn't work as expected. Your job is to find each one, understand why it's broken, and fix it. This is one of the most valuable real-world frontend skills.",
+        "time": "50-70 min",
         "type": "Debugging",
-        "deliverable": "Repository commit history or PR showing fixes plus a short bug report document.",
+        "deliverable": "A short write-up (a doc or your README) listing each bug, what caused it, and how you fixed it — a sentence or two per bug is enough.",
+        "hints": [
+          "Open your browser console first — many bugs show a helpful error message there.",
+          "Fix and test one bug at a time rather than changing lots of code at once.",
+          "It's fine to take breaks between bugs — fresh eyes often spot things faster."
+        ],
         "acceptedDomains": [
           "github.com",
           "gitlab.com",
@@ -95,11 +350,16 @@
       },
       {
         "num": 5,
-        "title": "Release Notes",
-        "description": "Write concise release notes summarizing features, known limitations, and next sprint improvements.",
-        "time": "30 min",
+        "title": "Write Simple Release Notes",
+        "description": "Imagine you just finished a small sprint. Write short, clear release notes: what did you build, what's not finished yet (limitations), and what would you improve next. This is a real skill — being able to explain your work simply is just as valuable as writing the code.",
+        "time": "20-30 min",
         "type": "Communication",
-        "deliverable": "Public document with release notes and roadmap items.",
+        "deliverable": "A short public document (half a page is plenty) with your release notes.",
+        "hints": [
+          "Bullet points are perfectly fine — this doesn't need to be a formal report.",
+          "Being honest about limitations (e.g. 'search isn't case-sensitive yet') shows maturity, not weakness.",
+          "Read it once out loud — if it sounds clear when spoken, it's probably clear when read too."
+        ],
         "acceptedDomains": [
           "docs.google.com",
           "notion.so",
@@ -111,14 +371,18 @@
     "faq": [
       {
         "q": "Is this a live interview?",
-        "a": "No. It is self-paced and project-driven."
+        "a": "No. It's fully self-paced — go as slow as you need."
+      },
+      {
+        "q": "I'm still learning React. Is this too advanced for me?",
+        "a": "If you know basic components, props, and useState, you're ready. The hints in each task are there to guide you through anything unfamiliar."
       },
       {
         "q": "Do I need to submit code?",
-        "a": "Yes. Most tasks expect a public repo, sandbox, or deployed link."
+        "a": "Yes. Most tasks expect a public repo, sandbox, or deployed link — but it doesn't need to be perfect, just working."
       },
       {
-        "q": "What do I get for INR 99?",
+        "q": "What is included with the certificate?",
         "a": "A verified PDF certificate with role and QR verification after completing tasks."
       },
       {
@@ -134,35 +398,70 @@
     "category": "Job Simulation",
     "company": "SkillValix Labs",
     "role": "Data Analyst Intern",
-    "comingSoon": true,
-    "duration": "5-7 hours",
+    "comingSoon": false,
+    "duration": "5-7 hours (self-paced, no rush)",
     "skills": [
       "Python",
       "Pandas",
       "SQL",
       "Data Visualization"
     ],
-    "level": "Beginner",
-    "certCost": 99,
+    "level": "Beginner Friendly",
+    "certCost": 999,
     "color": "from-violet-600 to-purple-500",
     "icon": "BarChart3",
-    "image": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80",
-    "description": "Run a realistic analytics workflow: clean data, analyze trends, visualize results, and present business recommendations.",
-    "about": "You will work like an entry-level analyst handling a noisy dataset and presenting decisions to stakeholders.",
+    "image": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80",
+    "description": "Take one messy dataset from confusing to clean, explore it step by step, turn it into simple charts, and explain your findings in plain language — no advanced math needed.",
+    "about": "This simulation is built for people just starting out in data analysis. You'll work with one dataset from start to finish, in small clear steps: clean it, explore it, visualize it, query it, and summarize it for a non-technical audience. Every task explains exactly what 'good' looks like.",
+    "techStack": [
+      "Python",
+      "Pandas & NumPy",
+      "SQL (SQLite / DB Fiddle)",
+      "Matplotlib / Seaborn",
+      "Google Colab & Jupyter Notebooks",
+      "Tableau / Excel"
+    ],
+    "submissionGuide": {
+      "title": "Data Sharing & File Submission Guide",
+      "steps": [
+        "Store your Jupyter notebook or Excel analysis file on Google Drive / GitHub.",
+        "If using Google Drive or Colab, make sure to set the sharing permissions to 'Anyone with the link can view'.",
+        "If using GitHub or DB Fiddle, verify that your repository or session url is public.",
+        "Ensure all tables, diagrams, and written summaries are visible in the shared document.",
+        "Copy your file or repository URL, paste it below, and click 'Submit'."
+      ]
+    },
+    "metaTitle": "Data Analyst Job Simulation - Learn Python & SQL | SkillValix",
+    "metaDescription": "Build a data analyst portfolio. Clean datasets in Python Pandas, query databases using SQL, generate matplotlib charts, write executive summaries, and get certified.",
+    "keywords": [
+      "Data Analyst Simulation",
+      "Python Pandas tutorial",
+      "SQL Business Queries",
+      "Matplotlib Visualization",
+      "Jupyter Notebook analysis",
+      "Data Analyst Portfolio",
+      "SkillValix Data Intern"
+    ],
     "modules": [
-      "Data cleaning and quality checks",
-      "Exploratory analysis",
-      "Visual storytelling",
-      "Business recommendation report"
+      "Cleaning messy data (a core, everyday analyst skill)",
+      "Exploring the data to find patterns",
+      "Turning numbers into simple, clear charts",
+      "Answering business questions using SQL",
+      "Explaining findings in plain, non-technical language"
     ],
     "tasks": [
       {
         "num": 1,
-        "title": "Dataset Quality Fix",
-        "description": "Clean null values, remove duplicates, standardize date/currency formats, and create a quality report.",
-        "time": "60 min",
+        "title": "Clean the Messy Dataset",
+        "description": "You'll be given a dataset with common real-world problems: missing values, duplicate rows, and inconsistent formats (like dates written differently, or prices with mixed currency symbols). Your job is to clean it up: fill or remove missing values sensibly, remove duplicates, and make formats consistent. Keep a simple 'before vs after' count so you can show your impact.",
+        "time": "50-70 min",
         "type": "Data",
-        "deliverable": "Notebook or repo with before/after stats and cleaned dataset link.",
+        "deliverable": "A notebook (Python/Pandas) or spreadsheet showing your cleaning steps, a simple before/after summary (e.g. '120 duplicate rows removed'), and a link to the cleaned file.",
+        "hints": [
+          "Google Colab is a free, no-install way to run Python/Pandas if you don't have anything set up locally.",
+          "Always keep your original raw file untouched — clean into a new file or variable.",
+          "df.isnull().sum() and df.duplicated().sum() in Pandas are quick beginner-friendly commands to spot problems."
+        ],
         "acceptedDomains": [
           "github.com",
           "kaggle.com",
@@ -173,11 +472,16 @@
       },
       {
         "num": 2,
-        "title": "Exploratory Data Analysis",
-        "description": "Identify top trends and anomalies. Add summary statistics and at least 3 investigative questions.",
-        "time": "75 min",
+        "title": "Explore the Data",
+        "description": "Now that your data is clean, explore it. Look for the top trends (e.g. what sells most, what changes over time) and anything unusual (like a value way higher than everything else). Write down at least 3 questions you're curious about and try to answer them using simple summary statistics (like averages, counts, and min/max).",
+        "time": "60-75 min",
         "type": "Analysis",
-        "deliverable": "Notebook/report showing findings with reasoning and assumptions.",
+        "deliverable": "A notebook or report showing your findings, your 3 questions, and short explanations of your reasoning and any assumptions you made.",
+        "hints": [
+          "df.describe() in Pandas gives you a quick overview of your numeric columns — a great starting point.",
+          "It's OK if your questions are simple, like 'which category has the highest average price?' — clear beats clever.",
+          "Write down assumptions as you go (e.g. 'I'm assuming missing values here mean zero') — this shows good analytical thinking."
+        ],
         "acceptedDomains": [
           "github.com",
           "kaggle.com",
@@ -189,11 +493,16 @@
       },
       {
         "num": 3,
-        "title": "Visualization Pack",
-        "description": "Create 4 visualizations (trend, distribution, comparison, and correlation). Include chart captions.",
-        "time": "60 min",
+        "title": "Make 4 Simple Charts",
+        "description": "Create 4 basic charts from your data: one showing a trend over time, one showing how values are distributed, one comparing categories, and one showing a relationship between two variables (correlation). Add a one-line caption under each chart explaining what it shows in plain English.",
+        "time": "50-60 min",
         "type": "Visualization",
-        "deliverable": "Dashboard or report with visuals and business interpretation.",
+        "deliverable": "A report or simple dashboard with your 4 charts and captions, plus one short paragraph on what it means for the business.",
+        "hints": [
+          "Simple bar and line charts (using matplotlib, Pandas' built-in plotting, or even Google Sheets) are perfectly fine — no need for fancy tools.",
+          "A good caption answers 'so what?' — not just what the chart shows, but why it matters.",
+          "Keep each chart focused on one clear idea rather than cramming multiple messages into one chart."
+        ],
         "acceptedDomains": [
           "tableau.com",
           "github.com",
@@ -204,11 +513,16 @@
       },
       {
         "num": 4,
-        "title": "SQL Business Queries",
-        "description": "Write 5 SQL queries for business questions (top customers, retention, revenue trend, etc.).",
-        "time": "45 min",
+        "title": "Answer Business Questions with SQL",
+        "description": "Write 5 simple SQL queries that answer real business questions, like: who are the top 5 customers by spend? What's the monthly revenue trend? Which product category is most popular? Keep each query focused on one clear question.",
+        "time": "40-50 min",
         "type": "Analysis",
-        "deliverable": "SQL file and outputs/screenshots with short interpretation.",
+        "deliverable": "A SQL file with your 5 queries, plus a screenshot of each result and a one-line explanation of what it tells you.",
+        "hints": [
+          "SQLite (or even a free tool like DB Fiddle) is an easy, beginner-friendly way to practice without installing a full database server.",
+          "Start each query by writing in plain English what you want to know, then translate it into SQL step by step.",
+          "GROUP BY and ORDER BY will answer most 'top N' and 'trend over time' style business questions."
+        ],
         "acceptedDomains": [
           "github.com",
           "drive.google.com",
@@ -218,11 +532,16 @@
       },
       {
         "num": 5,
-        "title": "Executive Summary",
-        "description": "Prepare a one-page summary with risks, opportunities, and prioritized recommendations.",
-        "time": "30 min",
+        "title": "Write a Simple Executive Summary",
+        "description": "Imagine explaining your findings to a busy manager who doesn't know SQL or Python. Write one page (or less!) covering: what you found, what risks or opportunities you noticed, and 2-3 clear recommendations, ranked by importance.",
+        "time": "25-35 min",
         "type": "Communication",
-        "deliverable": "Public document with non-technical summary for decision makers.",
+        "deliverable": "A short public document with your non-technical summary for decision-makers.",
+        "hints": [
+          "Avoid technical terms like 'null values' or 'correlation' — describe things in everyday language instead.",
+          "Lead with your most important finding, not the order you discovered things.",
+          "If you can explain it clearly to a friend who isn't in data, your summary is on the right track."
+        ],
         "acceptedDomains": [
           "docs.google.com",
           "notion.so",
@@ -233,15 +552,19 @@
     ],
     "faq": [
       {
+        "q": "I've never used SQL or Python before. Can I still try this?",
+        "a": "Basic familiarity helps, but every task includes simple hints and beginner-friendly tool suggestions like Google Colab, which needs no setup."
+      },
+      {
         "q": "What tools can I use?",
-        "a": "Python, SQL, Excel, or BI tools are all accepted."
+        "a": "Python, SQL, Excel, or Google Sheets are all accepted — use whatever you're most comfortable with."
       },
       {
         "q": "Is there auto-grading?",
-        "a": "No. Validation checks your link quality and completion flow."
+        "a": "No. Validation checks your link quality and completion flow, not exact numeric answers, so there's room to learn as you go."
       },
       {
-        "q": "What do I get for INR 99?",
+        "q": "What is included with the certificate?",
         "a": "A verified downloadable PDF certificate with your role."
       }
     ]
@@ -253,36 +576,68 @@
     "category": "Job Simulation",
     "company": "SkillValix Labs",
     "role": "UI/UX Design Intern",
-    "comingSoon": true,
-    "duration": "4-6 hours",
+    "comingSoon": false,
+    "duration": "4-6 hours (self-paced, no rush)",
     "skills": [
       "Figma",
       "User Research",
       "Wireframing",
       "Prototyping"
     ],
-    "level": "Beginner",
-    "certCost": 99,
+    "level": "Beginner Friendly",
+    "certCost": 999,
     "color": "from-pink-600 to-rose-500",
     "icon": "Palette",
-    "image": "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&q=80",
-    "description": "Go from research to interactive prototype with practical UX deliverables.",
-    
-    "about": "A realistic design sprint where you define user pain points, map flows, and craft a clickable prototype.",
+    "image": "https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?w=800&q=80",
+    "description": "Design a simple food delivery app from scratch: understand the users, sketch the flow, make it look great, and gather feedback — all in easy, guided steps.",
+    "about": "New to UX design? This is a gentle, guided introduction. You'll design a small food delivery app in four clear stages, moving from simple research notes, to rough sketches, to a polished clickable prototype, to feedback — the exact same process real design teams follow, just scoped down to be approachable.",
+    "techStack": [
+      "Figma (Desktop or Web)",
+      "User Personas & Journey maps",
+      "Low-Fidelity Wireframes",
+      "Clickable Prototypes",
+      "Mini Design Systems"
+    ],
+    "submissionGuide": {
+      "title": "Figma Project Sharing Guide",
+      "steps": [
+        "Open your design project workspace in Figma.",
+        "Click the blue 'Share' button in the upper right corner.",
+        "Ensure link sharing permissions are set to 'Anyone with the link can view'.",
+        "Make sure the link points to either your design board or active prototype flow.",
+        "Copy the link, verify it opens in an incognito window, paste it below, and submit."
+      ]
+    },
+    "metaTitle": "UI/UX Designer Job Simulation - Learn Figma | SkillValix",
+    "metaDescription": "Build a design portfolio in Figma. Design a food delivery app from scratch. Create wireframes, interactive user flows, custom prototypes, and obtain certification.",
+    "keywords": [
+      "UI/UX Design Simulation",
+      "Figma App Design",
+      "Mobile Wireframing",
+      "Interactive Prototyping",
+      "User Research Persona",
+      "Design Portfolio Building",
+      "SkillValix UIUX Intern"
+    ],
     "modules": [
-      "Problem discovery and user intent",
-      "Wireframing and interaction structure",
-      "High-fidelity UI system",
-      "Usability feedback and iteration"
+      "Understanding your users (simpler than it sounds)",
+      "Sketching your app's basic flow",
+      "Making it look polished and professional",
+      "Getting feedback and improving your design"
     ],
     "tasks": [
       {
         "num": 1,
-        "title": "User Research Brief",
-        "description": "Define target users, goals, pain points, and success metrics for a food delivery product.",
-        "time": "45 min",
+        "title": "Understand Your Users",
+        "description": "Before designing anything, think about who will use a food delivery app and what they need. Write a simple description of 2 example users (personas) — their goals and frustrations. Then map out their basic journey: what steps do they take from opening the app to getting their food?",
+        "time": "35-45 min",
         "type": "Research",
-        "deliverable": "Research notes with 2 personas and journey highlights.",
+        "deliverable": "A simple document with 2 short personas (a few sentences each is enough) and a basic journey outline (a bullet list of steps is fine).",
+        "hints": [
+          "You don't need real user interviews — imagining realistic, thoughtful personas is a normal and accepted starting point for beginners.",
+          "Keep personas short: name, one goal, one frustration is plenty.",
+          "A journey map can just be a numbered list: 'Opens app → Searches for food → Adds to cart → Checks out → Tracks delivery.'"
+        ],
         "acceptedDomains": [
           "docs.google.com",
           "notion.so",
@@ -292,11 +647,16 @@
       },
       {
         "num": 2,
-        "title": "Low-Fidelity Wireframes",
-        "description": "Design wireframes for Home, Search, Product Detail, Cart, and Checkout screens.",
-        "time": "70 min",
+        "title": "Sketch Low-Fidelity Wireframes",
+        "description": "Now sketch simple, rough layouts (wireframes) for 5 screens: Home, Search, Product Detail, Cart, and Checkout. These should be plain boxes and text — no colors or fancy styling yet. The goal is to figure out where things go, not to make it pretty.",
+        "time": "50-60 min",
         "type": "Design",
-        "deliverable": "Wireframe file with navigation flow and annotations.",
+        "deliverable": "A wireframe file (Figma is great and free) showing all 5 screens with simple arrows showing how a user moves between them.",
+        "hints": [
+          "Figma's free plan is more than enough for this — no need to pay for anything.",
+          "Grayscale boxes and placeholder text (like 'Product Name') are exactly what's expected at this stage.",
+          "Don't worry about making decisions final here — wireframes are meant to be quick and rough."
+        ],
         "acceptedDomains": [
           "figma.com",
           "canva.com",
@@ -307,11 +667,16 @@
       },
       {
         "num": 3,
-        "title": "High-Fidelity Prototype",
-        "description": "Build an interactive prototype with components, typography scale, and color tokens.",
-        "time": "90 min",
+        "title": "Build a Polished, Clickable Prototype",
+        "description": "Take your wireframes and turn them into a polished, good-looking design: pick a simple color palette, a clean font, and consistent spacing. Then link the screens together in Figma so someone can click through the app like a real product (this is called a prototype).",
+        "time": "70-90 min",
         "type": "Design",
-        "deliverable": "Public prototype link with design system page.",
+        "deliverable": "A public Figma prototype link, plus a simple page showing your color choices, font, and any reusable components (a 'mini design system').",
+        "hints": [
+          "Pick 2-3 colors and one font family and reuse them everywhere — consistency looks more professional than variety.",
+          "Figma's built-in prototyping (connecting frames with arrows) is simple to learn and has many free tutorials.",
+          "It's fine to only fully design the 5 core screens — you don't need to cover every possible edge case."
+        ],
         "acceptedDomains": [
           "figma.com",
           "invisionapp.com",
@@ -323,11 +688,16 @@
       },
       {
         "num": 4,
-        "title": "Usability Findings",
-        "description": "Run a quick usability review and document at least 5 issues with fixes and priority.",
-        "time": "40 min",
+        "title": "Get Feedback & List Improvements",
+        "description": "Show your prototype to a friend, classmate, or even just review it yourself with fresh eyes. Find at least 5 things that could be clearer or easier to use, and write them down along with how important each one is (e.g. high/medium/low priority) and what you'd do to fix it.",
+        "time": "35-45 min",
         "type": "Analysis",
-        "deliverable": "Issue log with severity labels and improvement proposal.",
+        "deliverable": "A short issue list with 5+ items, each with a priority level and a proposed fix.",
+        "hints": [
+          "Asking 'what would you tap first?' to a friend testing your prototype often reveals confusing spots quickly.",
+          "It's completely normal to find issues in your own design — that's the whole point of this step, not a sign of failure.",
+          "Simple fixes like 'make the button bigger' or 'add a back arrow' are great, valid answers."
+        ],
         "acceptedDomains": [
           "docs.google.com",
           "notion.so",
@@ -339,14 +709,18 @@
     "faq": [
       {
         "q": "Do I need prior Figma experience?",
-        "a": "Basic knowledge helps, but beginner-level workflows are acceptable."
+        "a": "No prior experience is required — Figma is free and beginner-friendly, and the tasks are scoped so you can learn as you go."
       },
       {
         "q": "Can I use Adobe XD or Canva?",
-        "a": "Yes, but your submission must include interaction flow and rationale."
+        "a": "Yes, but your submission must include the interaction flow (how screens connect) and your reasoning."
       },
       {
-        "q": "What do I get for INR 99?",
+        "q": "What if my design isn't very 'creative'?",
+        "a": "That's completely fine — this simulation focuses on clear thinking and usable design, not artistic flair."
+      },
+      {
+        "q": "What is included with the certificate?",
         "a": "A verified PDF certificate with role and completion details."
       }
     ]
@@ -358,8 +732,8 @@
     "category": "Job Simulation",
     "company": "SkillValix Labs",
     "role": "Backend Developer Intern",
-    "comingSoon": true,
-    "duration": "6-8 hours",
+    "comingSoon": false,
+    "duration": "6-8 hours (self-paced, no rush)",
     "skills": [
       "Node.js",
       "REST APIs",
@@ -367,28 +741,63 @@
       "JWT",
       "Testing"
     ],
-    "level": "Intermediate",
-    "certCost": 99,
+    "level": "Beginner Friendly",
+    "certCost": 999,
     "color": "from-emerald-600 to-teal-500",
     "icon": "Settings",
-    "image": "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=80",
-    "description": "Design, implement, secure, and test a production-style backend service with realistic engineering tasks.",
-    "about": "This simulation reflects backend sprint work: API contract design, implementation, authentication, debugging, and test reliability.",
+    "image": "https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=800&q=80",
+    "description": "Build a simple task-management backend step by step with Node.js: plan it, build it, secure it, fix a few bugs, and test it — all explained in plain language with helpful hints.",
+    "about": "This simulation is designed for people who know basic JavaScript and want real, guided practice with backend development. You'll build one small task-management API across five clear stages, each with a simple explanation of the concept and hints for anything unfamiliar. No prior professional experience needed.",
+    "techStack": [
+      "Node.js",
+      "Express framework",
+      "MongoDB (Atlas) & Mongoose",
+      "JSON Web Tokens (JWT)",
+      "Jest & Supertest",
+      "Dotenv"
+    ],
+    "submissionGuide": {
+      "title": "GitHub Repository Submission Guide",
+      "steps": [
+        "Create a public GitHub repository for your Node.js application.",
+        "Commit your files (exclude folder `node_modules` and your real `.env` file).",
+        "Include a clear README.md stating the project setup, run commands, and environment variables template.",
+        "Ensure your integration tests pass when running `npm test`.",
+        "Copy your public repository URL and submit it in the field below for instant evaluation."
+      ]
+    },
+    "metaTitle": "Backend Developer Job Simulation - Node.js & Express | SkillValix",
+    "metaDescription": "Build a task-management API in Node.js, Express, and MongoDB. Secure routes with JWT, fix async bugs, write integration tests with Jest, and get certified.",
+    "keywords": [
+      "Backend Job Simulation",
+      "Node.js Express API",
+      "MongoDB Mongoose Database",
+      "JWT Authentication Node",
+      "Jest Unit Testing",
+      "RESTful API Development",
+      "Backend Developer Portfolio",
+      "SkillValix Node Intern"
+    ],
     "modules": [
-      "API contract and endpoint planning",
-      "Implementation and database modeling",
-      "Security hardening with auth",
-      "Debugging production bugs",
-      "Automated testing"
+      "Planning your API before writing code",
+      "Building the core features",
+      "Adding simple login and protection",
+      "Fixing a few small bugs (great learning practice)",
+      "Testing your work so you know it's solid"
     ],
     "tasks": [
       {
         "num": 1,
-        "title": "API Contract (OpenAPI)",
-        "description": "Design an OpenAPI spec for a task-management backend with auth, CRUD, pagination, and error responses.",
-        "time": "60 min",
+        "title": "Plan Your API (No Coding Yet)",
+        "description": "Before building, plan it out. You're creating a simple task-management backend. List the main actions users need: creating an account, logging in, creating tasks, viewing tasks, updating tasks, deleting tasks. For each, note what information is needed and what the response should look like. This planning step will make the actual coding much faster and clearer.",
+        "time": "45-60 min",
         "type": "API Design",
-        "deliverable": "Public OpenAPI file or Postman documentation with sample request/response payloads.",
+        "deliverable": "A simple document (or a free Postman collection) listing each endpoint, what it needs, and an example response. No need for a formal OpenAPI spec if that feels too advanced — a clear list is enough.",
+        "hints": [
+          "Postman's free plan is a beginner-friendly way to plan and later test your API in one place.",
+          "Keep your first version simple: /register, /login, /tasks (GET, POST), /tasks/:id (PUT, DELETE) covers the essentials.",
+          "Write example responses in plain JSON — you don't need any special tools for this step."
+        ],
         "acceptedDomains": [
           "swagger.io",
           "postman.com",
@@ -400,11 +809,16 @@
       },
       {
         "num": 2,
-        "title": "Implement Core Endpoints",
-        "description": "Build user/task CRUD with Express + Mongoose. Include validation and proper status codes.",
-        "time": "100 min",
+        "title": "Build the Core Endpoints",
+        "description": "Now build it. Using Express and MongoDB (with Mongoose), create the user and task CRUD endpoints you planned. Add simple validation (like making sure a task has a title) and make sure each response uses a sensible HTTP status code.",
+        "time": "90-120 min",
         "type": "Coding",
-        "deliverable": "Public repository with setup instructions and environment variables guide.",
+        "deliverable": "A public repository with clear setup instructions (how to install and run it) and a simple guide to any environment variables needed (like the database connection string).",
+        "hints": [
+          "MongoDB Atlas has a free tier that's perfect for a project like this — no local database installation needed.",
+          "Build and test one endpoint at a time using Postman rather than writing everything before testing anything.",
+          "A simple .env.example file in your repo (without real secrets) makes setup much easier for anyone reviewing it."
+        ],
         "acceptedDomains": [
           "github.com",
           "gitlab.com",
@@ -416,11 +830,16 @@
       },
       {
         "num": 3,
-        "title": "Authentication + Authorization",
-        "description": "Add register/login, JWT token verification, and role-based protection for at least one admin route.",
-        "time": "70 min",
+        "title": "Add Simple Login & Protection",
+        "description": "Add register and login endpoints, and use JWT (a secure login token) to check that a user is logged in before letting them access their tasks. Protect just one admin-style route (e.g. viewing all users' tasks) so only specific accounts can use it.",
+        "time": "60-75 min",
         "type": "Security",
-        "deliverable": "Repository update plus a short auth flow document.",
+        "deliverable": "Your updated repository plus a short, plain-English explanation of how login works and how the protected route is guarded.",
+        "hints": [
+          "jsonwebtoken and bcrypt are the two most common, beginner-friendly npm packages for this — many free guides walk through them together.",
+          "Test by trying to access a protected route both with and without a valid token, to confirm the protection actually works.",
+          "It's fine to keep roles very simple (e.g. just a boolean 'isAdmin' field) rather than building a full permissions system."
+        ],
         "acceptedDomains": [
           "github.com",
           "gitlab.com",
@@ -430,11 +849,16 @@
       },
       {
         "num": 4,
-        "title": "Production Bug Fix Pack",
-        "description": "Fix 3 intentional backend bugs: one auth bug, one data validation bug, and one async/await bug.",
-        "time": "70 min",
+        "title": "Bug Hunt: Fix 3 Small Bugs",
+        "description": "We've planted 3 common beginner-level bugs: one login/authentication bug, one where invalid data isn't being rejected properly, and one issue with async/await (a common source of confusing errors in Node.js). Find and fix each one — this is one of the best ways to really learn backend development.",
+        "time": "60 min",
         "type": "Debugging",
-        "deliverable": "PR or commit history showing bug fixes with before/after explanation.",
+        "deliverable": "A short write-up (in your README or a doc) listing each bug, what caused it, and how you fixed it. A simple before/after code snippet for each is enough proof.",
+        "hints": [
+          "Console.log statements placed before and after suspicious code are a simple, effective way to track down async bugs.",
+          "If a request 'hangs' and never responds, an async/await issue is often the cause.",
+          "Take bugs one at a time, and don't worry if it takes a few attempts to spot the real cause."
+        ],
         "acceptedDomains": [
           "github.com",
           "gitlab.com",
@@ -444,11 +868,16 @@
       },
       {
         "num": 5,
-        "title": "API Test Suite",
-        "description": "Add Jest + Supertest tests for at least 4 endpoints including one edge case each.",
-        "time": "60 min",
+        "title": "Write Your First API Tests",
+        "description": "Add Jest and Supertest tests for at least 4 of your endpoints. For each one, include a 'normal' test case (things working correctly) and try to add at least one edge case (like sending missing or invalid data) where you can.",
+        "time": "55-65 min",
         "type": "Testing",
-        "deliverable": "Test report or CI run link proving tests pass.",
+        "deliverable": "A test report (a screenshot of your tests passing is fine) or a CI run link proving your tests pass.",
+        "hints": [
+          "Supertest lets you test your Express routes directly without needing to deploy anything first.",
+          "Start with the simplest possible test (does the endpoint return status 200?) before adding more detailed checks.",
+          "It's completely fine if not every endpoint has an edge-case test yet — a solid 'happy path' test for each is a great start."
+        ],
         "acceptedDomains": [
           "github.com",
           "gitlab.com",
@@ -460,14 +889,18 @@
     "faq": [
       {
         "q": "Why am I not asked for Figma here?",
-        "a": "Backend tasks are validated against backend/documentation/testing platforms, not UI design tools."
+        "a": "Backend tasks are validated against backend, documentation, and testing platforms, not UI design tools."
+      },
+      {
+        "q": "I only know basic JavaScript. Is Node.js too advanced?",
+        "a": "If you're comfortable with basic JavaScript (functions, objects, arrays), you're ready — each task explains new concepts simply and includes beginner-friendly hints."
       },
       {
         "q": "What stack is expected?",
-        "a": "Node.js + Express + MongoDB is recommended, but equivalent backend stacks are acceptable."
+        "a": "Node.js + Express + MongoDB is recommended and has the most beginner-friendly free tools (like MongoDB Atlas), but equivalent backend stacks are accepted."
       },
       {
-        "q": "What do I get for INR 99?",
+        "q": "What is included with the certificate?",
         "a": "A verified downloadable certificate with QR verification."
       }
     ]
