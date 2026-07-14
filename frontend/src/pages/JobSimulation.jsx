@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import { useAuthStore } from '../store/authStore';
 import axios from 'axios';
 import CertificateTemplate from '../components/CertificateTemplate';
+import JobSimCertificateTemplate from '../components/JobSimCertificateTemplate';
 import { generatePDFFromDOM } from '../utils/pdfGenerator';
 import {
   ArrowDownToLine,
@@ -34,6 +35,8 @@ import {
   UserRound,
   Zap,
   Home,
+  Linkedin,
+  Calendar,
   X
 } from 'lucide-react';
 
@@ -694,12 +697,14 @@ export default function JobSimulation() {
         <link rel="canonical" href={`https://www.skillvalix.com/job-simulation/${sim.id}`} />
       </Helmet>
 
-      {/* Hidden certificate canvas */}
+      {/* Hidden Job Simulation certificate canvas */}
       {certId && (
-        <CertificateTemplate
+        <JobSimCertificateTemplate
           ref={certTemplateRef}
           studentName={user?.name || 'Student'}
-          courseTitle={sim.title}
+          simTitle={sim.title}
+          role={sim.role}
+          company={sim.company || 'SkillValix Labs'}
           certificateId={certId}
           issueDate={
             certData?.issueDate
@@ -707,7 +712,6 @@ export default function JobSimulation() {
               : new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })
           }
           verifyUrl={`${window.location.origin}/verify/${certId}`}
-          isEvent={true}
         />
       )}
 
@@ -814,8 +818,8 @@ export default function JobSimulation() {
               </div>
               <div className="bg-sky-50 border border-sky-100 rounded-2xl p-5">
                 <ExternalLink className="w-5 h-5 text-sky-600 mb-3" />
-                <div className="text-xs font-bold uppercase text-sky-500 mb-1">LinkedIn-Ready</div>
-                <div className="text-sm text-slate-700 font-semibold">Share badge + cert link on your profile</div>
+                <div className="text-xs font-bold uppercase text-sky-500 mb-1">LinkedIn Experience</div>
+                <div className="text-sm text-slate-700 font-semibold">Add this to your LinkedIn <em>Experience</em> section — not just Certifications</div>
               </div>
             </div>
 
@@ -915,13 +919,16 @@ export default function JobSimulation() {
                   <div className="flex flex-wrap items-center gap-2 mb-2">
                     <h2 className="text-2xl md:text-3xl font-black text-slate-900">{activeTask.title}</h2>
                   </div>
-                  <div className="flex items-center gap-3 text-sm">
-                    <span className="px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 font-bold flex items-center gap-1.5">
-                      {React.createElement(TYPE_ICONS[activeTask.type] || ClipboardList, { className: "w-3.5 h-3.5" })}
+                  <div className="flex flex-wrap items-center gap-3 text-sm">
+                    <span className="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 font-bold flex items-center gap-1.5 shadow-sm">
+                      {React.createElement(TYPE_ICONS[activeTask.type] || ClipboardList, { className: "w-4 h-4 text-slate-500" })}
                       {activeTask.type}
                     </span>
-                    <span className="flex items-center gap-1.5 text-slate-500 font-medium">
-                      <Clock3 className="w-4 h-4" /> {activeTask.time}
+                    <span className="px-3 py-1.5 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-700 font-bold flex items-center gap-1.5 shadow-sm">
+                      <Clock3 className="w-4 h-4 text-indigo-500" /> Duration: {activeTask.time}
+                    </span>
+                    <span className="px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-100 text-emerald-700 font-bold flex items-center gap-1.5 shadow-sm">
+                      <Calendar className="w-4 h-4 text-emerald-500" /> Deadline: Flexible
                     </span>
                   </div>
                   {((activeTask.techStack && activeTask.techStack.length > 0) || (sim.techStack && sim.techStack.length > 0)) && (
@@ -1074,11 +1081,14 @@ export default function JobSimulation() {
         {activeSection === 'certificate' && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-2xl mx-auto space-y-8">
             <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 mb-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-100 text-indigo-600 mb-4">
                 <Award className="w-8 h-8" />
               </div>
               <h2 className="text-3xl font-black text-slate-900">Your Certificate</h2>
-              <p className="text-slate-500 mt-2">Unlock a verified PDF to share on LinkedIn and your resume.</p>
+              <p className="text-slate-500 mt-2 max-w-md mx-auto leading-relaxed">
+                Unlock a verified <strong>Certificate of Experience</strong> — designed to be added to your
+                LinkedIn <span className="text-blue-600 font-bold">Experience section</span>, not just Certifications.
+              </p>
             </div>
 
             <div className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
@@ -1180,6 +1190,35 @@ export default function JobSimulation() {
                       <><ArrowDownToLine className="w-5 h-5" /> Download Certificate</>
                     )}
                   </button>
+
+                  {/* LinkedIn Experience Guide */}
+                  <div className="mt-2 rounded-2xl border border-blue-100 bg-blue-50 p-5">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-7 h-7 rounded-lg bg-[#0A66C2] flex items-center justify-center shrink-0">
+                        <Linkedin className="w-4 h-4 text-white fill-white" />
+                      </div>
+                      <span className="font-black text-slate-800 text-sm">Add to LinkedIn Experience Section</span>
+                    </div>
+                    <p className="text-xs text-slate-600 mb-3 leading-relaxed">
+                      This certificate is formatted to be added as a work experience entry on LinkedIn, boosting your profile with real hands-on skills.
+                    </p>
+                    <ol className="space-y-2 text-xs text-slate-700">
+                      {[
+                        'Go to your LinkedIn profile → click \"Add profile section\" → choose \"Work Experience\".',
+                        `Title: ${sim.role}`,
+                        `Company: ${sim.company || 'SkillValix Labs'} (search and select SkillValix)`,
+                        'Employment type: Apprenticeship / Freelance',
+                        'Start date: month you started — End date: month you received this certificate.',
+                        'Description: Add a short summary and paste the certificate verify link.',
+                        'Media: Upload the downloaded PDF certificate under this experience entry.',
+                      ].map((step, i) => (
+                        <li key={i} className="flex gap-2 items-start">
+                          <span className="shrink-0 w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold" style={{ fontSize: 9 }}>{i + 1}</span>
+                          <span>{step}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
                 </div>
               ) : (
                 <button

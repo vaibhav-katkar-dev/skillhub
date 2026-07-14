@@ -5,9 +5,9 @@
     "title": "Spring Boot Developer Job Simulation",
     "category": "Job Simulation",
     "company": "SkillValix Labs",
-    "role": "Backend Developer Intern (Java / Spring Boot)",
+    "role": "Backend Developer (Java / Spring Boot)",
     "comingSoon": false,
-    "duration": "8-10 hours (self-paced, no rush)",
+    "duration": "1-2 Weeks (self-paced, no rush)",
     "skills": [
       "Java",
       "Spring Boot",
@@ -68,7 +68,7 @@
         "num": 1,
         "title": "Plan Your Data (Books, Authors, Members)",
         "description": "Before writing any code, let's plan. Imagine a small library app. We need to store Books, Authors, and Members. Draw or list out: what information does each one need (like a book's title, an author's name)? How are they connected (one author can write many books; one member can borrow many books)? Then turn this into simple Java classes using JPA annotations like @Entity, @OneToMany, and @ManyToOne. Don't worry about getting it perfect — this is meant to be a learning step.",
-        "time": "45-60 min",
+        "time": "1-2 Days",
         "type": "Design",
         "deliverable": "A simple diagram or bullet list showing your entities and how they connect, plus your Java entity classes in a public repo. A few sentences explaining your choices is enough — no need for a formal report.",
         "hints": [
@@ -88,7 +88,7 @@
         "num": 2,
         "title": "Build Your First Working API",
         "description": "Now let's make it real. Using Spring Boot and Spring Data JPA, build basic Create/Read/Update/Delete (CRUD) endpoints for Books and Members. Use an easy database to start (H2 is perfect for beginners — no installation needed). Add simple pagination (so results come back in pages, not all at once) and make sure each response uses the right HTTP status code (like 200 for success, 404 for not found).",
-        "time": "90-120 min",
+        "time": "3 Days",
         "type": "Coding",
         "deliverable": "A public repository with your Spring Boot project that runs with a simple command, a README explaining how to start it, and a couple of example requests (you can just paste a Postman screenshot or example curl commands).",
         "hints": [
@@ -108,7 +108,7 @@
         "num": 3,
         "title": "Add Simple Login & Access Rules",
         "description": "Let's add basic security — this sounds scary but we'll keep it simple. Add Spring Security with JWT (a type of secure login token). Create two simple roles: MEMBER and ADMIN. Then protect just one or two endpoints so only an ADMIN can use them (like deleting a book). You don't need a fancy login page — a simple login endpoint that returns a token is enough.",
-        "time": "75-90 min",
+        "time": "2-3 Days",
         "type": "Security",
         "deliverable": "Your updated repository, plus a short plain-English explanation (a few lines is fine) of how someone logs in and how the ADMIN-only route is protected.",
         "hints": [
@@ -127,7 +127,7 @@
         "num": 4,
         "title": "Make Errors Clean and Helpful",
         "description": "Right now, if something goes wrong, Spring Boot might show a messy default error page. Let's fix that. Add simple validation (like making sure a book title isn't empty) and a global error handler using @ControllerAdvice so every error comes back in the same clean format — no confusing stack traces for the user.",
-        "time": "45-60 min",
+        "time": "1-2 Days",
         "type": "Coding",
         "deliverable": "Your updated repository, plus 2-3 example error responses (a screenshot or pasted JSON is fine) showing a validation error, a 'not found' error, and an 'unauthorized' error.",
         "hints": [
@@ -146,7 +146,7 @@
         "num": 5,
         "title": "Bug Hunt (Great Learning Practice!)",
         "description": "We've planted 3 small, common beginner-level bugs for you to find and fix: one related to fetching data inefficiently, one where an endpoint that should be protected isn't, and one small pagination mistake. Finding and fixing bugs is one of the best ways to actually learn a framework — take your time here.",
-        "time": "60 min",
+        "time": "2 Days",
         "type": "Debugging",
         "deliverable": "A short list (in your repo README or a doc) explaining each bug you found, why it was a problem, and how you fixed it. Commit history or a simple before/after code snippet is enough proof.",
         "hints": [
@@ -165,7 +165,7 @@
         "num": 6,
         "title": "Your First Tests & Simple Docs",
         "description": "Let's prove your API works with tests, and make it easy for others to understand. Write a few simple JUnit tests for at least 2-3 endpoints (even 1-2 tests per endpoint is a great start). Then add basic API documentation using Swagger/OpenAPI so anyone can see what your API does without reading your code.",
-        "time": "60-75 min",
+        "time": "2 Days",
         "type": "Testing",
         "deliverable": "A test report (a screenshot of passing tests is fine) and a link to your Swagger docs, or an exported OpenAPI file in your repo.",
         "hints": [
@@ -211,9 +211,9 @@
     "title": "Frontend Developer Job Simulation",
     "category": "Job Simulation",
     "company": "SkillValix Labs",
-    "role": "Frontend Developer Intern",
+    "role": "Frontend Developer",
     "comingSoon": false,
-    "duration": "5-7 hours (self-paced, no rush)",
+    "duration": "1 Week (self-paced, no rush)",
     "skills": [
       "React",
       "CSS",
@@ -255,7 +255,7 @@
       "JavaScript ES6",
       "Vercel Deployment",
       "Software Engineer Portfolio",
-      "SkillValix Frontend Intern"
+      "SkillValix Frontend"
     ],
     "modules": [
       "Understanding what you're building before you code",
@@ -269,7 +269,7 @@
         "num": 1,
         "title": "Build a Responsive Navbar",
         "description": "Create a navbar (the menu bar at the top of a website) that looks good on both desktop and mobile. On mobile, it should collapse into a simple menu button (a 'hamburger' icon) that opens and closes. Make sure the current page link is visually highlighted, and that someone using only a keyboard (no mouse) can open the menu with Tab and Enter.",
-        "time": "45-60 min",
+        "time": "1-2 Days",
         "type": "Coding",
         "deliverable": "A public repo link with a README explaining how to run it, and one screenshot each of the mobile view and desktop view.",
         "hints": [
@@ -291,7 +291,7 @@
         "num": 2,
         "title": "Reusable Card Component",
         "description": "Build one React component that can be reused to show different kinds of cards (like a product card or a blog post preview). It should accept a title, a short summary, an image, some tags, and a button (CTA). Also handle two extra situations: what the card looks like while loading, and what it looks like when there's no data to show (empty state).",
-        "time": "60-75 min",
+        "time": "2 Days",
         "type": "Coding",
         "deliverable": "A repo or CodeSandbox link showing your Card component used in 3 different examples (e.g. different titles/images), plus the loading and empty states.",
         "hints": [
@@ -312,7 +312,7 @@
         "num": 3,
         "title": "Load Real Data with Pagination & Search",
         "description": "Connect your app to a free public API (JSONPlaceholder) to fetch a list of users. Show them in pages (e.g. 5 or 10 per page) instead of all at once. Add a simple search box that filters the list by name. Also handle: what shows while data is loading, what shows if the request fails, and what shows if there are simply no results.",
-        "time": "60-75 min",
+        "time": "2 Days",
         "type": "Coding",
         "deliverable": "A deployed link (free hosting like Vercel or Netlify works great) plus your source code repo link.",
         "hints": [
@@ -333,7 +333,7 @@
         "num": 4,
         "title": "Bug Hunt: Find & Fix 5 Small Bugs",
         "description": "We've hidden 5 small bugs in a sample project — things like a broken link, a form that doesn't validate correctly, or a state update that doesn't work as expected. Your job is to find each one, understand why it's broken, and fix it. This is one of the most valuable real-world frontend skills.",
-        "time": "50-70 min",
+        "time": "2 Days",
         "type": "Debugging",
         "deliverable": "A short write-up (a doc or your README) listing each bug, what caused it, and how you fixed it — a sentence or two per bug is enough.",
         "hints": [
@@ -352,7 +352,7 @@
         "num": 5,
         "title": "Write Simple Release Notes",
         "description": "Imagine you just finished a small sprint. Write short, clear release notes: what did you build, what's not finished yet (limitations), and what would you improve next. This is a real skill — being able to explain your work simply is just as valuable as writing the code.",
-        "time": "20-30 min",
+        "time": "1 Day",
         "type": "Communication",
         "deliverable": "A short public document (half a page is plenty) with your release notes.",
         "hints": [
@@ -397,9 +397,9 @@
     "title": "Data Analyst Job Simulation",
     "category": "Job Simulation",
     "company": "SkillValix Labs",
-    "role": "Data Analyst Intern",
+    "role": "Data Analyst",
     "comingSoon": false,
-    "duration": "5-7 hours (self-paced, no rush)",
+    "duration": "1 Week (self-paced, no rush)",
     "skills": [
       "Python",
       "Pandas",
@@ -440,7 +440,7 @@
       "Matplotlib Visualization",
       "Jupyter Notebook analysis",
       "Data Analyst Portfolio",
-      "SkillValix Data Intern"
+      "SkillValix Data"
     ],
     "modules": [
       "Cleaning messy data (a core, everyday analyst skill)",
@@ -454,7 +454,7 @@
         "num": 1,
         "title": "Clean the Messy Dataset",
         "description": "You'll be given a dataset with common real-world problems: missing values, duplicate rows, and inconsistent formats (like dates written differently, or prices with mixed currency symbols). Your job is to clean it up: fill or remove missing values sensibly, remove duplicates, and make formats consistent. Keep a simple 'before vs after' count so you can show your impact.",
-        "time": "50-70 min",
+        "time": "2 Days",
         "type": "Data",
         "deliverable": "A notebook (Python/Pandas) or spreadsheet showing your cleaning steps, a simple before/after summary (e.g. '120 duplicate rows removed'), and a link to the cleaned file.",
         "hints": [
@@ -474,7 +474,7 @@
         "num": 2,
         "title": "Explore the Data",
         "description": "Now that your data is clean, explore it. Look for the top trends (e.g. what sells most, what changes over time) and anything unusual (like a value way higher than everything else). Write down at least 3 questions you're curious about and try to answer them using simple summary statistics (like averages, counts, and min/max).",
-        "time": "60-75 min",
+        "time": "2 Days",
         "type": "Analysis",
         "deliverable": "A notebook or report showing your findings, your 3 questions, and short explanations of your reasoning and any assumptions you made.",
         "hints": [
@@ -495,7 +495,7 @@
         "num": 3,
         "title": "Make 4 Simple Charts",
         "description": "Create 4 basic charts from your data: one showing a trend over time, one showing how values are distributed, one comparing categories, and one showing a relationship between two variables (correlation). Add a one-line caption under each chart explaining what it shows in plain English.",
-        "time": "50-60 min",
+        "time": "1-2 Days",
         "type": "Visualization",
         "deliverable": "A report or simple dashboard with your 4 charts and captions, plus one short paragraph on what it means for the business.",
         "hints": [
@@ -515,7 +515,7 @@
         "num": 4,
         "title": "Answer Business Questions with SQL",
         "description": "Write 5 simple SQL queries that answer real business questions, like: who are the top 5 customers by spend? What's the monthly revenue trend? Which product category is most popular? Keep each query focused on one clear question.",
-        "time": "40-50 min",
+        "time": "1-2 Days",
         "type": "Analysis",
         "deliverable": "A SQL file with your 5 queries, plus a screenshot of each result and a one-line explanation of what it tells you.",
         "hints": [
@@ -534,7 +534,7 @@
         "num": 5,
         "title": "Write a Simple Executive Summary",
         "description": "Imagine explaining your findings to a busy manager who doesn't know SQL or Python. Write one page (or less!) covering: what you found, what risks or opportunities you noticed, and 2-3 clear recommendations, ranked by importance.",
-        "time": "25-35 min",
+        "time": "1 Day",
         "type": "Communication",
         "deliverable": "A short public document with your non-technical summary for decision-makers.",
         "hints": [
@@ -575,9 +575,9 @@
     "title": "UI/UX Designer Job Simulation",
     "category": "Job Simulation",
     "company": "SkillValix Labs",
-    "role": "UI/UX Design Intern",
+    "role": "UI/UX Design",
     "comingSoon": false,
-    "duration": "4-6 hours (self-paced, no rush)",
+    "duration": "1 Week (self-paced, no rush)",
     "skills": [
       "Figma",
       "User Research",
@@ -617,7 +617,7 @@
       "Interactive Prototyping",
       "User Research Persona",
       "Design Portfolio Building",
-      "SkillValix UIUX Intern"
+      "SkillValix UIUX"
     ],
     "modules": [
       "Understanding your users (simpler than it sounds)",
@@ -630,7 +630,7 @@
         "num": 1,
         "title": "Understand Your Users",
         "description": "Before designing anything, think about who will use a food delivery app and what they need. Write a simple description of 2 example users (personas) — their goals and frustrations. Then map out their basic journey: what steps do they take from opening the app to getting their food?",
-        "time": "35-45 min",
+        "time": "1-2 Days",
         "type": "Research",
         "deliverable": "A simple document with 2 short personas (a few sentences each is enough) and a basic journey outline (a bullet list of steps is fine).",
         "hints": [
@@ -649,7 +649,7 @@
         "num": 2,
         "title": "Sketch Low-Fidelity Wireframes",
         "description": "Now sketch simple, rough layouts (wireframes) for 5 screens: Home, Search, Product Detail, Cart, and Checkout. These should be plain boxes and text — no colors or fancy styling yet. The goal is to figure out where things go, not to make it pretty.",
-        "time": "50-60 min",
+        "time": "1-2 Days",
         "type": "Design",
         "deliverable": "A wireframe file (Figma is great and free) showing all 5 screens with simple arrows showing how a user moves between them.",
         "hints": [
@@ -669,7 +669,7 @@
         "num": 3,
         "title": "Build a Polished, Clickable Prototype",
         "description": "Take your wireframes and turn them into a polished, good-looking design: pick a simple color palette, a clean font, and consistent spacing. Then link the screens together in Figma so someone can click through the app like a real product (this is called a prototype).",
-        "time": "70-90 min",
+        "time": "2-3 Days",
         "type": "Design",
         "deliverable": "A public Figma prototype link, plus a simple page showing your color choices, font, and any reusable components (a 'mini design system').",
         "hints": [
@@ -690,7 +690,7 @@
         "num": 4,
         "title": "Get Feedback & List Improvements",
         "description": "Show your prototype to a friend, classmate, or even just review it yourself with fresh eyes. Find at least 5 things that could be clearer or easier to use, and write them down along with how important each one is (e.g. high/medium/low priority) and what you'd do to fix it.",
-        "time": "35-45 min",
+        "time": "1-2 Days",
         "type": "Analysis",
         "deliverable": "A short issue list with 5+ items, each with a priority level and a proposed fix.",
         "hints": [
@@ -731,9 +731,9 @@
     "title": "Backend Developer Job Simulation",
     "category": "Job Simulation",
     "company": "SkillValix Labs",
-    "role": "Backend Developer Intern",
+    "role": "Backend Developer",
     "comingSoon": false,
-    "duration": "6-8 hours (self-paced, no rush)",
+    "duration": "1-2 Weeks (self-paced, no rush)",
     "skills": [
       "Node.js",
       "REST APIs",
@@ -776,7 +776,7 @@
       "Jest Unit Testing",
       "RESTful API Development",
       "Backend Developer Portfolio",
-      "SkillValix Node Intern"
+      "SkillValix Node"
     ],
     "modules": [
       "Planning your API before writing code",
@@ -790,7 +790,7 @@
         "num": 1,
         "title": "Plan Your API (No Coding Yet)",
         "description": "Before building, plan it out. You're creating a simple task-management backend. List the main actions users need: creating an account, logging in, creating tasks, viewing tasks, updating tasks, deleting tasks. For each, note what information is needed and what the response should look like. This planning step will make the actual coding much faster and clearer.",
-        "time": "45-60 min",
+        "time": "1-2 Days",
         "type": "API Design",
         "deliverable": "A simple document (or a free Postman collection) listing each endpoint, what it needs, and an example response. No need for a formal OpenAPI spec if that feels too advanced — a clear list is enough.",
         "hints": [
@@ -811,7 +811,7 @@
         "num": 2,
         "title": "Build the Core Endpoints",
         "description": "Now build it. Using Express and MongoDB (with Mongoose), create the user and task CRUD endpoints you planned. Add simple validation (like making sure a task has a title) and make sure each response uses a sensible HTTP status code.",
-        "time": "90-120 min",
+        "time": "3 Days",
         "type": "Coding",
         "deliverable": "A public repository with clear setup instructions (how to install and run it) and a simple guide to any environment variables needed (like the database connection string).",
         "hints": [
@@ -832,7 +832,7 @@
         "num": 3,
         "title": "Add Simple Login & Protection",
         "description": "Add register and login endpoints, and use JWT (a secure login token) to check that a user is logged in before letting them access their tasks. Protect just one admin-style route (e.g. viewing all users' tasks) so only specific accounts can use it.",
-        "time": "60-75 min",
+        "time": "2 Days",
         "type": "Security",
         "deliverable": "Your updated repository plus a short, plain-English explanation of how login works and how the protected route is guarded.",
         "hints": [
@@ -851,7 +851,7 @@
         "num": 4,
         "title": "Bug Hunt: Fix 3 Small Bugs",
         "description": "We've planted 3 common beginner-level bugs: one login/authentication bug, one where invalid data isn't being rejected properly, and one issue with async/await (a common source of confusing errors in Node.js). Find and fix each one — this is one of the best ways to really learn backend development.",
-        "time": "60 min",
+        "time": "2 Days",
         "type": "Debugging",
         "deliverable": "A short write-up (in your README or a doc) listing each bug, what caused it, and how you fixed it. A simple before/after code snippet for each is enough proof.",
         "hints": [
@@ -870,7 +870,7 @@
         "num": 5,
         "title": "Write Your First API Tests",
         "description": "Add Jest and Supertest tests for at least 4 of your endpoints. For each one, include a 'normal' test case (things working correctly) and try to add at least one edge case (like sending missing or invalid data) where you can.",
-        "time": "55-65 min",
+        "time": "2 Days",
         "type": "Testing",
         "deliverable": "A test report (a screenshot of your tests passing is fine) or a CI run link proving your tests pass.",
         "hints": [

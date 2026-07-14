@@ -44,7 +44,7 @@ export const generatePDFFromDOM = async (elementRef, fileName) => {
         // Force the element to be fully opaque for drawing, since we made it 0.01 in the DOM
         opacity: '1',
         visibility: 'visible',
-        backgroundColor: '#F8FAFC',
+        // NOTE: do NOT override backgroundColor here — each certificate template sets its own.
       },
       // Skip any elements that shouldn't appear in the PDF
       filter: (node) => {
