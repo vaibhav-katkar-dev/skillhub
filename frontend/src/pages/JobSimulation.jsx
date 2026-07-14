@@ -251,6 +251,14 @@ export default function JobSimulation() {
   const [showGuide, setShowGuide] = useState(true);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
+  // Price & Coupon State
+  const [certCostInr, setCertCostInr] = useState(null);
+  const [certCostLoading, setCertCostLoading] = useState(true);
+  const [couponCode, setCouponCode] = useState('');
+  const [couponResult, setCouponResult] = useState(null);
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
+  const [couponError, setCouponError] = useState('');
+
   useEffect(() => {
     const cachedCountry = localStorage.getItem('user_country');
     if (cachedCountry) {
@@ -278,6 +286,14 @@ export default function JobSimulation() {
         const found = data.find((item) => item.id === id);
         setSim(found);
         setLoading(false);
+        if (found) {
+          apiClient.get(`/events/simulations/${found.id}/price`)
+            .then(res => {
+              setCertCostInr(res.data.certCostInr);
+              setCertCostLoading(false);
+            })
+            .catch(() => setCertCostLoading(false));
+        }
       })
       .catch(() => setLoading(false));
   }, [id]);
@@ -397,8 +413,33 @@ export default function JobSimulation() {
 
 
   const displayAmount = (inr) => {
+    if (inr == null) return '...';
     if (!isInternationalUser) return formatInr(inr);
     return formatUsd(Number(inr || 0) / INR_PER_USD);
+  };
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setValidatingCoupon(true);
+    setCouponError('');
+    setCouponResult(null);
+    try {
+      const res = await apiClient.post('/events/simulations/validate-coupon', {
+        code: couponCode,
+        simId: sim.id
+      });
+      setCouponResult(res.data);
+    } catch (e) {
+      setCouponError(e.response?.data?.message || 'Invalid coupon.');
+    } finally {
+      setValidatingCoupon(false);
+    }
+  };
+
+  const clearCoupon = () => {
+    setCouponCode('');
+    setCouponResult(null);
+    setCouponError('');
   };
 
   const loadRazorpay = () =>
@@ -431,6 +472,7 @@ export default function JobSimulation() {
         eventTitle: sim.title,
         eventType: 'job-simulation',
         role: sim.role,
+        couponCode: couponResult?.code || '',
       });
       const order = orderRes.data;
 
@@ -1055,9 +1097,70 @@ export default function JobSimulation() {
                 </div>
                 <div className="flex justify-between items-center py-3 border-b border-slate-100">
                   <span className="text-slate-600 font-medium">Certificate Fee</span>
-                  <span className="font-bold text-slate-900">{displayAmount(sim.certCost)}</span>
+                  <div className="flex flex-col items-end">
+                    {certCostLoading ? (
+                      <span className="w-12 h-4 bg-slate-200 animate-pulse rounded"></span>
+                    ) : couponResult ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-400 line-through text-sm">
+                          {displayAmount(certCostInr)}
+                        </span>
+                        <span className="font-bold text-emerald-600">
+                          {displayAmount(couponResult.discountedAmountRupees)}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="font-bold text-slate-900">{displayAmount(certCostInr)}</span>
+                    )}
+                  </div>
                 </div>
               </div>
+
+              {!certId && canUnlockCertificate && (
+                <div className="mb-6 p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
+                    Discount Code (Optional)
+                  </label>
+                  {couponResult ? (
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-50 border border-emerald-100">
+                      <div>
+                        <div className="text-emerald-700 font-bold flex items-center gap-1.5">
+                          <CheckCircle2 className="w-4 h-4" /> {couponResult.code} Applied
+                        </div>
+                        <div className="text-xs text-emerald-600 font-medium mt-0.5">
+                          {couponResult.discountType === 'percentage' 
+                            ? `${couponResult.discountValue}% off` 
+                            : `₹${couponResult.discountValue} off`} 
+                          · Saved {displayAmount(couponResult.savedAmountRupees)}
+                        </div>
+                      </div>
+                      <button onClick={clearCoupon} className="p-1 text-emerald-600 hover:bg-emerald-100 rounded-md transition-colors" title="Remove coupon">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Enter code..."
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
+                        disabled={validatingCoupon}
+                        className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-white"
+                      />
+                      <button
+                        onClick={handleApplyCoupon}
+                        disabled={!couponCode.trim() || validatingCoupon}
+                        className="px-4 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-sm disabled:opacity-50 hover:bg-slate-800 transition-colors"
+                      >
+                        {validatingCoupon ? 'Wait...' : 'Apply'}
+                      </button>
+                    </div>
+                  )}
+                  {couponError && <p className="text-xs text-red-500 font-bold mt-2">{couponError}</p>}
+                </div>
+              )}
 
               {err && <div className="mb-6 p-4 rounded-xl bg-red-50 text-red-600 text-sm font-semibold border border-red-100">{err}</div>}
 
@@ -1090,7 +1193,7 @@ export default function JobSimulation() {
                 >
                   {!canUnlockCertificate
                     ? `Complete ${minRequired} tasks to unlock`
-                    : paying ? 'Processing...' : `Get Certificate · ${displayAmount(sim.certCost)}`}
+                    : paying ? 'Processing...' : `Get Certificate · ${displayAmount(couponResult ? couponResult.discountedAmountRupees : certCostInr)}`}
                 </button>
               )}
 

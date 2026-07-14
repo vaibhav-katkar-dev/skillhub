@@ -17,12 +17,33 @@ import HackathonRegistration from '../models/HackathonRegistration.js';
 import EventCertificate from '../models/EventCertificate.js';
 import SimulationProgress from '../models/SimulationProgress.js';
 import SimulationSubmission from '../models/SimulationSubmission.js';
+import SimulationPrice from '../models/SimulationPrice.js';
+import SimulationCoupon from '../models/SimulationCoupon.js';
 import User from '../models/User.js';
 import { authOptions, adminCheck } from '../middleware/auth.js';
 
 const router = express.Router();
 const FRONTEND_URL = () => (process.env.FRONTEND_URL || 'https://www.skillvalix.com').replace(/\/$/, '');
 const EVENT_CERT_TEMPLATE_VERSION = 4;
+const DEFAULT_SIM_CERT_COST = 99; // INR fallback if JSON and DB both lack a price
+
+/**
+ * Resolve the effective cert cost (INR) for a simulation.
+ * Priority: MongoDB SimulationPrice (isActive) → JSON certCost → DEFAULT_SIM_CERT_COST
+ */
+async function getSimCertCostInr(simId, jsonCertCost) {
+  try {
+    const dbPrice = await SimulationPrice.findOne({ simId: String(simId), isActive: true }).lean();
+    if (dbPrice && Number.isInteger(dbPrice.certCostInr) && dbPrice.certCostInr >= 1) {
+      return dbPrice.certCostInr;
+    }
+  } catch (e) {
+    console.warn('[SimPrice] DB lookup failed, falling back to JSON:', e.message);
+  }
+  if (Number.isInteger(jsonCertCost) && jsonCertCost >= 1) return jsonCertCost;
+  if (typeof jsonCertCost === 'number' && jsonCertCost >= 1) return Math.round(jsonCertCost);
+  return DEFAULT_SIM_CERT_COST;
+}
 
 // Rate limiter: max 10 task submissions per user per hour.
 // Uses the authenticated user's ID as the key so banning one user doesn't
@@ -1654,10 +1675,92 @@ async function buildGenericCertificate(doc, {
   });
 }
 
+// ─── Public Job Simulation Endpoints ───────────────────────────────────────
+
+router.get('/simulations/:simId/price', async (req, res) => {
+  try {
+    const { simId } = req.params;
+    let basePrice = DEFAULT_SIM_CERT_COST;
+    let title = simId;
+    try {
+      const simsData = JSON.parse(fs.readFileSync(SIM_JSON_PATH, 'utf-8'));
+      const matchedSim = simsData.find(s => s.id === simId || s.slug === simId);
+      if (matchedSim) {
+        basePrice = await getSimCertCostInr(matchedSim.id, matchedSim.certCost);
+        title = matchedSim.title;
+      } else {
+        const dbPrice = await SimulationPrice.findOne({ simId: String(simId), isActive: true }).lean();
+        if (dbPrice) basePrice = dbPrice.certCostInr;
+      }
+    } catch(e) {
+      console.warn('Failed reading JSON for sim price:', e.message);
+    }
+    res.json({ simId, certCostInr: basePrice, priceRupees: basePrice, title });
+  } catch (err) {
+    console.error('[Events] Fetch sim price error:', err);
+    res.status(500).json({ message: 'Error fetching simulation price' });
+  }
+});
+
+router.post('/simulations/validate-coupon', authOptions, async (req, res) => {
+  try {
+    const code = (req.body.code || '').toString().trim().toUpperCase();
+    const { simId } = req.body;
+
+    if (!code) return res.status(400).json({ valid: false, message: 'Coupon code is required.' });
+    if (!simId) return res.status(400).json({ valid: false, message: 'Simulation ID is required.' });
+
+    const coupon = await SimulationCoupon.findOne({ code });
+    if (!coupon) return res.status(404).json({ valid: false, message: 'Coupon not found.' });
+
+    if (!coupon.isValid()) {
+      let reason = 'This coupon is not valid.';
+      if (!coupon.isActive) reason = 'This coupon has been deactivated.';
+      else if (coupon.validUntil && new Date() > coupon.validUntil) reason = 'This coupon has expired.';
+      else if (coupon.validFrom && new Date() < coupon.validFrom) reason = 'This coupon is not yet active.';
+      else if (coupon.maxUsageLimit !== null && coupon.usedCount >= coupon.maxUsageLimit) {
+        reason = 'This coupon has reached its usage limit.';
+      }
+      return res.status(400).json({ valid: false, message: reason });
+    }
+
+    if (coupon.simIds && coupon.simIds.length > 0 && !coupon.simIds.includes(String(simId))) {
+      return res.status(400).json({ valid: false, message: 'This coupon is not valid for this simulation.' });
+    }
+
+    let basePrice = DEFAULT_SIM_CERT_COST;
+    try {
+      const simsData = JSON.parse(fs.readFileSync(SIM_JSON_PATH, 'utf-8'));
+      const matchedSim = simsData.find(s => s.id === String(simId) || s.slug === String(simId));
+      if (matchedSim) {
+        basePrice = await getSimCertCostInr(matchedSim.id, matchedSim.certCost);
+      }
+    } catch(e) {}
+    
+    const basePaise = basePrice * 100;
+    const discountedPaise = coupon.applyDiscount(basePaise);
+    
+    return res.json({
+      valid: true,
+      code: coupon.code,
+      discountType: coupon.discountType,
+      discountValue: coupon.discountValue,
+      originalAmountPaise: basePaise,
+      discountedAmountPaise: discountedPaise,
+      originalAmountRupees: basePaise / 100,
+      discountedAmountRupees: discountedPaise / 100,
+      savedAmountRupees: (basePaise - discountedPaise) / 100,
+    });
+  } catch (err) {
+    console.error('[Events] Validate sim coupon error:', err);
+    res.status(500).json({ valid: false, message: 'Server error validating coupon.' });
+  }
+});
+
 // ─── Razorpay Order Creation (Event Certificates) ───────────────────────────
 router.post('/certificates/razorpay-order', authOptions, async (req, res) => {
   try {
-    const { eventTitle, eventType = 'job-simulation', role = 'Participant' } = req.body;
+    const { eventTitle, eventType = 'job-simulation', role = 'Participant', couponCode } = req.body;
     if (!eventTitle) return res.status(400).json({ message: 'eventTitle is required.' });
 
     if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
@@ -1667,8 +1770,9 @@ router.post('/certificates/razorpay-order', authOptions, async (req, res) => {
     const user = await User.findById(req.user.id).lean();
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    // Ensure we parse the actual exact price from JSON instead of hardcoded 99 INR.
-    let basePrice = 99; // Fallback
+    // Resolve the actual price from DB first, then JSON, then fallback.
+    let basePrice = DEFAULT_SIM_CERT_COST; // Fallback
+    let matchedSimId = null;
     try {
       if (eventType === 'job-simulation') {
         const simsData = JSON.parse(fs.readFileSync(SIM_JSON_PATH, 'utf-8'));
@@ -1687,12 +1791,26 @@ router.post('/certificates/razorpay-order', authOptions, async (req, res) => {
           });
         }
 
-        if (matchedSim.certCost) basePrice = matchedSim.certCost;
+        // DB price takes priority over JSON certCost
+        basePrice = await getSimCertCostInr(matchedSim.id, matchedSim.certCost);
+        matchedSimId = matchedSim.id;
       }
     } catch(e) { console.error('[Events] Failed to parse job-simulations.json for price/completion', e); }
 
     const isAdminTestMode = user.role === 'admin';
-    const amountToCharge = isAdminTestMode ? 100 : basePrice * 100; // paise
+    let amountToCharge = isAdminTestMode ? 100 : basePrice * 100; // paise
+
+    let appliedCoupon = null;
+    if (!isAdminTestMode && couponCode && matchedSimId && eventType === 'job-simulation') {
+      const code = String(couponCode).trim().toUpperCase();
+      const coupon = await SimulationCoupon.findOne({ code });
+      if (coupon && coupon.isValid()) {
+        if (!coupon.simIds?.length || coupon.simIds.includes(matchedSimId)) {
+          amountToCharge = coupon.applyDiscount(amountToCharge);
+          appliedCoupon = code;
+        }
+      }
+    }
 
     const rzp = new Razorpay({
       key_id: process.env.RAZORPAY_KEY_ID,
@@ -1704,7 +1822,7 @@ router.post('/certificates/razorpay-order', authOptions, async (req, res) => {
       amount: amountToCharge,
       currency: 'INR',
       receipt: expectedReceipt,
-      notes: { eventTitle, eventType, role } // Store in backend order directly
+      notes: { eventTitle, eventType, role, couponCode: appliedCoupon || '' } // Store in backend order directly
     };
 
     const order = await rzp.orders.create(options);
@@ -1763,18 +1881,36 @@ router.post('/certificates/generate', authOptions, async (req, res) => {
     }
 
     // Determine actual expected amount to fully stamp out price manipulation checks
-    let basePrice = 99; 
+    let basePrice = DEFAULT_SIM_CERT_COST;
+    let matchedSimId = null;
     try {
       if (verifiedType === 'job-simulation') {
         const simsData = JSON.parse(fs.readFileSync(SIM_JSON_PATH, 'utf-8'));
         const matchedSim = simsData.find(s => s.title === verifiedTitle);
-        if (matchedSim && matchedSim.certCost) basePrice = matchedSim.certCost;
+        if (matchedSim) {
+          matchedSimId = matchedSim.id;
+          // DB price takes priority over JSON certCost
+          basePrice = await getSimCertCostInr(matchedSim.id, matchedSim.certCost);
+        }
       }
-    } catch(e) {}
+    } catch(e) { console.warn('[Events] Price verify fallback:', e.message); }
     
-    const expectedAmount = user.role === 'admin' ? 100 : basePrice * 100;
+    let expectedAmount = user.role === 'admin' ? 100 : basePrice * 100;
+    let appliedCouponDoc = null;
+
+    if (user.role !== 'admin' && order.notes?.couponCode && matchedSimId && verifiedType === 'job-simulation') {
+      const code = String(order.notes.couponCode).trim().toUpperCase();
+      const coupon = await SimulationCoupon.findOne({ code });
+      if (coupon && coupon.isValid()) {
+        if (!coupon.simIds?.length || coupon.simIds.includes(matchedSimId)) {
+          expectedAmount = coupon.applyDiscount(expectedAmount);
+          appliedCouponDoc = coupon;
+        }
+      }
+    }
+
     if (order.amount !== expectedAmount) {
-       return res.status(400).json({ message: 'Payment mismatch: The order amount does not match current event price.' });
+       return res.status(400).json({ message: 'Payment mismatch: The order amount does not match current event price (or coupon invalid).' });
     }
 
     // SECURITY: Ensure payment ID hasn't been used for another certificate
@@ -1800,6 +1936,11 @@ router.post('/certificates/generate', authOptions, async (req, res) => {
       pdfTemplateVersion: EVENT_CERT_TEMPLATE_VERSION,
     });
     await cert.save();
+
+    if (appliedCouponDoc) {
+      appliedCouponDoc.usedCount += 1;
+      await appliedCouponDoc.save();
+    }
 
     // Generate PDF immediately
     const issueDate = new Date(cert.issueDate).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -2142,13 +2283,19 @@ router.get('/admin/simulations', authOptions, adminCheck, async (req, res) => {
       s._id, { submissionCount: s.submissionCount, uniqueUsers: s.uniqueUsers?.length || 0 }
     ]));
 
+    // Fetch all DB prices in one query and build a lookup map by simId
+    const dbPrices = await SimulationPrice.find({ isActive: true }).lean();
+    const dbPriceMap = Object.fromEntries(dbPrices.map(p => [p.simId, p.certCostInr]));
+
     const enriched = simulations.map(sim => ({
       id: sim.id,
       title: sim.title,
       role: sim.role,
       level: sim.level,
       duration: sim.duration,
-      certCost: sim.certCost,
+      // DB price overrides JSON certCost so the admin always sees the live value
+      certCost: dbPriceMap[sim.id] ?? sim.certCost ?? DEFAULT_SIM_CERT_COST,
+      certCostSource: sim.id in dbPriceMap ? 'db' : 'json',
       comingSoon: sim.comingSoon || false,
       color: sim.color,
       taskCount: Array.isArray(sim.tasks) ? sim.tasks.length : 0,
@@ -2170,7 +2317,9 @@ router.get('/admin/simulations', authOptions, adminCheck, async (req, res) => {
 // ─── ADMIN: Update certCost price for a simulation ────────────────────────────
 // PUT /api/events/admin/simulations/:simId/price
 // Body: { certCost: number }   — price in INR (positive integer)
-// Writes back to job-simulations.json atomically (temp file swap).
+// Persists the price to MongoDB (SimulationPrice collection).
+// The JSON file is intentionally NOT mutated: production (Vercel) has a
+// read-only filesystem, so file writes would silently fail or throw EROFS.
 router.put('/admin/simulations/:simId/price', authOptions, adminCheck, async (req, res) => {
   try {
     const { simId } = req.params;
@@ -2182,23 +2331,38 @@ router.put('/admin/simulations/:simId/price', authOptions, adminCheck, async (re
     }
     const roundedCost = Math.round(parsed);
 
-    const raw = fs.readFileSync(SIM_JSON_PATH, 'utf-8');
-    const simulations = JSON.parse(raw);
+    // Verify the simulation exists in the JSON catalogue
+    let simTitle = simId;
+    try {
+      const raw = fs.readFileSync(SIM_JSON_PATH, 'utf-8');
+      const simulations = JSON.parse(raw);
+      const found = simulations.find(s => s.id === simId || s.slug === simId);
+      if (!found) return res.status(404).json({ message: `Simulation "${simId}" not found.` });
+      simTitle = found.title || simId;
+    } catch (readErr) {
+      // If the JSON can't be read (shouldn't happen locally; can happen on edge cases),
+      // proceed with the DB write using simId as title rather than blocking the admin.
+      console.warn('[Admin Simulations] Could not read JSON for title lookup:', readErr.message);
+    }
 
-    const idx = simulations.findIndex(s => s.id === simId || s.slug === simId);
-    if (idx === -1) return res.status(404).json({ message: `Simulation "${simId}" not found.` });
-
-    simulations[idx].certCost = roundedCost;
-
-    // Atomic write: temp file → rename to prevent partial writes.
-    const tmpPath = SIM_JSON_PATH + '.tmp';
-    fs.writeFileSync(tmpPath, JSON.stringify(simulations, null, 2), 'utf-8');
-    fs.renameSync(tmpPath, SIM_JSON_PATH);
+    // Upsert into MongoDB — this works on all environments including Vercel.
+    const doc = await SimulationPrice.findOneAndUpdate(
+      { simId },
+      {
+        simId,
+        simTitle,
+        certCostInr: roundedCost,
+        isActive: true,
+        updatedBy: req.user.id,
+      },
+      { upsert: true, new: true, runValidators: true }
+    );
 
     res.json({
-      message: `Certificate price for "${simulations[idx].title}" updated to ₹${roundedCost}.`,
+      message: `Certificate price for "${simTitle}" updated to ₹${roundedCost}.`,
       simId,
       certCost: roundedCost,
+      source: 'db',
     });
   } catch (err) {
     console.error('[Admin Simulations] Price update error:', err);
@@ -2281,6 +2445,112 @@ router.get('/admin/simulations/:simId/stats', authOptions, adminCheck, async (re
   } catch (err) {
     console.error('[Admin Simulations] Stats error:', err);
     res.status(500).json({ message: 'Failed to fetch simulation stats.' });
+  }
+});
+
+// ─── ADMIN: Manage Simulation Coupons ───────────────────────────────────────
+
+router.get('/admin/sim-coupons', authOptions, adminCheck, async (req, res) => {
+  try {
+    const coupons = await SimulationCoupon.find().sort({ createdAt: -1 }).lean();
+    res.json(coupons);
+  } catch (err) {
+    console.error('[Admin SimCoupons] List error:', err);
+    res.status(500).json({ message: 'Failed to fetch sim coupons.' });
+  }
+});
+
+router.post('/admin/sim-coupons', authOptions, adminCheck, async (req, res) => {
+  try {
+    const {
+      code, discountType = 'percentage', discountValue, simIds = [],
+      maxUsageLimit, validFrom, validUntil, description = ''
+    } = req.body;
+
+    if (!code || typeof code !== 'string') return res.status(400).json({ message: 'A valid coupon code is required.' });
+    const cleanCode = code.trim().toUpperCase();
+    if (!/^[A-Z0-9_-]+$/.test(cleanCode) || cleanCode.length < 3 || cleanCode.length > 30) {
+      return res.status(400).json({ message: 'Code must be 3-30 characters: A-Z, 0-9, _ or -.' });
+    }
+    if (!['percentage', 'flat'].includes(discountType)) return res.status(400).json({ message: 'discountType must be "percentage" or "flat".' });
+    
+    const dv = Number(discountValue);
+    if (isNaN(dv) || dv <= 0) return res.status(400).json({ message: 'discountValue must be a positive number.' });
+    if (discountType === 'percentage' && dv > 100) return res.status(400).json({ message: 'Percentage discount cannot exceed 100.' });
+
+    const existing = await SimulationCoupon.findOne({ code: cleanCode });
+    if (existing) return res.status(409).json({ message: `Coupon code "${cleanCode}" already exists.` });
+
+    const coupon = new SimulationCoupon({
+      code: cleanCode,
+      discountType,
+      discountValue: dv,
+      simIds: Array.isArray(simIds) ? simIds.map(String).filter(Boolean) : [],
+      maxUsageLimit: maxUsageLimit ? Number(maxUsageLimit) : null,
+      validFrom: validFrom ? new Date(validFrom) : null,
+      validUntil: validUntil ? new Date(validUntil) : null,
+      description: String(description).slice(0, 200),
+      createdBy: req.user.id,
+      isActive: true,
+    });
+
+    await coupon.save();
+    res.status(201).json({ message: 'Simulation Coupon created.', coupon });
+  } catch (err) {
+    console.error('[Admin SimCoupons] Create error:', err);
+    if (err.code === 11000) return res.status(409).json({ message: 'Coupon code already exists.' });
+    res.status(500).json({ message: 'Failed to create sim coupon.' });
+  }
+});
+
+router.patch('/admin/sim-coupons/:id/toggle', authOptions, adminCheck, async (req, res) => {
+  try {
+    const coupon = await SimulationCoupon.findById(req.params.id);
+    if (!coupon) return res.status(404).json({ message: 'Coupon not found.' });
+    coupon.isActive = !coupon.isActive;
+    await coupon.save();
+    res.json({ message: `Coupon ${coupon.isActive ? 'activated' : 'deactivated'}.`, coupon });
+  } catch (err) {
+    console.error('[Admin SimCoupons] Toggle error:', err);
+    res.status(500).json({ message: 'Failed to toggle sim coupon.' });
+  }
+});
+
+router.delete('/admin/sim-coupons/:id', authOptions, adminCheck, async (req, res) => {
+  try {
+    const coupon = await SimulationCoupon.findByIdAndDelete(req.params.id);
+    if (!coupon) return res.status(404).json({ message: 'Coupon not found.' });
+    res.json({ message: 'Simulation Coupon deleted successfully.' });
+  } catch (err) {
+    console.error('[Admin SimCoupons] Delete error:', err);
+    res.status(500).json({ message: 'Failed to delete sim coupon.' });
+  }
+});
+
+router.patch('/admin/sim-coupons/:id', authOptions, adminCheck, async (req, res) => {
+  try {
+    const coupon = await SimulationCoupon.findById(req.params.id);
+    if (!coupon) return res.status(404).json({ message: 'Coupon not found.' });
+
+    const {
+      discountType, discountValue, simIds, maxUsageLimit,
+      validFrom, validUntil, description, isActive,
+    } = req.body;
+
+    if (discountType !== undefined) coupon.discountType = discountType;
+    if (discountValue !== undefined) coupon.discountValue = Number(discountValue);
+    if (simIds !== undefined) coupon.simIds = Array.isArray(simIds) ? simIds.map(String).filter(Boolean) : [];
+    if (maxUsageLimit !== undefined) coupon.maxUsageLimit = maxUsageLimit ? Number(maxUsageLimit) : null;
+    if (validFrom !== undefined) coupon.validFrom = validFrom ? new Date(validFrom) : null;
+    if (validUntil !== undefined) coupon.validUntil = validUntil ? new Date(validUntil) : null;
+    if (description !== undefined) coupon.description = String(description).slice(0, 200);
+    if (isActive !== undefined) coupon.isActive = Boolean(isActive);
+
+    await coupon.save();
+    res.json({ message: 'Simulation Coupon updated.', coupon });
+  } catch (err) {
+    console.error('[Admin SimCoupons] Edit error:', err);
+    res.status(500).json({ message: 'Failed to update sim coupon.' });
   }
 });
 

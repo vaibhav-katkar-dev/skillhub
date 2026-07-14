@@ -99,6 +99,23 @@ const AdminPanel = () => {
   });
   const [editCouponSaving, setEditCouponSaving] = useState(false);
 
+  // ── Sim Coupon manager state ──────────────────────────────────────────
+  const [simCoupons, setSimCoupons] = useState([]);
+  const [simCouponsLoading, setSimCouponsLoading] = useState(false);
+  const [simCouponSaving, setSimCouponSaving] = useState(false);
+  const [simCouponMsg, setSimCouponMsg] = useState({ type: '', text: '' });
+  const [simCouponForm, setSimCouponForm] = useState({
+    code: '', discountType: 'percentage', discountValue: '',
+    simIds: '', maxUsageLimit: '', validFrom: '', validUntil: '', description: '',
+  });
+  const [deletingSimCouponId, setDeletingSimCouponId] = useState('');
+  const [editingSimCouponId, setEditingSimCouponId] = useState(''); 
+  const [editSimCouponForm, setEditSimCouponForm] = useState({
+    discountType: 'percentage', discountValue: '', simIds: '',
+    maxUsageLimit: '', validFrom: '', validUntil: '', description: '',
+  });
+  const [editSimCouponSaving, setEditSimCouponSaving] = useState(false);
+
   // ── Course Pricing manager state ─────────────────────────────────
   const [prices, setPrices] = useState([]);          // list from DB
   const [defaultPricePaise, setDefaultPricePaise] = useState(9900);
@@ -404,6 +421,96 @@ const AdminPanel = () => {
     }
   };
 
+  const loadSimCoupons = async () => {
+    setSimCouponsLoading(true);
+    try { const r = await api.get('/events/admin/sim-coupons'); setSimCoupons(r.data || []); }
+    catch { setSimCoupons([]); }
+    finally { setSimCouponsLoading(false); }
+  };
+
+  const handleCreateSimCoupon = async (e) => {
+    e.preventDefault();
+    setSimCouponSaving(true);
+    setSimCouponMsg({ type: '', text: '' });
+    try {
+      const payload = {
+        code: simCouponForm.code.trim().toUpperCase(),
+        discountType: simCouponForm.discountType,
+        discountValue: Number(simCouponForm.discountValue),
+        simIds: simCouponForm.simIds.split(',').map(s => s.trim()).filter(Boolean),
+        maxUsageLimit: simCouponForm.maxUsageLimit ? Number(simCouponForm.maxUsageLimit) : null,
+        validFrom: simCouponForm.validFrom || null,
+        validUntil: simCouponForm.validUntil || null,
+        description: simCouponForm.description,
+      };
+      await api.post('/events/admin/sim-coupons', payload);
+      setSimCouponMsg({ type: 'success', text: `Simulation Coupon "${payload.code}" created successfully!` });
+      setSimCouponForm({ code: '', discountType: 'percentage', discountValue: '', simIds: '', maxUsageLimit: '', validFrom: '', validUntil: '', description: '' });
+      loadSimCoupons();
+    } catch (err) {
+      setSimCouponMsg({ type: 'error', text: err.response?.data?.message || 'Failed to create sim coupon.' });
+    } finally {
+      setSimCouponSaving(false);
+    }
+  };
+
+  const handleToggleSimCoupon = async (id) => {
+    try {
+      await api.patch(`/events/admin/sim-coupons/${id}/toggle`);
+      loadSimCoupons();
+    } catch (err) {
+      setSimCouponMsg({ type: 'error', text: err.response?.data?.message || 'Failed to toggle sim coupon.' });
+    }
+  };
+
+  const handleDeleteSimCoupon = async (id, code) => {
+    if (!window.confirm(`Permanently delete simulation coupon "${code}"? This cannot be undone.`)) return;
+    setDeletingSimCouponId(id);
+    try {
+      await api.delete(`/events/admin/sim-coupons/${id}`);
+      setSimCoupons(prev => prev.filter(c => c._id !== id));
+      setSimCouponMsg({ type: 'success', text: `Simulation Coupon "${code}" deleted.` });
+    } catch { setSimCouponMsg({ type: 'error', text: 'Failed to delete sim coupon.' }); }
+    finally { setDeletingSimCouponId(''); }
+  };
+
+  const handleStartEditSimCoupon = (coupon) => {
+    setEditingSimCouponId(coupon._id);
+    setEditSimCouponForm({
+      discountType: coupon.discountType,
+      discountValue: String(coupon.discountValue),
+      simIds: coupon.simIds?.join(', ') || '',
+      maxUsageLimit: coupon.maxUsageLimit !== null ? String(coupon.maxUsageLimit) : '',
+      validFrom: coupon.validFrom ? new Date(coupon.validFrom).toISOString().slice(0, 16) : '',
+      validUntil: coupon.validUntil ? new Date(coupon.validUntil).toISOString().slice(0, 16) : '',
+      description: coupon.description || '',
+    });
+  };
+
+  const handleSaveEditSimCoupon = async (couponId) => {
+    setEditSimCouponSaving(true);
+    setSimCouponMsg({ type: '', text: '' });
+    try {
+      const payload = {
+        discountType: editSimCouponForm.discountType,
+        discountValue: Number(editSimCouponForm.discountValue),
+        simIds: editSimCouponForm.simIds.split(',').map(s => s.trim()).filter(Boolean),
+        maxUsageLimit: editSimCouponForm.maxUsageLimit ? Number(editSimCouponForm.maxUsageLimit) : null,
+        validFrom: editSimCouponForm.validFrom || null,
+        validUntil: editSimCouponForm.validUntil || null,
+        description: editSimCouponForm.description,
+      };
+      await api.patch(`/events/admin/sim-coupons/${couponId}`, payload);
+      setSimCouponMsg({ type: 'success', text: 'Sim Coupon updated successfully.' });
+      setEditingSimCouponId('');
+      loadSimCoupons();
+    } catch (err) {
+      setSimCouponMsg({ type: 'error', text: err.response?.data?.message || 'Failed to update sim coupon.' });
+    } finally {
+      setEditSimCouponSaving(false);
+    }
+  };
+
   const loadEmailUsers = async (search = '') => {
     setEmailUsersLoading(true);
     try {
@@ -459,6 +566,7 @@ const AdminPanel = () => {
     if (tab === 'hackathons') loadHacks();
     if (tab === 'host-requests') loadHostRequests();
     if (tab === 'coupons') loadCoupons();
+    if (tab === 'sim-coupons') loadSimCoupons();
     if (tab === 'pricing') loadPrices();
     if (tab === 'simulations') loadSimulations();
     if (tab === 'users') {
@@ -823,6 +931,7 @@ const AdminPanel = () => {
               { key: 'host-requests', label: 'Host Requests', icon: Users },
               { key: 'simulations', label: 'Job Simulations', icon: Briefcase },
               { key: 'coupons', label: 'Coupons', icon: Tag },
+              { key: 'sim-coupons', label: 'Sim Coupons', icon: Percent },
               { key: 'pricing', label: 'Course Pricing', icon: IndianRupee },
               { key: 'email', label: 'Email Campaign', icon: Mail },
               { key: 'guide', label: 'Course Guide', icon: BookOpen },
@@ -2699,6 +2808,384 @@ const AdminPanel = () => {
 
           </div>
         )}
+
+        {/* ══════════════ SIM COUPONS TAB ══════════════ */}
+        {tab === 'sim-simCoupons' && (
+          <div className="space-y-8">
+
+            {/* Feedback banner */}
+            {simCouponMsg.text && (
+              <div className={`flex items-start gap-3 p-4 rounded-2xl border text-sm font-medium ${
+                simCouponMsg.type === 'success'
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                  : 'bg-rose-50 border-rose-200 text-rose-800'
+              }`}>
+                {simCouponMsg.type === 'success'
+                  ? <CheckCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                  : <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />}
+                <span>{simCouponMsg.text}</span>
+                <button onClick={() => setSimCouponMsg({ type: '', text: '' })} className="ml-auto shrink-0"><X className="w-4 h-4" /></button>
+              </div>
+            )}
+
+            {/* ── Create Coupon Form ── */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+              <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-5">
+                <Tag className="w-5 h-5 text-indigo-600" />
+                Create Simulation Coupon
+              </h2>
+              <form onSubmit={handleCreateSimCoupon} className="space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                  {/* Code */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Coupon Code *</label>
+                    <input
+                      required
+                      type="text"
+                      placeholder="e.g. SKILL20"
+                      value={simCouponForm.code}
+                      onChange={e => setSimCouponForm(p => ({ ...p, code: e.target.value.toUpperCase() }))}
+                      maxLength={30}
+                      pattern="[A-Z0-9_-]+"
+                      title="Only A-Z, 0-9, _ or - allowed"
+                      className="border border-slate-300 rounded-xl px-3 py-2.5 text-sm font-mono font-bold tracking-widest focus:outline-none focus:ring-2 focus:ring-indigo-400 uppercase"
+                    />
+                    <p className="text-xs text-slate-400">3–30 chars, A-Z / 0-9 / _ / -</p>
+                  </div>
+
+                  {/* Discount type */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Discount Type *</label>
+                    <select
+                      value={simCouponForm.discountType}
+                      onChange={e => setSimCouponForm(p => ({ ...p, discountType: e.target.value }))}
+                      className="border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    >
+                      <option value="percentage">Percentage (%) off</option>
+                      <option value="flat">Flat (₹) off</option>
+                    </select>
+                  </div>
+
+                  {/* Discount value */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+                      {simCouponForm.discountType === 'percentage' ? 'Discount % (1–100) *' : 'Flat Discount ₹ *'}
+                    </label>
+                    <input
+                      required
+                      type="number"
+                      min="1"
+                      max={simCouponForm.discountType === 'percentage' ? 100 : 98}
+                      step="0.01"
+                      placeholder={simCouponForm.discountType === 'percentage' ? '20' : '30'}
+                      value={simCouponForm.discountValue}
+                      onChange={e => setSimCouponForm(p => ({ ...p, discountValue: e.target.value }))}
+                      className="border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    />
+                  </div>
+
+                  {/* Sim IDs */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Simulation IDs</label>
+                    <input
+                      type="text"
+                      placeholder="Comma separated IDs (leave empty for all)"
+                      value={simCouponForm.simIds}
+                      onChange={e => setSimCouponForm(p => ({ ...p, simIds: e.target.value }))}
+                      className="border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    />
+                  </div>
+
+                  {/* Usage limit */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Usage Limit</label>
+                    <input
+                      type="number"
+                      min="1"
+                      placeholder="Leave blank for unlimited"
+                      value={simCouponForm.maxUsageLimit}
+                      onChange={e => setSimCouponForm(p => ({ ...p, maxUsageLimit: e.target.value }))}
+                      className="border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    />
+                  </div>
+
+                  {/* Valid from */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Valid From</label>
+                    <input
+                      type="datetime-local"
+                      value={simCouponForm.validFrom}
+                      onChange={e => setSimCouponForm(p => ({ ...p, validFrom: e.target.value }))}
+                      className="border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    />
+                  </div>
+
+                  {/* Valid until */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Valid Until (Expiry)</label>
+                    <input
+                      type="datetime-local"
+                      value={simCouponForm.validUntil}
+                      onChange={e => setSimCouponForm(p => ({ ...p, validUntil: e.target.value }))}
+                      className="border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    />
+                  </div>
+
+                  {/* Description – full width */}
+                  <div className="flex flex-col gap-1.5 md:col-span-2">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Internal Description</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Campus ambassador batch April 2026"
+                      value={simCouponForm.description}
+                      maxLength={200}
+                      onChange={e => setSimCouponForm(p => ({ ...p, description: e.target.value }))}
+                      className="border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    />
+                  </div>
+                </div>
+
+                {/* Preview line */}
+                {simCouponForm.code && simCouponForm.discountValue && (
+                  <div className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-800 flex items-center gap-2">
+                    <Percent className="w-4 h-4 shrink-0" />
+                    <span>
+                      <strong>{simCouponForm.code || '...'}</strong> — {simCouponForm.discountType === 'percentage'
+                        ? `${simCouponForm.discountValue}% off → ₹${Math.max(1, Math.round(99 * (1 - simCouponForm.discountValue / 100)))}`
+                        : `₹${simCouponForm.discountValue} off → ₹${Math.max(1, 99 - Number(simCouponForm.discountValue))}`}
+                      {simCouponForm.maxUsageLimit ? ` · limit ${simCouponForm.maxUsageLimit} uses` : ' · unlimited uses'}
+                      {simCouponForm.validUntil ? ` · expires ${new Date(simCouponForm.validUntil).toLocaleDateString('en-IN')}` : ''}
+                    </span>
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={simCouponSaving}
+                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow transition disabled:opacity-60"
+                >
+                  {simCouponSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                  {simCouponSaving ? 'Creating...' : 'Create Coupon'}
+                </button>
+              </form>
+            </div>
+
+            {/* ── Coupon List ── */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+              <div className="flex items-center justify-between gap-4 mb-5">
+                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <Tag className="w-5 h-5 text-indigo-600" />
+                  All Simulation Coupons
+                  <span className="ml-1 px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold">{simCoupons.length}</span>
+                </h2>
+                <button
+                  onClick={loadSimCoupons}
+                  disabled={simCouponsLoading}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${simCouponsLoading ? 'animate-spin' : ''}`} />
+                  Refresh
+                </button>
+              </div>
+
+              {simCouponsLoading && (
+                <div className="space-y-3">
+                  {[1,2,3].map(i => <div key={i} className="h-20 rounded-xl bg-slate-100 animate-pulse" />)}
+                </div>
+              )}
+
+              {!simCouponsLoading && simCoupons.length === 0 && (
+                <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center">
+                  <Tag className="w-8 h-8 text-slate-300 mx-auto mb-3" />
+                  <p className="text-sm text-slate-500 font-medium">No simCoupons created yet.</p>
+                  <p className="text-xs text-slate-400 mt-1">Use the form above to create your first discount simCoupon.</p>
+                </div>
+              )}
+
+              {!simCouponsLoading && simCoupons.length > 0 && (
+                <div className="space-y-3">
+                  {simCoupons.map(simCoupon => {
+                    const isExpired = simCoupon.validUntil && new Date(simCoupon.validUntil) < new Date();
+                    const isExhausted = simCoupon.maxUsageLimit !== null && simCoupon.usedCount >= simCoupon.maxUsageLimit;
+                    const statusBadge = !simCoupon.isActive
+                      ? { label: 'Inactive', cls: 'bg-slate-100 text-slate-600' }
+                      : isExpired
+                        ? { label: 'Expired', cls: 'bg-rose-100 text-rose-700' }
+                        : isExhausted
+                          ? { label: 'Exhausted', cls: 'bg-amber-100 text-amber-700' }
+                          : { label: 'Active', cls: 'bg-emerald-100 text-emerald-700' };
+
+                    return (
+                      <div key={simCoupon._id} className="rounded-xl border border-slate-200 p-4">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+
+                          {/* Left: code + badges */}
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2 mb-1">
+                              <span className="font-black text-slate-900 text-base font-mono tracking-widest">{simCoupon.code}</span>
+                              <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${statusBadge.cls}`}>{statusBadge.label}</span>
+                              <span className="text-[10px] font-bold bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full">
+                                {simCoupon.discountType === 'percentage' ? `${simCoupon.discountValue}% off` : `₹${simCoupon.discountValue} off`}
+                              </span>
+                            </div>
+                            {simCoupon.description && (
+                              <p className="text-xs text-slate-500 mb-1 truncate max-w-sm">{simCoupon.description}</p>
+                            )}
+                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+                              <span>Used: <strong className="text-slate-700">{simCoupon.usedCount}</strong>
+                                {simCoupon.maxUsageLimit !== null ? ` / ${simCoupon.maxUsageLimit}` : ' / ∞'}
+                              </span>
+                              {simCoupon.validUntil && (
+                                <span>Expires: <strong className={`${isExpired ? 'text-rose-600' : 'text-slate-700'}`}>
+                                  {new Date(simCoupon.validUntil).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })}
+                                </strong></span>
+                              )}
+                              {simCoupon.validFrom && (
+                                <span>From: <strong className="text-slate-700">
+                                  {new Date(simCoupon.validFrom).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' })}
+                                </strong></span>
+                              )}
+                              <span>Created: <strong className="text-slate-700">{formatDate(simCoupon.createdAt)}</strong></span>
+                            </div>
+                          </div>
+
+                          {/* Right: actions */}
+                          <div className="flex items-center gap-2 shrink-0">
+                            {/* Edit */}
+                            <button
+                              onClick={() => editingSimCouponId === simCoupon._id ? setEditingSimCouponId('') : handleStartEditSimCoupon(coupon)}
+                              title="Edit coupon"
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 transition"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                              {editingSimCouponId === simCoupon._id ? 'Cancel' : 'Edit'}
+                            </button>
+
+                            {/* Toggle active */}
+                            <button
+                              onClick={() => handleToggleSimCoupon(simCoupon._id)}
+                              title={simCoupon.isActive ? 'Deactivate coupon' : 'Activate coupon'}
+                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                                simCoupon.isActive
+                                  ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200'
+                                  : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200'
+                              }`}
+                            >
+                              {simCoupon.isActive
+                                ? <ToggleRight className="w-4 h-4" />
+                                : <ToggleLeft className="w-4 h-4" />}
+                              {simCoupon.isActive ? 'Active' : 'Inactive'}
+                            </button>
+
+                            {/* Delete */}
+                            <button
+                              onClick={() => handleDeleteSimCoupon(simCoupon._id, simCoupon.code)}
+                              disabled={deletingSimCouponId === simCoupon._id}
+                              title="Delete coupon permanently"
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition disabled:opacity-50"
+                            >
+                              {deletingSimCouponId === simCoupon._id
+                                ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                : <Trash2 className="w-3.5 h-3.5" />}
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* ── Inline edit panel ── */}
+                        {editingSimCouponId === simCoupon._id && (
+                          <div className="mt-4 pt-4 border-t border-amber-200 bg-amber-50/60 rounded-xl p-4">
+                            <p className="text-xs font-bold text-amber-700 uppercase tracking-wide mb-3">Edit Sim Coupon: {simCoupon.code}</p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <div className="flex flex-col gap-1">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Discount Type</label>
+                                <select
+                                  value={editSimCouponForm.discountType}
+                                  onChange={e => setEditSimCouponForm(p => ({ ...p, discountType: e.target.value }))}
+                                  className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                                >
+                                  <option value="percentage">Percentage (%) off</option>
+                                  <option value="flat">Flat (₹) off</option>
+                                </select>
+                              </div>
+                              <div className="flex flex-col gap-1">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+                                  {editSimCouponForm.discountType === 'percentage' ? 'Discount %' : 'Flat ₹ off'}
+                                </label>
+                                <input
+                                  type="number" min="1" step="0.01"
+                                  value={editSimCouponForm.discountValue}
+                                  onChange={e => setEditSimCouponForm(p => ({ ...p, discountValue: e.target.value }))}
+                                  className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                                />
+                              </div>
+                              <div className="flex flex-col gap-1">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Usage Limit</label>
+                                <input
+                                  type="number" min="1" placeholder="Unlimited"
+                                  value={editSimCouponForm.maxUsageLimit}
+                                  onChange={e => setEditSimCouponForm(p => ({ ...p, maxUsageLimit: e.target.value }))}
+                                  className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                                />
+                              </div>
+                              <div className="flex flex-col gap-1">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Valid Until (Expiry)</label>
+                                <input
+                                  type="datetime-local"
+                                  value={editSimCouponForm.validUntil}
+                                  onChange={e => setEditSimCouponForm(p => ({ ...p, validUntil: e.target.value }))}
+                                  className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                                />
+                              </div>
+                              <div className="flex flex-col gap-1">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Valid From</label>
+                                <input
+                                  type="datetime-local"
+                                  value={editSimCouponForm.validFrom}
+                                  onChange={e => setEditSimCouponForm(p => ({ ...p, validFrom: e.target.value }))}
+                                  className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                                />
+                              </div>
+                              <div className="flex flex-col gap-1">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Description</label>
+                                <input
+                                  type="text" maxLength={200} placeholder="Internal notes..."
+                                  value={editSimCouponForm.description}
+                                  onChange={e => setEditSimCouponForm(p => ({ ...p, description: e.target.value }))}
+                                  className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                                />
+                              </div>
+                            </div>
+                            <div className="flex gap-2 mt-4">
+                              <button
+                                onClick={() => handleSaveEditSimCoupon(simCoupon._id)}
+                                disabled={editSimCouponSaving}
+                                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow transition disabled:opacity-60"
+                              >
+                                {editSimCouponSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
+                                {editSimCouponSaving ? 'Saving...' : 'Save Changes'}
+                              </button>
+                              <button
+                                onClick={() => setEditingSimCouponId('')}
+                                className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs transition"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+          </div>
+        )}
+
+        
 
         {/* ══════════════ COURSE PRICING TAB ══════════════ */}
         {tab === 'pricing' && (
