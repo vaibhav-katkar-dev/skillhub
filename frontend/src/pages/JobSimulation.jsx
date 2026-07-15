@@ -238,6 +238,7 @@ export default function JobSimulation() {
   const [certData, setCertData] = useState(null);
   const [generatingPdf, setGeneratingPdf] = useState(false);
   const certTemplateRef = useRef(null);
+  const payingRef = useRef(false);
   const [err, setErr] = useState('');
 
   // Tracking
@@ -460,12 +461,15 @@ export default function JobSimulation() {
       navigate('/login');
       return;
     }
+    if (payingRef.current) return;
+    payingRef.current = true;
     setErr('');
     setPaying(true);
 
     const loaded = await loadRazorpay();
     if (!loaded) {
       setErr('Payment gateway failed to load. Please try again.');
+      payingRef.current = false;
       setPaying(false);
       return;
     }
@@ -479,8 +483,15 @@ export default function JobSimulation() {
       });
       const order = orderRes.data;
 
+      if (!import.meta.env.VITE_RAZORPAY_KEY_ID) {
+        setErr('Payment system not configured. Please contact support.');
+        payingRef.current = false;
+        setPaying(false);
+        return;
+      }
+
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || '',
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: order.amount,
         currency: order.currency,
         order_id: order.id,
@@ -493,6 +504,7 @@ export default function JobSimulation() {
               eventType: 'job-simulation',
               eventTitle: sim.title,
               role: sim.role,
+              couponCode: couponResult?.code || '',
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
@@ -502,20 +514,26 @@ export default function JobSimulation() {
           } catch (e) {
             setErr(e.response?.data?.message || 'Verification failed. Contact support.');
           } finally {
+            payingRef.current = false;
             setPaying(false);
           }
         },
-        modal: { ondismiss: () => setPaying(false) },
+        modal: { ondismiss: () => {
+          payingRef.current = false;
+          setPaying(false);
+        } },
       };
 
       const razorpay = new window.Razorpay(options);
       razorpay.on('payment.failed', (response) => {
         setErr(response.error.description || 'Payment failed.');
+        payingRef.current = false;
         setPaying(false);
       });
       razorpay.open();
     } catch (e) {
       setErr(e.response?.data?.message || 'Could not initiate payment.');
+      payingRef.current = false;
       setPaying(false);
     }
   };

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
@@ -74,6 +74,7 @@ export default function HackathonDetail() {
   const [note, setNote] = useState('');
 
   const [busy, setBusy] = useState(false);
+  const payingRef = useRef(false);
   const [msg, setMsg] = useState({ text: '', tone: 'info' });
 
   const rules = useMemo(() => hack?.contentConfig?.rules || [], [hack]);
@@ -248,18 +249,29 @@ export default function HackathonDetail() {
   // ── Payment ────────────────────────────────────────────────────────────────
   const handlePay = async () => {
     if (!registration) return;
+    if (payingRef.current) return;
+    payingRef.current = true;
     setBusy(true);
     const loaded = await loadRazorpay();
     if (!loaded) {
       showMsg('Payment gateway failed to load. Please try again.', 'error');
+      payingRef.current = false;
       setBusy(false);
       return;
     }
     try {
       const orderRes = await api.post(`/events/hackathons/${hack._id}/razorpay-order`, { registrationId: registration._id });
       const order = orderRes.data;
+
+      if (!import.meta.env.VITE_RAZORPAY_KEY_ID) {
+        showMsg('Payment system not configured. Please contact support.', 'error');
+        payingRef.current = false;
+        setBusy(false);
+        return;
+      }
+
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || '',
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: order.amount,
         currency: order.currency,
         order_id: order.id,
@@ -279,19 +291,25 @@ export default function HackathonDetail() {
           } catch (err) {
             showMsg(err.response?.data?.message || 'Payment verification failed.', 'error');
           } finally {
+            payingRef.current = false;
             setBusy(false);
           }
         },
-        modal: { ondismiss: () => setBusy(false) },
+        modal: { ondismiss: () => {
+          payingRef.current = false;
+          setBusy(false);
+        } },
       };
       const razorpay = new window.Razorpay(options);
       razorpay.on('payment.failed', (response) => {
         showMsg(response?.error?.description || 'Payment failed.', 'error');
+        payingRef.current = false;
         setBusy(false);
       });
       razorpay.open();
     } catch (err) {
       showMsg(err.response?.data?.message || 'Could not initiate payment.', 'error');
+      payingRef.current = false;
       setBusy(false);
     }
   };

@@ -42,6 +42,7 @@ const QuizView = () => {
   const [certStatusMessage, setCertStatusMessage] = useState('');
   const [exportCertData, setExportCertData] = useState(null);
   const certTemplateRef = useRef(null);
+  const payingRef = useRef(false);
 
   // ── Coupon state ──────────────────────────────────────
   const [couponInput, setCouponInput]       = useState('');
@@ -212,6 +213,8 @@ const QuizView = () => {
   };
 
   const handlePayment = async () => {
+    if (payingRef.current) return;
+    payingRef.current = true;
     setPaying(true);
     try {
       const appliedCode = couponResult?.valid ? couponResult.code : undefined;
@@ -220,10 +223,21 @@ const QuizView = () => {
         couponCode: appliedCode,
       });
       const order = res.data;
-      setPaymentInfo(order);
+      if (order.displayAmountRupees !== undefined) {
+        setPaymentInfo(order);
+      } else {
+        setPaymentInfo(order);
+      }
+
+      if (!import.meta.env.VITE_RAZORPAY_KEY_ID) {
+        alert('Payment system not configured. Please contact support.');
+        payingRef.current = false;
+        setPaying(false);
+        return;
+      }
 
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_your_key_id_here',
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: order.amount,
         currency: order.currency,
         name: 'SkillValix Certification',
@@ -235,7 +249,6 @@ const QuizView = () => {
         order_id: order.id,
         handler: async function (response) {
           try {
-            setPaying(true);
             await api.post('/payments/razorpay-verify', {
               ...response,
               courseId: course._id,
@@ -250,6 +263,7 @@ const QuizView = () => {
           } catch (err) {
             alert('Verification failed. Please contact support.');
           } finally {
+            payingRef.current = false;
             setPaying(false);
           }
         },
@@ -260,6 +274,7 @@ const QuizView = () => {
         theme: { color: '#4f46e5' },
         modal: {
           ondismiss: function () {
+            payingRef.current = false;
             setPaying(false);
           },
         },
@@ -268,12 +283,14 @@ const QuizView = () => {
       const rzp = new window.Razorpay(options);
       rzp.on('payment.failed', function (response) {
         alert('Payment failed: ' + response.error.description);
+        payingRef.current = false;
         setPaying(false);
       });
       rzp.open();
     } catch (err) {
       const msg = err.response?.data?.message || 'Failed to initialize payment.';
       alert(msg);
+      payingRef.current = false;
       setPaying(false);
     }
   };

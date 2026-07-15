@@ -1,0 +1,68 @@
+# SkillValix
+
+> India's free online learning platform offering structured courses, job simulations, skill exams, and student hackathons — all with verifiable certificates, targeted at beginners aged 16–30.
+
+SkillValix is an EdTech platform founded in 2024. It provides 100% free certification courses in Web Development, Python, JavaScript, Java, C/C++, React, Node.js, AI/ML, and Cybersecurity. Students can also take proctored Skill Exams to earn certificates without completing a full course, participate in student hackathons, or experience real work environments through Job Simulations (virtual internships in Frontend Dev, Spring Boot, Data Analysis, UI/UX Design, and Backend Development). All certificates are verifiable via a public link.
+
+## Courses
+
+- [Free Courses (All)](https://www.skillvalix.com/courses): Browse the full catalogue of free structured courses with certificates.
+- [Free Courses Landing Page](https://www.skillvalix.com/free-courses): SEO landing page for free online courses with certificates in India.
+- [Ultimate HTML Masterclass](https://www.skillvalix.com/courses/ultimate-html-masterclass): Zero-to-hero HTML5 course for beginners, includes a verifiable certificate.
+- [CSS for Beginners – Zero to Pro](https://www.skillvalix.com/courses/css-for-beginners-learn-web-styling-zero-to-pro): Comprehensive CSS course covering Flexbox, Grid, and animations.
+- [Ultimate JavaScript Masterclass](https://www.skillvalix.com/courses/ultimate-javascript-masterclass): JavaScript from fundamentals to DOM, async, and ES6+.
+- [Ultimate Python Masterclass](https://www.skillvalix.com/courses/ultimate-python-masterclass): Python programming from basics to OOP and file handling.
+- [Ultimate Java Masterclass](https://www.skillvalix.com/courses/ultimate-java-masterclass): Java fundamentals through OOP and collections.
+- [Basics of Artificial Intelligence for Beginners](https://www.skillvalix.com/courses/basics-of-artificial-intelligence-beginners): Intro to AI and Machine Learning concepts, no prior experience needed.
+- [Ultimate React Masterclass](https://www.skillvalix.com/courses/ultimate-react-masterclass): React.js from beginner to advanced including hooks and state management.
+- [Node.js & Express API Development](https://www.skillvalix.com/courses/nodejs-express-api-development): Backend API development with Node.js and Express.
+- [Cyber Security Basics – Introduction](https://www.skillvalix.com/courses/cyber-security-basics-introduction): Beginner's guide to cybersecurity concepts and best practices.
+- [Ultimate C Programming](https://www.skillvalix.com/courses/ultimate-c-programming): C language from hardware understanding to high-performance programming.
+- [Modern C++ Mastery](https://www.skillvalix.com/courses/modern-cpp-mastery): Modern C++ with OOP, templates, and STL.
+
+## Job Simulations
+
+- [Job Simulations (All)](https://www.skillvalix.com/job-simulations): Free virtual work experience simulations for students in multiple tech roles.
+- [Frontend Developer Simulation](https://www.skillvalix.com/job-simulation/frontend-developer): Simulate a Frontend Developer role — build real UI components, tackle tasks a junior dev would face.
+- [Spring Boot Developer Simulation](https://www.skillvalix.com/job-simulation/spring-boot-developer): Virtual Spring Boot backend development experience with real company-style tasks.
+- [Data Analyst Simulation](https://www.skillvalix.com/job-simulation/data-analyst): Hands-on data analysis simulation — work with datasets, charts, and insights.
+- [UI/UX Designer Simulation](https://www.skillvalix.com/job-simulation/ui-ux-designer): Practice user research, wireframing, and prototyping in a virtual design role.
+- [Backend Developer Simulation](https://www.skillvalix.com/job-simulation/backend-developer): Experience backend development tasks including API design and database queries.
+
+## Skill Exams & Certification
+
+- [Skill Exams](https://www.skillvalix.com/skill-exams): Take a proctored online exam to earn a programming certificate — no course required.
+- [Certification](https://www.skillvalix.com/certification): Overview of SkillValix's free verifiable certificate programme.
+- [Verify Certificate](https://www.skillvalix.com/verify): Public tool to verify the authenticity of any SkillValix certificate.
+
+## Hackathons
+
+- [Student Hackathons](https://www.skillvalix.com/hackathons): Free online hackathons for Indian students with certificates and prizes.
+- [Host a Hackathon](https://www.skillvalix.com/host): Platform for colleges and corporates to host hackathons on SkillValix.
+
+## Blog
+
+- [Blog Home](https://www.skillvalix.com/blog): Articles on web development, career advice, AI, Python, and more for students.
+- [What is SkillValix?](https://www.skillvalix.com/blog/what-is-skillvalix-complete-guide): Complete guide to the SkillValix platform and how to use it to build a tech career.
+- [How SkillValix Helps Students Become Job Ready](https://www.skillvalix.com/blog/how-skillvalix-helps-students-become-job-ready): 7 key ways SkillValix prepares students for the job market.
+- [Job Simulations: Gain Real-World Experience](https://www.skillvalix.com/blog/skillvalix-job-simulations-gain-real-world-experience): Why job simulations matter and how they bridge the gap between learning and employment.
+- [How to Become a Web Developer in 2026](https://www.skillvalix.com/blog/how-to-become-a-web-developer-2026): Complete roadmap for beginners wanting to break into web development.
+- [Best Programming Languages to Learn in 2026](https://www.skillvalix.com/blog/best-programming-languages-to-learn-2026): Top languages to learn for jobs and freelancing in 2026.
+- [Online Skill Exam: Validate Programming Skills](https://www.skillvalix.com/blog/online-skill-exam-certificate-validate-programming-skills): How to earn a certificate by taking a skill exam without doing a full course.
+- [Web Development Roadmap 2026](https://www.skillvalix.com/blog/web-development-roadmap-2026-beginners): Complete free guide for beginners on the web development learning path.
+- [Top 30 JavaScript Interview Questions 2026](https://www.skillvalix.com/blog/javascript-interview-questions-2026): Must-know JS interview questions for freshers and experienced developers.
+- [Python for Data Science 2026](https://www.skillvalix.com/blog/python-for-data-science-beginners-2026): Beginner guide with free resources for learning Python in the data science context.
+- [Python vs JavaScript: Which to Learn First](https://www.skillvalix.com/blog/python-vs-javascript-which-to-learn-first): Comparison of Python and JavaScript for beginners choosing their first language.
+- [Best Free Online Courses with Certificate in India 2026](https://www.skillvalix.com/blog/free-online-courses-with-certificate-india-2026): Curated list of free certification courses available in India.
+- [How to Win a Hackathon](https://www.skillvalix.com/blog/how-to-win-a-hackathon-beginner-guide-2026): Step-by-step beginner guide to winning competitive hackathons.
+- [How to Host a Hackathon in India 2026](https://www.skillvalix.com/blog/how-to-host-hackathon-in-india-2026): Complete guide for colleges and organisations hosting student hackathons.
+- [AI Tools Every Developer Must Use in 2026](https://www.skillvalix.com/blog/ai-tools-every-developer-should-use-2026): Top 10 AI-powered dev tools to code faster and smarter.
+- [How to Build a Powerful Public Portfolio](https://www.skillvalix.com/blog/how-to-build-powerful-public-portfolio-2026): Guide to building a developer portfolio that gets you hired.
+- [Developer Resume Tips 2026](https://www.skillvalix.com/blog/developer-resume-portfolio-tips-2026): 7 things every developer resume must include with real examples.
+
+## About
+
+- [Campus Ambassador Programme](https://www.skillvalix.com/campus-ambassador): Student representatives promoting SkillValix at their college.
+- [Privacy Policy](https://www.skillvalix.com/privacy-policy): SkillValix data privacy and protection policy.
+- [Terms of Service](https://www.skillvalix.com/terms): Usage terms and conditions for the SkillValix platform.
+- [Refund Policy](https://www.skillvalix.com/refund-policy): Policy for any paid features or premium upgrades on SkillValix.

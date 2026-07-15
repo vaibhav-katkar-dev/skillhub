@@ -794,4 +794,24 @@
     </image:image>
   </url>
 
+  <!-- ── Job Simulations Blog Post (July 2026) ─────────────────────── -->
+  <url>
+    <loc>https://www.skillvalix.com/blog/skillvalix-job-simulations-gain-real-world-experience</loc>
+    <lastmod>2026-07-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.92</priority>
+    <news:news>
+      <news:publication>
+        <news:name>SkillValix Blog</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-07-15</news:publication_date>
+      <news:title>SkillValix Job Simulations: Gain Real-World Experience Before Your First Job</news:title>
+    </news:news>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1623282033815-40b05d96c903?auto=format&amp;fit=crop&amp;q=80&amp;w=1200</image:loc>
+      <image:title>Student gaining real-world work experience through a free job simulation on SkillValix</image:title>
+    </image:image>
+  </url>
+
 </urlset>
