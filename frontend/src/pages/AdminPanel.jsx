@@ -1097,8 +1097,8 @@ const AdminPanel = () => {
                 </div>
 
                 {analytics?.charts && (
-                  <div className="mt-8 grid grid-cols-1 gap-6">
-                    <div>
+                  <div className="mt-8 grid grid-cols-1 xl:grid-cols-2 gap-6 items-stretch">
+                    <div className="h-full">
                       <h3 className="text-sm font-bold text-slate-700 mb-4 uppercase tracking-wide">User Growth</h3>
                       <div className="h-64 w-full">
                         <ResponsiveContainer width="100%" height="100%">
@@ -1113,7 +1113,7 @@ const AdminPanel = () => {
                       </div>
                     </div>
                     
-                    <div className="pt-6 border-t border-slate-100">
+                    <div className="h-full pt-6 border-t border-slate-100 xl:pt-0 xl:border-t-0">
                       <h3 className="text-sm font-bold text-slate-700 mb-4 uppercase tracking-wide">Certificates Issued</h3>
                       <div className="h-64 w-full">
                         <ResponsiveContainer width="100%" height="100%">
