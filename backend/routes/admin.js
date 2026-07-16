@@ -244,7 +244,8 @@ router.get('/analytics', authOptions, adminCheck, async (req, res) => {
       recentUsers,
       recentCertificates,
       quizDocs,
-      usersForAttempts,
+      userTimeRaw,
+      certificateTimeRaw,
       userGrowthRaw,
       certificateGrowthRaw
     ] = await Promise.all([
@@ -284,7 +285,28 @@ router.get('/analytics', authOptions, adminCheck, async (req, res) => {
         .limit(6)
         .lean(),
       Quiz.find().select('course questions updatedAt').lean(),
-      User.find().select('quizAttempts completedCourses').lean(),
+      User.aggregate([
+        {
+          $group: {
+            _id: {
+              dayOfWeek: { $dayOfWeek: "$createdAt" },
+              hour: { $hour: "$createdAt" }
+            },
+            count: { $sum: 1 }
+          }
+        }
+      ]),
+      Certificate.aggregate([
+        {
+          $group: {
+            _id: {
+              dayOfWeek: { $dayOfWeek: { $ifNull: ["$issueDate", "$createdAt"] } },
+              hour: { $hour: { $ifNull: ["$issueDate", "$createdAt"] } }
+            },
+            count: { $sum: 1 }
+          }
+        }
+      ]),
       User.aggregate([
         {
           $group: {
@@ -346,15 +368,33 @@ router.get('/analytics', authOptions, adminCheck, async (req, res) => {
       }))
       .sort((a, b) => b.certificatesEarned - a.certificatesEarned || a.title.localeCompare(b.title));
 
-    const totalAttemptsUsed = usersForAttempts.reduce(
-      (sum, user) => sum + (user.quizAttempts || []).reduce((inner, attempt) => inner + (attempt.attempts || 0), 0),
-      0
-    );
+    const weekdayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const getBucket = (hour) => {
+      if (hour >= 6 && hour < 12) return 'morning';
+      if (hour >= 12 && hour < 18) return 'afternoon';
+      if (hour >= 18 && hour < 22) return 'evening';
+      return 'late night';
+    };
 
-    const totalAttemptsUnlocked = usersForAttempts.reduce(
-      (sum, user) => sum + (user.quizAttempts || []).reduce((inner, attempt) => inner + (attempt.unlockedAttempts || 0), 0),
-      0
-    );
+    const activityByWeekday = { Sunday: 0, Monday: 0, Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0, Saturday: 0 };
+    const activityByTimeBucket = { morning: 0, afternoon: 0, evening: 0, 'late night': 0 };
+
+    const processTimeRaw = (rawData) => {
+      rawData.forEach(d => {
+        if (d._id && d._id.dayOfWeek && d._id.hour !== undefined) {
+          const dayName = weekdayNames[d._id.dayOfWeek - 1]; // $dayOfWeek is 1-7
+          const bucket = getBucket(d._id.hour);
+          if (dayName) activityByWeekday[dayName] += d.count;
+          activityByTimeBucket[bucket] += d.count;
+        }
+      });
+    };
+
+    processTimeRaw(userTimeRaw || []);
+    processTimeRaw(certificateTimeRaw || []);
+
+    const peakWeekday = Object.keys(activityByWeekday).reduce((a, b) => activityByWeekday[a] > activityByWeekday[b] ? a : b, 'Monday');
+    const peakTimeBucket = Object.keys(activityByTimeBucket).reduce((a, b) => activityByTimeBucket[a] > activityByTimeBucket[b] ? a : b, 'morning');
 
     const quizCoverage = publishedCourses.length
       ? Math.round((quizCourseIds.size / publishedCourses.length) * 100)
@@ -395,8 +435,10 @@ router.get('/analytics', authOptions, adminCheck, async (req, res) => {
         courseCompletionCoverage,
       },
       engagement: {
-        totalAttemptsUsed,
-        totalAttemptsUnlocked,
+        activityByWeekday,
+        activityByTimeBucket,
+        peakWeekday,
+        peakTimeBucket,
         averageCertificatesPerCertifiedUser: uniqueCertifiedUsers
           ? Number((totalCertificates / uniqueCertifiedUsers).toFixed(2))
           : 0,

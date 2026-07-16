@@ -1053,7 +1053,7 @@ const AdminPanel = () => {
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
                     <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Users</p>
                     <div className="mt-3 space-y-2 text-sm">

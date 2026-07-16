@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { useAuthStore } from '../store/authStore';
+import { useAuthStore, clearCache } from '../store/authStore';
 import axios from 'axios';
 import CertificateTemplate from '../components/CertificateTemplate';
 import JobSimCertificateTemplate from '../components/JobSimCertificateTemplate';
@@ -511,6 +511,7 @@ export default function JobSimulation() {
             });
             const newCertId = res.data.certificateId;
             setCertData({ certificateId: newCertId, issueDate: res.data.issueDate || new Date() });
+            clearCache('certs_mine');
           } catch (e) {
             setErr(e.response?.data?.message || 'Verification failed. Contact support.');
           } finally {
