@@ -1070,11 +1070,11 @@ const AdminPanel = () => {
                   </div>
 
                   <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
-                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Assessment</p>
+                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Engagement & Assessment</p>
                     <div className="mt-3 space-y-2 text-sm">
                       <div className="flex items-center justify-between"><span className="text-slate-500">Total quizzes</span><span className="font-bold text-slate-900">{analytics?.overview?.totalQuizzes ?? '-'}</span></div>
-                      <div className="flex items-center justify-between"><span className="text-slate-500">Attempts used</span><span className="font-bold text-slate-900">{analytics?.engagement?.totalAttemptsUsed ?? '-'}</span></div>
-                      <div className="flex items-center justify-between"><span className="text-slate-500">Attempts unlocked</span><span className="font-bold text-slate-900">{analytics?.engagement?.totalAttemptsUnlocked ?? '-'}</span></div>
+                      <div className="flex items-center justify-between"><span className="text-slate-500">Best Engagement Day</span><span className="font-bold text-slate-900 capitalize">{analytics?.engagement?.peakWeekday ?? '-'}</span></div>
+                      <div className="flex items-center justify-between"><span className="text-slate-500">Peak Time</span><span className="font-bold text-slate-900 capitalize">{analytics?.engagement?.peakTimeBucket ?? '-'}</span></div>
                     </div>
                   </div>
 
