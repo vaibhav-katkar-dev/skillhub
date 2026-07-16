@@ -4,6 +4,7 @@ import User from '../models/User.js';
 import Quiz from '../models/Quiz.js';
 import Certificate from '../models/Certificate.js';
 import EventCertificate from '../models/EventCertificate.js';
+import LoginEvent from '../models/LoginEvent.js';
 import { authOptions, adminCheck } from '../middleware/auth.js';
 import { COURSE_JSON_PATH, getAllCoursesFromJSON } from '../utils/courseData.js';
 import { sendEmail } from '../utils/mailer.js';
@@ -247,7 +248,10 @@ router.get('/analytics', authOptions, adminCheck, async (req, res) => {
       userTimeRaw,
       certificateTimeRaw,
       userGrowthRaw,
-      certificateGrowthRaw
+      certificateGrowthRaw,
+      loginHourRaw,
+      certBuyHourRaw,
+      eventCertBuyHourRaw
     ] = await Promise.all([
       User.countDocuments(),
       User.countDocuments({ role: 'student' }),
@@ -326,6 +330,35 @@ router.get('/analytics', authOptions, adminCheck, async (req, res) => {
         },
         { $sort: { _id: 1 } },
         { $limit: 12 }
+      ]),
+      // 24-hour login heatmap — counts by UTC hour from LoginEvent collection
+      LoginEvent.aggregate([
+        {
+          $group: {
+            _id: "$hour",
+            count: { $sum: 1 }
+          }
+        },
+        { $sort: { _id: 1 } }
+      ]),
+      // Certificate buy-time by UTC hour (both standard + event certs)
+      Certificate.aggregate([
+        {
+          $group: {
+            _id: { $hour: { $ifNull: ["$issueDate", "$createdAt"] } },
+            count: { $sum: 1 }
+          }
+        },
+        { $sort: { _id: 1 } }
+      ]),
+      EventCertificate.aggregate([
+        {
+          $group: {
+            _id: { $hour: { $ifNull: ["$issueDate", "$createdAt"] } },
+            count: { $sum: 1 }
+          }
+        },
+        { $sort: { _id: 1 } }
       ])
     ]);
 
@@ -421,6 +454,27 @@ router.get('/analytics', authOptions, adminCheck, async (req, res) => {
       ? Math.round((cachedPdfCount / totalCertificates) * 100)
       : 0;
 
+    // Build full 24-slot arrays (hour 0–23) from sparse MongoDB aggregation results
+    const buildHourlySlots = (rawArr) => {
+      const slots = Array.from({ length: 24 }, (_, h) => ({ hour: h, label: `${String(h).padStart(2, '0')}:00`, count: 0 }));
+      (rawArr || []).forEach(d => {
+        const h = d._id;
+        if (h != null && h >= 0 && h <= 23) slots[h].count += d.count;
+      });
+      return slots;
+    };
+
+    // Merge std cert + event cert buy-hours
+    const mergedCertBuyHour = [...(certBuyHourRaw || []), ...(eventCertBuyHourRaw || [])].reduce((acc, d) => {
+      const h = d._id;
+      if (h != null) acc[h] = (acc[h] || 0) + d.count;
+      return acc;
+    }, {});
+    const mergedCertBuyHourArr = Object.entries(mergedCertBuyHour).map(([h, count]) => ({ _id: Number(h), count }));
+
+    const loginsByHour = buildHourlySlots(loginHourRaw);
+    const certsBoughtByHour = buildHourlySlots(mergedCertBuyHourArr);
+
     res.json({
       generatedAt: new Date().toISOString(),
       overview: {
@@ -482,7 +536,9 @@ router.get('/analytics', authOptions, adminCheck, async (req, res) => {
       })),
       charts: {
         userGrowth,
-        certificateGrowth
+        certificateGrowth,
+        loginsByHour,
+        certsBoughtByHour,
       }
     });
   } catch (err) {

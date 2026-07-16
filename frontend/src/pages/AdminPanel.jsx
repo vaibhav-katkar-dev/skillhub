@@ -1131,6 +1131,48 @@ const AdminPanel = () => {
                 )}
               </div>
 
+              {analytics?.charts?.loginsByHour && (
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="text-base font-bold text-slate-900">Logins by Hour (UTC · 24-hour window)</h3>
+                    <span className="text-xs text-slate-400 font-medium">All-time · {analytics.charts.loginsByHour.reduce((s, d) => s + d.count, 0)} logins tracked</span>
+                  </div>
+                  <p className="text-xs text-slate-400 mb-4">Shows when users log in across the day. Peak bars = highest traffic hours.</p>
+                  <div className="h-56 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={analytics.charts.loginsByHour} margin={{ top: 4, right: 8, bottom: 4, left: 0 }}>
+                        <CartesianGrid stroke="#e2e8f0" strokeDasharray="4 4" vertical={false} />
+                        <XAxis dataKey="label" stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} dy={8} interval={1} />
+                        <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} dx={-6} allowDecimals={false} />
+                        <Tooltip contentStyle={{ borderRadius: '10px', border: 'none', boxShadow: '0 4px 16px rgb(0 0 0/0.12)', fontSize: 12 }} formatter={(v) => [v, 'Logins']} labelFormatter={(l) => `Hour: ${l}`} cursor={{ fill: '#eef2ff' }} />
+                        <Bar dataKey="count" fill="#6366f1" radius={[3, 3, 0, 0]} maxBarSize={28} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              )}
+
+              {analytics?.charts?.certsBoughtByHour && (
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="text-base font-bold text-slate-900">Certificates Issued by Hour (UTC · 24-hour window)</h3>
+                    <span className="text-xs text-slate-400 font-medium">All-time · {analytics.charts.certsBoughtByHour.reduce((s, d) => s + d.count, 0)} total certificates</span>
+                  </div>
+                  <p className="text-xs text-slate-400 mb-4">Course completions + job simulation certificates. Shows peak purchase windows.</p>
+                  <div className="h-56 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={analytics.charts.certsBoughtByHour} margin={{ top: 4, right: 8, bottom: 4, left: 0 }}>
+                        <CartesianGrid stroke="#e2e8f0" strokeDasharray="4 4" vertical={false} />
+                        <XAxis dataKey="label" stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} dy={8} interval={1} />
+                        <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} dx={-6} allowDecimals={false} />
+                        <Tooltip contentStyle={{ borderRadius: '10px', border: 'none', boxShadow: '0 4px 16px rgb(0 0 0/0.12)', fontSize: 12 }} formatter={(v) => [v, 'Certificates']} labelFormatter={(l) => `Hour: ${l}`} cursor={{ fill: '#fef3c7' }} />
+                        <Bar dataKey="count" fill="#f59e0b" radius={[3, 3, 0, 0]} maxBarSize={28} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              )}
+
               <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
                 <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                   <ShieldCheck className="w-5 h-5 text-indigo-600" />

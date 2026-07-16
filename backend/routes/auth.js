@@ -6,6 +6,7 @@ import User from '../models/User.js';
 import Certificate from '../models/Certificate.js';
 import EventCertificate from '../models/EventCertificate.js';
 import SimulationSubmission from '../models/SimulationSubmission.js';
+import LoginEvent from '../models/LoginEvent.js';
 import { authOptions } from '../middleware/auth.js';
 import { OAuth2Client } from 'google-auth-library';
 import { sendEmail } from '../utils/mailer.js';
@@ -240,6 +241,9 @@ router.post('/login', async (req, res) => {
     user.loginCount = (user.loginCount || 0) + 1;
     await user.save();
 
+    // Fire-and-forget login event (non-blocking)
+    LoginEvent.create({ userId: user._id, method: 'email', hour: new Date().getUTCHours() }).catch(() => {});
+
     const payload = { user: { id: user.id, role: user.role } };
     const token = jwt.sign(payload, getJwtSecret(), { expiresIn: '7d' });
 
@@ -280,17 +284,19 @@ router.post('/google', async (req, res) => {
         loginCount: 1
       });
       await user.save();
+      LoginEvent.create({ userId: user._id, method: 'google', hour: new Date().getUTCHours() }).catch(() => {});
     } else if (!user.googleId) {
-      // Link Google ID if email exists from standard reg
       user.googleId = googleId;
-      user.isVerified = true; // Auto-verify if they connect Google
+      user.isVerified = true;
       user.lastLogin = new Date();
       user.loginCount = (user.loginCount || 0) + 1;
       await user.save();
+      LoginEvent.create({ userId: user._id, method: 'google', hour: new Date().getUTCHours() }).catch(() => {});
     } else {
       user.lastLogin = new Date();
       user.loginCount = (user.loginCount || 0) + 1;
       await user.save();
+      LoginEvent.create({ userId: user._id, method: 'google', hour: new Date().getUTCHours() }).catch(() => {});
     }
 
     const jwtPayload = { user: { id: user.id, role: user.role } };
