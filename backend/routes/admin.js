@@ -331,11 +331,12 @@ router.get('/analytics', authOptions, adminCheck, async (req, res) => {
         { $sort: { _id: 1 } },
         { $limit: 12 }
       ]),
-      // 24-hour login heatmap — counts by UTC hour from LoginEvent collection
-      LoginEvent.aggregate([
+      // 24-hour login heatmap — use existing User.lastLogin field (all historical data)
+      User.aggregate([
+        { $match: { lastLogin: { $exists: true, $ne: null } } },
         {
           $group: {
-            _id: "$hour",
+            _id: { $hour: '$lastLogin' },
             count: { $sum: 1 }
           }
         },

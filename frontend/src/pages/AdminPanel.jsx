@@ -13,7 +13,7 @@ import {
   IndianRupee, Briefcase, TrendingUp, Eye as EyeIcon, EyeOff, BadgeCheck,
   ChevronRight, Globe
 } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 
 const QUIZ_TEMPLATE = {
   passingScore: 60,
@@ -1131,47 +1131,133 @@ const AdminPanel = () => {
                 )}
               </div>
 
-              {analytics?.charts?.loginsByHour && (
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-                  <div className="flex items-center justify-between mb-1">
-                    <h3 className="text-base font-bold text-slate-900">Logins by Hour (UTC · 24-hour window)</h3>
-                    <span className="text-xs text-slate-400 font-medium">All-time · {analytics.charts.loginsByHour.reduce((s, d) => s + d.count, 0)} logins tracked</span>
+              {analytics?.charts?.loginsByHour && (() => {
+                const data = analytics.charts.loginsByHour;
+                const total = data.reduce((s, d) => s + d.count, 0);
+                const peak = data.reduce((a, b) => b.count > a.count ? b : a, data[0]);
+                const coloredData = data.map(d => ({ ...d, fill: d.hour === peak.hour ? '#4f46e5' : '#a5b4fc' }));
+                return (
+                  <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div className="px-6 pt-6 pb-4 border-b border-slate-100">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <div>
+                          <h3 className="text-base font-bold text-slate-900">User Logins — 24-Hour Distribution</h3>
+                          <p className="text-xs text-slate-400 mt-0.5">Based on last login time per user (UTC). Shows which hours attract the most logins.</p>
+                        </div>
+                        <div className="flex items-center gap-4 text-sm shrink-0">
+                          <div className="text-center">
+                            <div className="font-bold text-slate-900">{total}</div>
+                            <div className="text-xs text-slate-400">Total users w/ login</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="font-bold text-indigo-600">{peak.label}</div>
+                            <div className="text-xs text-slate-400">Peak hour ({peak.count} logins)</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <div className="h-72 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={coloredData} margin={{ top: 4, right: 16, bottom: 8, left: 0 }} barCategoryGap="18%">
+                            <CartesianGrid stroke="#f1f5f9" strokeDasharray="3 3" vertical={false} />
+                            <XAxis
+                              dataKey="label"
+                              stroke="#94a3b8"
+                              fontSize={10}
+                              tickLine={false}
+                              axisLine={false}
+                              dy={8}
+                              interval={0}
+                              tick={{ fontSize: 9 }}
+                            />
+                            <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} dx={-4} allowDecimals={false} />
+                            <Tooltip
+                              contentStyle={{ borderRadius: '10px', border: 'none', boxShadow: '0 8px 24px rgb(0 0 0/0.12)', fontSize: 13, padding: '10px 14px' }}
+                              formatter={(v, _, p) => [<span style={{fontWeight:700}}>{v} logins</span>, p.payload.hour === peak.hour ? '🔥 Peak hour' : 'Login count']}
+                              labelFormatter={(l) => `🕐 ${l} UTC`}
+                              cursor={{ fill: '#eef2ff', rx: 4 }}
+                            />
+                            <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                              {coloredData.map((entry, index) => (
+                                <Cell key={index} fill={entry.fill} />
+                              ))}
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div className="mt-3 flex items-center gap-4 text-xs text-slate-400">
+                        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-indigo-600 inline-block"></span> Peak hour</span>
+                        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-indigo-200 inline-block"></span> Other hours</span>
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-xs text-slate-400 mb-4">Shows when users log in across the day. Peak bars = highest traffic hours.</p>
-                  <div className="h-56 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={analytics.charts.loginsByHour} margin={{ top: 4, right: 8, bottom: 4, left: 0 }}>
-                        <CartesianGrid stroke="#e2e8f0" strokeDasharray="4 4" vertical={false} />
-                        <XAxis dataKey="label" stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} dy={8} interval={1} />
-                        <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} dx={-6} allowDecimals={false} />
-                        <Tooltip contentStyle={{ borderRadius: '10px', border: 'none', boxShadow: '0 4px 16px rgb(0 0 0/0.12)', fontSize: 12 }} formatter={(v) => [v, 'Logins']} labelFormatter={(l) => `Hour: ${l}`} cursor={{ fill: '#eef2ff' }} />
-                        <Bar dataKey="count" fill="#6366f1" radius={[3, 3, 0, 0]} maxBarSize={28} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-              )}
+                );
+              })()}
 
-              {analytics?.charts?.certsBoughtByHour && (
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-                  <div className="flex items-center justify-between mb-1">
-                    <h3 className="text-base font-bold text-slate-900">Certificates Issued by Hour (UTC · 24-hour window)</h3>
-                    <span className="text-xs text-slate-400 font-medium">All-time · {analytics.charts.certsBoughtByHour.reduce((s, d) => s + d.count, 0)} total certificates</span>
+              {analytics?.charts?.certsBoughtByHour && (() => {
+                const data = analytics.charts.certsBoughtByHour;
+                const total = data.reduce((s, d) => s + d.count, 0);
+                const peak = data.reduce((a, b) => b.count > a.count ? b : a, data[0]);
+                const coloredData = data.map(d => ({ ...d, fill: d.hour === peak.hour ? '#d97706' : '#fde68a' }));
+                return (
+                  <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div className="px-6 pt-6 pb-4 border-b border-slate-100">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <div>
+                          <h3 className="text-base font-bold text-slate-900">Certificates Issued — 24-Hour Distribution</h3>
+                          <p className="text-xs text-slate-400 mt-0.5">Course completions + job simulation certificates by UTC hour. Shows peak purchase windows.</p>
+                        </div>
+                        <div className="flex items-center gap-4 text-sm shrink-0">
+                          <div className="text-center">
+                            <div className="font-bold text-slate-900">{total}</div>
+                            <div className="text-xs text-slate-400">Total certificates</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="font-bold text-amber-600">{peak.label}</div>
+                            <div className="text-xs text-slate-400">Peak hour ({peak.count} certs)</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <div className="h-72 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={coloredData} margin={{ top: 4, right: 16, bottom: 8, left: 0 }} barCategoryGap="18%">
+                            <CartesianGrid stroke="#f1f5f9" strokeDasharray="3 3" vertical={false} />
+                            <XAxis
+                              dataKey="label"
+                              stroke="#94a3b8"
+                              fontSize={10}
+                              tickLine={false}
+                              axisLine={false}
+                              dy={8}
+                              interval={0}
+                              tick={{ fontSize: 9 }}
+                            />
+                            <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} dx={-4} allowDecimals={false} />
+                            <Tooltip
+                              contentStyle={{ borderRadius: '10px', border: 'none', boxShadow: '0 8px 24px rgb(0 0 0/0.12)', fontSize: 13, padding: '10px 14px' }}
+                              formatter={(v, _, p) => [<span style={{fontWeight:700}}>{v} certificates</span>, p.payload.hour === peak.hour ? '🏆 Peak hour' : 'Certificates']}
+                              labelFormatter={(l) => `🕐 ${l} UTC`}
+                              cursor={{ fill: '#fffbeb', rx: 4 }}
+                            />
+                            <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                              {coloredData.map((entry, index) => (
+                                <Cell key={index} fill={entry.fill} />
+                              ))}
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div className="mt-3 flex items-center gap-4 text-xs text-slate-400">
+                        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-amber-600 inline-block"></span> Peak hour</span>
+                        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-amber-200 inline-block"></span> Other hours</span>
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-xs text-slate-400 mb-4">Course completions + job simulation certificates. Shows peak purchase windows.</p>
-                  <div className="h-56 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={analytics.charts.certsBoughtByHour} margin={{ top: 4, right: 8, bottom: 4, left: 0 }}>
-                        <CartesianGrid stroke="#e2e8f0" strokeDasharray="4 4" vertical={false} />
-                        <XAxis dataKey="label" stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} dy={8} interval={1} />
-                        <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} dx={-6} allowDecimals={false} />
-                        <Tooltip contentStyle={{ borderRadius: '10px', border: 'none', boxShadow: '0 4px 16px rgb(0 0 0/0.12)', fontSize: 12 }} formatter={(v) => [v, 'Certificates']} labelFormatter={(l) => `Hour: ${l}`} cursor={{ fill: '#fef3c7' }} />
-                        <Bar dataKey="count" fill="#f59e0b" radius={[3, 3, 0, 0]} maxBarSize={28} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-              )}
+                );
+              })()}
 
               <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
                 <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
