@@ -23,8 +23,12 @@ import {
   Users,
   Linkedin,
   X,
+  Award,
+  Download,
 } from 'lucide-react';
 import { api, useAuthStore } from '../store/authStore';
+import { generatePDFFromDOM } from '../utils/pdfGenerator';
+import HackathonCertificateTemplate from '../components/HackathonCertificateTemplate';
 
 const STATUS_STYLE = {
   upcoming: { bg: 'bg-amber-100', text: 'text-amber-700', label: 'Upcoming', icon: Clock3 },
@@ -64,6 +68,13 @@ export default function HackathonDetail() {
   const [loadingReg, setLoadingReg] = useState(false);
 
   const [winners, setWinners] = useState(null);
+
+  // Certificate state
+  const [certificate, setCertificate] = useState(null);
+  const [loadingCert, setLoadingCert] = useState(false);
+  const [prepState, setPrepState] = useState(null);
+  const [exportCert, setExportCert] = useState(null);
+  const hackCertTemplateRef = useRef(null);
 
   // Team registration
   const [teamName, setTeamName] = useState('');
@@ -124,9 +135,23 @@ export default function HackathonDetail() {
     }
   }, [id]);
 
+  const fetchMyCertificate = useCallback(async () => {
+    if (!isAuthenticated || !hack?._id) { setCertificate(null); return; }
+    setLoadingCert(true);
+    try {
+      const r = await api.get(`/events/hackathons/${hack._id}/my-certificate`);
+      setCertificate(r.data);
+    } catch {
+      setCertificate(null);
+    } finally {
+      setLoadingCert(false);
+    }
+  }, [hack?._id, isAuthenticated]);
+
   useEffect(() => { fetchHack(); }, [fetchHack]);
   useEffect(() => { fetchMyTeam(); }, [fetchMyTeam]);
   useEffect(() => { if (hack?.winnerConfig?.announced) fetchWinners(); }, [hack, fetchWinners]);
+  useEffect(() => { fetchMyCertificate(); }, [hack?._id, fetchMyCertificate]);
 
   // ── Dynamic member rows ──────────────────────────────────────────────────
   const teamMax = Number(hack?.teamConfig?.maxMembers || 4);
@@ -436,6 +461,24 @@ export default function HackathonDetail() {
 
   return (
     <>
+      {/* Hidden local template for compiling PDFs visually on client thread */}
+      {exportCert && (
+        <HackathonCertificateTemplate
+          ref={hackCertTemplateRef}
+          studentName={user?.name || 'Student'}
+          hackathonTitle={hack.title || 'Hackathon'}
+          eventTitle={hack.title || 'Hackathon'}
+          certificateId={exportCert.certificateId}
+          issueDate={new Date(exportCert.issueDate || Date.now()).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric'})}
+          verifyUrl={`${window.location.origin}/verify/${exportCert.certificateId}`}
+          certType={exportCert.certType}
+          isWinner={exportCert.isWinner}
+          winnerRank={exportCert.winnerRank}
+          teamName={exportCert.teamName}
+          customTitle={exportCert.customTitle}
+          customBody={exportCert.customBody}
+        />
+      )}
       <Helmet>
         <title>{hack.title} | Hackathon | SkillValix</title>
         <meta name="description" content={hack.tagline || hack.description?.slice(0, 155) || 'Join this hackathon on SkillValix'} />
@@ -770,6 +813,70 @@ export default function HackathonDetail() {
 
           {/* Right column - registration sidebar */}
           <div className="space-y-5">
+            {/* Certificate Card */}
+            {certificate && (
+              <div className="bg-gradient-to-br from-indigo-700 via-violet-700 to-purple-800 rounded-2xl p-5 text-white shadow-xl relative overflow-hidden">
+                <div className="absolute inset-0 opacity-10">
+                  <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-white" />
+                  <div className="absolute -left-4 -bottom-10 w-24 h-24 rounded-full bg-white" />
+                </div>
+                <div className="relative space-y-4">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-white/70 text-[10px] font-black uppercase tracking-widest">Congratulations!</p>
+                      <h3 className="text-xl font-black text-white mt-1">
+                        {certificate.certType === 'winner' ? '🏆 Winner Certificate' : '🎓 Certificate of Participation'}
+                      </h3>
+                    </div>
+                    <Award className="w-8 h-8 text-amber-300 shrink-0" />
+                  </div>
+                  
+                  <p className="text-xs text-white/90 leading-relaxed">
+                    Your official certificate for <strong>{hack.title}</strong> has been issued. Click download to get your PDF.
+                  </p>
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={async () => {
+                        setPrepState({ busy: true, message: 'Preparing PDF...' });
+                        setExportCert(certificate);
+                        setTimeout(async () => {
+                          try {
+                            const fileName = `HackathonCertificate-${certificate.certificateId}`;
+                            await generatePDFFromDOM(hackCertTemplateRef, fileName);
+                            setExportCert(null);
+                            setPrepState(null);
+                          } catch (err) {
+                            setExportCert(null);
+                            setPrepState({ busy: false, message: err.message || 'Download failed.' });
+                          }
+                        }, 300);
+                      }}
+                      disabled={prepState?.busy}
+                      className="flex-1 bg-white hover:bg-slate-50 text-slate-900 font-bold text-xs py-2.5 px-4 rounded-xl flex items-center justify-center gap-1.5 transition active:scale-95 disabled:opacity-50"
+                    >
+                      {prepState?.busy ? <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-800" /> : <Download className="w-3.5 h-3.5" />}
+                      Download PDF
+                    </button>
+                    <button
+                      onClick={() => {
+                        const url = `${window.location.origin}/verify/${certificate.certificateId}`;
+                        navigator.clipboard.writeText(url);
+                        alert('Verification link copied to clipboard!');
+                      }}
+                      className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs px-4 rounded-xl flex items-center justify-center"
+                      title="Copy Verification Link"
+                    >
+                      Share
+                    </button>
+                  </div>
+                  {prepState?.message && (
+                    <p className="text-[10px] text-amber-200 mt-1 font-medium">{prepState.message}</p>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="bg-white border border-slate-200 rounded-2xl p-6 sticky top-24">
               {/* Already registered - status card */}
               {loadingReg ? (

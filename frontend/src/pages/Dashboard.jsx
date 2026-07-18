@@ -5,6 +5,7 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { getCourseList } from '../data/courseLoader';
 import { generatePDFFromDOM } from '../utils/pdfGenerator';
 import CertificateTemplate from '../components/CertificateTemplate';
+import HackathonCertificateTemplate from '../components/HackathonCertificateTemplate';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://api.skillvalix.com/api';
 import {
@@ -199,7 +200,9 @@ const CertCard = ({ cert, onDownload, copyMsg, onCopy, prepState }) => {
   const handleFeedPost = async (e) => {
     e.preventDefault();
     const certUrl = `${window.location.origin}/verify/${cert.certificateId}`;
-    const courseTitle = cert.course?.title || 'Certification';
+    const courseTitle = cert.eventType === 'hackathon'
+      ? (cert.eventTitle || cert.course?.title || 'Hackathon Certificate')
+      : (cert.course?.title || 'Certification');
     
     // Best approach for mobile: Native web share API
     // Opens native iOS/Android share sheet which properly hooks into installed social apps like LinkedIn
@@ -231,17 +234,44 @@ const CertCard = ({ cert, onDownload, copyMsg, onCopy, prepState }) => {
 
   const isEvent = cert.isEvent;
   const isJobSim = isEvent && cert.eventType === 'job-simulation';
+  const isHackathon = isEvent && cert.eventType === 'hackathon';
+  const isWinner = isHackathon && (cert.certType === 'winner' || cert.isWinner);
+  const courseTitle = isHackathon ? (cert.eventTitle || cert.course?.title || 'Hackathon Certificate') : (cert.course?.title || 'Certification');
   
   // Dynamic Styles
-  const cardBgCls = isJobSim ? "bg-slate-900 border-slate-800" : "bg-white border-slate-100";
-  const topGrad = isJobSim ? "from-emerald-400 via-teal-500 to-cyan-500" : "from-amber-400 via-orange-400 to-rose-400";
-  const IconBg = isJobSim ? "from-emerald-400 to-teal-500 shadow-teal-500/40" : "from-amber-400 to-orange-500 shadow-amber-300/40";
-  const titleCls = isJobSim ? "text-white" : "text-slate-900";
-  const dateCls = isJobSim ? "text-teal-400" : "text-amber-400";
-  const boxBgCls = isJobSim ? "bg-slate-800 border-slate-700" : "bg-slate-50 border-slate-100";
-  const boxTextCls = isJobSim ? "text-slate-300" : "text-slate-600";
-  const primaryBtn = isJobSim ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-slate-900 hover:bg-slate-800 text-white';
-  const copyBtnBg = isJobSim ? (copyMsg === cert.certificateId ? 'bg-emerald-900/40 border-emerald-500/50 text-emerald-400 scale-[0.98]' : 'bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-300') : (copyMsg === cert.certificateId ? 'bg-emerald-50 border-emerald-300 text-emerald-600 scale-[0.98]' : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-600');
+  let cardBgCls = isJobSim ? "bg-slate-900 border-slate-800" : "bg-white border-slate-100";
+  let topGrad = isJobSim ? "from-emerald-400 via-teal-500 to-cyan-500" : "from-amber-400 via-orange-400 to-rose-400";
+  let IconBg = isJobSim ? "from-emerald-400 to-teal-500 shadow-teal-500/40" : "from-amber-400 to-orange-500 shadow-amber-300/40";
+  let titleCls = isJobSim ? "text-white" : "text-slate-900";
+  let dateCls = isJobSim ? "text-teal-400" : "text-amber-400";
+  let boxBgCls = isJobSim ? "bg-slate-800 border-slate-700" : "bg-slate-50 border-slate-100";
+  let boxTextCls = isJobSim ? "text-slate-300" : "text-slate-600";
+  let primaryBtn = isJobSim ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-slate-900 hover:bg-slate-800 text-white';
+  let copyBtnBg = isJobSim ? (copyMsg === cert.certificateId ? 'bg-emerald-900/40 border-emerald-500/50 text-emerald-400 scale-[0.98]' : 'bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-300') : (copyMsg === cert.certificateId ? 'bg-emerald-50 border-emerald-300 text-emerald-600 scale-[0.98]' : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-600');
+
+  if (isHackathon) {
+    if (isWinner) {
+      cardBgCls = "bg-slate-900 border-amber-500/30";
+      topGrad = "from-amber-400 via-yellow-500 to-amber-600";
+      IconBg = "from-amber-400 to-yellow-500 shadow-amber-500/40";
+      titleCls = "text-white";
+      dateCls = "text-amber-400";
+      boxBgCls = "bg-slate-800 border-slate-700";
+      boxTextCls = "text-slate-300";
+      primaryBtn = "bg-amber-600 hover:bg-amber-500 text-white";
+      copyBtnBg = (copyMsg === cert.certificateId ? 'bg-amber-900/40 border-amber-500/50 text-amber-400 scale-[0.98]' : 'bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-300');
+    } else {
+      cardBgCls = "bg-white border-purple-100 shadow-purple-50/20";
+      topGrad = "from-purple-400 via-indigo-500 to-purple-600";
+      IconBg = "from-purple-400 to-indigo-500 shadow-purple-300/40";
+      titleCls = "text-slate-900";
+      dateCls = "text-purple-500";
+      boxBgCls = "bg-purple-50/50 border-purple-100";
+      boxTextCls = "text-purple-700";
+      primaryBtn = "bg-purple-600 hover:bg-purple-700 text-white";
+      copyBtnBg = (copyMsg === cert.certificateId ? 'bg-emerald-50 border-emerald-300 text-emerald-600 scale-[0.98]' : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-600');
+    }
+  }
 
   return (
     <div className={`group ${cardBgCls} rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300`}>
@@ -253,9 +283,21 @@ const CertCard = ({ cert, onDownload, copyMsg, onCopy, prepState }) => {
           </div>
           <div className="flex-1 min-w-0">
             <h3 className={`font-extrabold ${titleCls} text-sm leading-tight line-clamp-2`}>
-              {cert.course?.title || 'Certificate Course'}
+              {courseTitle}
             </h3>
-            <p className="text-[10px] text-slate-400 font-medium mt-0.5 flex items-center gap-1">
+            {isHackathon && (
+              <div className="mt-1 flex flex-wrap gap-1 items-center">
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${isWinner ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-500'}`}>
+                  Team: {cert.teamName || 'Solo'}
+                </span>
+                {isWinner && (
+                  <span className="text-[10px] font-bold bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded">
+                    🏆 {cert.winnerRank || 'Winner'}
+                  </span>
+                )}
+              </div>
+            )}
+            <p className="text-[10px] text-slate-400 font-medium mt-1 flex items-center gap-1">
               <Star className={`w-2.5 h-2.5 ${dateCls} fill-current`} />
               {new Date(cert.issueDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
             </p>
@@ -296,7 +338,7 @@ const CertCard = ({ cert, onDownload, copyMsg, onCopy, prepState }) => {
           {/* Row 2: LinkedIn Actions */}
           <div className="flex gap-2">
             <a
-              href={`https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&name=${encodeURIComponent(cert.course?.title || 'Certification')}&organizationName=SkillValix&certId=${cert.certificateId}&certUrl=${encodeURIComponent(`${window.location.origin}/verify/${cert.certificateId}`)}`}
+              href={`https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&name=${encodeURIComponent(courseTitle)}&organizationName=SkillValix&certId=${cert.certificateId}&certUrl=${encodeURIComponent(`${window.location.origin}/verify/${cert.certificateId}`)}`}
               target="_blank" rel="noopener noreferrer"
               title="Add certification to your LinkedIn Profile"
               className="flex-1 bg-white border border-[#0A66C2]/30 hover:bg-[#0A66C2]/5 text-[#0A66C2] text-xs font-bold py-2.5 px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-[.98]"
@@ -354,6 +396,7 @@ const Dashboard = () => {
   const [prepStates, setPrepStates] = useState({});
   const [exportCert, setExportCert] = useState(null); // Local PDF export state
   const certTemplateRef = useRef(null); // Reference to the hidden template
+  const hackCertTemplateRef = useRef(null);
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const initialTab = searchParams.get('tab') || 'learning';
@@ -474,6 +517,7 @@ const Dashboard = () => {
   const dl = async (cert) => {
     const certId = cert?.certificateId;
     if (!certId) return;
+    const templateRef = cert?.eventType === 'hackathon' ? hackCertTemplateRef : certTemplateRef;
 
     // 1. Mark as loading locally
     setPrepStates(prev => ({ ...prev, [certId]: { busy: true, seconds: 0, message: 'Preparing your certificate PDF…' } }));
@@ -486,9 +530,11 @@ const Dashboard = () => {
     //    300 ms gives React two full render cycles plus font-load confirmation.
     setTimeout(async () => {
       try {
-        const fileName = `${cert.isEvent ? 'JobSimCertificate' : 'Certificate'}-${cert.certificateId}`;
+        const fileName = cert?.eventType === 'hackathon'
+          ? `HackathonCertificate-${cert.certificateId}`
+          : `${cert.isEvent ? 'JobSimCertificate' : 'Certificate'}-${cert.certificateId}`;
 
-        await generatePDFFromDOM(certTemplateRef, fileName);
+        await generatePDFFromDOM(templateRef, fileName);
 
         // Clean up: hide the template and clear loading state
         setExportCert(null);
@@ -532,15 +578,33 @@ const Dashboard = () => {
 
       {/* Hidden local template for compiling PDFs visually on client thread */}
       {exportCert && (
-        <CertificateTemplate 
-           ref={certTemplateRef}
-           studentName={userData?.name || 'Student'}
-           courseTitle={exportCert.course?.title || 'Certification'}
-           certificateId={exportCert.certificateId}
-           issueDate={new Date(exportCert.issueDate || Date.now()).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric'})}
-           verifyUrl={`${window.location.origin}/verify/${exportCert.certificateId}`}
-           isEvent={exportCert.isEvent}
-        />
+        exportCert.eventType === 'hackathon' ? (
+          <HackathonCertificateTemplate
+            ref={hackCertTemplateRef}
+            studentName={userData?.name || 'Student'}
+            hackathonTitle={exportCert.eventTitle || exportCert.course?.title || 'Hackathon Event'}
+            eventTitle={exportCert.eventTitle || exportCert.course?.title || 'Hackathon Event'}
+            certificateId={exportCert.certificateId}
+            issueDate={new Date(exportCert.issueDate || Date.now()).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric'})}
+            verifyUrl={`${window.location.origin}/verify/${exportCert.certificateId}`}
+            certType={exportCert.certType}
+            isWinner={exportCert.isWinner}
+            winnerRank={exportCert.winnerRank}
+            teamName={exportCert.teamName}
+            customTitle={exportCert.customTitle}
+            customBody={exportCert.customBody}
+          />
+        ) : (
+          <CertificateTemplate 
+             ref={certTemplateRef}
+             studentName={userData?.name || 'Student'}
+             courseTitle={exportCert.course?.title || 'Certification'}
+             certificateId={exportCert.certificateId}
+             issueDate={new Date(exportCert.issueDate || Date.now()).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric'})}
+             verifyUrl={`${window.location.origin}/verify/${exportCert.certificateId}`}
+             isEvent={exportCert.isEvent}
+          />
+        )
       )}
 
       {/* ── HERO ── */}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Navigate } from 'react-router-dom';
 import { useAuthStore, api } from '../store/authStore';
@@ -78,6 +78,19 @@ const AdminPanel = () => {
   const [hostRequestsLoading, setHostRequestsLoading] = useState(false);
   const [showHackForm, setShowHackForm] = useState(false);
   
+  // Hackathon certificate circulation state
+  const [activeCertIssueHackId, setActiveCertIssueHackId] = useState('');
+  const [certIssueHackTitle, setCertIssueHackTitle] = useState('');
+  const [certIssueForm, setCertIssueForm] = useState({
+    certType: 'participation',
+    customTitle: 'Certificate of Participation in Hackathon',
+    customBody: 'This certificate is proudly awarded to {studentName} for active and valuable participation in the hackathon, demonstrating outstanding creativity, technical problem solving, and collaboration as a member of team "{teamName}".',
+    targetMode: 'all',
+    selectedTeamIds: []
+  });
+  const [certIssueSaving, setCertIssueSaving] = useState(false);
+  const [certIssueMsg, setCertIssueMsg] = useState('');
+  
   const [warmJob, setWarmJob] = useState(null);
   const [warmJobLoading, setWarmJobLoading] = useState(false);
   const [warmJobError, setWarmJobError] = useState('');
@@ -124,21 +137,6 @@ const AdminPanel = () => {
   const [priceMsg, setPriceMsg] = useState({ type: '', text: '' });
   // Local edits: { [courseId]: rupeeString }
   const [priceEdits, setPriceEdits] = useState({});
-  // Submissions viewer state
-  const [submissionsViewHackId, setSubmissionsViewHackId] = useState('');
-  const [submissionsData, setSubmissionsData] = useState(null);
-  const [submissionsLoading, setSubmissionsLoading] = useState(false);
-  const [submissionsPage, setSubmissionsPage] = useState(1);
-  const [submissionsStatusFilter, setSubmissionsStatusFilter] = useState('');
-  // Winner state
-  const [winnerModal, setWinnerModal] = useState(null); // { hackId, reg }
-  const [winnerRank, setWinnerRank] = useState('');
-  const [winnerNote, setWinnerNote] = useState('');
-  const [winnerSaving, setWinnerSaving] = useState(false);
-  const [winnerConfigHackId, setWinnerConfigHackId] = useState('');
-  const [winnerConfigNote, setWinnerConfigNote] = useState('');
-  const [winnerConfigSaving, setWinnerConfigSaving] = useState(false);
-
   // ── Job Simulation Manager state ─────────────────────────────────────────
   const [simulations, setSimulations] = useState([]);
   const [simsLoading, setSimsLoading] = useState(false);
@@ -165,7 +163,7 @@ const AdminPanel = () => {
 
   const loadHacks = async () => {
     setHacksLoading(true);
-    try { const r = await api.get('/events/admin/hackathons'); setHacks(r.data); } catch { setHacks([]); }
+    try { const r = await api.get('/events/admin/hackathons'); setHacks(r.data); } catch (e) { console.error(e); setHacks([]); }
     finally { setHacksLoading(false); }
   };
 
@@ -191,7 +189,8 @@ const AdminPanel = () => {
       document.body.appendChild(link);
       link.click();
       link.remove();
-    } catch (e) {
+    } catch (error) {
+      console.error(error);
       alert('Failed to export users.');
     }
   };
@@ -206,7 +205,8 @@ const AdminPanel = () => {
       document.body.appendChild(link);
       link.click();
       link.remove();
-    } catch (e) {
+    } catch (error) {
+      console.error(error);
       alert('Failed to export hackathon registrations.');
     }
   };
@@ -221,8 +221,42 @@ const AdminPanel = () => {
     try {
       await api.put(`/host/admin/${id}/status`, { status });
       loadHostRequests();
-    } catch (e) { alert('Failed to update status'); }
+    } catch (error) {
+      console.error(error);
+      alert('Failed to update status');
+    }
   };
+
+  const fetchEmailUsers = useCallback(async (search = '') => {
+    setEmailUsersLoading(true);
+    try {
+      const params = new URLSearchParams({ limit: '100' });
+      if (search) params.set('search', search);
+      const res = await api.get(`/admin/users?${params.toString()}`);
+      setEmailUsers(res.data);
+    } catch (error) {
+      console.error(error);
+      setEmailMsg({ type: 'error', text: 'Failed to load users.' });
+    } finally {
+      setEmailUsersLoading(false);
+    }
+  }, []);
+
+  const fetchTrackerUsers = useCallback(async (search = '') => {
+    setTrackerLoading(true);
+    try {
+      const params = new URLSearchParams({ limit: '100' });
+      if (search) params.set('search', search);
+      params.set('hasPortfolio', trackerFilterPortfolio.toString());
+      params.set('hasCertificate', trackerFilterCertified.toString());
+      const res = await api.get(`/admin/users?${params.toString()}`);
+      setTrackerUsers(res.data);
+    } catch {
+      // ignore
+    } finally {
+      setTrackerLoading(false);
+    }
+  }, [trackerFilterPortfolio, trackerFilterCertified]);
 
 
   const resetHackForm = () => {
@@ -241,40 +275,41 @@ const AdminPanel = () => {
     setEditingHackId('');
   };
 
-  const loadSubmissionsView = async (hackId, page = 1, statusFilter = '') => {
-    setSubmissionsViewHackId(hackId);
-    setSubmissionsLoading(true);
-    try {
-      const params = new URLSearchParams({ page, limit: 20 });
-      if (statusFilter) params.set('status', statusFilter);
-      const r = await api.get(`/events/admin/hackathons/${hackId}/submissions?${params}`);
-      setSubmissionsData(r.data);
-      setSubmissionsPage(page);
-    } catch { setSubmissionsData(null); }
-    finally { setSubmissionsLoading(false); }
+  const openCertIssuePanel = (hack) => {
+    const hackTitle = hack?.title || 'Hackathon';
+    setActiveCertIssueHackId(hack._id);
+    setCertIssueHackTitle(hackTitle);
+    setCertIssueMsg('');
+    setCertIssueForm({
+      certType: 'participation',
+      customTitle: `Certificate of Participation in ${hackTitle}`,
+      customBody: `This certificate is proudly awarded to {studentName} for active and valuable participation in ${hackTitle}, demonstrating outstanding creativity, technical problem solving, and collaboration as a member of team "{teamName}".`,
+      targetMode: 'all',
+      selectedTeamIds: []
+    });
+    if (!registrationsByHack[hack._id]) {
+      loadRegistrations(hack._id);
+    }
   };
 
-  const handleSetWinner = async (hackId, regId, isWinner) => {
-    setWinnerSaving(true);
+  const handleIssueCertificates = async (hackId) => {
+    setCertIssueSaving(true);
+    setCertIssueMsg('');
     try {
-      await api.put(`/events/admin/hackathons/${hackId}/registrations/${regId}/winner`, {
-        isWinner, winnerRank, winnerNote,
-      });
-      setWinnerModal(null); setWinnerRank(''); setWinnerNote('');
-      loadRegistrations(hackId);
-      if (submissionsViewHackId === hackId) loadSubmissionsView(hackId, submissionsPage, submissionsStatusFilter);
-    } catch (e) { alert(e.response?.data?.message || 'Failed to set winner.'); }
-    finally { setWinnerSaving(false); }
-  };
-
-  const handleAnnounceWinners = async (hackId, announced) => {
-    setWinnerConfigSaving(true);
-    try {
-      await api.put(`/events/admin/hackathons/${hackId}/winner-config`, { announced, note: winnerConfigNote });
-      loadHacks();
-      setWinnerConfigHackId('');
-    } catch (e) { alert(e.response?.data?.message || 'Failed.'); }
-    finally { setWinnerConfigSaving(false); }
+      const payload = {
+        certType: certIssueForm.certType,
+        customTitle: certIssueForm.customTitle,
+        customBody: certIssueForm.customBody,
+        targetMode: certIssueForm.targetMode,
+        teamIds: certIssueForm.selectedTeamIds
+      };
+      const res = await api.post(`/events/admin/hackathons/${hackId}/issue-certificates`, payload);
+      setCertIssueMsg(`✅ Certificates processed: Issued ${res.data.issued}, Skipped ${res.data.skipped} (already issued).`);
+    } catch (e) {
+      setCertIssueMsg(`❌ Error: ${e.response?.data?.message || 'Failed to issue certificates.'}`);
+    } finally {
+      setCertIssueSaving(false);
+    }
   };
 
   const loadCoupons = async () => {
@@ -511,20 +546,6 @@ const AdminPanel = () => {
     }
   };
 
-  const loadEmailUsers = async (search = '') => {
-    setEmailUsersLoading(true);
-    try {
-      const params = new URLSearchParams({ limit: '100' });
-      if (search) params.set('search', search);
-      const res = await api.get(`/admin/users?${params.toString()}`);
-      setEmailUsers(res.data);
-    } catch {
-      setEmailMsg({ type: 'error', text: 'Failed to load users.' });
-    } finally {
-      setEmailUsersLoading(false);
-    }
-  };
-
   const handleSendEmail = async (e) => {
     e.preventDefault();
     if (selectedEmails.size === 0 && !selectAllUsers) {
@@ -571,7 +592,7 @@ const AdminPanel = () => {
     if (tab === 'simulations') loadSimulations();
     if (tab === 'users') {
       setTrackerSearch('');
-      loadTrackerUsers('');
+      fetchTrackerUsers('');
     }
     if (tab === 'email') {
       // Reset stale state when entering the email tab
@@ -579,9 +600,9 @@ const AdminPanel = () => {
       setEmailSearch('');
       setSelectedEmails(new Set());
       setSelectAllUsers(false);
-      loadEmailUsers('');
+      fetchEmailUsers('');
     }
-  }, [tab]);
+  }, [tab, fetchTrackerUsers, fetchEmailUsers]);
 
   // ── Simulation Manager handlers ───────────────────────────────────────────
   const loadSimulations = async () => {
@@ -619,7 +640,7 @@ const AdminPanel = () => {
     }
   };
 
-  const handleSimToggleVisibility = async (simId, title) => {
+  const handleSimToggleVisibility = async (simId) => {
     setSimTogglingId(simId);
     setSimMsg({ type: '', text: '' });
     try {
@@ -647,31 +668,6 @@ const AdminPanel = () => {
     }
   };
 
-  // Debounce email search — only fires API after 400ms of no typing
-  useEffect(() => {
-    if (tab !== 'email') return;
-    const debounceTimer = setTimeout(() => {
-      loadEmailUsers(emailSearch);
-    }, 400);
-    return () => clearTimeout(debounceTimer);
-  }, [emailSearch]);
-
-  const loadTrackerUsers = async (search = '') => {
-    setTrackerLoading(true);
-    try {
-      const params = new URLSearchParams({ limit: '100' });
-      if (search) params.set('search', search);
-      params.set('hasPortfolio', trackerFilterPortfolio.toString());
-      params.set('hasCertificate', trackerFilterCertified.toString());
-      const res = await api.get(`/admin/users?${params.toString()}`);
-      setTrackerUsers(res.data);
-    } catch {
-      // ignore
-    } finally {
-      setTrackerLoading(false);
-    }
-  };
-
   const handleViewTrackerDetails = async (user) => {
     setTrackerSelectedUser(user);
     setTrackerDetailsLoading(true);
@@ -689,16 +685,25 @@ const AdminPanel = () => {
   useEffect(() => {
     if (tab !== 'users') return;
     const debounceTimer = setTimeout(() => {
-      loadTrackerUsers(trackerSearch);
+      fetchTrackerUsers(trackerSearch);
     }, 400);
     return () => clearTimeout(debounceTimer);
-  }, [trackerSearch]);
+  }, [trackerSearch, tab, fetchTrackerUsers]);
 
   // Reload when filters change
   useEffect(() => {
     if (tab !== 'users') return;
-    loadTrackerUsers(trackerSearch);
-  }, [trackerFilterPortfolio, trackerFilterCertified, tab]);
+    fetchTrackerUsers(trackerSearch);
+  }, [trackerFilterPortfolio, trackerFilterCertified, tab, trackerSearch, fetchTrackerUsers]);
+
+  // Debounce email search — only fires API after 400ms of no typing
+  useEffect(() => {
+    if (tab !== 'email') return;
+    const debounceTimer = setTimeout(() => {
+      fetchEmailUsers(emailSearch);
+    }, 400);
+    return () => clearTimeout(debounceTimer);
+  }, [emailSearch, tab, fetchEmailUsers]);
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'admin') return;
@@ -901,7 +906,7 @@ const AdminPanel = () => {
                 <p className="text-indigo-200 text-sm mt-0.5">Protected admin workspace for analytics, quiz operations, and course guidance.</p>
               </div>
             </div>
-            
+
             <button
               onClick={handleExportAllUsers}
               className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-bold text-sm shadow-xl transition-all flex items-center gap-2 border border-emerald-400 whitespace-nowrap"
@@ -922,11 +927,10 @@ const AdminPanel = () => {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2 mt-8">
+          <div className="mt-6 flex flex-wrap gap-3">
             {[
               { key: 'analytics', label: 'Analytics', icon: BarChart3 },
               { key: 'users', label: 'User Tracker', icon: Users },
-              { key: 'quiz', label: 'Quiz Manager', icon: ClipboardList },
               { key: 'hackathons', label: 'Hackathons', icon: Award },
               { key: 'host-requests', label: 'Host Requests', icon: Users },
               { key: 'simulations', label: 'Job Simulations', icon: Briefcase },
@@ -2236,6 +2240,9 @@ const AdminPanel = () => {
                           <button onClick={() => loadRegistrations(h._id)} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition">
                             Teams
                           </button>
+                          <button onClick={() => openCertIssuePanel(h)} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white transition">
+                            Issue Certificates
+                          </button>
                           <button onClick={() => handleExportHackathonUsers(h._id)} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition">
                             Export Teams CSV
                           </button>
@@ -2244,6 +2251,162 @@ const AdminPanel = () => {
                           </button>
                         </div>
                       </div>
+
+                      {activeCertIssueHackId === h._id && (
+                        <div className="mt-4 p-5 rounded-xl border border-amber-200 bg-amber-50/20 space-y-4">
+                          <div className="flex items-center justify-between border-b border-amber-100 pb-2">
+                            <h4 className="font-bold text-sm text-slate-800 flex items-center gap-1.5">
+                              <Award className="w-4 h-4 text-amber-600" /> Issue Hackathon Certificates
+                            </h4>
+                            <button onClick={() => setActiveCertIssueHackId('')} className="text-slate-400 hover:text-slate-600">
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {/* Certificate Type */}
+                            <div>
+                              <label className="block text-xs font-semibold text-slate-500 mb-1">Certificate Type</label>
+                              <select
+                                value={certIssueForm.certType}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setCertIssueForm(p => ({
+                                    ...p,
+                                    certType: val,
+                                    customTitle: val === 'winner'
+                                      ? `Certificate of Achievement in ${certIssueHackTitle || 'Hackathon'}`
+                                      : `Certificate of Participation in ${certIssueHackTitle || 'Hackathon'}`,
+                                    customBody: val === 'winner'
+                                      ? `This certificate is proudly awarded to {studentName} in recognition of securing {winnerRank} in ${certIssueHackTitle || 'the hackathon'}, demonstrating exceptional innovation, technical skills, and teamwork as a member of team "{teamName}".`
+                                      : `This certificate is proudly awarded to {studentName} for active and valuable participation in ${certIssueHackTitle || 'the hackathon'}, demonstrating outstanding creativity, technical problem solving, and collaboration as a member of team "{teamName}".`
+                                  }));
+                                }}
+                                className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-sm"
+                              >
+                                <option value="participation">Participation Certificate</option>
+                                <option value="winner">Winner Certificate</option>
+                              </select>
+                            </div>
+
+                            {/* Custom Title */}
+                            <div>
+                              <label className="block text-xs font-semibold text-slate-500 mb-1">Certificate Title (Main Headline)</label>
+                              <input
+                                type="text"
+                                value={certIssueForm.customTitle}
+                                onChange={(e) => setCertIssueForm(p => ({ ...p, customTitle: e.target.value }))}
+                                className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-sm font-semibold text-slate-800"
+                                placeholder="e.g. OF PARTICIPATION"
+                              />
+                            </div>
+
+                            {/* Custom Body */}
+                            <div className="sm:col-span-2">
+                              <label className="block text-xs font-semibold text-slate-500 mb-1">
+                                Certificate Body Text (Supports: <code>{`{studentName}`}</code>, <code>{`{teamName}`}</code>, <code>{`{hackathonTitle}`}</code>, <code>{`{winnerRank}`}</code>)
+                              </label>
+                              <textarea
+                                value={certIssueForm.customBody}
+                                onChange={(e) => setCertIssueForm(p => ({ ...p, customBody: e.target.value }))}
+                                rows={3}
+                                className="w-full px-3 py-2 bg-white rounded-xl border border-slate-200 text-sm leading-relaxed"
+                                placeholder="Enter certificate text template..."
+                              />
+                            </div>
+
+                            {/* Target Audience Mode */}
+                            <div className="sm:col-span-2">
+                              <label className="block text-xs font-semibold text-slate-500 mb-2">Recipient Group</label>
+                              <div className="flex flex-wrap gap-4">
+                                <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    name="targetMode"
+                                    value="all"
+                                    checked={certIssueForm.targetMode === 'all'}
+                                    onChange={() => setCertIssueForm(p => ({ ...p, targetMode: 'all' }))}
+                                  />
+                                  All Registered Teams
+                                </label>
+                                <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    name="targetMode"
+                                    value="winners"
+                                    checked={certIssueForm.targetMode === 'winners'}
+                                    onChange={() => setCertIssueForm(p => ({ ...p, targetMode: 'winners' }))}
+                                  />
+                                  Winners Only
+                                </label>
+                                <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    name="targetMode"
+                                    value="selected"
+                                    checked={certIssueForm.targetMode === 'selected'}
+                                    onChange={() => setCertIssueForm(p => ({ ...p, targetMode: 'selected' }))}
+                                  />
+                                  Specific Selected Teams
+                                </label>
+                              </div>
+                            </div>
+
+                            {/* Selected Teams Checklist */}
+                            {certIssueForm.targetMode === 'selected' && (
+                              <div className="sm:col-span-2 bg-white border border-slate-200 rounded-xl p-3 max-h-48 overflow-y-auto space-y-1">
+                                <p className="text-xs font-bold text-slate-400 mb-2">Select Teams to Receive Certificate:</p>
+                                {(registrationsByHack[h._id] || []).length === 0 ? (
+                                  <p className="text-xs text-slate-400 italic">No registrations loaded. Click "Teams" button above to load registrations first.</p>
+                                ) : (
+                                  (registrationsByHack[h._id] || []).map(reg => (
+                                    <label key={reg._id} className="flex items-center gap-2 text-xs text-slate-700 hover:bg-slate-50 p-1 rounded cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        checked={certIssueForm.selectedTeamIds.includes(reg._id)}
+                                        onChange={(e) => {
+                                          const checked = e.target.checked;
+                                          setCertIssueForm(p => {
+                                            const ids = checked
+                                              ? [...p.selectedTeamIds, reg._id]
+                                              : p.selectedTeamIds.filter(id => id !== reg._id);
+                                            return { ...p, selectedTeamIds: ids };
+                                          });
+                                        }}
+                                      />
+                                      <span className="font-semibold">{reg.teamName}</span>
+                                      <span className="text-slate-400">({reg.leader?.name || 'No Leader'})</span>
+                                      {reg.isWinner && <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 rounded font-bold">🏆 {reg.winnerRank}</span>}
+                                    </label>
+                                  ))
+                                )}
+                              </div>
+                            )}
+                          </div>
+
+                          {certIssueMsg && (
+                            <div className={`p-3 rounded-xl text-xs font-semibold ${certIssueMsg.startsWith('✅') ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                              {certIssueMsg}
+                            </div>
+                          )}
+
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleIssueCertificates(h._id)}
+                              disabled={certIssueSaving || (certIssueForm.targetMode === 'selected' && certIssueForm.selectedTeamIds.length === 0)}
+                              className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold hover:opacity-90 transition disabled:opacity-50"
+                            >
+                              {certIssueSaving ? 'Processing...' : 'Issue Certificates'}
+                            </button>
+                            <button
+                              onClick={() => setActiveCertIssueHackId('')}
+                              className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-50 transition"
+                            >
+                              Close
+                            </button>
+                          </div>
+                        </div>
+                      )}
 
                       {loadingRegistrationsFor === h._id && <div className="mt-3 text-xs text-slate-500">Loading team registrations...</div>}
 
@@ -3182,7 +3345,7 @@ const AdminPanel = () => {
                           <div className="flex items-center gap-2 shrink-0">
                             {/* Edit */}
                             <button
-                              onClick={() => editingSimCouponId === simCoupon._id ? setEditingSimCouponId('') : handleStartEditSimCoupon(coupon)}
+                              onClick={() => editingSimCouponId === simCoupon._id ? setEditingSimCouponId('') : handleStartEditSimCoupon(simCoupon)}
                               title="Edit coupon"
                               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 transition"
                             >
@@ -3684,16 +3847,13 @@ const AdminPanel = () => {
             {!simsLoading && simulations.length > 0 && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
-                  { label: 'Total Simulations', value: simulations.length, tone: 'from-indigo-600 to-blue-600', icon: Briefcase },
-                  { label: 'Total Completions', value: simulations.reduce((s, sim) => s + sim.completionCount, 0), tone: 'from-emerald-600 to-teal-600', icon: BadgeCheck },
-                  { label: 'Certs Issued', value: simulations.reduce((s, sim) => s + sim.certCount, 0), tone: 'from-amber-500 to-orange-500', icon: Award },
-                  { label: 'Active Sims', value: simulations.filter(s => !s.comingSoon).length, tone: 'from-violet-600 to-purple-600', icon: Globe },
-                ].map(({ label, value, tone, icon: Icon }) => (
+                  { label: 'Total Simulations', value: simulations.length, tone: 'from-indigo-600 to-blue-600' },
+                  { label: 'Total Completions', value: simulations.reduce((s, sim) => s + sim.completionCount, 0), tone: 'from-emerald-600 to-teal-600' },
+                  { label: 'Certs Issued', value: simulations.reduce((s, sim) => s + sim.certCount, 0), tone: 'from-amber-500 to-orange-500' },
+                  { label: 'Active Sims', value: simulations.filter(s => !s.comingSoon).length, tone: 'from-violet-600 to-purple-600' },
+                ].map(({ label, value, tone }) => (
                   <div key={label} className={`rounded-2xl bg-gradient-to-br ${tone} p-5 text-white shadow-lg`}>
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs uppercase tracking-widest font-bold text-white/70">{label}</p>
-                      <Icon className="w-5 h-5 text-white/80" />
-                    </div>
+                    <p className="text-xs uppercase tracking-widest font-bold text-white/70">{label}</p>
                     <p className="mt-3 text-4xl font-black leading-none">{value}</p>
                   </div>
                 ))}
@@ -3714,7 +3874,6 @@ const AdminPanel = () => {
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {simulations.map(sim => {
-                  const isEditingPrice = simId => simPriceEdits[simId] !== undefined;
                   const priceEdit = simPriceEdits[sim.id];
                   const isSavingPrice = simPriceSaving === sim.id;
                   const isToggling = simTogglingId === sim.id;
