@@ -60,6 +60,12 @@ const HackathonCertificateTemplate = forwardRef(
     const titleToDisplay = customTitle || defaultTitle;
     const bodyToDisplay = customBody || defaultBody;
 
+    // Long custom titles/names would otherwise wrap onto extra lines and
+    // push the paragraph into the footer — scale them down instead of
+    // letting the layout overflow the fixed 794px canvas.
+    const titleFontSize = titleToDisplay.length > 55 ? 32 : titleToDisplay.length > 38 ? 40 : 54;
+    const nameFontSize = studentName?.length > 28 ? 44 : studentName?.length > 18 ? 56 : 68;
+
     // Corner bracket component (used 4x, one per corner)
     const CornerBracket = ({ corner }) => {
       const size = 34;
@@ -206,7 +212,7 @@ const HackathonCertificateTemplate = forwardRef(
                 <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', marginBottom: 4 }}>
                   Issued On
                 </p>
-                <p style={{ fontSize: 15, fontWeight: 800, color: '#FFFFFF', fontFamily: fontMono }}>
+                <p style={{ fontSize: 15, fontWeight: 800, color: '#FFFFFF', fontFamily: fontMono, margin: 0 }}>
                   {issueDate}
                 </p>
               </div>
@@ -243,7 +249,7 @@ const HackathonCertificateTemplate = forwardRef(
           <div style={{
             position: 'relative',
             zIndex: 10,
-            marginTop: 76,
+            marginTop: 108,
             padding: '0 90px',
             display: 'flex',
             flexDirection: 'column',
@@ -254,9 +260,11 @@ const HackathonCertificateTemplate = forwardRef(
               Certificate
             </p>
             <h1 style={{
-              fontSize: 54, fontWeight: 900, lineHeight: 1.05,
-              color: ink, fontFamily: fontDisplay, margin: '0 0 22px',
+              fontSize: titleFontSize, fontWeight: 900, lineHeight: 1.15,
+              color: ink, fontFamily: fontDisplay, margin: '0 0 18px',
               textTransform: 'uppercase', letterSpacing: '0.01em',
+              display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+              overflow: 'hidden', maxWidth: 900,
             }}>
               {titleToDisplay}
             </h1>
@@ -266,9 +274,9 @@ const HackathonCertificateTemplate = forwardRef(
             </p>
 
             <h2 style={{
-              fontSize: 68, fontWeight: 900, lineHeight: 1.05,
+              fontSize: nameFontSize, fontWeight: 900, lineHeight: 1.1,
               color: ink, fontFamily: fontDisplay, margin: '0 0 10px',
-              maxWidth: 880, wordBreak: 'break-word',
+              maxWidth: 880, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
             }}>
               {studentName}
             </h2>
@@ -284,7 +292,10 @@ const HackathonCertificateTemplate = forwardRef(
               for outstanding contribution in <span style={{ color: primaryColor }}>{title}</span>
             </p>
 
-            <p style={{ fontSize: 14.5, lineHeight: 1.75, maxWidth: 700, color: muted }}>
+            <p style={{
+              fontSize: 14.5, lineHeight: 1.7, maxWidth: 700, color: muted, margin: 0,
+              display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+            }}>
               {bodyToDisplay}
             </p>
           </div>
@@ -306,29 +317,27 @@ const HackathonCertificateTemplate = forwardRef(
               <p style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.18em', color: muted, textTransform: 'uppercase', marginBottom: 4 }}>
                 Certificate ID
               </p>
-              <p style={{ fontSize: 15, fontWeight: 700, color: ink, fontFamily: fontMono }}>
+              <p style={{ fontSize: 15, fontWeight: 700, color: ink, fontFamily: fontMono, margin: 0 }}>
                 {certificateId}
               </p>
             </div>
 
             {/* Issuer note, center */}
-            <p style={{ fontSize: 11, color: muted, textAlign: 'center' }}>
+            <p style={{ fontSize: 11, color: muted, textAlign: 'center', margin: 0 }}>
               Issued by SkillValix · MSME Registered · skillvalix.com
             </p>
 
             {/* QR, right */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ textAlign: 'right' }}>
-                <p style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.18em', color: muted, textTransform: 'uppercase' }}>
-                  Scan to
-                </p>
-                <p style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.18em', color: muted, textTransform: 'uppercase' }}>
-                  Verify
-                </p>
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <p style={{
+                fontSize: 9, fontWeight: 800, letterSpacing: '0.14em', color: muted,
+                textTransform: 'uppercase', margin: 0, whiteSpace: 'nowrap',
+              }}>
+                Scan to<br />verify
+              </p>
               <div style={{
                 padding: 8, border: `1px solid ${rule}`, borderRadius: 4,
-                backgroundColor: '#FFFFFF',
+                backgroundColor: '#FFFFFF', lineHeight: 0,
               }}>
                 <QRCodeSVG value={verifyUrl} size={64} level="H" fgColor={ink} bgColor="#FFFFFF" />
               </div>
