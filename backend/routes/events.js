@@ -992,6 +992,172 @@ router.put('/admin/hackathons/:id/registrations/:registrationId/score', authOpti
   }
 });
 
+// ─── ADMIN: Issue certificates for a hackathon ───────────────────────────────
+router.post('/admin/hackathons/:id/issue-certificates', authOptions, adminCheck, async (req, res) => {
+  try {
+    const { certType, customTitle, customBody, targetMode, teamIds } = req.body;
+    const hackathonId = req.params.id;
+
+    if (!['participation', 'winner'].includes(certType)) {
+      return res.status(400).json({ message: 'Invalid certificate type.' });
+    }
+
+    const hackathon = await Hackathon.findById(hackathonId).lean();
+    if (!hackathon) {
+      return res.status(404).json({ message: 'Hackathon not found.' });
+    }
+
+    // Build filter to query team registrations
+    const filter = { hackathon: hackathonId };
+    if (targetMode === 'winners') {
+      filter.isWinner = true;
+    } else if (targetMode === 'selected') {
+      if (!Array.isArray(teamIds) || teamIds.length === 0) {
+        return res.status(400).json({ message: 'No teams selected.' });
+      }
+      filter._id = { $in: teamIds };
+    }
+
+    const registrations = await HackathonRegistration.find(filter)
+      .populate('leader', 'name email')
+      .populate('members.user', 'name email')
+      .lean();
+
+    let issued = 0;
+    let skipped = 0;
+
+    const applyTemplate = (value, replacements = {}) => {
+      const raw = String(value || '');
+      return raw
+        .replace(/\{studentName\}/g, replacements.studentName || '')
+        .replace(/\{hackathonTitle\}/g, replacements.hackathonTitle || '')
+        .replace(/\{hackathonName\}/g, replacements.hackathonTitle || '')
+        .replace(/\{teamName\}/g, replacements.teamName || '')
+        .replace(/\{winnerRank\}/g, replacements.winnerRank || '');
+    };
+
+    for (const reg of registrations) {
+      // Gather all team members including the leader
+      const studentsToIssue = [];
+      const seen = new Set();
+
+      const addStudent = (userField, name, email) => {
+        if (!userField) return;
+        const uid = typeof userField === 'object' ? (userField._id || userField.id) : userField;
+        if (!uid) return;
+        const uidStr = uid.toString();
+        if (seen.has(uidStr)) return;
+        seen.add(uidStr);
+        studentsToIssue.push({
+          userId: uid,
+          name: name || 'Participant',
+          email
+        });
+      };
+
+      // 1. Leader
+      if (reg.leader) {
+        addStudent(reg.leader, reg.leader.name, reg.leader.email);
+      }
+
+      // 2. Members
+      if (Array.isArray(reg.members)) {
+        for (const m of reg.members) {
+          const mUser = m.user;
+          const mName = m.name || (mUser && mUser.name);
+          const mEmail = m.email || (mUser && mUser.email);
+          addStudent(mUser, mName, mEmail);
+        }
+      }
+
+      // Create certificate for each student
+      for (const student of studentsToIssue) {
+        const existing = await EventCertificate.findOne({
+          student: student.userId,
+          hackathonId: hackathon._id,
+          certType,
+        });
+
+        if (existing) {
+          skipped++;
+          continue;
+        }
+
+        const winnerRankText = String(reg.winnerRank || '').trim() || 'Winner';
+        const certificateId = `EVC-${uuidv4().substring(0, 8).toUpperCase()}`;
+        const eventCert = new EventCertificate({
+          student: student.userId,
+          eventType: 'hackathon',
+          eventTitle: hackathon.title,
+          role: certType === 'winner' ? winnerRankText : 'Participant',
+          certificateId,
+          issueDate: new Date(),
+          pdfStatus: 'ready',
+          hackathonId: hackathon._id,
+          certType,
+          isWinner: certType === 'winner',
+          winnerRank: certType === 'winner' ? winnerRankText : '',
+          teamName: reg.teamName,
+          customTitle: applyTemplate(customTitle, {
+            studentName: student.name,
+            hackathonTitle: hackathon.title,
+            teamName: reg.teamName,
+            winnerRank: winnerRankText,
+          }),
+          customBody: applyTemplate(customBody, {
+            studentName: student.name,
+            hackathonTitle: hackathon.title,
+            teamName: reg.teamName,
+            winnerRank: winnerRankText,
+          }),
+          issuedByAdmin: true,
+        });
+
+        await eventCert.save();
+        issued++;
+      }
+    }
+
+    res.json({ message: 'Certificate process complete.', issued, skipped, total: issued + skipped });
+  } catch (err) {
+    console.error('[Events] Issue certificates error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ─── ADMIN: List certificates of a hackathon ───────────────────────────────
+router.get('/admin/hackathons/:id/certificates', authOptions, adminCheck, async (req, res) => {
+  try {
+    const list = await EventCertificate.find({ hackathonId: req.params.id })
+      .populate('student', 'name email')
+      .sort({ createdAt: -1 })
+      .lean();
+    res.json(list);
+  } catch (err) {
+    console.error('[Events] Admin list hackathon certificates error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ─── USER: Get my hackathon certificate ─────────────────────────────────────
+router.get('/hackathons/:id/my-certificate', authOptions, async (req, res) => {
+  try {
+    const certs = await EventCertificate.find({
+      hackathonId: req.params.id,
+      student: req.user.id
+    })
+      .populate('student', 'name')
+      .lean();
+    
+    // Prioritize winner certificate if both exist
+    const winnerCert = certs.find(c => c.certType === 'winner');
+    res.json(winnerCert || certs[0] || null);
+  } catch (err) {
+    console.error('[Events] Fetch user hackathon cert error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // ─── PDF Builder: Event Certificate (job simulation has premium achievement look) ─────
 function buildEventCertificatePdf({ studentName, eventTitle, role, certificateId, issueDate, eventType, verifyUrl }) {
   return new Promise(async (resolve, reject) => {

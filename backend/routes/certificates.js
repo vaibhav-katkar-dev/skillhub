@@ -706,7 +706,7 @@ router.get('/mine', authOptions, async (req, res) => {
     const stdUniqueCerts = Array.from(uniqueMap.values());
 
     const eventCerts = await EventCertificate.find({ student: req.user.id })
-      .select('student eventType eventTitle role certificateId issueDate createdAt')
+      .select('student eventType eventTitle role certificateId issueDate createdAt hackathonId certType isWinner winnerRank teamName customTitle customBody issuedByAdmin')
       .sort({ issueDate: -1 })
       .lean();
 
