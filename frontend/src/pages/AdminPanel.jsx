@@ -928,12 +928,13 @@ const AdminPanel = () => {
           </div>
 
           <div className="mt-6 flex flex-wrap gap-3">
-            {[
+              {[
               { key: 'analytics', label: 'Analytics', icon: BarChart3 },
               { key: 'users', label: 'User Tracker', icon: Users },
               { key: 'hackathons', label: 'Hackathons', icon: Award },
               { key: 'host-requests', label: 'Host Requests', icon: Users },
               { key: 'simulations', label: 'Job Simulations', icon: Briefcase },
+              { key: 'quiz', label: 'Quizzes', icon: ClipboardList },
               { key: 'coupons', label: 'Coupons', icon: Tag },
               { key: 'sim-coupons', label: 'Sim Coupons', icon: Percent },
               { key: 'pricing', label: 'Course Pricing', icon: IndianRupee },

@@ -6,16 +6,6 @@ import { VERIFIED_STAMP_BASE64 } from './verified-base64';
  * HackathonCertificateTemplate — v2
  * 100% inline styles, zero Tailwind dependency.
  *
- * DESIGN NOTES
- * - Structure: centered composition instead of the old left-content /
- *   right-sidebar split. A full-width gradient band runs across the top,
- *   a "circuit medallion" (a nod to the hackathon/code subject matter,
- *   standing in for the generic laurel-wreath seal) overlaps the band's
- *   lower edge, and the footer is a single hairline-divided bar.
- * - Corner brackets replace the old nested double-rectangle border.
- * - Type: a serif display face carries the name and title big and loud;
- *   a sans face carries labels/eyebrows; mono carries the data (ID, date).
- *
  * A4 Landscape: 1123 × 794 px
  */
 const HackathonCertificateTemplate = forwardRef(
@@ -52,70 +42,99 @@ const HackathonCertificateTemplate = forwardRef(
       : 'linear-gradient(100deg, #211048, #3B1E82, #5B21B6, #9C7FE0)';
     const ribbonText = isWinnerType ? 'WINNER' : 'PARTICIPANT';
 
+    // Winner: differentiate 1st/2nd/3rd vs other winners, keep participation text safe.
+    const normalizedWinnerRank = (winnerRank || '').toLowerCase().trim();
+    const isTop3Winner = ['1st', '2nd', '3rd'].includes(normalizedWinnerRank);
+    const top3Label = isTop3Winner
+      ? (normalizedWinnerRank === '1st'
+        ? '1st Prize'
+        : normalizedWinnerRank === '2nd'
+          ? '2nd Prize'
+          : '3rd Prize')
+      : (winnerRank || 'Winner');
+
     const defaultTitle = isWinnerType ? 'OF ACHIEVEMENT' : 'OF PARTICIPATION';
     const defaultBody = isWinnerType
-      ? `Presented in recognition of securing ${winnerRank || 'Winner'} in ${title}, for exceptional innovation, technical craft, and teamwork as a member of team "${teamName || 'Solo'}".`
+      ? isTop3Winner
+        ? `Presented in recognition of securing ${top3Label} in ${title}, for exceptional innovation, technical craft, and outstanding teamwork as a member of team "${teamName || 'Solo'}".`
+        : `Presented in recognition of securing ${winnerRank || 'Winner'} in ${title}, for exceptional innovation, technical craft, and teamwork as a member of team "${teamName || 'Solo'}".`
       : `Presented in recognition of active, valuable participation in ${title}, for creativity, technical problem-solving, and collaboration as a member of team "${teamName || 'Solo'}".`;
 
     const titleToDisplay = customTitle || defaultTitle;
     const bodyToDisplay = customBody || defaultBody;
 
-    // Long custom titles/names would otherwise wrap onto extra lines and
-    // push the paragraph into the footer — scale them down instead of
-    // letting the layout overflow the fixed 794px canvas.
+    // Long custom titles/names would otherwise wrap onto extra lines and push the paragraph into footer.
     const titleFontSize = titleToDisplay.length > 55 ? 32 : titleToDisplay.length > 38 ? 40 : 54;
     const nameFontSize = studentName?.length > 28 ? 44 : studentName?.length > 18 ? 56 : 68;
 
-    // Corner bracket component (used 4x, one per corner)
-    const CornerBracket = ({ corner }) => {
+    const renderCornerBracket = (corner) => {
       const size = 34;
       const thickness = 3;
       const positions = {
         tl: { top: 18, left: 18 },
         tr: { top: 18, right: 18 },
         bl: { bottom: 18, left: 18 },
-        br: { bottom: 18, right: 18 },
+        br: { bottom: 18, right: 18 }
       };
       const isTop = corner === 'tl' || corner === 'tr';
       const isLeft = corner === 'tl' || corner === 'bl';
+
       return (
         <div style={{ position: 'absolute', width: size, height: size, zIndex: 15, ...positions[corner] }}>
-          <div style={{
-            position: 'absolute',
-            [isTop ? 'top' : 'bottom']: 0,
-            [isLeft ? 'left' : 'right']: 0,
-            width: size, height: thickness,
-            backgroundColor: primaryColor,
-          }} />
-          <div style={{
-            position: 'absolute',
-            [isTop ? 'top' : 'bottom']: 0,
-            [isLeft ? 'left' : 'right']: 0,
-            width: thickness, height: size,
-            backgroundColor: primaryColor,
-          }} />
+          <div
+            style={{
+              position: 'absolute',
+              [isTop ? 'top' : 'bottom']: 0,
+              [isLeft ? 'left' : 'right']: 0,
+              width: size,
+              height: thickness,
+              backgroundColor: primaryColor
+            }}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              [isTop ? 'top' : 'bottom']: 0,
+              [isLeft ? 'left' : 'right']: 0,
+              width: thickness,
+              height: size,
+              backgroundColor: primaryColor
+            }}
+          />
         </div>
       );
     };
 
-    // Circuit medallion — the signature element. A ring of small "solder
-    // point" dots joined by hairline traces around a </> glyph, standing
-    // in for the generic laurel wreath most certificates reach for.
-    const CircuitMedallion = () => {
+    const renderCircuitMedallion = () => {
       const r = 52;
       const dotCount = 10;
       const dots = Array.from({ length: dotCount }, (_, i) => {
         const angle = (i / dotCount) * Math.PI * 2 - Math.PI / 2;
         return { x: 60 + r * Math.cos(angle), y: 60 + r * Math.sin(angle) };
       });
+
       return (
         <svg width="120" height="120" viewBox="0 0 120 120" style={{ display: 'block' }}>
           <circle cx="60" cy="60" r={r} fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="1" strokeDasharray="2 5" />
           <circle cx="60" cy="60" r={r - 14} fill={ink} stroke={primaryColor} strokeWidth="2" />
           {dots.map((d, i) => (
-            <circle key={i} cx={d.x} cy={d.y} r={i % 2 === 0 ? 2.5 : 1.5} fill={i % 2 === 0 ? primaryColor : 'rgba(255,255,255,0.5)'} />
+            <circle
+              key={i}
+              cx={d.x}
+              cy={d.y}
+              r={i % 2 === 0 ? 2.5 : 1.5}
+              fill={i % 2 === 0 ? primaryColor : 'rgba(255,255,255,0.5)'}
+            />
           ))}
-          <text x="60" y="68" textAnchor="middle" fontFamily={fontMono} fontSize="22" fontWeight="700" fill="#FFFFFF">
+          <text
+            x="60"
+            y="68"
+            textAnchor="middle"
+            fontFamily={fontMono}
+            fontSize="22"
+            fontWeight="700"
+            fill="#FFFFFF"
+          >
             {'</>'}
           </text>
         </svg>
@@ -131,7 +150,7 @@ const HackathonCertificateTemplate = forwardRef(
           left: 0,
           zIndex: -9999,
           opacity: 0.01,
-          pointerEvents: 'none',
+          pointerEvents: 'none'
         }}
       >
         <div
@@ -144,14 +163,14 @@ const HackathonCertificateTemplate = forwardRef(
             height: '794px',
             backgroundColor: parchment,
             fontFamily: fontSans,
-            boxSizing: 'border-box',
+            boxSizing: 'border-box'
           }}
         >
           {/* Corner brackets — signature framing device instead of nested borders */}
-          <CornerBracket corner="tl" />
-          <CornerBracket corner="tr" />
-          <CornerBracket corner="bl" />
-          <CornerBracket corner="br" />
+          {renderCornerBracket('tl')}
+          {renderCornerBracket('tr')}
+          {renderCornerBracket('bl')}
+          {renderCornerBracket('br')}
 
           {/* Faint diagonal watermark */}
           <div
@@ -165,51 +184,83 @@ const HackathonCertificateTemplate = forwardRef(
               justifyContent: 'center',
               opacity: 0.02,
               transform: 'rotate(-20deg)',
-              userSelect: 'none',
+              userSelect: 'none'
             }}
           >
             <div style={{ display: 'flex', flexDirection: 'column', gap: 96 }}>
               {['SKILLVALIX · HACKATHON', 'SKILLVALIX · HACKATHON'].map((t, i) => (
-                <span key={i} style={{
-                  fontSize: 90, fontWeight: 900, letterSpacing: '-0.04em',
-                  whiteSpace: 'nowrap', color: ink, fontFamily: fontDisplay, lineHeight: 1,
-                }}>
+                <span
+                  key={i}
+                  style={{
+                    fontSize: 90,
+                    fontWeight: 900,
+                    letterSpacing: '-0.04em',
+                    whiteSpace: 'nowrap',
+                    color: ink,
+                    fontFamily: fontDisplay,
+                    lineHeight: 1
+                  }}
+                >
                   {t}
                 </span>
               ))}
             </div>
           </div>
 
-          {/* ══════════════ TOP GRADIENT BAND ══════════════ */}
-          <div style={{
-            position: 'relative',
-            height: 132,
-            width: '100%',
-            background: bandGradient,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '0 56px',
-            boxSizing: 'border-box',
-            zIndex: 5,
-          }}>
-            {/* Logo + brand, left */}
+          {/* Top gradient band */}
+          <div
+            style={{
+              position: 'relative',
+              height: 132,
+              width: '100%',
+              background: bandGradient,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '0 56px',
+              boxSizing: 'border-box',
+              zIndex: 5
+            }}
+          >
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <img src="/logo.svg" crossOrigin="anonymous" alt="SkillValix Logo" width="48" height="48" style={{ objectFit: 'contain' }} />
+              <img
+                src="/logo.svg"
+                crossOrigin="anonymous"
+                alt="SkillValix Logo"
+                width="48"
+                height="48"
+                style={{ objectFit: 'contain' }}
+              />
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <span style={{ fontSize: 22, fontWeight: 900, color: '#FFFFFF', fontFamily: fontDisplay, lineHeight: 1 }}>
                   SkillValix
                 </span>
-                <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.28em', color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase' }}>
+                <span
+                  style={{
+                    fontSize: 9,
+                    fontWeight: 700,
+                    letterSpacing: '0.28em',
+                    color: 'rgba(255,255,255,0.7)',
+                    textTransform: 'uppercase'
+                  }}
+                >
                   Hackathon Portal
                 </span>
               </div>
             </div>
 
-            {/* Verified stamp + issue date, right */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
               <div style={{ textAlign: 'right' }}>
-                <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', marginBottom: 4 }}>
+                <p
+                  style={{
+                    fontSize: 9,
+                    fontWeight: 700,
+                    letterSpacing: '0.2em',
+                    color: 'rgba(255,255,255,0.65)',
+                    textTransform: 'uppercase',
+                    marginBottom: 4
+                  }}
+                >
                   Issued On
                 </p>
                 <p style={{ fontSize: 15, fontWeight: 800, color: '#FFFFFF', fontFamily: fontMono, margin: 0 }}>
@@ -221,63 +272,97 @@ const HackathonCertificateTemplate = forwardRef(
           </div>
 
           {/* Medallion — overlaps the band's lower edge, centered */}
-          <div style={{
-            position: 'absolute',
-            top: 132 - 60,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 20,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-          }}>
-            <CircuitMedallion />
-            <div style={{
-              marginTop: -6,
-              padding: '3px 14px',
-              borderRadius: 20,
-              backgroundColor: primaryColor,
-              boxShadow: '0 4px 10px rgba(0,0,0,0.2)',
-            }}>
+          <div
+            style={{
+              position: 'absolute',
+              top: 132 - 60,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 20,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center'
+            }}
+          >
+            {renderCircuitMedallion()}
+            <div
+              style={{
+                marginTop: -6,
+                padding: '3px 14px',
+                borderRadius: 20,
+                backgroundColor: primaryColor,
+                boxShadow: '0 4px 10px rgba(0,0,0,0.2)'
+              }}
+            >
               <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.2em', color: '#FFFFFF' }}>
-                {ribbonText}{isWinnerType && winnerRank ? ` · ${winnerRank}` : ''}
+                {ribbonText}
+                {isWinnerType && winnerRank ? ` · ${winnerRank}` : ''}
               </span>
             </div>
           </div>
 
-          {/* ══════════════ CENTER CONTENT ══════════════ */}
-          <div style={{
-            position: 'relative',
-            zIndex: 10,
-            marginTop: 108,
-            padding: '0 90px',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            textAlign: 'center',
-          }}>
-            <p style={{ fontSize: 13, fontWeight: 800, letterSpacing: '0.4em', color: primaryColor, textTransform: 'uppercase', marginBottom: 6 }}>
+          {/* Center content */}
+          <div
+            style={{
+              position: 'relative',
+              zIndex: 10,
+              marginTop: 108,
+              padding: '0 90px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              textAlign: 'center'
+            }}
+          >
+            <p
+              style={{
+                fontSize: 13,
+                fontWeight: 800,
+                letterSpacing: '0.4em',
+                color: primaryColor,
+                textTransform: 'uppercase',
+                marginBottom: 6
+              }}
+            >
               Certificate
             </p>
-            <h1 style={{
-              fontSize: titleFontSize, fontWeight: 900, lineHeight: 1.15,
-              color: ink, fontFamily: fontDisplay, margin: '0 0 18px',
-              textTransform: 'uppercase', letterSpacing: '0.01em',
-              display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-              overflow: 'hidden', maxWidth: 900,
-            }}>
+
+            <h1
+              style={{
+                fontSize: titleFontSize,
+                fontWeight: 900,
+                lineHeight: 1.15,
+                color: ink,
+                fontFamily: fontDisplay,
+                margin: '0 0 18px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.01em',
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                maxWidth: 900
+              }}
+            >
               {titleToDisplay}
             </h1>
 
-            <p style={{ fontSize: 15, fontWeight: 500, color: muted, marginBottom: 6 }}>
-              This certifies that
-            </p>
+            <p style={{ fontSize: 15, fontWeight: 500, color: muted, marginBottom: 6 }}>This certifies that</p>
 
-            <h2 style={{
-              fontSize: nameFontSize, fontWeight: 900, lineHeight: 1.1,
-              color: ink, fontFamily: fontDisplay, margin: '0 0 10px',
-              maxWidth: 880, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-            }}>
+            <h2
+              style={{
+                fontSize: nameFontSize,
+                fontWeight: 900,
+                lineHeight: 1.1,
+                color: ink,
+                fontFamily: fontDisplay,
+                margin: '0 0 10px',
+                maxWidth: 880,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}
+            >
               {studentName}
             </h2>
 
@@ -292,53 +377,74 @@ const HackathonCertificateTemplate = forwardRef(
               for outstanding contribution in <span style={{ color: primaryColor }}>{title}</span>
             </p>
 
-            <p style={{
-              fontSize: 14.5, lineHeight: 1.7, maxWidth: 700, color: muted, margin: 0,
-              display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-            }}>
+            <p
+              style={{
+                fontSize: 14.5,
+                lineHeight: 1.7,
+                maxWidth: 700,
+                color: muted,
+                margin: 0,
+                display: '-webkit-box',
+                WebkitLineClamp: 3,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden'
+              }}
+            >
               {bodyToDisplay}
             </p>
           </div>
 
-          {/* ══════════════ FOOTER BAR ══════════════ */}
-          <div style={{
-            position: 'absolute',
-            left: 0, right: 0, bottom: 0,
-            zIndex: 10,
-            borderTop: `1px solid ${rule}`,
-            padding: '18px 56px 22px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            boxSizing: 'border-box',
-          }}>
-            {/* Cert ID, left */}
+          {/* Footer bar */}
+          <div
+            style={{
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 10,
+              borderTop: `1px solid ${rule}`,
+              padding: '18px 56px 22px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              boxSizing: 'border-box'
+            }}
+          >
             <div>
-              <p style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.18em', color: muted, textTransform: 'uppercase', marginBottom: 4 }}>
+              <p
+                style={{
+                  fontSize: 9,
+                  fontWeight: 800,
+                  letterSpacing: '0.18em',
+                  color: muted,
+                  textTransform: 'uppercase',
+                  marginBottom: 4
+                }}
+              >
                 Certificate ID
               </p>
-              <p style={{ fontSize: 15, fontWeight: 700, color: ink, fontFamily: fontMono, margin: 0 }}>
-                {certificateId}
-              </p>
+              <p style={{ fontSize: 15, fontWeight: 700, color: ink, fontFamily: fontMono, margin: 0 }}>{certificateId}</p>
             </div>
 
-            {/* Issuer note, center */}
             <p style={{ fontSize: 11, color: muted, textAlign: 'center', margin: 0 }}>
               Issued by SkillValix · MSME Registered · skillvalix.com
             </p>
 
-            {/* QR, right */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <p style={{
-                fontSize: 9, fontWeight: 800, letterSpacing: '0.14em', color: muted,
-                textTransform: 'uppercase', margin: 0, whiteSpace: 'nowrap',
-              }}>
+              <p
+                style={{
+                  fontSize: 9,
+                  fontWeight: 800,
+                  letterSpacing: '0.14em',
+                  color: muted,
+                  textTransform: 'uppercase',
+                  margin: 0,
+                  whiteSpace: 'nowrap'
+                }}
+              >
                 Scan to<br />verify
               </p>
-              <div style={{
-                padding: 8, border: `1px solid ${rule}`, borderRadius: 4,
-                backgroundColor: '#FFFFFF', lineHeight: 0,
-              }}>
+              <div style={{ padding: 8, border: `1px solid ${rule}`, borderRadius: 4, backgroundColor: '#FFFFFF', lineHeight: 0 }}>
                 <QRCodeSVG value={verifyUrl} size={64} level="H" fgColor={ink} bgColor="#FFFFFF" />
               </div>
             </div>
@@ -352,3 +458,4 @@ const HackathonCertificateTemplate = forwardRef(
 HackathonCertificateTemplate.displayName = 'HackathonCertificateTemplate';
 
 export default HackathonCertificateTemplate;
+
