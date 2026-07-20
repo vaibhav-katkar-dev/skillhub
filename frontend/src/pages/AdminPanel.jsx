@@ -73,6 +73,12 @@ const AdminPanel = () => {
   const [registrationsByHack, setRegistrationsByHack] = useState({});
   const [loadingRegistrationsFor, setLoadingRegistrationsFor] = useState('');
   
+  // Winner management state
+  const [winnerFormOpen, setWinnerFormOpen] = useState({}); // { [regId]: true/false }
+  const [winnerRankInputs, setWinnerRankInputs] = useState({}); // { [regId]: '1st' }
+  const [winnerNoteInputs, setWinnerNoteInputs] = useState({}); // { [regId]: 'note' }
+  const [winnerSaving, setWinnerSaving] = useState({}); // { [regId]: true/false }
+  
   // Host requests state
   const [hostRequests, setHostRequests] = useState([]);
   const [hostRequestsLoading, setHostRequestsLoading] = useState(false);
@@ -176,6 +182,37 @@ const AdminPanel = () => {
       setRegistrationsByHack((prev) => ({ ...prev, [hackId]: [] }));
     } finally {
       setLoadingRegistrationsFor('');
+    }
+  };
+
+  const handleSetWinner = async (hackId, regId, winnerRank, note = '') => {
+    setWinnerSaving(prev => ({ ...prev, [regId]: true }));
+    try {
+      await api.put(`/events/admin/hackathons/${hackId}/registrations/${regId}/winner`, { winnerRank, note });
+      // Refresh registrations after updating
+      loadRegistrations(hackId);
+      // Clear the winner form state for this reg
+      setWinnerFormOpen(prev => ({ ...prev, [regId]: false }));
+      setWinnerRankInputs(prev => ({ ...prev, [regId]: undefined }));
+      setWinnerNoteInputs(prev => ({ ...prev, [regId]: undefined }));
+    } catch (err) {
+      alert('Failed to set winner: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setWinnerSaving(prev => ({ ...prev, [regId]: false }));
+    }
+  };
+
+  const handleRemoveWinner = async (hackId, regId) => {
+    if (!window.confirm('Remove winner status from this team?')) return;
+    setWinnerSaving(prev => ({ ...prev, [regId]: true }));
+    try {
+      await api.delete(`/events/admin/hackathons/${hackId}/registrations/${regId}/winner`);
+      loadRegistrations(hackId);
+      setWinnerFormOpen(prev => ({ ...prev, [regId]: false }));
+    } catch (err) {
+      alert('Failed to remove winner: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setWinnerSaving(prev => ({ ...prev, [regId]: false }));
     }
   };
 
@@ -2449,13 +2486,14 @@ const AdminPanel = () => {
                           <div className="overflow-x-auto rounded-xl border border-slate-200">
                             <table className="w-full text-xs">
                               <thead>
-                                <tr className="bg-slate-50 border-b border-slate-200">
+                              <tr className="bg-slate-50 border-b border-slate-200">
                                   <th className="px-3 py-2 text-left font-bold text-slate-600">Team</th>
                                   <th className="px-3 py-2 text-left font-bold text-slate-600">Leader</th>
                                   <th className="px-3 py-2 text-left font-bold text-slate-600">Members</th>
                                   <th className="px-3 py-2 text-left font-bold text-slate-600">Submissions</th>
                                   <th className="px-3 py-2 text-left font-bold text-slate-600">Payment</th>
                                   <th className="px-3 py-2 text-left font-bold text-slate-600">Score /100</th>
+                                  <th className="px-3 py-2 text-left font-bold text-slate-600">Winner</th>
                                   <th className="px-3 py-2 text-left font-bold text-slate-600">Status</th>
                                 </tr>
                               </thead>
@@ -2530,6 +2568,66 @@ const AdminPanel = () => {
                                         />
                                         {reg.scoredAt && <span className="text-slate-300 text-xs" title={`Scored ${new Date(reg.scoredAt).toLocaleDateString()}`}>✓</span>}
                                       </div>
+                                    </td>
+                                    {/* Winner actions */}
+                                    <td className="px-3 py-2.5">
+                                      {reg.isWinner ? (
+                                        <div className="flex flex-col gap-1">
+                                          <span className="text-xs font-bold text-amber-700 flex items-center gap-1">
+                                            <Trophy className="w-3 h-3" /> {reg.winnerRank || 'Winner'}
+                                          </span>
+                                          <button
+                                            onClick={() => handleRemoveWinner(h._id, reg._id)}
+                                            disabled={winnerSaving[reg._id]}
+                                            className="px-2 py-0.5 rounded bg-red-50 text-red-600 hover:bg-red-100 text-[10px] font-bold transition disabled:opacity-50 flex items-center gap-1"
+                                          >
+                                            {winnerSaving[reg._id] ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <Trash2 className="w-2.5 h-2.5" />}
+                                            Remove
+                                          </button>
+                                        </div>
+                                      ) : (
+                                        <div className="flex flex-col gap-1">
+                                          {winnerFormOpen[reg._id] ? (
+                                            <>
+                                              <select
+                                                value={winnerRankInputs[reg._id] || ''}
+                                                onChange={(e) => setWinnerRankInputs(prev => ({ ...prev, [reg._id]: e.target.value }))}
+                                                className="px-1.5 py-0.5 rounded border border-slate-200 text-[10px] bg-white"
+                                              >
+                                                <option value="">Select rank...</option>
+                                                <option value="1st">1st Place</option>
+                                                <option value="2nd">2nd Place</option>
+                                                <option value="3rd">3rd Place</option>
+                                                <option value="winner">Winner</option>
+                                              </select>
+                                              <div className="flex gap-1">
+                                                <button
+                                                  onClick={() => handleSetWinner(h._id, reg._id, winnerRankInputs[reg._id] || 'winner', winnerNoteInputs[reg._id] || '')}
+                                                  disabled={winnerSaving[reg._id] || !winnerRankInputs[reg._id]}
+                                                  className="px-1.5 py-0.5 rounded bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-bold transition disabled:opacity-50 flex items-center gap-1"
+                                                >
+                                                  {winnerSaving[reg._id] ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <Trophy className="w-2.5 h-2.5" />}
+                                                  Save
+                                                </button>
+                                                <button
+                                                  onClick={() => setWinnerFormOpen(prev => ({ ...prev, [reg._id]: false }))}
+                                                  className="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] font-bold transition"
+                                                >
+                                                  Cancel
+                                                </button>
+                                              </div>
+                                            </>
+                                          ) : (
+                                            <button
+                                              onClick={() => setWinnerFormOpen(prev => ({ ...prev, [reg._id]: true }))}
+                                              className="px-2 py-0.5 rounded bg-amber-50 hover:bg-amber-100 text-amber-700 text-[10px] font-bold transition flex items-center gap-1"
+                                            >
+                                              <Trophy className="w-2.5 h-2.5" />
+                                              Set Winner
+                                            </button>
+                                          )}
+                                        </div>
+                                      )}
                                     </td>
                                     {/* Status dropdown */}
                                     <td className="px-3 py-2.5">
