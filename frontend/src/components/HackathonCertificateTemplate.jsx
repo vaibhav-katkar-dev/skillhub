@@ -3,7 +3,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { VERIFIED_STAMP_BASE64 } from './verified-base64';
 
 /**
- * HackathonCertificateTemplate — v2
+ * HackathonCertificateTemplate — v3
  * 100% inline styles, zero Tailwind dependency.
  *
  * A4 Landscape: 1123 × 794 px
@@ -53,37 +53,36 @@ const HackathonCertificateTemplate = forwardRef(
           : '3rd Prize')
       : (winnerRank || 'Winner');
 
-    // Rank badge visual config for top 3 winners
+    // Rank badge visual config for top 3 winners.
+    // Design note: the badge circle only carries the number + icon.
+    // Rank + "WINNER" text lives once, in the ribbon below — no duplicated labels.
     const rankConfig = {
       '1st': {
-        label: '1ST',
-        subtitle: 'PRIZE',
+        label: '1',
+        ribbonLabel: '1ST PLACE',
         icon: 'crown',
-        gradient: 'linear-gradient(145deg, #6B4C0A, #B8892B, #E8C876, #FFF2C8, #E8C876)',
-        glow: 'rgba(232,200,118,0.5)',
+        gradient: 'linear-gradient(150deg, #7A5510, #C79A3B, #F0D68C, #FFF6DC, #D9AE4F)',
+        ring: '#8A6212',
+        glow: 'rgba(216,169,79,0.55)',
         textColor: '#3E2A08',
-        medalColor: '#D4A017',
-        size: 88,
       },
       '2nd': {
-        label: '2ND',
-        subtitle: 'PRIZE',
+        label: '2',
+        ribbonLabel: '2ND PLACE',
         icon: 'medal',
-        gradient: 'linear-gradient(145deg, #6B7280, #9CA3AF, #D1D5DB, #F3F4F6, #D1D5DB)',
-        glow: 'rgba(156,163,175,0.5)',
+        gradient: 'linear-gradient(150deg, #6B7280, #A7ADB8, #DDE1E6, #F7F8FA, #C3C8CF)',
+        ring: '#7C828B',
+        glow: 'rgba(160,167,177,0.5)',
         textColor: '#1F2937',
-        medalColor: '#9CA3AF',
-        size: 82,
       },
       '3rd': {
-        label: '3RD',
-        subtitle: 'PRIZE',
+        label: '3',
+        ribbonLabel: '3RD PLACE',
         icon: 'medal',
-        gradient: 'linear-gradient(145deg, #78350F, #A0522D, #CD7F32, #E6A873, #CD7F32)',
-        glow: 'rgba(205,127,50,0.5)',
-        textColor: '#451A03',
-        medalColor: '#CD7F32',
-        size: 82,
+        gradient: 'linear-gradient(150deg, #7C4A1E, #B67A3F, #DDA36E, #F2CFA8, #C6853F)',
+        ring: '#8A5424',
+        glow: 'rgba(198,133,63,0.5)',
+        textColor: '#3D2004',
       },
     };
     const currentRank = isTop3Winner ? rankConfig[normalizedWinnerRank] : null;
@@ -176,147 +175,113 @@ const HackathonCertificateTemplate = forwardRef(
       );
     };
 
-    // RANK BADGE for top 3 winners — bold, eye-catching hero element
+    // RANK BADGE for top 3 winners — a clean medal disc (icon + big number only)
+    // with a single ribbon underneath carrying the rank + "winner" text.
+    // This replaces the old version, which crammed icon + number + subtitle
+    // into one small circle and then repeated the same message in a second
+    // ribbon below — that duplication is what made it feel busy/unpolished.
     const renderRankBadge = () => {
       if (!currentRank) return null;
 
-      const size = Math.max(currentRank.size || 82, 72);
-      const fontSize = Math.round(size * 0.52);
-      const subtitleSize = Math.round(size * 0.18);
+      const discSize = 108;
 
-      // Crown icon SVG for 1st place
       const renderCrown = () => (
-        <svg width={size * 0.32} height={size * 0.28} viewBox="0 0 24 24" fill="none" style={{ marginBottom: 2 }}>
+        <svg width="26" height="20" viewBox="0 0 24 24" fill="none">
           <path
-            d="M2 19h20v3H2v-3zm1.5-15l4.5 5.5L12 5l4 4.5L20.5 4l-1 12h-15l-1-12z"
-            fill="#FFF2C8"
-            stroke="#6B4C0A"
+            d="M2 19h20v2.4H2V19zm1.5-13.4l4.5 5.2L12 5.6l4 5.2 4.5-5.2-1 10.4h-15l-1-10.4z"
+            fill="#FFFDF4"
+            stroke={currentRank.textColor}
             strokeWidth="0.8"
+            strokeLinejoin="round"
           />
         </svg>
       );
 
-      // Medal icon SVG for 2nd/3rd place
-      const renderMedal = (color) => (
-        <svg width={size * 0.26} height={size * 0.26} viewBox="0 0 24 24" fill="none" style={{ marginBottom: 2 }}>
-          <circle cx="12" cy="16" r="5" fill={color} stroke="#FFFFFF" strokeWidth="1" />
-          <path d="M12 13l1 2h-2l1-2z" fill="#FFFFFF" opacity="0.4" />
-          <path
-            d="M9 10l-1-8h8l-1 8"
-            stroke="#FFFFFF"
-            strokeWidth="1.2"
-            fill={color}
-            fillOpacity="0.3"
-          />
+      const renderMedal = () => (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M8.5 3h7l-2.6 6.4h-1.8L8.5 3z" fill="#FFFDF4" opacity="0.85" />
+          <circle cx="12" cy="15" r="6.5" fill="none" stroke="#FFFDF4" strokeWidth="1.4" />
+          <circle cx="12" cy="15" r="4.2" fill="#FFFDF4" opacity="0.9" />
         </svg>
       );
-
-      const iconSize = size;
 
       return (
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 6,
-          }}
-        >
-          {/* The rank badge itself */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <div
             style={{
               position: 'relative',
-              width: iconSize + 24,
-              height: iconSize + 24,
+              width: discSize,
+              height: discSize,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
-            {/* Outer glow ring */}
+            {/* Soft glow behind the disc */}
             <div
               style={{
                 position: 'absolute',
-                inset: -8,
+                inset: -10,
                 borderRadius: '50%',
                 background: currentRank.glow,
-                filter: 'blur(12px)',
-                opacity: 0.6,
+                filter: 'blur(14px)',
               }}
             />
-            {/* Main badge circle */}
+            {/* Medal disc */}
             <div
               style={{
-                width: iconSize + 16,
-                height: iconSize + 16,
+                position: 'relative',
+                width: discSize,
+                height: discSize,
                 borderRadius: '50%',
                 background: currentRank.gradient,
+                border: `3px solid ${parchment}`,
+                boxShadow: `0 6px 22px ${currentRank.glow}, inset 0 -3px 6px rgba(0,0,0,0.18), inset 0 2px 3px rgba(255,255,255,0.55), 0 0 0 1px ${currentRank.ring}`,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: `0 8px 32px ${currentRank.glow}, inset 0 -2px 4px rgba(0,0,0,0.15), inset 0 2px 4px rgba(255,255,255,0.3)`,
-                border: '3px solid rgba(255,255,255,0.6)',
-                position: 'relative',
-                zIndex: 1,
+                gap: 0,
               }}
             >
-              {/* Rank icon */}
-              {currentRank.icon === 'crown' ? renderCrown() : renderMedal(currentRank.medalColor)}
-
-              {/* Rank number */}
+              {currentRank.icon === 'crown' ? renderCrown() : renderMedal()}
               <span
                 style={{
-                  fontSize,
+                  fontSize: 44,
                   fontWeight: 900,
                   fontFamily: fontDisplay,
                   color: currentRank.textColor,
                   lineHeight: 1,
-                  letterSpacing: '-0.02em',
-                  textShadow: '0 1px 2px rgba(255,255,255,0.3)',
+                  marginTop: -2,
+                  textShadow: '0 1px 1px rgba(255,255,255,0.35)',
                 }}
               >
                 {currentRank.label}
               </span>
-
-              {/* Subtitle */}
-              <span
-                style={{
-                  fontSize: subtitleSize,
-                  fontWeight: 800,
-                  fontFamily: fontSans,
-                  color: currentRank.textColor,
-                  letterSpacing: '0.15em',
-                  textTransform: 'uppercase',
-                  opacity: 0.85,
-                  marginTop: -2,
-                }}
-              >
-                {currentRank.subtitle}
-              </span>
             </div>
           </div>
 
-          {/* Ribbon label below badge */}
+          {/* Ribbon — the single place rank + "winner" language appears */}
           <div
             style={{
-              padding: '4px 22px',
+              marginTop: -8,
+              padding: '5px 20px',
               borderRadius: 20,
               background: currentRank.gradient,
-              boxShadow: `0 4px 14px ${currentRank.glow}`,
-              border: '1px solid rgba(255,255,255,0.4)',
+              boxShadow: `0 4px 12px ${currentRank.glow}`,
+              border: `1px solid ${parchment}`,
             }}
           >
             <span
               style={{
-                fontSize: 12,
+                fontSize: 11.5,
                 fontWeight: 900,
-                letterSpacing: '0.25em',
+                letterSpacing: '0.18em',
                 color: currentRank.textColor,
-                textTransform: 'uppercase',
+                whiteSpace: 'nowrap',
               }}
             >
-              {ribbonText}
+              {currentRank.ribbonLabel} · WINNER
             </span>
           </div>
         </div>
@@ -453,11 +418,14 @@ const HackathonCertificateTemplate = forwardRef(
             </div>
           </div>
 
-          {/* Medallion / Rank Badge — overlaps the band's lower edge, centered */}
+          {/* Medallion / Rank Badge — overlaps the band's lower edge, centered.
+              Offset is computed from the actual rendered element height so the
+              circuit medallion (120px) and rank disc (~140px incl. ribbon)
+              both sit visually centered on the band edge, not just eyeballed. */}
           <div
             style={{
               position: 'absolute',
-              top: currentRank ? (132 - 100) : (132 - 60),
+              top: currentRank ? 132 - 108 / 2 - 14 : 132 - 60,
               left: '50%',
               transform: 'translateX(-50%)',
               zIndex: 20,
@@ -467,7 +435,7 @@ const HackathonCertificateTemplate = forwardRef(
             }}
           >
             {currentRank ? (
-              /* ── PROMINENT RANK BADGE for 1st/2nd/3rd ── */
+              /* ── Clean medal disc + single ribbon for 1st/2nd/3rd ── */
               renderRankBadge()
             ) : (
               /* ── Standard circuit medallion for participation / non-top-3 winners ── */
@@ -496,7 +464,7 @@ const HackathonCertificateTemplate = forwardRef(
             style={{
               position: 'relative',
               zIndex: 10,
-              marginTop: 108,
+              marginTop: currentRank ? 128 : 108,
               padding: '0 90px',
               display: 'flex',
               flexDirection: 'column',
@@ -648,4 +616,3 @@ const HackathonCertificateTemplate = forwardRef(
 HackathonCertificateTemplate.displayName = 'HackathonCertificateTemplate';
 
 export default HackathonCertificateTemplate;
-
