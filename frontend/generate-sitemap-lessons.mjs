@@ -38,8 +38,11 @@ function slugifyTitle(title) {
 }
 
 // ── Load data ──────────────────────────────────────────────────────────────
+// Some files may include a UTF-8 BOM. Strip it to keep JSON.parse stable.
 const raw = readFileSync(join(__dirname, 'public/data/all-courses.json'), 'utf-8');
-const courses = JSON.parse(raw);
+const withoutBom = raw.replace(/^\uFEFF/, '');
+const courses = JSON.parse(withoutBom);
+
 
 // ── Build XML entries ──────────────────────────────────────────────────────
 const urlEntries = [];
