@@ -995,7 +995,7 @@ router.put('/admin/hackathons/:id/registrations/:registrationId/score', authOpti
 // ─── ADMIN: Issue certificates for a hackathon ───────────────────────────────
 router.post('/admin/hackathons/:id/issue-certificates', authOptions, adminCheck, async (req, res) => {
   try {
-    const { certType, customTitle, customBody, targetMode, teamIds } = req.body;
+    const { certType, customTitle, customBody, targetMode, teamIds, winnerRankFilter } = req.body;
     const hackathonId = req.params.id;
 
     if (!['participation', 'winner'].includes(certType)) {
@@ -1011,6 +1011,10 @@ router.post('/admin/hackathons/:id/issue-certificates', authOptions, adminCheck,
     const filter = { hackathon: hackathonId };
     if (targetMode === 'winners') {
       filter.isWinner = true;
+      // If specific winner ranks are provided (e.g. ["1st","2nd","3rd"]), filter by them
+      if (winnerRankFilter && Array.isArray(winnerRankFilter) && winnerRankFilter.length > 0) {
+        filter.winnerRank = { $in: winnerRankFilter.map(r => String(r).trim()).filter(Boolean) };
+      }
     } else if (targetMode === 'selected') {
       if (!Array.isArray(teamIds) || teamIds.length === 0) {
         return res.status(400).json({ message: 'No teams selected.' });

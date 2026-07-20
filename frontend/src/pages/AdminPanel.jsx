@@ -301,7 +301,8 @@ const AdminPanel = () => {
         customTitle: certIssueForm.customTitle,
         customBody: certIssueForm.customBody,
         targetMode: certIssueForm.targetMode,
-        teamIds: certIssueForm.selectedTeamIds
+        teamIds: certIssueForm.selectedTeamIds,
+        winnerRankFilter: certIssueForm.winnerRankFilter
       };
       const res = await api.post(`/events/admin/hackathons/${hackId}/issue-certificates`, payload);
       setCertIssueMsg(`✅ Certificates processed: Issued ${res.data.issued}, Skipped ${res.data.skipped} (already issued).`);
@@ -2326,7 +2327,7 @@ const AdminPanel = () => {
                                     name="targetMode"
                                     value="all"
                                     checked={certIssueForm.targetMode === 'all'}
-                                    onChange={() => setCertIssueForm(p => ({ ...p, targetMode: 'all' }))}
+                                    onChange={() => setCertIssueForm(p => ({ ...p, targetMode: 'all', winnerRankFilter: [] }))}
                                   />
                                   All Registered Teams
                                 </label>
@@ -2336,7 +2337,7 @@ const AdminPanel = () => {
                                     name="targetMode"
                                     value="winners"
                                     checked={certIssueForm.targetMode === 'winners'}
-                                    onChange={() => setCertIssueForm(p => ({ ...p, targetMode: 'winners' }))}
+                                    onChange={() => setCertIssueForm(p => ({ ...p, targetMode: 'winners', winnerRankFilter: [] }))}
                                   />
                                   Winners Only
                                 </label>
@@ -2346,11 +2347,43 @@ const AdminPanel = () => {
                                     name="targetMode"
                                     value="selected"
                                     checked={certIssueForm.targetMode === 'selected'}
-                                    onChange={() => setCertIssueForm(p => ({ ...p, targetMode: 'selected' }))}
+                                    onChange={() => setCertIssueForm(p => ({ ...p, targetMode: 'selected', winnerRankFilter: [] }))}
                                   />
                                   Specific Selected Teams
                                 </label>
                               </div>
+
+                              {/* Rank filter checkboxes — visible only when "Winners Only" is selected */}
+                              {certIssueForm.targetMode === 'winners' && (
+                                <div className="mt-3 flex flex-wrap items-center gap-3">
+                                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Filter by Rank:</span>
+                                  {['1st', '2nd', '3rd'].map(rank => (
+                                    <label key={rank} className="flex items-center gap-1.5 text-xs text-slate-700 cursor-pointer bg-white border border-slate-200 rounded-lg px-3 py-1.5 hover:bg-slate-50 transition">
+                                      <input
+                                        type="checkbox"
+                                        checked={certIssueForm.winnerRankFilter?.includes(rank) || false}
+                                        onChange={(e) => {
+                                          const checked = e.target.checked;
+                                          setCertIssueForm(p => {
+                                            const current = p.winnerRankFilter || [];
+                                            const updated = checked
+                                              ? [...current, rank]
+                                              : current.filter(r => r !== rank);
+                                            return { ...p, winnerRankFilter: updated };
+                                          });
+                                        }}
+                                        className="w-3.5 h-3.5 rounded text-indigo-600"
+                                      />
+                                      <span className="font-semibold">{rank}</span>
+                                    </label>
+                                  ))}
+                                  {certIssueForm.winnerRankFilter?.length > 0 && certIssueForm.winnerRankFilter.length < 3 && (
+                                    <span className="text-xs text-amber-600 font-medium ml-1">
+                                      Will issue only to <strong>{certIssueForm.winnerRankFilter.join(', ')}</strong> rank winners
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                             </div>
 
                             {/* Selected Teams Checklist */}
