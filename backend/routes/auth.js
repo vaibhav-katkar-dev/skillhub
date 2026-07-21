@@ -295,7 +295,7 @@ router.post('/login', async (req, res) => {
 // ── Google Login ────────────────────────────────────────────────────────────
 router.post('/google', async (req, res) => {
   try {
-    const { credential } = req.body;
+    const { credential, referralCode } = req.body;
     const ticket = await client.verifyIdToken({
       idToken: credential,
       audience: process.env.GOOGLE_CLIENT_ID,
@@ -305,6 +305,7 @@ router.post('/google', async (req, res) => {
     const { email, name, sub: googleId } = payload;
 
     let user = await User.findOne({ email });
+    let isNewUser = false;
     
     if (!user) {
       // Create a user if they don't exist
@@ -318,8 +319,27 @@ router.post('/google', async (req, res) => {
         lastLogin: new Date(),
         loginCount: 1
       });
+
+      // Campus Ambassador referral tracking (only for new users)
+      let referringAmbassador = null;
+      if (referralCode && typeof referralCode === 'string') {
+        const cleanCode = referralCode.trim().toLowerCase();
+        if (/^ca-[0-9a-f]{8}$/.test(cleanCode)) {
+          referringAmbassador = await CampusAmbassador.findOne({ referralCode: cleanCode, status: 'approved' }).lean();
+          if (referringAmbassador) {
+            user.referredBy = referringAmbassador._id;
+          }
+        }
+      }
+
       await user.save();
+      isNewUser = true;
       LoginEvent.create({ userId: user._id, method: 'google', hour: new Date().getUTCHours() }).catch(() => {});
+
+      // Award referral points as verified (Google accounts are pre-verified, no email verification needed)
+      if (user.referredBy) {
+        awardPoints(user.referredBy, 'registration', { referredUserId: user._id, status: 'verified' }).catch(() => {});
+      }
     } else if (!user.googleId) {
       user.googleId = googleId;
       user.isVerified = true;
@@ -327,11 +347,29 @@ router.post('/google', async (req, res) => {
       user.loginCount = (user.loginCount || 0) + 1;
       await user.save();
       LoginEvent.create({ userId: user._id, method: 'google', hour: new Date().getUTCHours() }).catch(() => {});
+
+      // Ambassador referral login points for existing user
+      if (user.referredBy) {
+        awardPoints(user.referredBy, 'login', { referredUserId: user._id }).catch(() => {});
+      }
     } else {
       user.lastLogin = new Date();
       user.loginCount = (user.loginCount || 0) + 1;
       await user.save();
       LoginEvent.create({ userId: user._id, method: 'google', hour: new Date().getUTCHours() }).catch(() => {});
+
+      // Ambassador referral login points for existing user
+      if (user.referredBy) {
+        awardPoints(user.referredBy, 'login', { referredUserId: user._id }).catch(() => {});
+      }
+    }
+
+    // Ambassador's own daily login point
+    if (isNewUser) {
+      const ownAmb = await CampusAmbassador.findOne({ userId: user._id, status: 'approved' }).select('_id').lean();
+      if (ownAmb) {
+        awardPoints(ownAmb._id, 'ambassador_login', {}).catch(() => {});
+      }
     }
 
     const jwtPayload = { user: { id: user.id, role: user.role } };
