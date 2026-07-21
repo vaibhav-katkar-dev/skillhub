@@ -54,6 +54,7 @@ export function getCourseSeoMetadata(course, slug, lessons = []) {
   const imageUrl = rawImage.startsWith('http://') || rawImage.startsWith('https://')
     ? rawImage
     : `${SITE_URL}${rawImage.startsWith('/') ? '' : '/'}${rawImage}`;
+  const canonicalUrl = `${SITE_URL}/courses/${slug}`;
 
   // 5. Schema.org Course JSON-LD Payload
   const courseSchema = {
