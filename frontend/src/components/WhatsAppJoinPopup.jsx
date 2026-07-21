@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 
 const WHATSAPP_GROUP_LINK = 'https://chat.whatsapp.com/HxtxKbZCw39BNGzy7hXVSt?mode=gi_t';
+const WHATSAPP_COMMUNITY_LINK = 'https://chat.whatsapp.com/EKVMzGD2SeDLsgGSaWFSba';
 const POPUP_SEEN_KEY = 'skillvalix_whatsapp_popup_seen';
 const POPUP_DELAY_MS = 6000;
 
@@ -77,7 +78,7 @@ const WhatsAppJoinPopup = () => {
               Don't Learn Alone!
             </h2>
             <p style={{ margin: '8px 0 0', fontSize: 13, color: 'rgba(255,255,255,0.9)', fontWeight: 600 }}>
-              Join our fast-growing private community.
+              Join our fast-growing community channels.
             </p>
 
             <button
@@ -115,26 +116,47 @@ const WhatsAppJoinPopup = () => {
           </div>
 
           {/* CTA */}
-          <div style={{ padding: '0 20px 18px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ padding: '0 20px 18px', display: 'flex', flexDirection: 'column', gap: 10 }}>
             <a
               href={WHATSAPP_GROUP_LINK}
               target="_blank"
               rel="noopener noreferrer"
               onClick={closePopup}
               style={{
-                display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', gap: 8,
-                background: 'linear-gradient(135deg, #25d366, #128c7e)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                background: 'linear-gradient(135deg, #059669, #10b981)',
                 color: '#fff', textDecoration: 'none',
-                padding: '14px 20px', borderRadius: 12,
-                fontSize: 15, fontWeight: 800,
-                boxShadow: '0 4px 18px rgba(37,211,102,0.3)',
+                padding: '12px 20px', borderRadius: 12,
+                fontSize: 14.5, fontWeight: 800,
+                boxShadow: '0 4px 14px rgba(5,150,105,0.2)',
                 transition: 'transform .15s, box-shadow .15s',
               }}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 22px rgba(37,211,102,0.4)'; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 4px 18px rgba(37,211,102,0.3)'; }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 18px rgba(5,150,105,0.3)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 4px 14px rgba(5,150,105,0.2)'; }}
             >
-              <Zap size={16} />
-              Join WhatsApp Free
+              <Zap size={15} />
+              Join WhatsApp Group
+            </a>
+
+            <a
+              href={WHATSAPP_COMMUNITY_LINK}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={closePopup}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                background: 'linear-gradient(135deg, #25d366, #128c7e)',
+                color: '#fff', textDecoration: 'none',
+                padding: '12px 20px', borderRadius: 12,
+                fontSize: 14.5, fontWeight: 800,
+                boxShadow: '0 4px 14px rgba(37,211,102,0.2)',
+                transition: 'transform .15s, box-shadow .15s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 18px rgba(37,211,102,0.3)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 4px 14px rgba(37,211,102,0.2)'; }}
+            >
+              <Users size={15} />
+              Join WhatsApp Community
             </a>
 
             <button
@@ -146,8 +168,8 @@ const WhatsAppJoinPopup = () => {
                 padding: '4px 0', textAlign: 'center',
               }}
             >
-                No thanks, I'll learn alone
-              </button>
+              No thanks, I'll learn alone
+            </button>
           </div>
         </div>
       </div>
