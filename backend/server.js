@@ -17,6 +17,7 @@ import eventRoutes from './routes/events.js';
 import hostRoutes from './routes/hostRoutes.js';
 import couponRoutes from './routes/coupons.js';
 import priceRoutes from './routes/prices.js';
+import ambassadorRoutes from './routes/ambassador.js';
 import User from './models/User.js';
 
 dotenv.config();
@@ -257,6 +258,7 @@ app.use('/api/events', ensureDatabaseConnection);
 app.use('/api/host', ensureDatabaseConnection);
 app.use('/api/coupons', ensureDatabaseConnection);
 app.use('/api/prices', ensureDatabaseConnection);
+app.use('/api/ambassador', ensureDatabaseConnection);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
@@ -268,6 +270,7 @@ app.use('/api/events', eventRoutes);
 app.use('/api/host', hostRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/prices', priceRoutes);
+app.use('/api/ambassador', ambassadorRoutes);
 
 app.use((err, req, res, next) => {
   console.error('[Global Error]', err?.message || err);

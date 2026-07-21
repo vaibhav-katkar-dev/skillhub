@@ -50,7 +50,11 @@ const userSchema = new mongoose.Schema({
   // Analytics Tracking
   trafficSource: { type: String, default: 'direct' },
   lastLogin: { type: Date },
-  loginCount: { type: Number, default: 0 }
+  loginCount: { type: Number, default: 0 },
+
+  // Campus Ambassador Referral
+  referredBy: { type: mongoose.Schema.Types.ObjectId, ref: 'CampusAmbassador', default: null },
+
 }, { timestamps: true });
 
 export default mongoose.model('User', userSchema);

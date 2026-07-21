@@ -170,6 +170,25 @@ const AdminPanel = () => {
   const [emailMsg, setEmailMsg] = useState({ type: '', text: '' });
   const [selectAllUsers, setSelectAllUsers] = useState(false);
 
+  // ── Campus Ambassador Admin state ──────────────────────────────────────────
+  const [ambList, setAmbList] = useState([]);
+  const [ambListLoading, setAmbListLoading] = useState(false);
+  const [ambStatusFilter, setAmbStatusFilter] = useState('');
+  const [ambSearch, setAmbSearch] = useState('');
+  const [ambActingId, setAmbActingId] = useState('');
+  const [ambMsg, setAmbMsg] = useState({ type: '', text: '' });
+  const [ambNoteInputs, setAmbNoteInputs] = useState({});
+  const [rewardRequests, setRewardRequests] = useState([]);
+  const [rewardRequestsLoading, setRewardRequestsLoading] = useState(false);
+  const [rewardReqFilter, setRewardReqFilter] = useState('pending');
+  const [rewardActingId, setRewardActingId] = useState('');
+  const [rewardNoteInputs, setRewardNoteInputs] = useState({});
+  const [rewardMsg, setRewardMsg] = useState({ type: '', text: '' });
+  const [ambSubTab, setAmbSubTab] = useState('list');
+  const [ambApproveUserId, setAmbApproveUserId] = useState('');
+  const [ambApproveMsg, setAmbApproveMsg] = useState({ type: '', text: '' });
+  const [ambApproving, setAmbApproving] = useState(false);
+
   useEffect(() => {
     getCourseList().then(setCourses).catch(console.error);
   }, []);
@@ -310,6 +329,35 @@ const AdminPanel = () => {
       setTrackerLoading(false);
     }
   }, [trackerFilterPortfolio, trackerFilterCertified]);
+
+  const loadAmbList = useCallback(async (search = '') => {
+    setAmbListLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (ambStatusFilter) params.append('status', ambStatusFilter);
+      if (search) params.append('search', search);
+      const r = await api.get(`/ambassador/admin/list?${params}`);
+      setAmbList(r.data || []);
+    } catch {
+      setAmbList([]);
+    } finally {
+      setAmbListLoading(false);
+    }
+  }, [ambStatusFilter]);
+
+  const loadRewardRequests = useCallback(async () => {
+    setRewardRequestsLoading(true);
+    try {
+      const params = rewardReqFilter ? `?status=${rewardReqFilter}` : '';
+      const r = await api.get(`/ambassador/admin/rewards${params}`);
+      setRewardRequests(r.data || []);
+    } catch {
+      setRewardRequests([]);
+    } finally {
+      setRewardRequestsLoading(false);
+    }
+  }, [rewardReqFilter]);
+
 
 
   const resetHackForm = () => {
@@ -828,6 +876,108 @@ const AdminPanel = () => {
     }
   };
 
+  // ── Campus Ambassador admin handlers ─────────────────────────────────────────
+  const handleAmbApprove = async (ambassadorId) => {
+    setAmbActingId(ambassadorId);
+    setAmbMsg({ type: '', text: '' });
+    try {
+      const r = await api.post('/ambassador/admin/approve', { ambassadorId, adminNote: ambNoteInputs[ambassadorId] || '' });
+      setAmbMsg({ type: 'success', text: r.data.message });
+      loadAmbList(ambSearch);
+    } catch (err) {
+      setAmbMsg({ type: 'error', text: err.response?.data?.message || 'Failed to approve.' });
+    } finally {
+      setAmbActingId('');
+    }
+  };
+
+  const handleAmbReject = async (ambassadorId) => {
+    setAmbActingId(ambassadorId);
+    setAmbMsg({ type: '', text: '' });
+    try {
+      const r = await api.post('/ambassador/admin/reject', { ambassadorId, adminNote: ambNoteInputs[ambassadorId] || '' });
+      setAmbMsg({ type: 'success', text: r.data.message });
+      loadAmbList(ambSearch);
+    } catch (err) {
+      setAmbMsg({ type: 'error', text: err.response?.data?.message || 'Failed to reject.' });
+    } finally {
+      setAmbActingId('');
+    }
+  };
+
+  const handleAmbSuspend = async (id) => {
+    setAmbActingId(id);
+    try {
+      const r = await api.post(`/ambassador/admin/suspend/${id}`);
+      setAmbMsg({ type: 'success', text: r.data.message });
+      loadAmbList(ambSearch);
+    } catch (err) {
+      setAmbMsg({ type: 'error', text: err.response?.data?.message || 'Failed to suspend.' });
+    } finally {
+      setAmbActingId('');
+    }
+  };
+
+  const handleAmbReactivate = async (id) => {
+    setAmbActingId(id);
+    try {
+      const r = await api.post(`/ambassador/admin/reactivate/${id}`);
+      setAmbMsg({ type: 'success', text: r.data.message });
+      loadAmbList(ambSearch);
+    } catch (err) {
+      setAmbMsg({ type: 'error', text: err.response?.data?.message || 'Failed to reactivate.' });
+    } finally {
+      setAmbActingId('');
+    }
+  };
+
+  const handleRewardApprove = async (reqId) => {
+    setRewardActingId(reqId);
+    setRewardMsg({ type: '', text: '' });
+    try {
+      const r = await api.post(`/ambassador/admin/rewards/${reqId}/approve`, { adminNote: rewardNoteInputs[reqId] || '' });
+      setRewardMsg({ type: 'success', text: r.data.message });
+      loadRewardRequests();
+    } catch (err) {
+      setRewardMsg({ type: 'error', text: err.response?.data?.message || 'Failed to approve reward.' });
+    } finally {
+      setRewardActingId('');
+    }
+  };
+
+  const handleRewardReject = async (reqId) => {
+    setRewardActingId(reqId);
+    setRewardMsg({ type: '', text: '' });
+    try {
+      const r = await api.post(`/ambassador/admin/rewards/${reqId}/reject`, { adminNote: rewardNoteInputs[reqId] || '' });
+      setRewardMsg({ type: 'success', text: r.data.message });
+      loadRewardRequests();
+    } catch (err) {
+      setRewardMsg({ type: 'error', text: err.response?.data?.message || 'Failed to reject reward.' });
+    } finally {
+      setRewardActingId('');
+    }
+  };
+
+  const handleAmbAssignByUserId = async () => {
+    if (!ambApproveUserId.trim()) {
+      setAmbApproveMsg({ type: 'error', text: 'Enter a user ID.' });
+      return;
+    }
+    setAmbApproving(true);
+    setAmbApproveMsg({ type: '', text: '' });
+    try {
+      const r = await api.post('/ambassador/admin/approve', { userId: ambApproveUserId.trim() });
+      setAmbApproveMsg({ type: 'success', text: `${r.data.message} — Referral code: ${r.data.referralCode}` });
+      setAmbApproveUserId('');
+      loadAmbList(ambSearch);
+    } catch (err) {
+      setAmbApproveMsg({ type: 'error', text: err.response?.data?.message || 'Failed to assign ambassador.' });
+    } finally {
+      setAmbApproving(false);
+    }
+  };
+
   useEffect(() => {
     if (tab !== 'users') return;
     const debounceTimer = setTimeout(() => {
@@ -850,6 +1000,20 @@ const AdminPanel = () => {
     }, 400);
     return () => clearTimeout(debounceTimer);
   }, [emailSearch, tab, fetchEmailUsers]);
+
+  // ── Ambassador tab effects ──────────────────────────────────────────────────
+  useEffect(() => {
+    if (tab !== 'ambassadors') return;
+    loadAmbList(ambSearch);
+    loadRewardRequests();
+  }, [tab, ambStatusFilter, rewardReqFilter, loadAmbList, loadRewardRequests]);
+
+  useEffect(() => {
+    if (tab !== 'ambassadors') return;
+    const timer = setTimeout(() => loadAmbList(ambSearch), 400);
+    return () => clearTimeout(timer);
+  }, [ambSearch, tab, loadAmbList]);
+
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'admin') return;
@@ -1086,6 +1250,7 @@ const AdminPanel = () => {
               { key: 'pricing', label: 'Course Pricing', icon: IndianRupee },
               { key: 'email', label: 'Email Campaign', icon: Mail },
               { key: 'guide', label: 'Course Guide', icon: BookOpen },
+              { key: 'ambassadors', label: 'Ambassadors', icon: Crown },
             ].map(({ key, label, icon: Icon }) => (
               <button
                 key={key}
@@ -4502,6 +4667,396 @@ const AdminPanel = () => {
                     </div>
                   );
                 })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Campus Ambassador Admin Tab ──────────────────────────────────────── */}
+        {tab === 'ambassadors' && (
+          <div className="space-y-6">
+            {/* Header card */}
+            <div className="bg-white rounded-2xl border-2 border-purple-200 shadow-sm p-6">
+              <div className="flex items-center gap-3 mb-1">
+                <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
+                  <Crown className="w-5 h-5 text-purple-600" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-slate-800">Campus Ambassador Program</h2>
+                  <p className="text-slate-500 text-sm">Manage ambassadors, process reward requests, and quick-assign users.</p>
+                </div>
+              </div>
+              {/* Sub-tabs */}
+              <div className="flex gap-2 mt-5 flex-wrap">
+                {[
+                  { key: 'list', label: '📋 Ambassador List' },
+                  { key: 'rewards', label: '🎁 Reward Requests' },
+                  { key: 'assign', label: '⚡ Quick Assign' },
+                ].map(({ key, label }) => (
+                  <button
+                    key={key}
+                    onClick={() => setAmbSubTab(key)}
+                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-150 ${
+                      ambSubTab === key
+                        ? 'bg-purple-600 text-white shadow-md'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* ── AMBASSADOR LIST ──────────────────────────────────────────── */}
+            {ambSubTab === 'list' && (
+              <div className="space-y-4">
+                {/* Filters bar */}
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+                  <div className="flex flex-wrap gap-3 items-center">
+                    <div className="relative flex-1 min-w-48">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder="Search name, email, college, location..."
+                        value={ambSearch}
+                        onChange={e => setAmbSearch(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
+                      />
+                    </div>
+                    <select
+                      value={ambStatusFilter}
+                      onChange={e => setAmbStatusFilter(e.target.value)}
+                      className="px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-300"
+                    >
+                      <option value="">All Statuses</option>
+                      <option value="pending">Pending</option>
+                      <option value="approved">Approved</option>
+                      <option value="rejected">Rejected</option>
+                      <option value="suspended">Suspended</option>
+                    </select>
+                    <button
+                      onClick={() => loadAmbList(ambSearch)}
+                      className="px-4 py-2.5 rounded-xl bg-purple-600 text-white text-sm font-semibold hover:bg-purple-700 transition-colors flex items-center gap-2"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                      Refresh
+                    </button>
+                  </div>
+                </div>
+
+                {/* Global message */}
+                {ambMsg.text && (
+                  <div className={`p-3 rounded-xl text-sm font-medium border ${
+                    ambMsg.type === 'success'
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : 'bg-red-50 text-red-700 border-red-200'
+                  }`}>
+                    {ambMsg.text}
+                  </div>
+                )}
+
+                {/* Ambassador cards */}
+                {ambListLoading ? (
+                  <div className="flex items-center justify-center py-14">
+                    <Loader2 className="w-7 h-7 animate-spin text-purple-500" />
+                  </div>
+                ) : ambList.length === 0 ? (
+                  <div className="bg-white rounded-2xl border border-slate-200 p-10 text-center text-slate-400 text-sm">
+                    No ambassador records found.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {ambList.map(amb => (
+                      <div key={amb._id} className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 hover:border-purple-200 transition-colors">
+                        <div className="flex flex-wrap items-start justify-between gap-4">
+                          {/* Left: info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap mb-1">
+                              <p className="font-bold text-slate-800">{amb.user?.name || 'Unknown'}</p>
+                              <span className={`px-2 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide ${
+                                amb.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
+                                amb.status === 'pending'  ? 'bg-yellow-100 text-yellow-700' :
+                                amb.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                                'bg-orange-100 text-orange-700'
+                              }`}>
+                                {amb.status}
+                              </span>
+                              {amb.referralCode && (
+                                <span className="px-2 py-0.5 rounded-full text-xs bg-purple-100 text-purple-700 font-mono">
+                                  {amb.referralCode}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-slate-500 text-xs">{amb.user?.email}</p>
+                            <p className="text-slate-600 text-xs mt-1">
+                              🏫 {amb.college || '—'}&nbsp;·&nbsp;📍 {amb.location || '—'}
+                              {amb.mobile && <>&nbsp;·&nbsp;📱 {amb.mobile}</>}
+                            </p>
+                            {amb.whyJoin && (
+                              <p className="text-slate-400 text-xs mt-1 italic line-clamp-2">&ldquo;{amb.whyJoin}&rdquo;</p>
+                            )}
+                            <p className="text-purple-700 text-xs font-bold mt-1.5">
+                              ⭐ {(amb.totalPoints || 0).toLocaleString()} pts
+                              {amb.claimedMilestones?.length > 0 && (
+                                <span className="ml-2 text-amber-600">· Claimed: {amb.claimedMilestones.join(', ')}</span>
+                              )}
+                            </p>
+                            {amb.adminNote && (
+                              <p className="text-slate-400 text-xs mt-0.5">Admin note: {amb.adminNote}</p>
+                            )}
+                            <p className="text-slate-300 text-xs mt-1">
+                              Applied {formatDate(amb.createdAt)}
+                              {amb.approvedAt && <> · Approved {formatDate(amb.approvedAt)}</>}
+                            </p>
+                          </div>
+
+                          {/* Right: actions */}
+                          <div className="flex flex-col gap-2 min-w-44">
+                            <input
+                              type="text"
+                              placeholder="Admin note (optional)"
+                              value={ambNoteInputs[amb._id] || ''}
+                              onChange={e => setAmbNoteInputs(prev => ({ ...prev, [amb._id]: e.target.value }))}
+                              className="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs w-full focus:outline-none focus:ring-1 focus:ring-purple-300"
+                            />
+                            <div className="flex gap-1.5 flex-wrap">
+                              {amb.status === 'pending' && (
+                                <>
+                                  <button
+                                    onClick={() => handleAmbApprove(amb._id)}
+                                    disabled={ambActingId === amb._id}
+                                    className="flex-1 px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold flex items-center justify-center gap-1 transition-colors disabled:opacity-60"
+                                  >
+                                    {ambActingId === amb._id
+                                      ? <Loader2 className="w-3 h-3 animate-spin" />
+                                      : <CheckCircle className="w-3 h-3" />}
+                                    Approve
+                                  </button>
+                                  <button
+                                    onClick={() => handleAmbReject(amb._id)}
+                                    disabled={ambActingId === amb._id}
+                                    className="flex-1 px-3 py-1.5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-xs font-bold flex items-center justify-center gap-1 transition-colors disabled:opacity-60"
+                                  >
+                                    <X className="w-3 h-3" />
+                                    Reject
+                                  </button>
+                                </>
+                              )}
+                              {amb.status === 'approved' && (
+                                <button
+                                  onClick={() => handleAmbSuspend(amb._id)}
+                                  disabled={ambActingId === amb._id}
+                                  className="flex-1 px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold flex items-center justify-center gap-1 transition-colors disabled:opacity-60"
+                                >
+                                  {ambActingId === amb._id && <Loader2 className="w-3 h-3 animate-spin" />}
+                                  Suspend
+                                </button>
+                              )}
+                              {(amb.status === 'rejected' || amb.status === 'suspended') && (
+                                <button
+                                  onClick={() => handleAmbReactivate(amb._id)}
+                                  disabled={ambActingId === amb._id}
+                                  className="flex-1 px-3 py-1.5 rounded-lg bg-purple-500 hover:bg-purple-600 text-white text-xs font-bold flex items-center justify-center gap-1 transition-colors disabled:opacity-60"
+                                >
+                                  {ambActingId === amb._id && <Loader2 className="w-3 h-3 animate-spin" />}
+                                  Reactivate
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── REWARD REQUESTS ──────────────────────────────────────────── */}
+            {ambSubTab === 'rewards' && (
+              <div className="space-y-4">
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-wrap gap-3 items-center">
+                  <select
+                    value={rewardReqFilter}
+                    onChange={e => setRewardReqFilter(e.target.value)}
+                    className="px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-300"
+                  >
+                    <option value="">All Requests</option>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                  <button
+                    onClick={loadRewardRequests}
+                    className="px-4 py-2.5 rounded-xl bg-purple-600 text-white text-sm font-semibold hover:bg-purple-700 transition-colors flex items-center gap-2"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    Refresh
+                  </button>
+                  <p className="text-slate-400 text-xs ml-auto">{rewardRequests.length} request(s)</p>
+                </div>
+
+                {rewardMsg.text && (
+                  <div className={`p-3 rounded-xl text-sm font-medium border ${
+                    rewardMsg.type === 'success'
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : 'bg-red-50 text-red-700 border-red-200'
+                  }`}>
+                    {rewardMsg.text}
+                  </div>
+                )}
+
+                {rewardRequestsLoading ? (
+                  <div className="flex items-center justify-center py-14">
+                    <Loader2 className="w-7 h-7 animate-spin text-purple-500" />
+                  </div>
+                ) : rewardRequests.length === 0 ? (
+                  <div className="bg-white rounded-2xl border border-slate-200 p-10 text-center text-slate-400 text-sm">
+                    No reward requests found.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {rewardRequests.map(req => {
+                      const amb = req.ambassadorId;
+                      const tierEmoji = { bronze: '🥉', silver: '🥈', gold: '🥇' }[req.tier] || '🎁';
+                      const tierCard = {
+                        bronze: 'bg-amber-50 border-amber-200',
+                        silver: 'bg-slate-50 border-slate-300',
+                        gold:   'bg-yellow-50 border-yellow-300',
+                      }[req.tier] || 'bg-white border-slate-200';
+                      return (
+                        <div key={req._id} className={`rounded-2xl border-2 p-5 ${tierCard}`}>
+                          <div className="flex flex-wrap items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 flex-wrap mb-1">
+                                <span className="text-2xl">{tierEmoji}</span>
+                                <p className="font-bold text-base capitalize">{req.tier} Reward</p>
+                                <span className={`px-2 py-0.5 rounded-full text-xs font-bold uppercase ${
+                                  req.status === 'pending'  ? 'bg-yellow-100 text-yellow-700' :
+                                  req.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
+                                  'bg-red-100 text-red-700'
+                                }`}>
+                                  {req.status}
+                                </span>
+                              </div>
+                              <p className="text-sm font-semibold text-slate-800">
+                                {amb?.userId?.name}
+                                <span className="text-slate-500 font-normal ml-1">({amb?.userId?.email})</span>
+                              </p>
+                              <p className="text-xs text-slate-500 mt-0.5">
+                                🏫 {amb?.college} · 📍 {amb?.location}
+                              </p>
+                              <p className="text-xs text-slate-600 mt-1">
+                                Points at request: <strong>{(req.pointsAtRequest || 0).toLocaleString()}</strong>
+                                &nbsp;·&nbsp;Current: <strong>{(amb?.totalPoints || 0).toLocaleString()}</strong>
+                              </p>
+                              <p className="text-xs text-slate-400 mt-0.5">Requested: {formatDate(req.createdAt)}</p>
+                              {req.adminNote && (
+                                <p className="text-xs text-slate-500 mt-1 italic">Admin note: {req.adminNote}</p>
+                              )}
+                            </div>
+                            {req.status === 'pending' && (
+                              <div className="flex flex-col gap-2 min-w-44">
+                                <input
+                                  type="text"
+                                  placeholder="Admin note (optional)"
+                                  value={rewardNoteInputs[req._id] || ''}
+                                  onChange={e => setRewardNoteInputs(prev => ({ ...prev, [req._id]: e.target.value }))}
+                                  className="px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs w-full focus:outline-none focus:ring-1 focus:ring-purple-300 bg-white"
+                                />
+                                <div className="flex gap-1.5">
+                                  <button
+                                    onClick={() => handleRewardApprove(req._id)}
+                                    disabled={rewardActingId === req._id}
+                                    className="flex-1 px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold flex items-center justify-center gap-1 transition-colors disabled:opacity-60"
+                                  >
+                                    {rewardActingId === req._id
+                                      ? <Loader2 className="w-3 h-3 animate-spin" />
+                                      : <CheckCircle className="w-3 h-3" />}
+                                    Approve
+                                  </button>
+                                  <button
+                                    onClick={() => handleRewardReject(req._id)}
+                                    disabled={rewardActingId === req._id}
+                                    className="flex-1 px-3 py-1.5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-xs font-bold flex items-center justify-center gap-1 transition-colors disabled:opacity-60"
+                                  >
+                                    <X className="w-3 h-3" />
+                                    Reject
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── QUICK ASSIGN ──────────────────────────────────────────────── */}
+            {ambSubTab === 'assign' && (
+              <div className="space-y-6">
+                {/* Assign by user ID */}
+                <div className="bg-white rounded-2xl border-2 border-purple-100 shadow-sm p-6">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Crown className="w-5 h-5 text-purple-600" />
+                    <h3 className="font-bold text-slate-800">Assign Ambassador by User ID</h3>
+                  </div>
+                  <p className="text-slate-500 text-sm mb-4">
+                    Enter a MongoDB User <strong>_id</strong> (24-char hex) to instantly approve any registered user as a Campus Ambassador — bypassing the application form.
+                    A unique referral code will be generated automatically. Use the <strong>User Tracker</strong> tab to find user IDs.
+                  </p>
+                  <div className="flex gap-3 flex-wrap">
+                    <input
+                      type="text"
+                      placeholder="e.g. 64f3b2c1a9e1234567890abc"
+                      value={ambApproveUserId}
+                      onChange={e => setAmbApproveUserId(e.target.value)}
+                      className="flex-1 min-w-56 px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-purple-300"
+                    />
+                    <button
+                      onClick={handleAmbAssignByUserId}
+                      disabled={ambApproving || !ambApproveUserId.trim()}
+                      className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold flex items-center gap-2 transition-colors disabled:opacity-50"
+                    >
+                      {ambApproving
+                        ? <Loader2 className="w-4 h-4 animate-spin" />
+                        : <Crown className="w-4 h-4" />}
+                      Assign Ambassador
+                    </button>
+                  </div>
+                  {ambApproveMsg.text && (
+                    <div className={`mt-3 p-3 rounded-xl text-sm font-medium border ${
+                      ambApproveMsg.type === 'success'
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        : 'bg-red-50 text-red-700 border-red-200'
+                    }`}>
+                      {ambApproveMsg.text}
+                    </div>
+                  )}
+                </div>
+
+                {/* Summary stats */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {[
+                    { label: 'Active Ambassadors', value: ambList.filter(a => a.status === 'approved').length, bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', sub: 'text-emerald-600' },
+                    { label: 'Pending Review', value: ambList.filter(a => a.status === 'pending').length, bg: 'bg-yellow-50', border: 'border-yellow-200', text: 'text-yellow-700', sub: 'text-yellow-600' },
+                    { label: 'Suspended', value: ambList.filter(a => a.status === 'suspended').length, bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', sub: 'text-orange-600' },
+                    { label: 'Total Points Awarded', value: ambList.reduce((s, a) => s + (a.totalPoints || 0), 0).toLocaleString(), bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700', sub: 'text-purple-600' },
+                  ].map(({ label, value, bg, border, text, sub }) => (
+                    <div key={label} className={`${bg} border ${border} rounded-2xl p-5 text-center`}>
+                      <p className={`text-3xl font-extrabold ${text}`}>{value}</p>
+                      <p className={`text-xs font-medium ${sub} mt-1`}>{label}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <p className="text-slate-400 text-xs text-center">
+                  Counts above are based on the currently loaded ambassador list. Switch to "Ambassador List" tab and hit Refresh for the latest data.
+                </p>
               </div>
             )}
           </div>

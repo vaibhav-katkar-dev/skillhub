@@ -102,8 +102,8 @@ export const useAuthStore = create((set, get) => ({
     set({ user: userRes.data, isAuthenticated: true });
   },
 
-  register: async (name, email, password, role) => {
-    const res = await api.post('/auth/register', { name, email, password, role });
+  register: async (name, email, password, role, referralCode) => {
+    const res = await api.post('/auth/register', { name, email, password, role, referralCode });
     return res.data; // Return the message from server
   },
 
@@ -124,8 +124,8 @@ export const useAuthStore = create((set, get) => ({
     set({ user: null, isAuthenticated: false });
   },
 
-  googleLogin: async (credential) => {
-    const res = await api.post('/auth/google', { credential });
+  googleLogin: async (credential, referralCode) => {
+    const res = await api.post('/auth/google', { credential, referralCode });
     localStorage.setItem('token', res.data.token);
 
     const userRes = await api.get('/auth/me', {

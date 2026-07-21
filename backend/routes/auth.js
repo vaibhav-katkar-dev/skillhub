@@ -12,6 +12,8 @@ import { OAuth2Client } from 'google-auth-library';
 import { sendEmail } from '../utils/mailer.js';
 import crypto from 'crypto';
 import { isDisposableEmail, isValidEmailFormat } from '../utils/emailValidator.js';
+import CampusAmbassador from '../models/CampusAmbassador.js';
+import { awardPoints } from '../utils/ambassadorPoints.js';
 
 const router = express.Router();
 
@@ -41,7 +43,7 @@ router.get('/me', authOptions, async (req, res) => {
 // Register
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password, trafficSource } = req.body;
+    const { name, email, password, trafficSource, referralCode } = req.body;
 
     if (!isValidEmailFormat(email)) {
       return res.status(400).json({ message: 'Invalid email format' });
@@ -66,7 +68,26 @@ router.post('/register', async (req, res) => {
     user.verificationToken = crypto.createHash('sha256').update(verificationToken).digest('hex');
     user.verificationTokenExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
 
+    // Campus Ambassador referral tracking
+    let referringAmbassador = null;
+    if (referralCode && typeof referralCode === 'string') {
+      const cleanCode = referralCode.trim().toLowerCase();
+      if (/^ca-[0-9a-f]{8}$/.test(cleanCode)) {
+        referringAmbassador = await CampusAmbassador.findOne({ referralCode: cleanCode, status: 'approved' }).lean();
+        if (referringAmbassador) {
+          user.referredBy = referringAmbassador._id;
+        }
+      }
+    }
+
     await user.save();
+
+    if (user.referredBy) {
+      awardPoints(user.referredBy, 'registration', { referredUserId: user._id }).catch(() => {});
+    }
+
+    const frontendUrl = process.env.FRONTEND_URL || 'https://skillvalix.com';
+    const verifyUrl = `${frontendUrl}/verify-email/${verificationToken}`;
 
     // Send Verification Email — wrapped separately so a failed email doesn't
     // roll back an already-saved user account.
@@ -243,6 +264,16 @@ router.post('/login', async (req, res) => {
 
     // Fire-and-forget login event (non-blocking)
     LoginEvent.create({ userId: user._id, method: 'email', hour: new Date().getUTCHours() }).catch(() => {});
+
+    // Ambassador referral login points (fire-and-forget)
+    if (user.referredBy) {
+      awardPoints(user.referredBy, 'login', { referredUserId: user._id }).catch(() => {});
+    }
+    // Ambassador's own daily login point
+    const ownAmb = await CampusAmbassador.findOne({ userId: user._id, status: 'approved' }).select('_id').lean();
+    if (ownAmb) {
+      awardPoints(ownAmb._id, 'ambassador_login', {}).catch(() => {});
+    }
 
     const payload = { user: { id: user.id, role: user.role } };
     const token = jwt.sign(payload, getJwtSecret(), { expiresIn: '7d' });

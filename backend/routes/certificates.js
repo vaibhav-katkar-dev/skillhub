@@ -7,6 +7,7 @@ import EventCertificate from '../models/EventCertificate.js';
 import { v4 as uuidv4 } from 'uuid';
 import { authOptions } from '../middleware/auth.js';
 import { getCourseFromJSON, getAllCoursesFromJSON } from '../utils/courseData.js';
+import { awardPoints } from '../utils/ambassadorPoints.js';
 
 const router = express.Router();
 
@@ -646,6 +647,13 @@ router.post('/generate', authOptions, async (req, res) => {
         pdfStatus: 'pending',
       });
       await cert.save();
+
+      if (user.referredBy) {
+        awardPoints(user.referredBy, 'certificate', {
+          referredUserId: user._id,
+          meta: { certificateId: cert.certificateId, courseId: resolvedCourseId }
+        }).catch(console.error);
+      }
     } else {
       let shouldResetPdf = false;
       if (!cert.courseTitleSnapshot && courseTitle) {

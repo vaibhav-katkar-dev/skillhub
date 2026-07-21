@@ -5,6 +5,7 @@ import User from '../models/User.js';
 import DiscountCoupon from '../models/DiscountCoupon.js';
 import CoursePrice from '../models/CoursePrice.js';
 import { authOptions } from '../middleware/auth.js';
+import { awardPoints } from '../utils/ambassadorPoints.js';
 
 // Default price in paise (₹99) used when no custom price is set for a course
 const DEFAULT_PRICE_PAISE = 9900;
@@ -231,6 +232,20 @@ router.post('/razorpay-verify', authOptions, async (req, res) => {
     }
 
     await user.save();
+
+    if (user.referredBy) {
+      const amountPaidInr = order.amount / 100;
+      const fullPriceInr  = coursePaise / 100;
+      awardPoints(user.referredBy, 'paid_course', {
+        referredUserId: user._id,
+        amountPaidInr,
+        fullPriceInr,
+        couponCode: couponDoc?.code,
+        couponDiscount: couponDoc?.discountValue,
+        meta: { courseId },
+      }).catch(console.error);
+    }
+
     res.json({ success: true });
   } catch (err) {
     console.error('Verify error:', err);

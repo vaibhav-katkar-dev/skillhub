@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { UserPlus, Eye, EyeOff } from 'lucide-react';
+import { UserPlus, Eye, EyeOff, Sparkles } from 'lucide-react';
 import { GoogleLogin } from '@react-oauth/google';
 
 const Register = () => {
@@ -12,14 +12,30 @@ const Register = () => {
   const [role, setRole] = useState('student');
   const { register, googleLogin } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [refCode, setRefCode] = useState('');
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const ref = params.get('ref');
+    if (ref) {
+      sessionStorage.setItem('sv_ref', ref);
+      setRefCode(ref);
+    } else {
+      const stored = sessionStorage.getItem('sv_ref');
+      if (stored) setRefCode(stored);
+    }
+  }, [location.search]);
 
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
-      await googleLogin(credentialResponse.credential);
+      const activeRef = refCode || sessionStorage.getItem('sv_ref') || undefined;
+      await googleLogin(credentialResponse.credential, activeRef);
+      sessionStorage.removeItem('sv_ref');
       navigate('/dashboard');
     } catch (err) {
       setError('Google signup failed. Please try again.');
@@ -32,7 +48,9 @@ const Register = () => {
     setSuccess(null);
     setLoading(true);
     try {
-      const data = await register(name, email, password, role);
+      const activeRef = refCode || sessionStorage.getItem('sv_ref') || undefined;
+      const data = await register(name, email, password, role, activeRef);
+      sessionStorage.removeItem('sv_ref');
       setSuccess(data.message || 'Registration successful! Please check your email.');
       setName('');
       setEmail('');

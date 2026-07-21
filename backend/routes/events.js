@@ -21,6 +21,7 @@ import SimulationPrice from '../models/SimulationPrice.js';
 import SimulationCoupon from '../models/SimulationCoupon.js';
 import User from '../models/User.js';
 import { authOptions, adminCheck } from '../middleware/auth.js';
+import { awardPoints } from '../utils/ambassadorPoints.js';
 
 const router = express.Router();
 const FRONTEND_URL = () => (process.env.FRONTEND_URL || 'https://www.skillvalix.com').replace(/\/$/, '');
@@ -568,6 +569,13 @@ router.post('/hackathons/:id/register', authOptions, async (req, res) => {
     });
     await registration.save();
 
+    if (!paymentEnabled && leader.referredBy) {
+      awardPoints(leader.referredBy, 'free_hackathon', {
+        referredUserId: leader._id,
+        meta: { hackathonId: hackathon._id },
+      }).catch(console.error);
+    }
+
     const populated = await HackathonRegistration.findById(registration._id)
       .populate('members.user', 'name email')
       .lean();
@@ -712,6 +720,18 @@ router.post('/hackathons/:id/payment/verify', authOptions, async (req, res) => {
         },
       }
     );
+
+    const leaderUser = await User.findById(registration.leader).lean();
+    if (leaderUser?.referredBy) {
+      const amountPaidInr = Number(registration.payment?.amountInr || 0);
+      const fullPriceInr  = Number(registration.payment?.amountInr || amountPaidInr);
+      awardPoints(leaderUser.referredBy, 'paid_hackathon', {
+        referredUserId: leaderUser._id,
+        amountPaidInr,
+        fullPriceInr,
+        meta: { hackathonId: req.params.id, registrationId: registration._id },
+      }).catch(console.error);
+    }
 
     res.json({ message: 'Payment verified. You can now submit your solution.' });
   } catch (err) {
@@ -2146,6 +2166,24 @@ router.post('/certificates/generate', authOptions, async (req, res) => {
       pdfTemplateVersion: EVENT_CERT_TEMPLATE_VERSION,
     });
     await cert.save();
+
+    if (user.referredBy) {
+      const amountPaidInr = order.amount / 100;
+      const fullPriceInr  = basePrice;
+      awardPoints(user.referredBy, 'paid_simulation', {
+        referredUserId: user._id,
+        amountPaidInr,
+        fullPriceInr,
+        couponCode: appliedCouponDoc?.code,
+        couponDiscount: appliedCouponDoc?.discountValue,
+        meta: { simId: matchedSimId, eventTitle: verifiedTitle },
+      }).catch(console.error);
+
+      awardPoints(user.referredBy, 'certificate', {
+        referredUserId: user._id,
+        meta: { certificateId: cert.certificateId, eventType: cert.eventType },
+      }).catch(console.error);
+    }
 
     if (appliedCouponDoc) {
       appliedCouponDoc.usedCount += 1;
