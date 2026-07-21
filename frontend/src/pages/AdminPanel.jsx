@@ -105,6 +105,7 @@ const AdminPanel = () => {
   const [activeAnalyticsHack, setActiveAnalyticsHack] = useState(null);
   const [hackAnalyticsInputs, setHackAnalyticsInputs] = useState({ totalParticipants: '', totalCertificates: '', totalSubmissions: '' });
   const [hackAnalyticsMsg, setHackAnalyticsMsg] = useState('');
+  const [analyticsTick, setAnalyticsTick] = useState(0);
 
   // ── Coupon manager state ──────────────────────────────────────────
   const [coupons, setCoupons] = useState([]);
@@ -364,10 +365,10 @@ const AdminPanel = () => {
     try { saved = JSON.parse(localStorage.getItem(key) || '{}'); } catch {}
 
     const teamsCount = regs.length;
-    const autoParticipants = regs.reduce((sum, r) => sum + (r.members?.length || r.teamMembers?.length || 1), 0) || (hack.participantCount || 0);
-    const autoSubmissions = regs.filter(r => r.submissionLink || r.submission?.link || r.projectUrl || r.submissionDate).length;
+    const autoParticipants = regs.reduce((sum, r) => sum + 1 + (r.members?.length || 0), 0) || (hack.participantCount || 0);
+    const autoSubmissions = regs.filter(r => (r.submissions && r.submissions.length > 0) || r.submissionLink || r.submission?.link || r.projectUrl || r.status === 'submitted' || r.status === 'under_review' || r.status === 'approved' || r.status === 'winner').length;
     const autoCertificates = regs.filter(r => r.certificateIssued || r.hasCertificate || r.certIssued).length;
-    const autoWinners = regs.filter(r => r.isWinner || r.winnerRank).length;
+    const autoWinners = regs.filter(r => r.isWinner || r.winnerRank || r.status === 'winner').length;
 
     const hasOverride = Boolean(
       (saved.totalParticipants !== undefined && saved.totalParticipants !== '') ||
@@ -386,7 +387,7 @@ const AdminPanel = () => {
       totalSubmissions: saved.totalSubmissions !== undefined && saved.totalSubmissions !== '' ? Number(saved.totalSubmissions) : autoSubmissions,
       hasOverride
     };
-  }, []);
+  }, [analyticsTick]);
 
   const openHackAnalyticsModal = (hack) => {
     setActiveAnalyticsHack(hack);
@@ -417,6 +418,7 @@ const AdminPanel = () => {
     
     localStorage.setItem(key, JSON.stringify(payload));
     setHackAnalyticsMsg('✅ Frontend analytics updated & saved locally!');
+    setAnalyticsTick(prev => prev + 1);
   };
 
   const handleResetHackAnalyticsOverride = (hackId) => {
@@ -424,6 +426,7 @@ const AdminPanel = () => {
     localStorage.removeItem(key);
     setHackAnalyticsInputs({ totalParticipants: '', totalCertificates: '', totalSubmissions: '' });
     setHackAnalyticsMsg('🔄 Analytics reset to system auto-calculated metrics.');
+    setAnalyticsTick(prev => prev + 1);
   };
 
   const loadCoupons = async () => {
@@ -2798,10 +2801,186 @@ const AdminPanel = () => {
                         <div className="mt-3 text-xs text-slate-500">No team registrations yet.</div>
                       )}
                     </div>
-                  ))}
+                  );
+                })}
                 </div>
               )}
             </div>
+
+            {/* Individual Hackathon Analytics Management Modal */}
+            {activeAnalyticsHack && (() => {
+              const currentAnalytics = getHackAnalytics(activeAnalyticsHack, registrationsByHack[activeAnalyticsHack._id] || []);
+              const hackTitle = activeAnalyticsHack.title || 'Hackathon';
+
+              return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
+                  <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[90vh]">
+                    {/* Modal Header */}
+                    <div className="bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 px-6 py-5 text-white flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2.5 rounded-2xl bg-white/10 border border-white/10">
+                          <BarChart3 className="w-5 h-5 text-purple-300" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-bold text-lg text-white">Hackathon Analytics</h3>
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
+                              activeAnalyticsHack.status === 'live' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' :
+                              activeAnalyticsHack.status === 'ended' ? 'bg-slate-500/20 text-slate-300 border border-slate-500/30' :
+                              'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                            }`}>
+                              {activeAnalyticsHack.status}
+                            </span>
+                          </div>
+                          <p className="text-xs text-indigo-200 mt-0.5 truncate max-w-md">{hackTitle}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setActiveAnalyticsHack(null)}
+                        className="p-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    {/* Modal Content */}
+                    <div className="p-6 overflow-y-auto space-y-6">
+                      {/* Status Message */}
+                      {hackAnalyticsMsg && (
+                        <div className={`p-3.5 rounded-2xl text-xs font-semibold flex items-center gap-2 ${
+                          hackAnalyticsMsg.includes('✅') ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                        }`}>
+                          <span>{hackAnalyticsMsg}</span>
+                        </div>
+                      )}
+
+                      {/* System Auto-calculated Live Metrics */}
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">System Auto-Calculated Metrics</h4>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          <div className="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-100">
+                            <div className="flex items-center gap-1.5 text-xs text-indigo-600 font-medium mb-1">
+                              <Users className="w-3.5 h-3.5" /> Teams Registered
+                            </div>
+                            <p className="text-xl font-black text-indigo-950">{currentAnalytics.teamsCount}</p>
+                          </div>
+                          <div className="p-3.5 rounded-2xl bg-blue-50/70 border border-blue-100">
+                            <div className="flex items-center gap-1.5 text-xs text-blue-600 font-medium mb-1">
+                              <Users className="w-3.5 h-3.5" /> Auto Participants
+                            </div>
+                            <p className="text-xl font-black text-blue-950">{currentAnalytics.autoParticipants}</p>
+                          </div>
+                          <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-100">
+                            <div className="flex items-center gap-1.5 text-xs text-amber-600 font-medium mb-1">
+                              <Award className="w-3.5 h-3.5" /> Auto Certifications
+                            </div>
+                            <p className="text-xl font-black text-amber-950">{currentAnalytics.autoCertificates}</p>
+                          </div>
+                          <div className="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-100">
+                            <div className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium mb-1">
+                              <ClipboardList className="w-3.5 h-3.5" /> Auto Submissions
+                            </div>
+                            <p className="text-xl font-black text-emerald-950">{currentAnalytics.autoSubmissions}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Frontend Managed Custom Overrides */}
+                      <div className="border-t border-slate-100 pt-5 space-y-4">
+                        <div>
+                          <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center justify-between">
+                            <span>Frontend Managed Custom Analytics Overrides</span>
+                            {currentAnalytics.hasOverride && (
+                              <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-violet-100 text-violet-700 border border-violet-200">
+                                Active Override
+                              </span>
+                            )}
+                          </h4>
+                          <p className="text-xs text-slate-500 mt-1">
+                            Customize displayed metrics for this hackathon across the admin dashboard. Leave empty to use system auto-calculated counts.
+                          </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                          {/* Total Participants Override */}
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                              Total Participants
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              placeholder={`Auto: ${currentAnalytics.autoParticipants}`}
+                              value={hackAnalyticsInputs.totalParticipants}
+                              onChange={(e) => setHackAnalyticsInputs(prev => ({ ...prev, totalParticipants: e.target.value }))}
+                              className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-sm font-bold text-slate-800 focus:bg-white focus:ring-2 focus:ring-purple-500 outline-none transition"
+                            />
+                            <span className="text-[10px] text-slate-400 mt-1 block">Custom total participant count</span>
+                          </div>
+
+                          {/* Total Certifications Override */}
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                              Total Certifications
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              placeholder={`Auto: ${currentAnalytics.autoCertificates}`}
+                              value={hackAnalyticsInputs.totalCertificates}
+                              onChange={(e) => setHackAnalyticsInputs(prev => ({ ...prev, totalCertificates: e.target.value }))}
+                              className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-sm font-bold text-slate-800 focus:bg-white focus:ring-2 focus:ring-purple-500 outline-none transition"
+                            />
+                            <span className="text-[10px] text-slate-400 mt-1 block">Custom total certificates issued</span>
+                          </div>
+
+                          {/* Total Submissions Override */}
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                              Total Submissions
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              placeholder={`Auto: ${currentAnalytics.autoSubmissions}`}
+                              value={hackAnalyticsInputs.totalSubmissions}
+                              onChange={(e) => setHackAnalyticsInputs(prev => ({ ...prev, totalSubmissions: e.target.value }))}
+                              className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-sm font-bold text-slate-800 focus:bg-white focus:ring-2 focus:ring-purple-500 outline-none transition"
+                            />
+                            <span className="text-[10px] text-slate-400 mt-1 block">Custom total project submissions</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Modal Footer */}
+                    <div className="bg-slate-50 border-t border-slate-100 px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+                      <button
+                        onClick={() => handleResetHackAnalyticsOverride(activeAnalyticsHack._id || activeAnalyticsHack.slug)}
+                        className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 transition flex items-center gap-1.5"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" /> Reset to Auto Metrics
+                      </button>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setActiveAnalyticsHack(null)}
+                          className="px-4 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 transition"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => handleSaveHackAnalyticsOverride(activeAnalyticsHack._id || activeAnalyticsHack.slug)}
+                          className="px-5 py-2 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white shadow-md shadow-purple-600/20 transition flex items-center gap-1.5"
+                        >
+                          <CheckCircle className="w-3.5 h-3.5" /> Save Overrides
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )}
         {tab === 'guide' && (
