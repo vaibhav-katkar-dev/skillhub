@@ -3,20 +3,27 @@ import crypto from 'crypto';
 import CampusAmbassador from '../models/CampusAmbassador.js';
 import ReferralEvent from '../models/ReferralEvent.js';
 import RewardRequest from '../models/RewardRequest.js';
+import PointHistory from '../models/PointHistory.js';
 import User from '../models/User.js';
 import { authOptions, adminCheck } from '../middleware/auth.js';
-import { awardPoints, getUnlockedMilestones, MILESTONES } from '../utils/ambassadorPoints.js';
+import {
+  awardPoints,
+  adjustPointsManually,
+  getAmbassadorLevel,
+  calculateBadges,
+  AMBASSADOR_LEVELS,
+} from '../utils/ambassadorPoints.js';
 
 const router = express.Router();
 
 const FRONTEND_URL = () => (process.env.FRONTEND_URL || 'https://www.skillvalix.com').replace(/\/$/, '');
 
-// Generate a short unique referral code: "ca-" + 8 hex chars
+// Generate unique referral code: "ca-" + 8 hex chars
 function generateReferralCode() {
   return 'ca-' + crypto.randomBytes(4).toString('hex');
 }
 
-// ── Middleware: Resolve ambassador for logged-in user ──────────────────────────
+// Middleware: Resolve ambassador for logged-in user
 async function requireAmbassador(req, res, next) {
   try {
     const amb = await CampusAmbassador.findOne({ userId: req.user.id, status: 'approved' }).lean();
@@ -31,13 +38,12 @@ async function requireAmbassador(req, res, next) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PUBLIC (authenticated) ROUTES
+// PUBLIC / AMBASSADOR ROUTES
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
  * POST /api/ambassador/apply
  * Submit a campus ambassador application.
- * Any logged-in user can apply (once).
  */
 router.post('/apply', authOptions, async (req, res) => {
   try {
@@ -47,13 +53,11 @@ router.post('/apply', authOptions, async (req, res) => {
       return res.status(400).json({ message: 'College, mobile, and location are required.' });
     }
 
-    // Phone validation: Indian mobile 10 digits, optionally starting with +91
     const mobileClean = String(mobile).replace(/\s/g, '').replace(/^\+91/, '');
     if (!/^\d{10}$/.test(mobileClean)) {
       return res.status(400).json({ message: 'Please enter a valid 10-digit Indian mobile number.' });
     }
 
-    // Check duplicate
     const existing = await CampusAmbassador.findOne({ userId: req.user.id }).lean();
     if (existing) {
       return res.status(400).json({
@@ -67,12 +71,12 @@ router.post('/apply', authOptions, async (req, res) => {
     }
 
     const amb = await CampusAmbassador.create({
-      userId:   req.user.id,
-      college:  String(college).trim(),
-      mobile:   mobileClean,
+      userId: req.user.id,
+      college: String(college).trim(),
+      mobile: mobileClean,
       location: String(location).trim(),
-      whyJoin:  String(whyJoin || '').trim().substring(0, 500),
-      status:   'pending',
+      whyJoin: String(whyJoin || '').trim().substring(0, 500),
+      status: 'pending',
     });
 
     res.status(201).json({
@@ -91,8 +95,7 @@ router.post('/apply', authOptions, async (req, res) => {
 
 /**
  * GET /api/ambassador/me
- * GET /api/ambassador/status
- * Check this user's application/ambassador status & profile info.
+ * Check application status & info.
  */
 const getAmbassadorMe = async (req, res) => {
   try {
@@ -103,17 +106,21 @@ const getAmbassadorMe = async (req, res) => {
       ? `${FRONTEND_URL()}/register?ref=${amb.referralCode}`
       : null;
 
+    const levelInfo = getAmbassadorLevel(amb.totalPoints, amb.levelOverride, amb.customRevenueShare);
+
     res.json({
-      _id:              amb._id,
-      status:           amb.status,
-      college:          amb.college,
-      location:         amb.location,
-      referralCode:     amb.referralCode,
+      _id: amb._id,
+      status: amb.status,
+      college: amb.college,
+      location: amb.location,
+      referralCode: amb.referralCode,
       referralUrl,
-      totalPoints:      amb.totalPoints || 0,
-      claimedMilestones:amb.claimedMilestones || [],
-      createdAt:        amb.createdAt,
-      ambassador:       amb,
+      totalPoints: amb.totalPoints || 0,
+      totalSVPoints: amb.totalSVPoints || amb.totalPoints || 0,
+      level: levelInfo,
+      claimedMilestones: amb.claimedMilestones || [],
+      createdAt: amb.createdAt,
+      ambassador: amb,
     });
   } catch (err) {
     console.error('[Ambassador] Status error:', err);
@@ -126,149 +133,289 @@ router.get('/status', authOptions, getAmbassadorMe);
 
 /**
  * GET /api/ambassador/dashboard
- * Full dashboard data for an approved ambassador.
+ * Full dashboard data for v2.0 Campus Ambassador.
  */
 router.get('/dashboard', authOptions, requireAmbassador, async (req, res) => {
   try {
     const amb = req.ambassador;
     const referralUrl = `${FRONTEND_URL()}/register?ref=${amb.referralCode}`;
 
-    // Recent 30 activity events
-    const recentEvents = await ReferralEvent.find({ ambassadorId: amb._id })
-      .sort({ createdAt: -1 })
-      .limit(30)
-      .lean();
+    // Level info & revenue share %
+    const currentLevel = getAmbassadorLevel(amb.totalPoints, amb.levelOverride, amb.customRevenueShare);
 
-    // Aggregate stats
+    // Aggregate structured statistics
     const [
       totalReferrals,
-      totalLogins,
-      paidActivities,
+      profileCompletions,
+      portfolios,
       totalCerts,
-      pointsByMonth,
+      paidCourses,
+      paidHackathons,
+      paidSimulations,
+      studentsConverted,
     ] = await Promise.all([
       ReferralEvent.countDocuments({ ambassadorId: amb._id, eventType: 'registration' }),
-      ReferralEvent.countDocuments({ ambassadorId: amb._id, eventType: 'login' }),
-      ReferralEvent.countDocuments({
-        ambassadorId: amb._id,
-        eventType: { $in: ['paid_course', 'paid_simulation', 'paid_hackathon'] },
-      }),
-      ReferralEvent.countDocuments({ ambassadorId: amb._id, eventType: 'certificate' }),
-      ReferralEvent.aggregate([
-        { $match: { ambassadorId: amb._id } },
-        {
-          $group: {
-            _id: { $dateToString: { format: '%Y-%m', date: '$createdAt' } },
-            points: { $sum: '$points' },
-          },
-        },
-        { $sort: { _id: 1 } },
-        { $limit: 12 },
-      ]),
+      ReferralEvent.countDocuments({ ambassadorId: amb._id, eventType: 'profile_completed' }),
+      ReferralEvent.countDocuments({ ambassadorId: amb._id, eventType: 'portfolio_published' }),
+      ReferralEvent.countDocuments({ ambassadorId: amb._id, eventType: { $in: ['certificate', 'first_certificate', 'additional_certificate'] } }),
+      ReferralEvent.countDocuments({ ambassadorId: amb._id, eventType: 'paid_course' }),
+      ReferralEvent.countDocuments({ ambassadorId: amb._id, eventType: 'paid_hackathon' }),
+      ReferralEvent.countDocuments({ ambassadorId: amb._id, eventType: 'paid_simulation' }),
+      ReferralEvent.countDocuments({ ambassadorId: amb._id, eventType: 'student_becomes_ambassador' }),
     ]);
 
-    // Pending reward requests for this ambassador
+    const stats = {
+      totalReferrals,
+      profileCompletions,
+      portfolios,
+      totalCerts,
+      paidCourses,
+      paidHackathons,
+      paidSimulations,
+      paidActivities: paidCourses + paidHackathons + paidSimulations,
+      studentsConverted,
+    };
+
+    // Calculate Achievement Badges
+    const badges = calculateBadges(stats, amb.totalPoints);
+
+    // Point history audit log (recent 50)
+    const pointHistory = await PointHistory.find({ ambassadorId: amb._id })
+      .sort({ date: -1, createdAt: -1 })
+      .limit(50)
+      .lean();
+
+    // Reward requests
     const rewardRequests = await RewardRequest.find({ ambassadorId: amb._id }).lean();
 
-    // Which tiers are unlocked but not yet claimed or requested
-    const unlockedMilestones = getUnlockedMilestones(amb.totalPoints, amb.claimedMilestones);
-    const requestedTiers = rewardRequests.map(r => r.tier);
+    // Reward Status Flow: locked -> eligible -> requested -> approved / rejected -> claimed
+    const claimableTiers = ['bronze', 'silver', 'gold', 'platinum'];
+    const milestoneStatus = claimableTiers.map((tier) => {
+      const cfg = AMBASSADOR_LEVELS[tier];
+      const isClaimed = (amb.claimedMilestones || []).includes(tier);
+      const req = rewardRequests.find(r => r.tier === tier);
 
-    const milestoneStatus = Object.entries(MILESTONES).map(([tier, required]) => ({
-      tier,
-      required,
-      unlocked: amb.totalPoints >= required,
-      claimed:  amb.claimedMilestones.includes(tier),
-      requested:requestedTiers.includes(tier),
-      requestStatus: rewardRequests.find(r => r.tier === tier)?.status || null,
-    }));
+      let status = 'locked';
+      if (isClaimed) {
+        status = 'claimed';
+      } else if (req) {
+        status = req.status; // 'requested', 'approved', 'rejected'
+      } else if (amb.totalPoints >= cfg.minPoints) {
+        status = 'eligible';
+      }
+
+      return {
+        tier,
+        name: cfg.name,
+        icon: cfg.icon,
+        requiredPoints: cfg.minPoints,
+        revenueSharePercent: cfg.revenueSharePercent,
+        status,
+        requestDate: req?.createdAt || null,
+        adminNote: req?.adminNote || '',
+      };
+    });
+
+    // Monthly growth data for charts
+    const pointsByMonthRaw = await ReferralEvent.aggregate([
+      { $match: { ambassadorId: amb._id } },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m', date: '$createdAt' } },
+          points: { $sum: '$points' },
+        },
+      },
+      { $sort: { _id: 1 } },
+      { $limit: 12 },
+    ]);
+
+    const pointsByMonth = pointsByMonthRaw.map(d => {
+      const [year, month] = d._id.split('-');
+      const date = new Date(year, month - 1);
+      return {
+        name: date.toLocaleString('default', { month: 'short', year: '2-digit' }),
+        points: d.points,
+      };
+    });
 
     res.json({
       ambassador: {
-        _id:         amb._id,
-        college:     amb.college,
-        location:    amb.location,
-        status:      amb.status,
-        totalPoints: amb.totalPoints,
+        _id: amb._id,
+        college: amb.college,
+        location: amb.location,
+        status: amb.status,
+        totalPoints: amb.totalPoints || 0,
+        totalSVPoints: amb.totalSVPoints || amb.totalPoints || 0,
+        level: currentLevel,
+        referralCode: amb.referralCode,
         referralUrl,
-        referralCode:amb.referralCode,
-        claimedMilestones: amb.claimedMilestones,
-        approvedAt:  amb.approvedAt,
+        claimedMilestones: amb.claimedMilestones || [],
+        approvedAt: amb.approvedAt,
       },
-      stats: {
-        totalReferrals,
-        totalLogins,
-        paidActivities,
-        totalCerts,
-      },
-      recentEvents: recentEvents.map(e => ({
-        _id:       e._id,
-        eventType: e.eventType,
-        points:    e.points,
-        amountPaidInr: e.amountPaidInr,
-        couponCode:    e.couponCode,
-        createdAt: e.createdAt,
-        meta:      e.meta,
-      })),
-      pointsByMonth: pointsByMonth.map(d => {
-        const [year, month] = d._id.split('-');
-        const date = new Date(year, month - 1);
-        return {
-          name:   date.toLocaleString('default', { month: 'short', year: '2-digit' }),
-          points: d.points,
-        };
-      }),
+      stats,
+      badges,
       milestoneStatus,
-      nextMilestone: milestoneStatus.find(m => !m.unlocked) || null,
+      pointHistory,
+      pointsByMonth,
     });
   } catch (err) {
     console.error('[Ambassador] Dashboard error:', err);
-    res.status(500).json({ message: 'Server error loading dashboard.' });
+    res.status(500).json({ message: 'Server error loading ambassador dashboard.' });
+  }
+});
+
+/**
+ * GET /api/ambassador/leaderboard
+ * Leaderboard with Weekly, Monthly, and All-Time views, sortable by Points, Referrals, Certificates.
+ */
+router.get('/leaderboard', authOptions, async (req, res) => {
+  try {
+    const { timeframe = 'all_time', sortBy = 'points' } = req.query;
+
+    let dateFilter = {};
+    if (timeframe === 'weekly') {
+      const now = new Date();
+      const weekStart = new Date(now.setDate(now.getDate() - 7));
+      dateFilter = { createdAt: { $gte: weekStart } };
+    } else if (timeframe === 'monthly') {
+      const now = new Date();
+      const monthStart = new Date(now.setMonth(now.getMonth() - 1));
+      dateFilter = { createdAt: { $gte: monthStart } };
+    }
+
+    let ambassadors;
+    if (timeframe === 'all_time') {
+      ambassadors = await CampusAmbassador.find({ status: 'approved' })
+        .populate('userId', 'name email')
+        .lean();
+    } else {
+      // Aggregate points for specific timeframe
+      const agg = await ReferralEvent.aggregate([
+        { $match: dateFilter },
+        {
+          $group: {
+            _id: '$ambassadorId',
+            periodPoints: { $sum: '$points' },
+            periodReferrals: {
+              $sum: { $cond: [{ $eq: ['$eventType', 'registration'] }, 1, 0] },
+            },
+            periodCerts: {
+              $sum: { $cond: [{ $in: ['$eventType', ['certificate', 'first_certificate', 'additional_certificate']] }, 1, 0] },
+            },
+          },
+        },
+      ]);
+
+      const ambIds = agg.map(a => a._id);
+      const ambList = await CampusAmbassador.find({ _id: { $in: ambIds }, status: 'approved' })
+        .populate('userId', 'name email')
+        .lean();
+
+      ambassadors = ambList.map(amb => {
+        const match = agg.find(a => String(a._id) === String(amb._id));
+        return {
+          ...amb,
+          periodPoints: match?.periodPoints || 0,
+          periodReferrals: match?.periodReferrals || 0,
+          periodCerts: match?.periodCerts || 0,
+        };
+      });
+    }
+
+    // Enhance with calculated total stats & level info
+    const leaderboardData = await Promise.all(
+      ambassadors.map(async amb => {
+        const [refCount, certCount] = await Promise.all([
+          ReferralEvent.countDocuments({ ambassadorId: amb._id, eventType: 'registration' }),
+          ReferralEvent.countDocuments({ ambassadorId: amb._id, eventType: { $in: ['certificate', 'first_certificate', 'additional_certificate'] } }),
+        ]);
+
+        const levelInfo = getAmbassadorLevel(amb.totalPoints, amb.levelOverride, amb.customRevenueShare);
+
+        return {
+          _id: amb._id,
+          name: amb.userId?.name || 'Ambassador',
+          college: amb.college,
+          totalSVPoints: amb.totalPoints || 0,
+          totalReferrals: refCount,
+          totalCertificates: certCount,
+          periodPoints: amb.periodPoints ?? (amb.totalPoints || 0),
+          periodReferrals: amb.periodReferrals ?? refCount,
+          periodCertificates: amb.periodCerts ?? certCount,
+          level: levelInfo,
+        };
+      })
+    );
+
+    // Sort leaderboard
+    leaderboardData.sort((a, b) => {
+      if (sortBy === 'referrals') {
+        return b.periodReferrals - a.periodReferrals;
+      } else if (sortBy === 'certificates') {
+        return b.periodCertificates - a.periodCertificates;
+      }
+      return b.periodPoints - a.periodPoints;
+    });
+
+    // Assign rank
+    const ranked = leaderboardData.map((item, idx) => ({
+      ...item,
+      rank: idx + 1,
+    }));
+
+    res.json(ranked);
+  } catch (err) {
+    console.error('[Ambassador] Leaderboard error:', err);
+    res.status(500).json({ message: 'Server error loading leaderboard.' });
   }
 });
 
 /**
  * POST /api/ambassador/reward-request
- * Submit a reward claim for an unlocked tier.
+ * Submit a reward claim for an eligible tier (bronze, silver, gold, platinum).
  */
 router.post('/reward-request', authOptions, requireAmbassador, async (req, res) => {
   try {
     const amb = req.ambassador;
     const { tier } = req.body;
 
-    if (!['bronze', 'silver', 'gold'].includes(tier)) {
-      return res.status(400).json({ message: 'Invalid tier.' });
+    const allowedTiers = ['bronze', 'silver', 'gold', 'platinum'];
+    if (!allowedTiers.includes(tier)) {
+      return res.status(400).json({ message: 'Invalid tier selection.' });
     }
 
-    const required = MILESTONES[tier];
-    if (amb.totalPoints < required) {
+    const cfg = AMBASSADOR_LEVELS[tier];
+    if (!cfg || !cfg.claimable) {
+      return res.status(400).json({ message: 'This tier is not claimable.' });
+    }
+
+    if (amb.totalPoints < cfg.minPoints) {
       return res.status(400).json({
-        message: `You need ${required} points for ${tier} reward. You have ${amb.totalPoints}.`,
+        message: `You need ${cfg.minPoints} SV Points for ${cfg.name} reward. You currently have ${amb.totalPoints}.`,
       });
     }
 
-    if (amb.claimedMilestones.includes(tier)) {
-      return res.status(400).json({ message: `${tier} reward already claimed.` });
+    if ((amb.claimedMilestones || []).includes(tier)) {
+      return res.status(400).json({ message: `${cfg.name} reward already claimed.` });
     }
 
-    // Check if already requested
     const existing = await RewardRequest.findOne({ ambassadorId: amb._id, tier }).lean();
     if (existing) {
       return res.status(400).json({
-        message: `${tier} reward request already submitted. Status: ${existing.status}.`,
+        message: `${cfg.name} reward request already submitted. Current status: ${existing.status}.`,
         status: existing.status,
       });
     }
 
     const request = await RewardRequest.create({
-      ambassadorId:    amb._id,
+      ambassadorId: amb._id,
       tier,
       pointsAtRequest: amb.totalPoints,
-      status:          'pending',
+      status: 'requested',
     });
 
     res.status(201).json({
-      message: `${tier.charAt(0).toUpperCase() + tier.slice(1)} reward requested! Admin will review within 48 hours.`,
+      message: `${cfg.name} reward requested! The SkillValix Admin team will review and process your request.`,
       request,
     });
   } catch (err) {
@@ -276,17 +423,17 @@ router.post('/reward-request', authOptions, requireAmbassador, async (req, res) 
     if (err.code === 11000) {
       return res.status(400).json({ message: 'Reward request already submitted for this tier.' });
     }
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error processing reward request.' });
   }
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ADMIN ROUTES
+// ADMIN ROUTES (AUTHENTICATED ADMIN)
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
  * GET /api/ambassador/admin/list
- * All ambassador applications (all statuses), sortable.
+ * List all ambassadors with filters & search.
  */
 router.get('/admin/list', authOptions, adminCheck, async (req, res) => {
   try {
@@ -309,21 +456,30 @@ router.get('/admin/list', authOptions, adminCheck, async (req, res) => {
         )
       : ambassadors;
 
-    res.json(filtered.map(a => ({
-      _id:         a._id,
-      user:        { name: a.userId?.name, email: a.userId?.email, id: a.userId?._id, createdAt: a.userId?.createdAt },
-      college:     a.college,
-      mobile:      a.mobile,
-      location:    a.location,
-      whyJoin:     a.whyJoin,
-      status:      a.status,
-      totalPoints: a.totalPoints,
-      referralCode:a.referralCode,
-      claimedMilestones: a.claimedMilestones,
-      adminNote:   a.adminNote,
-      approvedAt:  a.approvedAt,
-      createdAt:   a.createdAt,
-    })));
+    const formatted = filtered.map(a => {
+      const levelInfo = getAmbassadorLevel(a.totalPoints, a.levelOverride, a.customRevenueShare);
+      return {
+        _id: a._id,
+        user: { name: a.userId?.name, email: a.userId?.email, id: a.userId?._id, createdAt: a.userId?.createdAt },
+        college: a.college,
+        mobile: a.mobile,
+        location: a.location,
+        whyJoin: a.whyJoin,
+        status: a.status,
+        totalPoints: a.totalPoints || 0,
+        totalSVPoints: a.totalSVPoints || a.totalPoints || 0,
+        level: levelInfo,
+        levelOverride: a.levelOverride || null,
+        customRevenueShare: a.customRevenueShare || null,
+        referralCode: a.referralCode,
+        claimedMilestones: a.claimedMilestones || [],
+        adminNote: a.adminNote,
+        approvedAt: a.approvedAt,
+        createdAt: a.createdAt,
+      };
+    });
+
+    res.json(formatted);
   } catch (err) {
     console.error('[Ambassador Admin] List error:', err);
     res.status(500).json({ message: 'Server error' });
@@ -331,70 +487,112 @@ router.get('/admin/list', authOptions, adminCheck, async (req, res) => {
 });
 
 /**
- * GET /api/ambassador/admin/:id
- * Single ambassador detail + growth chart.
+ * POST /api/ambassador/admin/adjust-points
+ * Manually add/deduct points with MANDATORY reason.
  */
-router.get('/admin/:id', authOptions, adminCheck, async (req, res) => {
+router.post('/admin/adjust-points', authOptions, adminCheck, async (req, res) => {
   try {
-    const amb = await CampusAmbassador.findById(req.params.id)
-      .populate('userId', 'name email college')
-      .lean();
-    if (!amb) return res.status(404).json({ message: 'Not found.' });
+    const { ambassadorId, points, reason } = req.body;
+    if (!ambassadorId || !points || !reason || !String(reason).trim()) {
+      return res.status(400).json({ message: 'ambassadorId, non-zero points, and a mandatory reason are required.' });
+    }
 
-    const [recentEvents, pointsByMonth, eventBreakdown] = await Promise.all([
-      ReferralEvent.find({ ambassadorId: amb._id })
-        .populate('referredUserId', 'name email')
-        .sort({ createdAt: -1 })
-        .limit(50)
-        .lean(),
-      ReferralEvent.aggregate([
-        { $match: { ambassadorId: amb._id } },
-        { $group: { _id: { $dateToString: { format: '%Y-%m', date: '$createdAt' } }, points: { $sum: '$points' } } },
-        { $sort: { _id: 1 } },
-        { $limit: 12 },
-      ]),
-      ReferralEvent.aggregate([
-        { $match: { ambassadorId: amb._id } },
-        { $group: { _id: '$eventType', count: { $sum: 1 }, totalPoints: { $sum: '$points' } } },
-      ]),
-    ]);
-
-    const rewardRequests = await RewardRequest.find({ ambassadorId: amb._id }).lean();
+    const updatedAmb = await adjustPointsManually(ambassadorId, points, reason, req.user.id);
 
     res.json({
+      message: `Successfully ${Number(points) > 0 ? 'added' : 'deducted'} ${Math.abs(points)} SV Points.`,
       ambassador: {
-        _id: amb._id,
-        user: { name: amb.userId?.name, email: amb.userId?.email },
-        college: amb.college,
-        mobile: amb.mobile,
-        location: amb.location,
-        whyJoin: amb.whyJoin,
-        status: amb.status,
-        totalPoints: amb.totalPoints,
-        referralCode: amb.referralCode,
-        claimedMilestones: amb.claimedMilestones,
-        adminNote: amb.adminNote,
-        approvedAt: amb.approvedAt,
-        createdAt: amb.createdAt,
+        _id: updatedAmb._id,
+        totalPoints: updatedAmb.totalPoints,
+        totalSVPoints: updatedAmb.totalSVPoints,
       },
-      recentEvents,
-      pointsByMonth: pointsByMonth.map(d => {
-        const [year, month] = d._id.split('-');
-        return { name: new Date(year, month - 1).toLocaleString('default', { month: 'short', year: '2-digit' }), points: d.points };
-      }),
-      eventBreakdown,
-      rewardRequests,
     });
   } catch (err) {
-    console.error('[Ambassador Admin] Detail error:', err);
-    res.status(500).json({ message: 'Server error' });
+    console.error('[Ambassador Admin] Adjust points error:', err.message);
+    res.status(400).json({ message: err.message || 'Error adjusting points.' });
+  }
+});
+
+/**
+ * POST /api/ambassador/admin/override-level
+ * Override ambassador level ('explorer', 'bronze', 'silver', 'gold', 'platinum', or null).
+ */
+router.post('/admin/override-level', authOptions, adminCheck, async (req, res) => {
+  try {
+    const { ambassadorId, levelOverride } = req.body;
+    if (!ambassadorId) return res.status(400).json({ message: 'ambassadorId is required.' });
+
+    const validLevels = ['explorer', 'bronze', 'silver', 'gold', 'platinum', null, ''];
+    if (!validLevels.includes(levelOverride)) {
+      return res.status(400).json({ message: 'Invalid level override value.' });
+    }
+
+    const targetLevel = levelOverride || null;
+    const amb = await CampusAmbassador.findByIdAndUpdate(
+      ambassadorId,
+      { $set: { levelOverride: targetLevel } },
+      { new: true }
+    );
+
+    if (!amb) return res.status(404).json({ message: 'Ambassador not found.' });
+
+    res.json({
+      message: targetLevel ? `Level overridden to ${targetLevel.toUpperCase()}` : 'Level override removed.',
+      level: getAmbassadorLevel(amb.totalPoints, amb.levelOverride, amb.customRevenueShare),
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error overriding level.' });
+  }
+});
+
+/**
+ * POST /api/ambassador/admin/override-revshare
+ * Configure custom revenue share % (e.g. 7-10% for Platinum).
+ */
+router.post('/admin/override-revshare', authOptions, adminCheck, async (req, res) => {
+  try {
+    const { ambassadorId, customRevenueShare } = req.body;
+    if (!ambassadorId) return res.status(400).json({ message: 'ambassadorId is required.' });
+
+    const val = customRevenueShare !== null && customRevenueShare !== '' ? Number(customRevenueShare) : null;
+    if (val !== null && (isNaN(val) || val < 0 || val > 100)) {
+      return res.status(400).json({ message: 'Revenue share must be a number between 0 and 100.' });
+    }
+
+    const amb = await CampusAmbassador.findByIdAndUpdate(
+      ambassadorId,
+      { $set: { customRevenueShare: val } },
+      { new: true }
+    );
+
+    if (!amb) return res.status(404).json({ message: 'Ambassador not found.' });
+
+    res.json({
+      message: val !== null ? `Custom revenue share configured to ${val}%.` : 'Custom revenue share reset to default.',
+      level: getAmbassadorLevel(amb.totalPoints, amb.levelOverride, amb.customRevenueShare),
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error configuring revenue share.' });
+  }
+});
+
+/**
+ * GET /api/ambassador/admin/point-history/:ambassadorId
+ * Fetch full PointHistory audit log for an ambassador.
+ */
+router.get('/admin/point-history/:ambassadorId', authOptions, adminCheck, async (req, res) => {
+  try {
+    const history = await PointHistory.find({ ambassadorId: req.params.ambassadorId })
+      .sort({ date: -1, createdAt: -1 })
+      .lean();
+    res.json(history);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error loading point history.' });
   }
 });
 
 /**
  * POST /api/ambassador/admin/approve
- * Approve a pending application. Generates referral code + awards base points.
- * Body: { ambassadorId }
  */
 router.post('/admin/approve', authOptions, adminCheck, async (req, res) => {
   try {
@@ -409,10 +607,9 @@ router.post('/admin/approve', authOptions, adminCheck, async (req, res) => {
     } else if (userId) {
       amb = await CampusAmbassador.findOne({ userId });
       if (!amb) {
-        // Create CampusAmbassador record directly for user
         const targetUser = await User.findById(userId).lean();
         if (!targetUser) return res.status(404).json({ message: 'User not found.' });
-        
+
         amb = new CampusAmbassador({
           userId,
           college: targetUser.college || 'N/A',
@@ -430,7 +627,6 @@ router.post('/admin/approve', authOptions, adminCheck, async (req, res) => {
       return res.status(400).json({ message: 'Already approved.' });
     }
 
-    // Generate unique referral code
     let referralCode;
     let attempts = 0;
     do {
@@ -440,14 +636,22 @@ router.post('/admin/approve', authOptions, adminCheck, async (req, res) => {
       attempts++;
     } while (attempts < 5);
 
-    amb.status      = 'approved';
-    amb.referralCode= referralCode;
-    amb.approvedAt  = new Date();
-    amb.adminNote   = adminNote;
+    amb.status = 'approved';
+    amb.referralCode = referralCode;
+    amb.approvedAt = new Date();
+    amb.adminNote = adminNote;
     await amb.save();
 
-    // Award base points (5 pts for approval)
+    // Award approval bonus (20 pts)
     await awardPoints(amb._id, 'ambassador_approved', {});
+
+    // Also check if referred user became ambassador (award referring user 100 pts)
+    const currentStudentUser = await User.findById(amb.userId).lean();
+    if (currentStudentUser?.referredBy) {
+      await awardPoints(currentStudentUser.referredBy, 'student_becomes_ambassador', {
+        referredUserId: currentStudentUser._id,
+      }).catch(() => {});
+    }
 
     res.json({
       message: 'Ambassador approved successfully.',
@@ -462,7 +666,6 @@ router.post('/admin/approve', authOptions, adminCheck, async (req, res) => {
 
 /**
  * POST /api/ambassador/admin/reject
- * Reject a pending application.
  */
 router.post('/admin/reject', authOptions, adminCheck, async (req, res) => {
   try {
@@ -516,11 +719,7 @@ router.post('/admin/reactivate/:id', authOptions, adminCheck, async (req, res) =
   }
 });
 
-// ─── Reward Requests (Admin) ──────────────────────────────────────────────────
-
-/**
- * GET /api/ambassador/admin/rewards
- */
+// Reward Requests Admin Management
 router.get('/admin/rewards', authOptions, adminCheck, async (req, res) => {
   try {
     const { status = '' } = req.query;
@@ -530,7 +729,7 @@ router.get('/admin/rewards', authOptions, adminCheck, async (req, res) => {
     const requests = await RewardRequest.find(filter)
       .populate({
         path: 'ambassadorId',
-        select: 'userId college location totalPoints referralCode status',
+        select: 'userId college location totalPoints referralCode status levelOverride customRevenueShare',
         populate: { path: 'userId', select: 'name email' },
       })
       .sort({ createdAt: -1 })
@@ -544,49 +743,100 @@ router.get('/admin/rewards', authOptions, adminCheck, async (req, res) => {
 });
 
 /**
- * POST /api/ambassador/admin/rewards/:id/approve
+ * POST /api/ambassador/admin/rewards/:id/status
+ * Update status of reward request: 'approved', 'rejected', 'claimed'.
  */
-router.post('/admin/rewards/:id/approve', authOptions, adminCheck, async (req, res) => {
+router.post('/admin/rewards/:id/status', authOptions, adminCheck, async (req, res) => {
   try {
-    const { adminNote = '' } = req.body;
-    const request = await RewardRequest.findById(req.params.id);
-    if (!request) return res.status(404).json({ message: 'Request not found.' });
-    if (request.status !== 'pending') {
-      return res.status(400).json({ message: `Request is already ${request.status}.` });
+    const { status, adminNote = '' } = req.body;
+    const allowed = ['approved', 'rejected', 'claimed'];
+    if (!allowed.includes(status)) {
+      return res.status(400).json({ message: 'Invalid reward status.' });
     }
 
-    request.status    = 'approved';
+    const request = await RewardRequest.findById(req.params.id);
+    if (!request) return res.status(404).json({ message: 'Request not found.' });
+
+    request.status = status;
     request.adminNote = adminNote;
     await request.save();
 
-    // Add tier to claimedMilestones
-    await CampusAmbassador.findByIdAndUpdate(
-      request.ambassadorId,
-      { $addToSet: { claimedMilestones: request.tier } }
-    );
+    if (status === 'claimed' || status === 'approved') {
+      await CampusAmbassador.findByIdAndUpdate(
+        request.ambassadorId,
+        { $addToSet: { claimedMilestones: request.tier } }
+      );
+    }
 
-    res.json({ message: `${request.tier} reward approved.`, request });
+    res.json({ message: `Reward request updated to ${status}.`, request });
   } catch (err) {
-    console.error('[Ambassador Admin] Approve reward error:', err);
+    console.error('[Ambassador Admin] Reward status update error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
 /**
- * POST /api/ambassador/admin/rewards/:id/reject
+ * GET /api/ambassador/admin/export-report
+ * Export comprehensive ambassador metrics report.
  */
-router.post('/admin/rewards/:id/reject', authOptions, adminCheck, async (req, res) => {
+router.get('/admin/export-report', authOptions, adminCheck, async (req, res) => {
   try {
-    const { adminNote = '' } = req.body;
-    const request = await RewardRequest.findByIdAndUpdate(
-      req.params.id,
-      { $set: { status: 'rejected', adminNote } },
-      { new: true }
-    ).lean();
-    if (!request) return res.status(404).json({ message: 'Request not found.' });
-    res.json({ message: 'Reward request rejected.', request });
+    const ambassadors = await CampusAmbassador.find()
+      .populate('userId', 'name email createdAt')
+      .sort({ totalPoints: -1 })
+      .lean();
+
+    const report = await Promise.all(
+      ambassadors.map(async amb => {
+        const [
+          totalReferrals,
+          profileCompletions,
+          portfolios,
+          totalCerts,
+          paidCourses,
+          paidHackathons,
+          paidSimulations,
+        ] = await Promise.all([
+          ReferralEvent.countDocuments({ ambassadorId: amb._id, eventType: 'registration' }),
+          ReferralEvent.countDocuments({ ambassadorId: amb._id, eventType: 'profile_completed' }),
+          ReferralEvent.countDocuments({ ambassadorId: amb._id, eventType: 'portfolio_published' }),
+          ReferralEvent.countDocuments({ ambassadorId: amb._id, eventType: { $in: ['certificate', 'first_certificate', 'additional_certificate'] } }),
+          ReferralEvent.countDocuments({ ambassadorId: amb._id, eventType: 'paid_course' }),
+          ReferralEvent.countDocuments({ ambassadorId: amb._id, eventType: 'paid_hackathon' }),
+          ReferralEvent.countDocuments({ ambassadorId: amb._id, eventType: 'paid_simulation' }),
+        ]);
+
+        const levelInfo = getAmbassadorLevel(amb.totalPoints, amb.levelOverride, amb.customRevenueShare);
+
+        return {
+          id: amb._id,
+          name: amb.userId?.name || 'N/A',
+          email: amb.userId?.email || 'N/A',
+          college: amb.college,
+          mobile: amb.mobile,
+          location: amb.location,
+          status: amb.status,
+          referralCode: amb.referralCode || 'N/A',
+          totalSVPoints: amb.totalPoints || 0,
+          currentLevel: levelInfo.name,
+          revenueSharePercent: levelInfo.effectiveRevenueShare,
+          totalReferrals,
+          profileCompletions,
+          portfolios,
+          totalCerts,
+          paidCourses,
+          paidHackathons,
+          paidSimulations,
+          claimedMilestones: (amb.claimedMilestones || []).join(', '),
+          approvedAt: amb.approvedAt ? new Date(amb.approvedAt).toISOString() : 'N/A',
+        };
+      })
+    );
+
+    res.json(report);
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('[Ambassador Admin] Export report error:', err);
+    res.status(500).json({ message: 'Server error generating report.' });
   }
 });
 

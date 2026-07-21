@@ -1,25 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuthStore, api } from '../store/authStore';
 import {
-  Award,
-  BookOpen,
-  CheckCircle2,
-  ChevronDown,
-  ExternalLink,
-  Gift,
-  Globe,
-  GraduationCap,
-  Linkedin,
-  Mail,
-  MessageCircle,
-  Rocket,
-  Shield,
-  Star,
-  Trophy,
-  Users,
-  Zap,
+  Award, BookOpen, CheckCircle2, ChevronDown, ExternalLink, Gift, Globe,
+  GraduationCap, Linkedin, Mail, Rocket, Shield, Star, Trophy, Users, Zap,
+  Sparkles, Send, AlertCircle, LogIn, ArrowRight, ShieldCheck, Check, Building,
+  Phone, MapPin, HelpCircle, Crown
 } from 'lucide-react';
+import { AMBASSADOR_LEVELS, POINT_RULES } from '../config/ambassadorConfig';
 
 const GMAIL_SUBJECT = encodeURIComponent('Campus Ambassador Application – SkillValix');
 const GMAIL_BODY = encodeURIComponent(
@@ -30,103 +19,110 @@ I'd like to apply to be a Campus Ambassador at my college.
 Full Name:
 College / University:
 City & State:
+Mobile Number:
 LinkedIn Profile:
-Instagram Handle (optional):
 Why do you want to be a SkillValix Campus Ambassador?
 
 Looking forward to hearing from you!`
 );
-// Using Gmail web compose URL instead of mailto: for reliable cross-browser opening
 const APPLY_GMAIL = `https://mail.google.com/mail/?view=cm&fs=1&to=skillvalix%40gmail.com&su=${GMAIL_SUBJECT}&body=${GMAIL_BODY}`;
 
-const WHATSAPP_LINK = 'https://chat.whatsapp.com/HxtxKbZCw39BNGzy7hXVSt?mode=gi_t';
-
-const PERKS = [
+const MILESTONES_V2 = [
   {
-    icon: Trophy,
-    title: 'Exclusive Prizes & Goodies',
-    desc: 'Top ambassadors win premium swag kits, cash prizes, e-gift cards, and limited-edition SkillValix merch every month.',
-    color: 'from-amber-500 to-orange-500',
+    tier: '🌱 Explorer',
+    points: '0–499 Points',
+    badge: 'from-emerald-700/20 to-slate-800 text-emerald-300 border-emerald-600/40',
+    headerBg: 'from-emerald-950/40 to-slate-900',
+    revShare: '0% Revenue Share',
+    perks: [
+      'Access to Campus Ambassador Portal & Live Referral Code',
+      'Custom Referral Link & Printable QR Code Card',
+      'Access to SkillValix Student Community',
+      'Official Explorer Digital Badge',
+    ],
   },
   {
-    icon: Award,
-    title: 'Verified Ambassador Certificate',
-    desc: 'A blockchain-verifiable SkillValix Campus Ambassador certificate that stands out on your LinkedIn profile.',
-    color: 'from-indigo-500 to-violet-500',
+    tier: '🥉 Bronze',
+    points: '500–1,499 Points',
+    badge: 'from-amber-700/20 to-orange-700/20 text-amber-300 border-amber-600/40',
+    headerBg: 'from-amber-900/40 to-slate-900',
+    revShare: '0% Revenue Share',
+    perks: [
+      'Official Bronze Ambassador Certificate',
+      'Exclusive SkillValix Profile Badge & Laptop Stickers',
+      'LinkedIn Feature & Recommendation Badge',
+      'Access to VIP Ambassador Discord / WhatsApp Groups',
+    ],
   },
   {
-    icon: Linkedin,
-    title: 'LinkedIn Shoutout & Feature',
-    desc: "Get featured on SkillValix's official LinkedIn with followers. Your name, college, and achievements — spotlighted.",
-    color: 'from-sky-500 to-blue-600',
+    tier: '🥈 Silver',
+    points: '1,500–2,999 Points',
+    badge: 'from-slate-400/20 to-slate-200/20 text-slate-200 border-slate-300/40',
+    headerBg: 'from-slate-800 to-slate-900',
+    revShare: '3% Revenue Share Eligible (Manual by Admin)',
+    perks: [
+      'Verified Silver Certificate & Letter of Recommendation',
+      'Silver Ambassador Badge on SkillValix Profile',
+      '3% Display Revenue Share Eligibility',
+      'Priority Access to Partner Hackathons & Tech Events',
+    ],
   },
   {
-    icon: BookOpen,
-    title: 'Free Premium Course Access',
-    desc: 'Unlock all current and upcoming SkillValix premium courses — zero cost, full access, forever.',
-    color: 'from-emerald-500 to-teal-500',
+    tier: '🥇 Gold',
+    points: '3,000–5,999 Points',
+    badge: 'from-amber-500/20 to-yellow-500/20 text-yellow-400 border-yellow-500/40',
+    headerBg: 'from-yellow-900/30 to-slate-900',
+    revShare: '5% Revenue Share Eligible (Manual by Admin)',
+    perks: [
+      'Gold Ambassador Trophy & Merch Box',
+      'SkillValix Official Website Hall of Fame Feature',
+      '5% Display Revenue Share Eligibility',
+      'Direct Internship / Executive Networking Referrals',
+    ],
   },
   {
-    icon: Users,
-    title: 'Lead Your Campus Community',
-    desc: 'Host webinars, workshops, and hackathons at your college under the SkillValix brand. Build your own tribe.',
-    color: 'from-rose-500 to-pink-500',
-  },
-  {
-    icon: Rocket,
-    title: 'Early Access to Launches',
-    desc: 'Be the first to experience new features, hackathons, and job simulations before they go live to the public.',
-    color: 'from-purple-500 to-fuchsia-500',
+    tier: '💎 Platinum',
+    points: '6,000+ Points',
+    badge: 'from-cyan-500/20 to-blue-500/20 text-cyan-300 border-cyan-400/40',
+    headerBg: 'from-cyan-950/40 to-slate-900',
+    revShare: '7–10% Revenue Share (Admin Configurable)',
+    perks: [
+      'Campus Leader & Mentor Badge',
+      'Configurable 7–10% Display Revenue Share Eligibility',
+      'Direct Founder Recognition & Career Referral Priority',
+      'Lead Official SkillValix Campus Tech Events',
+    ],
   },
 ];
 
-const STEPS = [
-  {
-    num: '01',
-    title: 'Send Your Application',
-    desc: 'Click "Apply Now", fill in the pre-loaded Gmail template, and hit send. Takes under 2 minutes.',
-  },
-  {
-    num: '02',
-    title: 'Get Onboarded',
-    desc: "Our team reviews your application within 48 hours. Once approved, you'll receive your official welcome kit.",
-  },
-  {
-    num: '03',
-    title: 'Start Spreading the Word',
-    desc: "Share SkillValix at your college, organize events, and bring your peers on board. We'll support you every step.",
-  },
-  {
-    num: '04',
-    title: 'Earn Rewards',
-    desc: 'Hit milestones → unlock prizes. More referrals, more events, more impact = more goodies coming your way.',
-  },
+const POINTS_TABLE_V2 = [
+  { activity: 'Student Converted to Ambassador', points: '100 SV pts', trigger: 'Referred user becomes an approved Campus Ambassador' },
+  { activity: 'First Certificate Earned', points: '50 SV pts', trigger: 'Referred user earns their first SkillValix certificate' },
+  { activity: 'Portfolio Published', points: '20 SV pts', trigger: 'Referred user publishes their public portfolio' },
+  { activity: 'Additional Certificate Earned', points: '20 SV pts', trigger: 'Referred user earns subsequent course certificates' },
+  { activity: 'Campus Ambassador Approved', points: '20 SV pts', trigger: 'One-time bonus on admin approval of your application' },
+  { activity: 'LinkedIn Cert Share', points: '15 SV pts', trigger: 'Referred user shares certificate on LinkedIn' },
+  { activity: 'Referred User Registration', points: '10 SV pts', trigger: 'New student registers using your referral link/QR' },
+  { activity: 'Profile Completed', points: '10 SV pts', trigger: 'Referred user completes their student profile' },
+  { activity: 'Paid Course / Hackathon / Sim Purchase', points: '10% of Paid Amount', trigger: 'Floor(Final Amount Paid × 10%) on actual payment received' },
 ];
 
 const FAQS = [
   {
     q: 'Who can apply to become a Campus Ambassador?',
-    a: 'Any student currently enrolled in a college or university in India can apply. There is no GPA or branch requirement — just enthusiasm for learning and sharing knowledge.',
+    a: 'Any student currently enrolled in a college or university in India can apply. There is no minimum GPA or branch requirement — just passion for technology, community building, and upskilling.',
   },
   {
-    q: 'Is there any cost involved?',
-    a: 'Absolutely not. The Campus Ambassador Program is completely free. You earn rewards, we never charge you anything.',
+    q: 'How are SV Points calculated for paid courses and hackathons?',
+    a: 'Revenue points use the exact formula Floor(Final Amount Paid × 10%) based on actual INR received after discounts. For instance, ₹499 paid = 49 points; ₹249 paid = 24 points.',
   },
   {
-    q: 'How much time do I need to commit?',
-    a: "Around 2–5 hours per week depending on how active you want to be. There's no strict minimum — but the more you do, the more you earn.",
+    q: 'Are financial payouts or reward shipping automated?',
+    a: 'No. All reward fulfillment, milestone approvals, level overrides, and revenue share payouts are strictly managed manually by the SkillValix Admin Team.',
   },
   {
-    q: 'Can there be multiple ambassadors from the same college?',
-    a: "Yes! We encourage it. A team of ambassadors from the same college amplifies the impact. You'll all get individual recognition.",
-  },
-  {
-    q: 'What happens after I apply?',
-    a: "We'll review your application within 48 hours and reply to your email with next steps. Check your inbox (and spam just in case).",
-  },
-  {
-    q: 'What do I do as a Campus Ambassador?',
-    a: 'Share SkillValix courses & hackathons with your peers, organize mini workshops, post about us on LinkedIn/Instagram, and help students in your college upskill.',
+    q: 'How do I track my level and reward status?',
+    a: 'Your Ambassador Dashboard shows your real-time level progress (Explorer to Platinum), referral analytics, badge unlocks, and reward request status flow (Locked → Eligible → Requested → Approved/Rejected → Claimed).',
   },
 ];
 
@@ -134,21 +130,24 @@ function FaqItem({ q, a }) {
   const [open, setOpen] = useState(false);
   return (
     <div
-      className={`rounded-2xl border transition-all duration-200 ${open ? 'border-indigo-200 bg-indigo-50/50' : 'border-slate-200 bg-white'}`}
+      className={`rounded-2xl border transition-all duration-200 ${open ? 'border-indigo-500/40 bg-slate-900/90' : 'border-slate-800 bg-slate-900/40'}`}
     >
       <button
         className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left"
         onClick={() => setOpen(!open)}
         aria-expanded={open}
       >
-        <span className="text-sm font-bold text-slate-900">{q}</span>
+        <span className="text-sm font-bold text-white flex items-center gap-2">
+          <HelpCircle className="w-4 h-4 text-indigo-400 shrink-0" />
+          {q}
+        </span>
         <ChevronDown
-          className={`w-4 h-4 text-indigo-500 shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+          className={`w-4 h-4 text-indigo-400 shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
         />
       </button>
       {open && (
-        <div className="px-6 pb-5">
-          <p className="text-sm text-slate-600 leading-relaxed">{a}</p>
+        <div className="px-6 pb-5 border-t border-slate-800/60 pt-4">
+          <p className="text-sm text-slate-300 leading-relaxed">{a}</p>
         </div>
       )}
     </div>
@@ -156,183 +155,159 @@ function FaqItem({ q, a }) {
 }
 
 export default function CampusAmbassador() {
+  const { isAuthenticated } = useAuthStore();
+  const navigate = useNavigate();
+
+  const [ambStatus, setAmbStatus] = useState(null);
+  const [college, setCollege] = useState('');
+  const [mobile, setMobile] = useState('');
+  const [location, setLocation] = useState('');
+  const [whyJoin, setWhyJoin] = useState('');
+  const [formError, setFormError] = useState('');
+  const [formSuccess, setFormSuccess] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    api.get('/ambassador/me')
+      .then(res => setAmbStatus(res.data?.status || 'none'))
+      .catch(() => setAmbStatus('none'));
+  }, [isAuthenticated]);
+
+  const handleApplySubmit = async (e) => {
+    e.preventDefault();
+    setFormError('');
+    setFormSuccess('');
+
+    if (!isAuthenticated) {
+      navigate('/login?redirect=/campus-ambassador');
+      return;
+    }
+
+    if (!college.trim()) {
+      setFormError('Please enter your College or University name.');
+      return;
+    }
+
+    const cleanMobile = mobile.replace(/\s/g, '').replace(/^\+91/, '');
+    if (!/^\d{10}$/.test(cleanMobile)) {
+      setFormError('Please enter a valid 10-digit Indian mobile number.');
+      return;
+    }
+
+    if (!location.trim()) {
+      setFormError('Please enter your City and State location.');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      const res = await api.post('/ambassador/apply', {
+        college: college.trim(),
+        mobile: cleanMobile,
+        location: location.trim(),
+        whyJoin: whyJoin.trim(),
+      });
+
+      setFormSuccess(res.data.message || 'Application submitted successfully!');
+      setAmbStatus('pending');
+    } catch (err) {
+      setFormError(err.response?.data?.message || 'Failed to submit application. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
-    <>
+    <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-indigo-500 selection:text-white">
       <Helmet>
-        <title>Campus Ambassador Program | SkillValix – Be the First at Your College</title>
+        <title>Campus Ambassador Program v2.0 | SkillValix</title>
         <meta
           name="description"
-          content="Join the SkillValix Campus Ambassador Program. Represent SkillValix at your college, host events, earn exclusive prizes, a verified certificate, LinkedIn features, and free premium course access. Apply now via email."
+          content="Join the official SkillValix Campus Ambassador Program v2.0. SV Points, 5 Ambassador Levels (Explorer to Platinum), achievement badges, and reward tracking."
         />
-        <meta name="robots" content="index, follow" />
-        <link rel="canonical" href="https://www.skillvalix.com/campus-ambassador" />
-
-        {/* Open Graph */}
-        <meta property="og:title" content="SkillValix Campus Ambassador Program – Apply Now" />
-        <meta
-          property="og:description"
-          content="Become the first SkillValix Campus Ambassador at your college. Earn prizes, certificates, LinkedIn features & free premium courses."
-        />
-        <meta property="og:url" content="https://www.skillvalix.com/campus-ambassador" />
-        <meta property="og:type" content="website" />
-
-        {/* Twitter */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="SkillValix Campus Ambassador Program" />
-        <meta
-          name="twitter:description"
-          content="Be the first SkillValix Campus Ambassador at your college. Exclusive prizes, certificates & community leadership await."
-        />
-
-        {/* Structured Data */}
-        <script type="application/ld+json">{JSON.stringify({
-          '@context': 'https://schema.org',
-          '@type': 'EducationalOccupationalProgram',
-          name: 'SkillValix Campus Ambassador Program',
-          description: 'A student-led campus ambassador initiative by SkillValix that rewards college students for spreading digital skills education across India.',
-          url: 'https://www.skillvalix.com/campus-ambassador',
-          provider: {
-            '@type': 'Organization',
-            name: 'SkillValix',
-            url: 'https://www.skillvalix.com',
-          },
-          educationalProgramMode: 'online',
-          offers: {
-            '@type': 'Offer',
-            price: '0',
-            priceCurrency: 'INR',
-          },
-        })}</script>
       </Helmet>
 
-      {/* ── Hero ── */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 py-20 px-6">
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            backgroundImage:
-              'radial-gradient(circle at 20% 40%, rgba(99,102,241,0.25) 0%, transparent 55%), radial-gradient(circle at 80% 20%, rgba(168,85,247,0.2) 0%, transparent 45%), radial-gradient(circle at 60% 80%, rgba(251,191,36,0.1) 0%, transparent 40%)',
-          }}
-          aria-hidden="true"
-        />
-
-        {/* Animated orbs */}
-        <div className="absolute top-16 left-10 w-56 h-56 rounded-full bg-indigo-600/10 blur-3xl animate-pulse" aria-hidden="true" />
-        <div className="absolute bottom-16 right-10 w-72 h-72 rounded-full bg-violet-600/10 blur-3xl animate-pulse" style={{ animationDelay: '1s' }} aria-hidden="true" />
-
-        <div className="relative max-w-5xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-400/15 border border-amber-400/30 text-amber-300 text-xs font-bold tracking-widest uppercase mb-6">
-            <Star className="w-3.5 h-3.5 fill-current" />
-            Limited Spots Available
+      {/* Hero Section */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-indigo-950 via-slate-900 to-slate-950 pt-14 pb-20 px-4 sm:px-6 lg:px-8 border-b border-slate-800">
+        <div className="relative max-w-6xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-400/15 border border-amber-400/30 text-amber-300 text-xs font-bold tracking-widest uppercase mb-6 animate-pulse">
+            <Star className="w-3.5 h-3.5 fill-current text-amber-400" />
+            SkillValix Campus Ambassador Program v2.0
           </div>
 
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white leading-[1.1] tracking-tight">
-            Become the First{' '}
-            <span className="bg-gradient-to-r from-indigo-400 via-violet-400 to-amber-300 bg-clip-text text-transparent">
-              SkillValix
+            Become a Registered{' '}
+            <span className="bg-gradient-to-r from-indigo-400 via-purple-300 to-amber-300 bg-clip-text text-transparent">
+              Campus Ambassador
             </span>
             <br />
-            Campus Ambassador
-            <br />
-            <span className="text-3xl sm:text-4xl md:text-5xl text-slate-300">at Your College</span>
+            & Lead SkillValix at Your College
           </h1>
 
-          <p className="mt-6 text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed">
-            Represent SkillValix, empower your peers, host events, and unlock{' '}
-            <span className="text-white font-semibold">exclusive prizes, certificates, LinkedIn features</span>{' '}
-            & free premium courses — all while building a rockstar resume.
+          <p className="mt-6 text-base sm:text-lg text-slate-300 max-w-3xl mx-auto leading-relaxed">
+            Earn <span className="text-amber-300 font-bold">SV Points</span>, advance through 5 Ambassador Levels (Explorer, Bronze, Silver, Gold, Platinum), unlock achievement badges, and track your referral milestones.
           </p>
 
-          <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
-            <a
-              href={APPLY_GMAIL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-black text-base shadow-2xl shadow-indigo-500/40 transition-all duration-200 hover:scale-105 active:scale-95"
-            >
-              <Mail className="w-5 h-5" />
-              Apply Now — It's Free
-              <ExternalLink className="w-4 h-4 opacity-70 group-hover:opacity-100" />
-            </a>
-            <a
-              href="#how-it-works"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl border border-white/20 bg-white/5 hover:bg-white/10 text-white font-bold text-base transition-colors"
-            >
-              How It Works
-            </a>
-          </div>
-
-          {/* Quick proof badges */}
-          <div className="mt-12 flex flex-wrap justify-center gap-4">
-            {[
-              { icon: Gift, label: 'Monthly Prizes' },
-              { icon: Shield, label: 'Verified Certificate' },
-              { icon: Globe, label: 'Pan-India Community' },
-              { icon: Zap, label: '48h Onboarding' },
-            ].map(({ icon: Icon, label }) => (
-              <div
-                key={label}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/15 text-slate-200 text-sm font-semibold"
+          <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center items-center">
+            {ambStatus === 'approved' ? (
+              <Link
+                to="/ambassador/dashboard"
+                className="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-base shadow-2xl shadow-emerald-500/30 transition-all duration-200"
               >
-                <Icon className="w-3.5 h-3.5 text-indigo-300" />
-                {label}
-              </div>
-            ))}
+                <ShieldCheck className="w-5 h-5" />
+                Go to Ambassador Dashboard
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            ) : (
+              <a
+                href="#application-form"
+                className="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-black text-base shadow-2xl shadow-indigo-500/40 transition-all duration-200"
+              >
+                <Sparkles className="w-5 h-5" />
+                Fill Application Form
+                <ArrowRight className="w-4 h-4" />
+              </a>
+            )}
           </div>
         </div>
       </section>
 
-      {/* ── Perks ── */}
-      <section className="bg-slate-50 px-6 py-20" aria-labelledby="perks-heading">
+      {/* 5 Ambassador Levels Grid */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-900/60 border-b border-slate-800">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-14">
-            <h2 id="perks-heading" className="text-3xl sm:text-4xl font-black text-slate-900">
-              What You Get as an Ambassador
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
+              5 Gamified Ambassador Levels
             </h2>
-            <p className="text-slate-500 mt-3 max-w-xl mx-auto">
-              Real rewards for real impact. No fluff — just value stacked upon value.
+            <p className="text-slate-400 text-sm mt-2 max-w-xl mx-auto">
+              Progress from Explorer to Platinum by helping fellow students upskill.
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {PERKS.map(({ icon: Icon, title, desc, color }) => (
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            {MILESTONES_V2.map((m) => (
               <div
-                key={title}
-                className="group bg-white rounded-2xl border border-slate-200 p-6 hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-300 hover:-translate-y-1"
+                key={m.tier}
+                className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden flex flex-col justify-between hover:border-indigo-500/40 transition-all shadow-xl"
               >
-                <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${color} flex items-center justify-center mb-4 shadow-lg`}>
-                  <Icon className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="text-base font-black text-slate-900 mb-2">{title}</h3>
-                <p className="text-sm text-slate-500 leading-relaxed">{desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── How it works ── */}
-      <section id="how-it-works" className="bg-white px-6 py-20" aria-labelledby="steps-heading">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-14">
-            <h2 id="steps-heading" className="text-3xl sm:text-4xl font-black text-slate-900">
-              How It Works
-            </h2>
-            <p className="text-slate-500 mt-3">Four simple steps. Zero gatekeeping.</p>
-          </div>
-
-          <div className="space-y-6">
-            {STEPS.map(({ num, title, desc }, idx) => (
-              <div
-                key={num}
-                className="flex gap-5 items-start rounded-2xl border border-slate-200 bg-slate-50 p-6 hover:border-indigo-200 hover:bg-indigo-50/30 transition-colors"
-              >
-                <div className="shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center text-white font-black text-sm shadow-lg">
-                  {num}
-                </div>
                 <div>
-                  <h3 className="text-sm font-black text-slate-900 mb-1">{title}</h3>
-                  <p className="text-sm text-slate-500 leading-relaxed">{desc}</p>
+                  <div className={`bg-gradient-to-r ${m.headerBg} p-4 border-b border-slate-800 text-center`}>
+                    <h3 className="text-lg font-black text-white">{m.tier}</h3>
+                    <p className="text-xs font-mono text-amber-300 font-bold mt-1">{m.points}</p>
+                    <span className="inline-block px-2.5 py-0.5 text-[10px] font-extrabold rounded-full bg-slate-950/80 text-indigo-300 border border-indigo-500/30 mt-2">
+                      {m.revShare}
+                    </span>
+                  </div>
+
+                  <div className="p-4 space-y-2.5">
+                    {m.perks.map((perk, idx) => (
+                      <div key={idx} className="flex items-start gap-2">
+                        <Check className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
+                        <span className="text-[11px] text-slate-300 leading-snug">{perk}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             ))}
@@ -340,125 +315,127 @@ export default function CampusAmbassador() {
         </div>
       </section>
 
-      {/* ── CTA Banner ── */}
-      <section className="bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-700 px-6 py-16">
-        <div className="max-w-3xl mx-auto text-center">
-          <GraduationCap className="w-12 h-12 text-indigo-200 mx-auto mb-4" />
-          <h2 className="text-3xl sm:text-4xl font-black text-white leading-tight">
-            Be the Change-Maker <br />at Your Campus
-          </h2>
-          <p className="text-indigo-200 mt-4 text-base max-w-lg mx-auto leading-relaxed">
-            Click the button below — it opens a pre-filled Gmail draft. Just add your details and hit send. Our team responds within 48 hours.
-          </p>
-          <a
-            href={APPLY_GMAIL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-8 inline-flex items-center gap-3 px-10 py-4 rounded-2xl bg-white text-indigo-700 font-black text-base hover:bg-indigo-50 transition-colors shadow-2xl shadow-indigo-900/40 hover:scale-105 active:scale-95 duration-200"
-          >
-            <Mail className="w-5 h-5" />
-            Apply via Gmail
-            <ExternalLink className="w-4 h-4 opacity-60" />
-          </a>
-          <p className="mt-4 text-indigo-300 text-xs">
-            Or email us directly at{' '}
-            <a href="mailto:skillvalix@gmail.com" className="underline hover:text-white">
-              skillvalix@gmail.com
-            </a>{' '}
-            with subject "Campus Ambassador Application"
-          </p>
+      {/* Point Calculation Rules Table */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-950">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
+              Transparent Point Matrix (v2.0)
+            </h2>
+            <p className="text-slate-400 text-sm mt-2 max-w-xl mx-auto">
+              Every point rule is defined centrally. Duplicate events are strictly prevented.
+            </p>
+          </div>
+
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm text-slate-300">
+                <thead className="bg-slate-950 text-slate-400 uppercase text-[11px] font-bold tracking-wider border-b border-slate-800">
+                  <tr>
+                    <th className="px-6 py-4">Activity Event</th>
+                    <th className="px-6 py-4">Award Points</th>
+                    <th className="px-6 py-4">Trigger Rule</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/80">
+                  {POINTS_TABLE_V2.map((row, idx) => (
+                    <tr key={idx} className="hover:bg-slate-800/40 transition-colors">
+                      <td className="px-6 py-4 font-bold text-white flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-indigo-400 shrink-0" />
+                        {row.activity}
+                      </td>
+                      <td className="px-6 py-4 text-amber-400 font-extrabold">{row.points}</td>
+                      <td className="px-6 py-4 text-xs text-slate-400">{row.trigger}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* ── What top ambassadors do ── */}
-      <section className="bg-slate-50 px-6 py-20" aria-labelledby="responsibilities-heading">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 id="responsibilities-heading" className="text-3xl font-black text-slate-900">
-              What Top Ambassadors Do
-            </h2>
-            <p className="text-slate-500 mt-2">These are the moves that unlock maximum rewards.</p>
-          </div>
-          <div className="grid sm:grid-cols-2 gap-4">
-            {[
-              'Share SkillValix courses with classmates and batch-mates',
-              'Post about hackathons & certifications on LinkedIn & Instagram',
-              'Organize mini workshops or coding sessions at your college',
-              'Onboard the most new students from their campus each month',
-              'Participate in SkillValix hackathons and invite teammates',
-              'Create short reels or posts about their learning journey',
-              'Represent SkillValix in college tech fests & events',
-              'Provide feedback to help SkillValix improve its platform',
-            ].map((item, idx) => (
-              <div key={idx} className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-4">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
-                <p className="text-sm text-slate-700">{item}</p>
+      {/* Application Form */}
+      <section id="application-form" className="py-16 px-4 sm:px-6 lg:px-8 bg-slate-950">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl">
+            <h2 className="text-2xl font-extrabold text-white mb-2">Apply for Campus Ambassador v2.0</h2>
+            <p className="text-slate-400 text-sm mb-6">Applications are reviewed within 24–48 hours by the SkillValix team.</p>
+
+            {formSuccess && <div className="mb-4 p-4 rounded-xl bg-emerald-500/10 text-emerald-300 text-sm">{formSuccess}</div>}
+            {formError && <div className="mb-4 p-4 rounded-xl bg-red-500/10 text-red-300 text-sm">{formError}</div>}
+
+            <form onSubmit={handleApplySubmit} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">College Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. IIT Bombay"
+                    value={college}
+                    onChange={(e) => setCollege(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">10-Digit Mobile *</label>
+                  <input
+                    type="tel"
+                    required
+                    placeholder="e.g. 9876543210"
+                    value={mobile}
+                    onChange={(e) => setMobile(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
               </div>
-            ))}
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">City & State *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Pune, Maharashtra"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Why do you want to join? (Optional)</label>
+                <textarea
+                  rows={3}
+                  placeholder="Tell us briefly about your campus interest..."
+                  value={whyJoin}
+                  onChange={(e) => setWhyJoin(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 resize-none"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full sm:w-auto px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm rounded-xl transition-all"
+              >
+                {submitting ? 'Submitting...' : 'Submit Application'}
+              </button>
+            </form>
           </div>
         </div>
       </section>
 
-      {/* ── FAQs ── */}
-      <section className="bg-white px-6 py-20" aria-labelledby="faq-heading">
+      {/* FAQs */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-slate-900/60 border-t border-slate-800">
         <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 id="faq-heading" className="text-3xl font-black text-slate-900">
-              Frequently Asked Questions
-            </h2>
-            <p className="text-slate-500 mt-2">Everything you need to know before applying.</p>
-          </div>
+          <h2 className="text-2xl font-extrabold text-white text-center mb-8">Frequently Asked Questions</h2>
           <div className="space-y-3">
-            {FAQS.map((faq) => (
-              <FaqItem key={faq.q} q={faq.q} a={faq.a} />
-            ))}
+            {FAQS.map(faq => <FaqItem key={faq.q} q={faq.q} a={faq.a} />)}
           </div>
         </div>
       </section>
-
-      {/* ── Final CTA ── */}
-      <section className="bg-slate-900 px-6 py-20">
-        <div className="max-w-3xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 text-xs font-bold tracking-widest uppercase mb-6">
-            <Zap className="w-3.5 h-3.5" />
-            Limited college spots open
-          </div>
-          <h2 className="text-3xl sm:text-4xl font-black text-white">
-            Ready to Lead? <br />
-            <span className="text-indigo-400">Apply in 2 Minutes.</span>
-          </h2>
-          <p className="text-slate-400 mt-4 max-w-md mx-auto">
-            Your college. Your community. Your prizes. The first ambassador at your campus gets a special founding badge — don't miss it.
-          </p>
-          <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-            <a
-              href={APPLY_GMAIL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-black text-base shadow-xl shadow-indigo-500/30 transition-all hover:scale-105 active:scale-95"
-            >
-              <Mail className="w-5 h-5" />
-              Apply Now — It's Free
-            </a>
-            <a
-              href={WHATSAPP_LINK}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl border border-emerald-600/50 bg-emerald-900/20 hover:bg-emerald-900/40 text-emerald-300 font-bold text-base transition-colors"
-            >
-              <MessageCircle className="w-5 h-5" />
-              Join WhatsApp for Updates
-            </a>
-          </div>
-          <p className="mt-6 text-slate-600 text-xs">
-            Already applied?{' '}
-            <a href="mailto:skillvalix@gmail.com" className="text-indigo-400 hover:text-indigo-300 underline">
-              Email us
-            </a>{' '}
-            to check your status.
-          </p>
-        </div>
-      </section>
-    </>
+    </div>
   );
 }

@@ -9,14 +9,14 @@ const rewardRequestSchema = new mongoose.Schema({
   },
   tier: {
     type: String,
-    enum: ['bronze', 'silver', 'gold'],
+    enum: ['bronze', 'silver', 'gold', 'platinum'],
     required: true,
   },
   pointsAtRequest: { type: Number, required: true },
   status: {
     type: String,
-    enum: ['pending', 'approved', 'rejected'],
-    default: 'pending',
+    enum: ['locked', 'eligible', 'requested', 'approved', 'rejected', 'claimed'],
+    default: 'requested',
     index: true,
   },
   adminNote: { type: String, default: '' },

@@ -649,10 +649,14 @@ router.post('/generate', authOptions, async (req, res) => {
       await cert.save();
 
       if (user.referredBy) {
-        awardPoints(user.referredBy, 'certificate', {
-          referredUserId: user._id,
-          meta: { certificateId: cert.certificateId, courseId: resolvedCourseId }
-        }).catch(console.error);
+        Certificate.countDocuments({ student: user._id }).then(certCount => {
+          const eventType = certCount <= 1 ? 'first_certificate' : 'additional_certificate';
+          awardPoints(user.referredBy, eventType, {
+            referredUserId: user._id,
+            referenceId: cert.certificateId,
+            meta: { certificateId: cert.certificateId, courseId: resolvedCourseId }
+          }).catch(console.error);
+        }).catch(() => {});
       }
     } else {
       let shouldResetPdf = false;

@@ -595,6 +595,16 @@ router.put('/profile', authOptions, async (req, res) => {
 
     await user.save();
 
+    // Ambassador referral awards for profile completion & portfolio publishing
+    if (user.referredBy) {
+      if (user.college || user.bio || user.phoneNumber) {
+        awardPoints(user.referredBy, 'profile_completed', { referredUserId: user._id }).catch(() => {});
+      }
+      if (user.portfolio && String(user.portfolio).trim().length > 0) {
+        awardPoints(user.referredBy, 'portfolio_published', { referredUserId: user._id }).catch(() => {});
+      }
+    }
+
     if (nameChanged) {
       await Promise.all([
         Certificate.updateMany(

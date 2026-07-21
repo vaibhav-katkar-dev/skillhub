@@ -1,87 +1,93 @@
 /**
- * ambassadorPoints.js
- * Central helper for awarding ambassador points.
- * ALL point math lives here — no client-provided values are trusted.
+ * ambassadorPoints.js (v2.0)
+ * Central helper for awarding ambassador points, tracking history, and calculating levels/badges.
+ * ALL point math and rules live here — single source of truth.
  */
+
 import CampusAmbassador from '../models/CampusAmbassador.js';
 import ReferralEvent from '../models/ReferralEvent.js';
+import PointHistory from '../models/PointHistory.js';
+import {
+  AMBASSADOR_LEVELS,
+  POINT_RULES,
+  ACHIEVEMENT_BADGES,
+  calculateRevenuePoints,
+} from '../config/ambassadorConfig.js';
 
-// ─── Point config ─────────────────────────────────────────────────────────────
-const POINT_CONFIG = {
-  registration:         { flat: 10 },
-  login:                { flat: 2,  maxPerUser: 5 },
-  free_hackathon:       { flat: 15 },
-  paid_hackathon:       { ceiling: 100, floor: 10 },
-  paid_course:          { ceiling: 60,  floor: 5  },
-  paid_simulation:      { ceiling: 80,  floor: 5  },
-  certificate:          { flat: 20 },
-  ambassador_login:     { flat: 1,  dailyCap: true },
-  ambassador_approved:  { flat: 5  },
-};
-
-// Milestone tiers (points required to unlock each)
-export const MILESTONES = {
-  bronze: 500,
-  silver: 1500,
-  gold:   3000,
-};
+export { AMBASSADOR_LEVELS, POINT_RULES, ACHIEVEMENT_BADGES };
 
 /**
- * Calculate points for a paid activity using price-aware linear scaling.
- *
- * @param {string} eventType
- * @param {number} amountPaidInr  — actual INR charged (after coupon)
- * @param {number} fullPriceInr   — base price before any coupon
- * @returns {number} points to award
+ * Determine effective level & revenue share % for an ambassador.
  */
-function calcPaidPoints(eventType, amountPaidInr = 0, fullPriceInr = 0) {
-  const cfg = POINT_CONFIG[eventType];
-  if (!cfg || cfg.flat !== undefined) return cfg?.flat ?? 0;
+export function getAmbassadorLevel(totalPoints = 0, levelOverride = null, customRevenueShare = null) {
+  const points = Math.max(0, totalPoints);
+  let levelKey = 'explorer';
 
-  const { ceiling, floor } = cfg;
-  if (!fullPriceInr || fullPriceInr <= 0) return floor;
+  if (levelOverride && AMBASSADOR_LEVELS[levelOverride]) {
+    levelKey = levelOverride;
+  } else if (points >= 6000) {
+    levelKey = 'platinum';
+  } else if (points >= 3000) {
+    levelKey = 'gold';
+  } else if (points >= 1500) {
+    levelKey = 'silver';
+  } else if (points >= 500) {
+    levelKey = 'bronze';
+  }
 
-  const ratio = Math.min(1, Math.max(0, amountPaidInr / fullPriceInr));
-  return Math.floor(floor + (ceiling - floor) * ratio);
+  const levelInfo = { ...AMBASSADOR_LEVELS[levelKey] };
+
+  // Calculate actual display revenue share %
+  if (customRevenueShare !== null && customRevenueShare !== undefined && !isNaN(customRevenueShare)) {
+    levelInfo.effectiveRevenueShare = Number(customRevenueShare);
+  } else {
+    levelInfo.effectiveRevenueShare = levelInfo.revenueSharePercent;
+  }
+
+  return levelInfo;
 }
 
 /**
- * Award points to an ambassador for a referral activity.
- *
- * @param {string|ObjectId} ambassadorId  — CampusAmbassador._id
- * @param {string}          eventType
- * @param {object}          opts
- *   @param {string|ObjectId} [opts.referredUserId]
- *   @param {number}          [opts.amountPaidInr]
- *   @param {number}          [opts.fullPriceInr]
- *   @param {string}          [opts.couponCode]
- *   @param {number}          [opts.couponDiscount]
- *   @param {object}          [opts.meta]
- * @returns {Promise<{points: number, skipped: boolean}>}
+ * Award points to an ambassador for a referral event.
+ * Ensures duplicate prevention, updates CampusAmbassador, and writes PointHistory audit.
  */
 export async function awardPoints(ambassadorId, eventType, opts = {}) {
-  const cfg = POINT_CONFIG[eventType];
-  if (!cfg) return { points: 0, skipped: true };
+  if (!ambassadorId) return { points: 0, skipped: true, reason: 'No ambassadorId' };
 
   const {
     referredUserId = null,
-    amountPaidInr  = 0,
-    fullPriceInr   = 0,
-    couponCode     = null,
+    amountPaidInr = 0,
+    fullPriceInr = 0,
+    couponCode = null,
     couponDiscount = null,
-    meta           = {},
+    referenceId = null,
+    description = '',
+    meta = {},
   } = opts;
 
-  // ── Rate limiting checks ───────────────────────────────────────────────────
+  // ── Single-award & Rate-limiting Duplicate Checks ─────────────────────────────
+  if (['profile_completed', 'portfolio_published', 'first_certificate', 'student_becomes_ambassador'].includes(eventType)) {
+    if (referredUserId || referenceId) {
+      const query = { ambassadorId, eventType };
+      if (referredUserId) query.referredUserId = referredUserId;
+      if (referenceId) query.meta = { ...meta, referenceId };
+
+      const existing = await ReferralEvent.findOne(query).lean();
+      if (existing) {
+        return { points: 0, skipped: true, reason: 'Duplicate event awarded previously' };
+      }
+    }
+  }
+
   if (eventType === 'login' && referredUserId) {
-    // Max 5 login credits per referred user per ambassador
+    // Capped at 5 login credits per referred user
     const existingCount = await ReferralEvent.countDocuments({
       ambassadorId,
       referredUserId,
       eventType: 'login',
     });
-    if (existingCount >= (cfg.maxPerUser || 5)) {
-      return { points: 0, skipped: true };
+    if (existingCount >= 5) {
+      return { points: 0, skipped: true, reason: 'Max login credits reached for referred user' };
     }
   }
 
@@ -94,53 +100,156 @@ export async function awardPoints(ambassadorId, eventType, opts = {}) {
       eventType: 'ambassador_login',
       createdAt: { $gte: todayStart },
     }).lean();
-    if (existing) return { points: 0, skipped: true };
+    if (existing) return { points: 0, skipped: true, reason: 'Daily login point already awarded' };
   }
 
-  // ── Calculate points ───────────────────────────────────────────────────────
-  let points;
-  if (cfg.flat !== undefined) {
-    points = cfg.flat;
-  } else {
-    points = calcPaidPoints(eventType, amountPaidInr, fullPriceInr);
+  // ── Calculate Points ───────────────────────────────────────────────────────
+  let points = 0;
+  if (['paid_course', 'paid_hackathon', 'paid_simulation'].includes(eventType)) {
+    points = calculateRevenuePoints(amountPaidInr);
+  } else if (POINT_RULES[eventType] !== undefined) {
+    points = POINT_RULES[eventType];
   }
 
-  if (points <= 0) return { points: 0, skipped: true };
+  if (points <= 0) {
+    return { points: 0, skipped: true, reason: 'Zero points calculated' };
+  }
 
-  // ── Persist event + update ambassador atomically ───────────────────────────
+  // ── Persist ReferralEvent + PointHistory Audit + Update CampusAmbassador ──────
   try {
+    const defaultDesc = description || getEventDescription(eventType, amountPaidInr);
+
     await ReferralEvent.create({
       ambassadorId,
       referredUserId,
       eventType,
       points,
       amountPaidInr: amountPaidInr || 0,
-      fullPriceInr:  fullPriceInr  || 0,
-      couponCode:    couponCode    || null,
-      couponDiscount:couponDiscount || null,
+      fullPriceInr: fullPriceInr || 0,
+      couponCode: couponCode || null,
+      couponDiscount: couponDiscount || null,
       meta,
     });
 
-    await CampusAmbassador.findByIdAndUpdate(
+    await PointHistory.create({
       ambassadorId,
-      { $inc: { totalPoints: points } }
-    );
-  } catch (err) {
-    console.error('[AmbassadorPoints] Error awarding points:', err.message);
-    return { points: 0, skipped: true };
-  }
+      points,
+      eventType,
+      description: defaultDesc,
+      referenceId: referenceId ? String(referenceId) : null,
+      addedBy: 'system',
+    });
 
-  return { points, skipped: false };
+    const updatedAmb = await CampusAmbassador.findByIdAndUpdate(
+      ambassadorId,
+      {
+        $inc: {
+          totalPoints: points,
+          totalSVPoints: points,
+        },
+      },
+      { new: true }
+    );
+
+    return { points, skipped: false, newTotal: updatedAmb?.totalPoints || 0 };
+  } catch (err) {
+    console.error('[AmbassadorPoints] Error awarding points:', err);
+    return { points: 0, skipped: true, error: err.message };
+  }
 }
 
 /**
- * Get which new milestones an ambassador has just crossed (not yet claimed).
- * @param {number} totalPoints
- * @param {string[]} claimedMilestones
- * @returns {string[]} newly unlocked tiers
+ * Manually adjust points (Add/Deduct) by Admin with MANDATORY reason.
  */
-export function getUnlockedMilestones(totalPoints, claimedMilestones = []) {
-  return Object.entries(MILESTONES)
-    .filter(([tier, req]) => totalPoints >= req && !claimedMilestones.includes(tier))
-    .map(([tier]) => tier);
+export async function adjustPointsManually(ambassadorId, points, reason, adminUserId = 'admin') {
+  if (!ambassadorId) throw new Error('Ambassador ID is required.');
+  if (points === 0 || isNaN(points)) throw new Error('Points adjustment must be a non-zero number.');
+  if (!reason || !String(reason).trim()) throw new Error('Mandatory reason required for manual point adjustment.');
+
+  const amb = await CampusAmbassador.findById(ambassadorId);
+  if (!amb) throw new Error('Ambassador not found.');
+
+  const pointsNum = Number(points);
+  const cleanReason = String(reason).trim();
+
+  // Create PointHistory audit record
+  await PointHistory.create({
+    ambassadorId: amb._id,
+    points: pointsNum,
+    eventType: pointsNum > 0 ? 'admin_addition' : 'admin_deduction',
+    description: cleanReason,
+    addedBy: String(adminUserId),
+  });
+
+  // Also store as a ReferralEvent for consistency
+  await ReferralEvent.create({
+    ambassadorId: amb._id,
+    eventType: pointsNum > 0 ? 'admin_addition' : 'admin_deduction',
+    points: pointsNum,
+    meta: { reason: cleanReason, adminUserId },
+  });
+
+  const updatedAmb = await CampusAmbassador.findByIdAndUpdate(
+    amb._id,
+    {
+      $inc: {
+        totalPoints: pointsNum,
+        totalSVPoints: pointsNum,
+      },
+    },
+    { new: true }
+  );
+
+  return updatedAmb;
+}
+
+/**
+ * Calculate dynamic achievement badges for an ambassador.
+ */
+export function calculateBadges(stats = {}, totalPoints = 0, eventTypesSeen = []) {
+  return ACHIEVEMENT_BADGES.map(badge => {
+    let unlocked = false;
+
+    switch (badge.reqType) {
+      case 'referrals':
+        unlocked = (stats.totalReferrals || 0) >= badge.reqCount;
+        break;
+      case 'portfolios':
+        unlocked = (stats.totalPortfolios || 0) >= badge.reqCount;
+        break;
+      case 'certificates':
+        unlocked = (stats.totalCerts || 0) >= badge.reqCount;
+        break;
+      case 'paidActivities':
+        unlocked = (stats.paidActivities || 0) >= badge.reqCount;
+        break;
+      case 'points':
+        unlocked = totalPoints >= badge.reqCount;
+        break;
+      default:
+        unlocked = false;
+    }
+
+    return {
+      ...badge,
+      unlocked,
+    };
+  });
+}
+
+function getEventDescription(eventType, amountPaid = 0) {
+  switch (eventType) {
+    case 'ambassador_approved': return 'Campus Ambassador Approval Bonus (+20 SV Points)';
+    case 'registration': return 'Referred user registration';
+    case 'profile_completed': return 'Referred user profile completed';
+    case 'portfolio_published': return 'Referred user portfolio published';
+    case 'first_certificate': return 'Referred user first certificate earned';
+    case 'additional_certificate': return 'Referred user additional certificate earned';
+    case 'linkedin_certificate_share': return 'Referred user shared certificate on LinkedIn';
+    case 'student_becomes_ambassador': return 'Referred student became a Campus Ambassador';
+    case 'paid_course': return `Referred user paid course purchase (₹${amountPaid})`;
+    case 'paid_hackathon': return `Referred user paid hackathon entry (₹${amountPaid})`;
+    case 'paid_simulation': return `Referred user paid job simulation cert (₹${amountPaid})`;
+    default: return eventType;
+  }
 }

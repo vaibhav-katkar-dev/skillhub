@@ -180,7 +180,7 @@ const AdminPanel = () => {
   const [ambNoteInputs, setAmbNoteInputs] = useState({});
   const [rewardRequests, setRewardRequests] = useState([]);
   const [rewardRequestsLoading, setRewardRequestsLoading] = useState(false);
-  const [rewardReqFilter, setRewardReqFilter] = useState('pending');
+  const [rewardReqFilter, setRewardReqFilter] = useState('');
   const [rewardActingId, setRewardActingId] = useState('');
   const [rewardNoteInputs, setRewardNoteInputs] = useState({});
   const [rewardMsg, setRewardMsg] = useState({ type: '', text: '' });
@@ -188,6 +188,15 @@ const AdminPanel = () => {
   const [ambApproveUserId, setAmbApproveUserId] = useState('');
   const [ambApproveMsg, setAmbApproveMsg] = useState({ type: '', text: '' });
   const [ambApproving, setAmbApproving] = useState(false);
+  // v2.0 controls
+  const [adjustModalAmb, setAdjustModalAmb] = useState(null);
+  const [adjustPointsVal, setAdjustPointsVal] = useState('');
+  const [adjustReason, setAdjustReason] = useState('');
+  const [adjustingPoints, setAdjustingPoints] = useState(false);
+  const [historyModalAmb, setHistoryModalAmb] = useState(null);
+  const [historyLogs, setHistoryLogs] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [exportingReport, setExportingReport] = useState(false);
 
   useEffect(() => {
     getCourseList().then(setCourses).catch(console.error);
@@ -956,6 +965,101 @@ const AdminPanel = () => {
       setRewardMsg({ type: 'error', text: err.response?.data?.message || 'Failed to reject reward.' });
     } finally {
       setRewardActingId('');
+    }
+  };
+
+  const handleAdjustPointsSubmit = async (e) => {
+    e.preventDefault();
+    if (!adjustModalAmb || !adjustPointsVal || !adjustReason.trim()) {
+      setAmbMsg({ type: 'error', text: 'Points value and a mandatory reason are required.' });
+      return;
+    }
+    setAdjustingPoints(true);
+    try {
+      const r = await api.post('/ambassador/admin/adjust-points', {
+        ambassadorId: adjustModalAmb._id,
+        points: Number(adjustPointsVal),
+        reason: adjustReason.trim(),
+      });
+      setAmbMsg({ type: 'success', text: r.data.message });
+      setAdjustModalAmb(null);
+      setAdjustPointsVal('');
+      setAdjustReason('');
+      loadAmbList(ambSearch);
+    } catch (err) {
+      setAmbMsg({ type: 'error', text: err.response?.data?.message || 'Failed to adjust points.' });
+    } finally {
+      setAdjustingPoints(false);
+    }
+  };
+
+  const handleOverrideLevel = async (ambassadorId, levelOverride) => {
+    try {
+      const r = await api.post('/ambassador/admin/override-level', { ambassadorId, levelOverride });
+      setAmbMsg({ type: 'success', text: r.data.message });
+      loadAmbList(ambSearch);
+    } catch (err) {
+      setAmbMsg({ type: 'error', text: err.response?.data?.message || 'Failed to override level.' });
+    }
+  };
+
+  const handleOverrideRevShare = async (ambassadorId, customRevenueShare) => {
+    try {
+      const r = await api.post('/ambassador/admin/override-revshare', { ambassadorId, customRevenueShare });
+      setAmbMsg({ type: 'success', text: r.data.message });
+      loadAmbList(ambSearch);
+    } catch (err) {
+      setAmbMsg({ type: 'error', text: err.response?.data?.message || 'Failed to update revenue share.' });
+    }
+  };
+
+  const handleUpdateRewardStatus = async (reqId, status) => {
+    setRewardActingId(reqId);
+    setRewardMsg({ type: '', text: '' });
+    try {
+      const r = await api.post(`/ambassador/admin/rewards/${reqId}/status`, {
+        status,
+        adminNote: rewardNoteInputs[reqId] || '',
+      });
+      setRewardMsg({ type: 'success', text: r.data.message });
+      loadRewardRequests();
+    } catch (err) {
+      setRewardMsg({ type: 'error', text: err.response?.data?.message || 'Failed to update reward status.' });
+    } finally {
+      setRewardActingId('');
+    }
+  };
+
+  const handleViewHistory = async (amb) => {
+    setHistoryModalAmb(amb);
+    setLoadingHistory(true);
+    try {
+      const r = await api.get(`/ambassador/admin/point-history/${amb._id}`);
+      setHistoryLogs(r.data);
+    } catch (err) {
+      console.error(err);
+      setHistoryLogs([]);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  const handleExportReport = async () => {
+    setExportingReport(true);
+    try {
+      const r = await api.get('/ambassador/admin/export-report');
+      const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(r.data, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute('href', dataStr);
+      downloadAnchor.setAttribute('download', `SkillValix-Ambassadors-Report-${new Date().toISOString().slice(0,10)}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      setAmbMsg({ type: 'success', text: 'Ambassador report exported successfully!' });
+    } catch (err) {
+      setAmbMsg({ type: 'error', text: 'Failed to export report.' });
+    } finally {
+      setExportingReport(false);
     }
   };
 
@@ -4742,6 +4846,14 @@ const AdminPanel = () => {
                       <RefreshCw className="w-4 h-4" />
                       Refresh
                     </button>
+                    <button
+                      onClick={handleExportReport}
+                      disabled={exportingReport}
+                      className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition-colors flex items-center gap-2 shadow-sm disabled:opacity-50"
+                    >
+                      <Download className="w-4 h-4" />
+                      {exportingReport ? 'Exporting...' : 'Export Report'}
+                    </button>
                   </div>
                 </div>
 
@@ -4796,12 +4908,48 @@ const AdminPanel = () => {
                             {amb.whyJoin && (
                               <p className="text-slate-400 text-xs mt-1 italic line-clamp-2">&ldquo;{amb.whyJoin}&rdquo;</p>
                             )}
-                            <p className="text-purple-700 text-xs font-bold mt-1.5">
-                              ⭐ {(amb.totalPoints || 0).toLocaleString()} pts
+                            <p className="text-purple-700 text-xs font-bold mt-1.5 flex items-center gap-2 flex-wrap">
+                              <span>⭐ {(amb.totalPoints || 0).toLocaleString()} SV pts</span>
+                              <span className="px-2 py-0.5 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-full font-bold">
+                                {amb.level?.name || 'Explorer'} ({amb.level?.effectiveRevenueShare}% Rev Share)
+                              </span>
                               {amb.claimedMilestones?.length > 0 && (
-                                <span className="ml-2 text-amber-600">· Claimed: {amb.claimedMilestones.join(', ')}</span>
+                                <span className="text-amber-600">· Claimed: {amb.claimedMilestones.join(', ')}</span>
                               )}
                             </p>
+
+                            {/* Level Override & Custom RevShare Controls */}
+                            <div className="flex flex-wrap gap-2 items-center mt-2 pt-2 border-t border-slate-100 text-xs">
+                              <div className="flex items-center gap-1">
+                                <span className="text-slate-400 font-semibold">Override Level:</span>
+                                <select
+                                  value={amb.levelOverride || ''}
+                                  onChange={e => handleOverrideLevel(amb._id, e.target.value)}
+                                  className="px-2 py-1 border border-slate-200 rounded-lg text-xs bg-white focus:outline-none"
+                                >
+                                  <option value="">(Default Level)</option>
+                                  <option value="explorer">🌱 Explorer</option>
+                                  <option value="bronze">🥉 Bronze</option>
+                                  <option value="silver">🥈 Silver</option>
+                                  <option value="gold">🥇 Gold</option>
+                                  <option value="platinum">💎 Platinum</option>
+                                </select>
+                              </div>
+
+                              <div className="flex items-center gap-1">
+                                <span className="text-slate-400 font-semibold">Platinum Rev Share %:</span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max="100"
+                                  placeholder={String(amb.level?.effectiveRevenueShare || 7)}
+                                  defaultValue={amb.customRevenueShare ?? ''}
+                                  onBlur={e => handleOverrideRevShare(amb._id, e.target.value)}
+                                  className="w-16 px-2 py-1 border border-slate-200 rounded-lg text-xs font-bold focus:outline-none"
+                                />
+                              </div>
+                            </div>
+
                             {amb.adminNote && (
                               <p className="text-slate-400 text-xs mt-0.5">Admin note: {amb.adminNote}</p>
                             )}
@@ -4812,7 +4960,23 @@ const AdminPanel = () => {
                           </div>
 
                           {/* Right: actions */}
-                          <div className="flex flex-col gap-2 min-w-44">
+                          <div className="flex flex-col gap-2 min-w-48">
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => setAdjustModalAmb(amb)}
+                                className="flex-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1"
+                              >
+                                ⚡ Adjust Points
+                              </button>
+                              <button
+                                onClick={() => handleViewHistory(amb)}
+                                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1"
+                                title="View Point Audit Log"
+                              >
+                                📜 Logs
+                              </button>
+                            </div>
+
                             <input
                               type="text"
                               placeholder="Admin note (optional)"
@@ -4919,11 +5083,12 @@ const AdminPanel = () => {
                   <div className="space-y-3">
                     {rewardRequests.map(req => {
                       const amb = req.ambassadorId;
-                      const tierEmoji = { bronze: '🥉', silver: '🥈', gold: '🥇' }[req.tier] || '🎁';
+                      const tierEmoji = { bronze: '🥉', silver: '🥈', gold: '🥇', platinum: '💎' }[req.tier] || '🎁';
                       const tierCard = {
                         bronze: 'bg-amber-50 border-amber-200',
                         silver: 'bg-slate-50 border-slate-300',
                         gold:   'bg-yellow-50 border-yellow-300',
+                        platinum: 'bg-cyan-50 border-cyan-300',
                       }[req.tier] || 'bg-white border-slate-200';
                       return (
                         <div key={req._id} className={`rounded-2xl border-2 p-5 ${tierCard}`}>
@@ -4932,10 +5097,11 @@ const AdminPanel = () => {
                               <div className="flex items-center gap-2 flex-wrap mb-1">
                                 <span className="text-2xl">{tierEmoji}</span>
                                 <p className="font-bold text-base capitalize">{req.tier} Reward</p>
-                                <span className={`px-2 py-0.5 rounded-full text-xs font-bold uppercase ${
-                                  req.status === 'pending'  ? 'bg-yellow-100 text-yellow-700' :
-                                  req.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
-                                  'bg-red-100 text-red-700'
+                                <span className={`px-2.5 py-0.5 rounded-full text-xs font-extrabold uppercase ${
+                                  req.status === 'requested' || req.status === 'pending' ? 'bg-yellow-100 text-yellow-700 border border-yellow-300' :
+                                  req.status === 'approved' ? 'bg-teal-100 text-teal-700 border border-teal-300' :
+                                  req.status === 'claimed'  ? 'bg-emerald-100 text-emerald-700 border border-emerald-300' :
+                                  'bg-red-100 text-red-700 border border-red-300'
                                 }`}>
                                   {req.status}
                                 </span>
@@ -4956,37 +5122,45 @@ const AdminPanel = () => {
                                 <p className="text-xs text-slate-500 mt-1 italic">Admin note: {req.adminNote}</p>
                               )}
                             </div>
-                            {req.status === 'pending' && (
-                              <div className="flex flex-col gap-2 min-w-44">
-                                <input
-                                  type="text"
-                                  placeholder="Admin note (optional)"
-                                  value={rewardNoteInputs[req._id] || ''}
-                                  onChange={e => setRewardNoteInputs(prev => ({ ...prev, [req._id]: e.target.value }))}
-                                  className="px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs w-full focus:outline-none focus:ring-1 focus:ring-purple-300 bg-white"
-                                />
-                                <div className="flex gap-1.5">
+
+                            <div className="flex flex-col gap-2 min-w-48">
+                              <input
+                                type="text"
+                                placeholder="Admin note (optional)"
+                                value={rewardNoteInputs[req._id] || ''}
+                                onChange={e => setRewardNoteInputs(prev => ({ ...prev, [req._id]: e.target.value }))}
+                                className="px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs w-full focus:outline-none focus:ring-1 focus:ring-purple-300 bg-white"
+                              />
+                              <div className="flex gap-1.5 flex-wrap">
+                                {req.status !== 'approved' && req.status !== 'claimed' && (
                                   <button
-                                    onClick={() => handleRewardApprove(req._id)}
+                                    onClick={() => handleUpdateRewardStatus(req._id, 'approved')}
                                     disabled={rewardActingId === req._id}
-                                    className="flex-1 px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold flex items-center justify-center gap-1 transition-colors disabled:opacity-60"
+                                    className="flex-1 px-3 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold flex items-center justify-center gap-1 transition-colors disabled:opacity-60"
                                   >
-                                    {rewardActingId === req._id
-                                      ? <Loader2 className="w-3 h-3 animate-spin" />
-                                      : <CheckCircle className="w-3 h-3" />}
                                     Approve
                                   </button>
+                                )}
+                                {req.status !== 'claimed' && (
                                   <button
-                                    onClick={() => handleRewardReject(req._id)}
+                                    onClick={() => handleUpdateRewardStatus(req._id, 'claimed')}
                                     disabled={rewardActingId === req._id}
-                                    className="flex-1 px-3 py-1.5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-xs font-bold flex items-center justify-center gap-1 transition-colors disabled:opacity-60"
+                                    className="flex-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center justify-center gap-1 transition-colors disabled:opacity-60"
                                   >
-                                    <X className="w-3 h-3" />
+                                    Mark Claimed
+                                  </button>
+                                )}
+                                {req.status !== 'rejected' && (
+                                  <button
+                                    onClick={() => handleUpdateRewardStatus(req._id, 'rejected')}
+                                    disabled={rewardActingId === req._id}
+                                    className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-colors disabled:opacity-60"
+                                  >
                                     Reject
                                   </button>
-                                </div>
+                                )}
                               </div>
-                            )}
+                            </div>
                           </div>
                         </div>
                       );
@@ -5059,6 +5233,121 @@ const AdminPanel = () => {
                 </p>
               </div>
             )}
+
+            {/* Adjust Points Modal */}
+            {adjustModalAmb && (
+              <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="bg-white rounded-2xl border border-slate-200 p-6 max-w-md w-full shadow-2xl space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h3 className="font-bold text-slate-900 text-lg flex items-center gap-2">
+                      <Zap className="w-5 h-5 text-indigo-600" />
+                      Adjust Ambassador Points
+                    </h3>
+                    <button onClick={() => setAdjustModalAmb(null)} className="text-slate-400 hover:text-slate-600">✕</button>
+                  </div>
+
+                  <p className="text-xs text-slate-500">
+                    Adjust SV points for <strong>{adjustModalAmb.user?.name}</strong> ({adjustModalAmb.college}).
+                    Current total: <strong>{adjustModalAmb.totalPoints || 0} pts</strong>.
+                  </p>
+
+                  <form onSubmit={handleAdjustPointsSubmit} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                        Points (+ / -) *
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        placeholder="e.g. +50 or -20"
+                        value={adjustPointsVal}
+                        onChange={e => setAdjustPointsVal(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                        Mandatory Reason / Description *
+                      </label>
+                      <textarea
+                        required
+                        rows={3}
+                        placeholder="State reason for manual point addition or deduction..."
+                        value={adjustReason}
+                        onChange={e => setAdjustReason(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"
+                      />
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setAdjustModalAmb(null)}
+                        className="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-200"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={adjustingPoints || !adjustPointsVal || !adjustReason.trim()}
+                        className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md disabled:opacity-50"
+                      >
+                        {adjustingPoints ? 'Saving...' : 'Save Point Adjustment'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {/* Point History Log Modal */}
+            {historyModalAmb && (
+              <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="bg-white rounded-2xl border border-slate-200 p-6 max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                    <div>
+                      <h3 className="font-bold text-slate-900 text-lg flex items-center gap-2">
+                        <Clock className="w-5 h-5 text-indigo-600" />
+                        Point History Audit Trail
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Ambassador: {historyModalAmb.user?.name} ({historyModalAmb.college})
+                      </p>
+                    </div>
+                    <button onClick={() => setHistoryModalAmb(null)} className="text-slate-400 hover:text-slate-600">✕</button>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto space-y-2.5 pr-1">
+                    {loadingHistory ? (
+                      <div className="py-12 text-center text-slate-400 text-sm">
+                        <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-indigo-500" />
+                        Loading point history...
+                      </div>
+                    ) : historyLogs.length === 0 ? (
+                      <div className="py-12 text-center text-slate-400 text-sm">
+                        No point audit records found.
+                      </div>
+                    ) : (
+                      historyLogs.map(log => (
+                        <div key={log._id} className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs">
+                          <div>
+                            <p className="font-bold text-slate-800">{log.description || log.eventType}</p>
+                            <span className="text-[10px] text-slate-400">
+                              {new Date(log.date || log.createdAt).toLocaleString('en-IN')} • Added by: {log.addedBy}
+                            </span>
+                          </div>
+                          <span className={`font-black text-sm ${log.points > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                            {log.points > 0 ? `+${log.points}` : log.points} pts
+                          </span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
           </div>
         )}
 

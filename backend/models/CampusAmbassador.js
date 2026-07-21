@@ -26,8 +26,11 @@ const campusAmbassadorSchema = new mongoose.Schema({
     index: true,
   },
 
-  totalPoints:      { type: Number, default: 0, min: 0, index: true },
-  claimedMilestones: [{ type: String, enum: ['bronze', 'silver', 'gold'] }],
+  totalPoints:        { type: Number, default: 0, min: 0, index: true },
+  totalSVPoints:      { type: Number, default: 0, min: 0, index: true },
+  levelOverride:      { type: String, enum: ['explorer', 'bronze', 'silver', 'gold', 'platinum', null], default: null },
+  customRevenueShare: { type: Number, default: null },
+  claimedMilestones:  [{ type: String, enum: ['bronze', 'silver', 'gold', 'platinum'] }],
 
   adminNote: { type: String, default: '' },
   approvedAt: { type: Date },
