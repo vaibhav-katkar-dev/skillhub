@@ -75,8 +75,16 @@
 
   <url>
     <loc>https://www.skillvalix.com/campus-ambassador</loc>
+    <lastmod>2026-07-21</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.85</priority>
+  </url>
+
+  <url>
+    <loc>https://www.skillvalix.com/campus-ambassador/terms</loc>
+    <lastmod>2026-07-21</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.55</priority>
   </url>
 
   <!-- ── Legal Pages ───────────────────────────────────────────────────────── -->
