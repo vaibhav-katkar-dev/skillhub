@@ -1,7 +1,7 @@
 import React, { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
-// import { Analytics } from '@vercel/analytics/react'; // Removed per request
+
 import { useAuthStore } from './store/authStore';
 import { preloadCourses } from './data/courseLoader';
 
@@ -223,7 +223,7 @@ function App() {
       <Router>
         <ScrollToTop />
         <AppContent />
-        {/* <Analytics /> */}
+
       </Router>
     </HelmetProvider>
   );

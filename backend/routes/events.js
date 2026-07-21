@@ -367,12 +367,52 @@ router.delete('/hackathons/:id', authOptions, adminCheck, async (req, res) => {
   }
 });
 
-// ─── ADMIN: List ALL hackathons (incl. hidden) ───────────────────────────────
+// ─── ADMIN: List ALL hackathons (incl. hidden + DB cert stats) ─────────────────
 router.get('/admin/hackathons', authOptions, adminCheck, async (req, res) => {
   try {
     const hackathons = await Hackathon.find().sort({ createdAt: -1 }).lean();
-    res.json(hackathons);
+
+    // Query DB for real event certificate counts per hackathon
+    const certStats = await EventCertificate.aggregate([
+      { $match: { eventType: 'hackathon', hackathonId: { $ne: null } } },
+      {
+        $group: {
+          _id: '$hackathonId',
+          totalCertificates: { $sum: 1 },
+          participationCertificates: {
+            $sum: { $cond: [{ $eq: ['$certType', 'participation'] }, 1, 0] }
+          },
+          winnerCertificates: {
+            $sum: { $cond: [{ $eq: ['$certType', 'winner'] }, 1, 0] }
+          }
+        }
+      }
+    ]);
+
+    const certMap = {};
+    certStats.forEach(s => {
+      if (s._id) {
+        certMap[s._id.toString()] = {
+          totalCertificates: s.totalCertificates || 0,
+          participationCertificates: s.participationCertificates || 0,
+          winnerCertificates: s.winnerCertificates || 0
+        };
+      }
+    });
+
+    const result = hackathons.map(h => {
+      const stats = certMap[h._id.toString()] || { totalCertificates: 0, participationCertificates: 0, winnerCertificates: 0 };
+      return {
+        ...h,
+        certificatesCount: stats.totalCertificates,
+        participationCertificatesCount: stats.participationCertificates,
+        winnerCertificatesCount: stats.winnerCertificates
+      };
+    });
+
+    res.json(result);
   } catch (err) {
+    console.error('[Events] Admin list hackathons error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });

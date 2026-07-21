@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { useParams, Link } from 'react-router-dom';
 import { getCourseBySlug, getCourseList } from '../data/courseLoader';
 import { getCourseCategory } from '../utils/course';
+import { getCourseSeoMetadata } from '../utils/courseSeo';
 import { PlayCircle, ShieldCheck, ListTodo, Loader2, BookOpen, Clock, Award, Sparkles, Zap, ArrowRight } from 'lucide-react';
 
 const THEMES = {
@@ -68,14 +69,43 @@ const CourseDetail = () => {
 
   const { course, lessons } = courseData;
   const themeClass = THEMES[course.theme] || THEMES.blue;
+  const seo = getCourseSeoMetadata(course, slug, lessons);
 
   return (
     <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <Helmet>
-        <title>{course.title} | SkillValix</title>
-        <meta name="description" content={course.description.substring(0, 155)} />
-        <link rel="canonical" href={`https://www.skillvalix.com/courses/${slug}`} />
-      </Helmet>
+      {seo && (
+        <Helmet>
+          {/* Primary SEO Meta Tags */}
+          <title>{seo.metaTitle}</title>
+          <meta name="description" content={seo.metaDescription} />
+          <meta name="keywords" content={seo.keywordsString} />
+          <link rel="canonical" href={seo.canonicalUrl} />
+          <meta name="author" content="SkillValix" />
+          <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+          <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+
+          {/* Open Graph (Facebook, LinkedIn, WhatsApp, Telegram, Discord) */}
+          <meta property="og:type" content="website" />
+          <meta property="og:title" content={seo.metaTitle} />
+          <meta property="og:description" content={seo.metaDescription} />
+          <meta property="og:url" content={seo.canonicalUrl} />
+          <meta property="og:image" content={seo.imageUrl} />
+          <meta property="og:image:alt" content={course.title} />
+          <meta property="og:site_name" content={seo.siteName} />
+          <meta property="og:locale" content="en_US" />
+
+          {/* Twitter Card */}
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content={seo.metaTitle} />
+          <meta name="twitter:description" content={seo.metaDescription} />
+          <meta name="twitter:image" content={seo.imageUrl} />
+          <meta name="twitter:site" content="@SkillValix" />
+
+          {/* Schema.org Structured Data (Course & Breadcrumbs) */}
+          <script type="application/ld+json">{JSON.stringify(seo.courseSchema)}</script>
+          <script type="application/ld+json">{JSON.stringify(seo.breadcrumbSchema)}</script>
+        </Helmet>
+      )}
 
       {/* Hero */}
       <div className={`bg-gradient-to-br ${themeClass} rounded-3xl p-8 sm:p-12 mb-12 shadow-xl relative overflow-hidden`}>

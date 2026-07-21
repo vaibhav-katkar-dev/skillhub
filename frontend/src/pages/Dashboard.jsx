@@ -7,7 +7,7 @@ import { generatePDFFromDOM } from '../utils/pdfGenerator';
 import CertificateTemplate from '../components/CertificateTemplate';
 import HackathonCertificateTemplate from '../components/HackathonCertificateTemplate';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://api.skillvalix.com/api';
+
 import {
   Download, CheckCircle, Award, Share2, BookOpen,
   ArrowRight, Loader2, Trophy, GraduationCap, Medal,
