@@ -59,7 +59,8 @@ const AdminPanel = () => {
   const [hackForm, setHackForm] = useState({
     title: '', slug: '', tagline: '', description: '', theme: '',
     status: 'upcoming', image: '', tags: '', visible: false, featured: false,
-    startDate: '', endDate: '',
+    startDate: '', endDate: '', registrationDeadline: '', submissionDeadline: '',
+    problemStatement: '',
     teamMin: 1, teamMax: 4,
     paymentEnabled: false, paymentAmountInr: 0, paymentDescription: 'Hackathon registration fee',
     acceptsDriveLink: true, acceptsPdfLink: true, acceptsAnyLink: false, acceptsGitHubLink: true, acceptsNotionLink: true,
@@ -944,7 +945,7 @@ const AdminPanel = () => {
     setRewardActingId(reqId);
     setRewardMsg({ type: '', text: '' });
     try {
-      const r = await api.post(`/ambassador/admin/rewards/${reqId}/approve`, { adminNote: rewardNoteInputs[reqId] || '' });
+      const r = await api.post(`/ambassador/admin/rewards/${reqId}/status`, { status: 'approved', adminNote: rewardNoteInputs[reqId] || '' });
       setRewardMsg({ type: 'success', text: r.data.message });
       loadRewardRequests();
     } catch (err) {
@@ -958,7 +959,7 @@ const AdminPanel = () => {
     setRewardActingId(reqId);
     setRewardMsg({ type: '', text: '' });
     try {
-      const r = await api.post(`/ambassador/admin/rewards/${reqId}/reject`, { adminNote: rewardNoteInputs[reqId] || '' });
+      const r = await api.post(`/ambassador/admin/rewards/${reqId}/status`, { status: 'rejected', adminNote: rewardNoteInputs[reqId] || '' });
       setRewardMsg({ type: 'success', text: r.data.message });
       loadRewardRequests();
     } catch (err) {
@@ -970,15 +971,16 @@ const AdminPanel = () => {
 
   const handleAdjustPointsSubmit = async (e) => {
     e.preventDefault();
-    if (!adjustModalAmb || !adjustPointsVal || !adjustReason.trim()) {
-      setAmbMsg({ type: 'error', text: 'Points value and a mandatory reason are required.' });
+    const parsedPts = Number(adjustPointsVal);
+    if (!adjustModalAmb || !adjustPointsVal || isNaN(parsedPts) || parsedPts === 0 || !adjustReason.trim()) {
+      setAmbMsg({ type: 'error', text: 'A non-zero points value and a mandatory reason are required.' });
       return;
     }
     setAdjustingPoints(true);
     try {
       const r = await api.post('/ambassador/admin/adjust-points', {
         ambassadorId: adjustModalAmb._id,
-        points: Number(adjustPointsVal),
+        points: parsedPts,
         reason: adjustReason.trim(),
       });
       setAmbMsg({ type: 'success', text: r.data.message });
@@ -2715,7 +2717,7 @@ const AdminPanel = () => {
                             >
                               Edit
                             </button>
-                            <button onClick={async () => { await api.put(`/events/hackathons/${h._id}`, { visible: !h.visible }); loadHacks(); }} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${h.visible ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}>
+                            <button onClick={async () => { try { await api.put(`/events/hackathons/${h._id}`, { visible: !h.visible }); loadHacks(); } catch (err) { alert('Failed to toggle visibility: ' + (err.response?.data?.message || err.message)); } }} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${h.visible ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}>
                               {h.visible ? 'Hide' : 'Show'}
                             </button>
                             <button onClick={() => loadRegistrations(h._id)} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition">
@@ -3076,11 +3078,15 @@ const AdminPanel = () => {
                                       <select
                                         value={reg.status}
                                         onChange={async (e) => {
-                                          await api.put(`/events/admin/hackathons/${h._id}/registrations/${reg._id}`, {
-                                            status: e.target.value,
-                                            adminRemarks: reg.adminRemarks || '',
-                                          });
-                                          loadRegistrations(h._id);
+                                          try {
+                                            await api.put(`/events/admin/hackathons/${h._id}/registrations/${reg._id}`, {
+                                              status: e.target.value,
+                                              adminRemarks: reg.adminRemarks || '',
+                                            });
+                                            loadRegistrations(h._id);
+                                          } catch (err) {
+                                            alert('Failed to update status: ' + (err.response?.data?.message || err.message));
+                                          }
                                         }}
                                         className="px-2 py-1 rounded border border-slate-200 text-xs"
                                       >
@@ -4963,7 +4969,11 @@ const AdminPanel = () => {
                           <div className="flex flex-col gap-2 min-w-48">
                             <div className="flex items-center gap-1.5">
                               <button
-                                onClick={() => setAdjustModalAmb(amb)}
+                                onClick={() => {
+                                  setAdjustModalAmb(amb);
+                                  setAdjustPointsVal('');
+                                  setAdjustReason('');
+                                }}
                                 className="flex-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1"
                               >
                                 ⚡ Adjust Points
@@ -5290,7 +5300,7 @@ const AdminPanel = () => {
                       </button>
                       <button
                         type="submit"
-                        disabled={adjustingPoints || !adjustPointsVal || !adjustReason.trim()}
+                        disabled={adjustingPoints || !adjustPointsVal || Number(adjustPointsVal) === 0 || isNaN(Number(adjustPointsVal)) || !adjustReason.trim()}
                         className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md disabled:opacity-50"
                       >
                         {adjustingPoints ? 'Saving...' : 'Save Point Adjustment'}
