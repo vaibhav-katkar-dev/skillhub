@@ -59,30 +59,33 @@ export const AMBASSADOR_LEVELS = {
 export const POINT_RULES = {
   // Referral lifecycle
   ambassador_approved: 20,
-  registration: 10,
-  profile_completed: 10,
-  portfolio_published: 20,
+  registration: 10,                 // Pending until email verified
+  profile_completed: 10,            // Requires verified email + name + phone + college + bio (>=20 chars)
+  portfolio_published: 20,          // Requires verified portfolio link + at least 1 added project
 
-  // Course Certification
-  first_certificate: 50,
-  additional_certificate: 20,
+  // Certificate separation
+  free_course_certificate: 5,       // Max 2 free course certificates per referred student
+  skill_exam_certificate: 20,        // Passed skill assessment exam
+  paid_course_certificate: 50,       // 1st paid course cert
+  additional_paid_certificate: 20,  // Subsequent paid course certs
+  first_certificate: 50,             // Legacy compatibility alias
+  additional_certificate: 20,        // Legacy compatibility alias
   linkedin_certificate_share: 15,
+  linkedin_cert_share: 15,
 
-  // Job Simulation
-  job_simulation_free: 25,         // flat points for free simulation completion
-  job_simulation_with_cert: 35,    // flat points when sim includes a certificate
-  // paid job simulation → uses calculateRevenuePoints (10% of amount)
+  // Job Simulation & Hackathon
+  job_sim_free: 15,
+  job_simulation_free: 15,
+  free_hackathon: 10,
+  hackathon_free: 10,
 
-  // Hackathon Registration
-  hackathon_free: 10,              // flat points for free hackathon registration
-  // paid hackathon → use HACKATHON_TIERS (range-based %)
-
-  // Network growth
+  // Ambassador Network growth
   student_becomes_ambassador: 100,
+  student_ambassador_verified: 100,  // Awarded when referred user becomes ambassador AND completes 1st verified milestone
 
-  // Activity
+  // Daily / Login Activity
   login: 2,
-  ambassador_login: 1,
+  ambassador_login: 1,              // Max 1 credit per UTC day for approved ambassadors
 };
 
 /**

@@ -13,7 +13,7 @@ import { sendEmail } from '../utils/mailer.js';
 import crypto from 'crypto';
 import { isDisposableEmail, isValidEmailFormat } from '../utils/emailValidator.js';
 import CampusAmbassador from '../models/CampusAmbassador.js';
-import { awardPoints } from '../utils/ambassadorPoints.js';
+import { awardPoints, verifyPendingPoints } from '../utils/ambassadorPoints.js';
 
 const router = express.Router();
 
@@ -83,7 +83,7 @@ router.post('/register', async (req, res) => {
     await user.save();
 
     if (user.referredBy) {
-      awardPoints(user.referredBy, 'registration', { referredUserId: user._id }).catch(() => {});
+      awardPoints(user.referredBy, 'registration', { referredUserId: user._id, status: 'pending' }).catch(() => {});
     }
 
     const frontendUrl = process.env.FRONTEND_URL || 'https://skillvalix.com';
@@ -163,6 +163,10 @@ router.get('/verify-email/:token', async (req, res) => {
     user.verificationToken = undefined;
     user.verificationTokenExpires = undefined;
     await user.save();
+
+    if (user.referredBy) {
+      verifyPendingPoints(user.referredBy, 'registration', user._id).catch(() => {});
+    }
 
     res.json({ message: 'Email verified successfully! You can now login.' });
   } catch (err) {

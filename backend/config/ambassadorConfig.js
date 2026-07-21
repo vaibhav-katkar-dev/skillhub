@@ -59,16 +59,44 @@ export const AMBASSADOR_LEVELS = {
 
 export const POINT_RULES = {
   ambassador_approved: 20,
-  registration: 10,
-  profile_completed: 10,
-  portfolio_published: 20,
-  first_certificate: 50,
-  additional_certificate: 20,
+  registration: 10,                 // Pending until email verified
+  profile_completed: 10,            // Requires verified email + name + phone + college + bio (>=20 chars)
+  portfolio_published: 20,          // Requires verified portfolio link + at least 1 added project
+
+  // Certificate separation
+  free_course_certificate: 5,       // Max 2 free course certificates per referred student
+  skill_exam_certificate: 20,        // Passed skill assessment exam
+  paid_course_certificate: 50,       // 1st paid course cert
+  additional_paid_certificate: 20,  // Subsequent paid course certs
+  first_certificate: 50,             // Legacy compatibility alias
+  additional_certificate: 20,        // Legacy compatibility alias
   linkedin_certificate_share: 15,
+  linkedin_cert_share: 15,
+
+  // Hackathon & Job Sim
+  free_hackathon: 10,
+  hackathon_free: 10,
+  job_sim_free: 15,
+
+  // Ambassador Network Growth
   student_becomes_ambassador: 100,
-  login: 2, // Legacy login rule (capped per user)
-  ambassador_login: 1, // Legacy daily login
+  student_ambassador_verified: 100,  // Awarded when referred user becomes ambassador AND completes 1st verified milestone
+
+  // Daily / Login activity
+  login: 2,
+  ambassador_login: 1,              // Max 1 credit per UTC day for approved ambassadors
 };
+
+/**
+ * Hackathon registration fee tiers (range-based SVC %).
+ */
+export const HACKATHON_TIERS = [
+  { label: '₹1–₹99',    min: 1,    max: 99,   pct: 0.08, display: '8%' },
+  { label: '₹100–₹299', min: 100,  max: 299,  pct: 0.10, display: '10%' },
+  { label: '₹300–₹499', min: 300,  max: 499,  pct: 0.12, display: '12%' },
+  { label: '₹500–₹999', min: 500,  max: 999,  pct: 0.15, display: '15%' },
+  { label: '₹1000+',    min: 1000, max: Infinity, pct: 0.18, display: '18%' },
+];
 
 /**
  * Calculates revenue points: Floor(Final Amount Paid * 10%)
@@ -78,6 +106,15 @@ export const POINT_RULES = {
 export function calculateRevenuePoints(finalAmountPaid) {
   if (!finalAmountPaid || finalAmountPaid <= 0) return 0;
   return Math.floor(finalAmountPaid * 0.10);
+}
+
+/**
+ * Range-based hackathon SVC calculation
+ */
+export function calculateHackathonPoints(registrationFee) {
+  if (!registrationFee || registrationFee <= 0) return POINT_RULES.hackathon_free;
+  const tier = HACKATHON_TIERS.find(t => registrationFee >= t.min && registrationFee <= t.max);
+  return tier ? Math.floor(registrationFee * tier.pct) : POINT_RULES.hackathon_free;
 }
 
 export const ACHIEVEMENT_BADGES = [

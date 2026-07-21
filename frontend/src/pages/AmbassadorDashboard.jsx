@@ -250,9 +250,18 @@ const AmbassadorDashboard = () => {
                   <Trophy className="w-8 h-8" />
                 </div>
                 <div>
-                  <span className="text-slate-400 text-xs font-bold uppercase tracking-wider block">Total SV Points</span>
-                  <div className="text-3xl sm:text-4xl font-black text-white">{amb.totalSVPoints || amb.totalPoints} <span className="text-xs font-bold text-amber-400">pts</span></div>
-                  <span className="text-xs text-slate-400">Price-aware engagement points</span>
+                  <span className="text-slate-400 text-xs font-bold uppercase tracking-wider block">Verified SV Points</span>
+                  <div className="text-3xl sm:text-4xl font-black text-white">
+                    {amb.totalVerifiedPoints ?? amb.totalPoints ?? 0} <span className="text-xs font-bold text-amber-400">Verified</span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-xs text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md">
+                      Pending: {amb.totalPendingPoints || 0} pts
+                    </span>
+                    <Link to="/campus-ambassador/terms" className="text-xs text-indigo-400 hover:text-indigo-300 underline font-medium">
+                      Terms & Rules
+                    </Link>
+                  </div>
                 </div>
               </div>
 
@@ -1204,7 +1213,7 @@ const AmbassadorDashboard = () => {
 
             {pointsByMonth.length > 0 ? (
               <div className="h-64 w-full pt-4">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                   <LineChart data={pointsByMonth} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
                     <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} />

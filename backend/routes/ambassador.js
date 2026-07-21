@@ -97,6 +97,10 @@ router.post('/apply', authOptions, async (req, res) => {
  * GET /api/ambassador/me
  * Check application status & info.
  */
+/**
+ * GET /api/ambassador/me
+ * Check application status & info.
+ */
 const getAmbassadorMe = async (req, res) => {
   try {
     const amb = await CampusAmbassador.findOne({ userId: req.user.id }).lean();
@@ -106,7 +110,9 @@ const getAmbassadorMe = async (req, res) => {
       ? `${FRONTEND_URL()}/register?ref=${amb.referralCode}`
       : null;
 
-    const levelInfo = getAmbassadorLevel(amb.totalPoints, amb.levelOverride, amb.customRevenueShare);
+    const verifiedPts = amb.totalVerifiedPoints ?? amb.totalPoints ?? 0;
+    const pendingPts = amb.totalPendingPoints ?? 0;
+    const levelInfo = getAmbassadorLevel(verifiedPts, amb.levelOverride, amb.customRevenueShare);
 
     res.json({
       _id: amb._id,
@@ -116,7 +122,9 @@ const getAmbassadorMe = async (req, res) => {
       referralCode: amb.referralCode,
       referralUrl,
       totalPoints: amb.totalPoints || 0,
-      totalSVPoints: amb.totalSVPoints || amb.totalPoints || 0,
+      totalSVPoints: verifiedPts,
+      totalVerifiedPoints: verifiedPts,
+      totalPendingPoints: pendingPts,
       level: levelInfo,
       claimedMilestones: amb.claimedMilestones || [],
       createdAt: amb.createdAt,
@@ -140,12 +148,17 @@ router.get('/dashboard', authOptions, requireAmbassador, async (req, res) => {
     const amb = req.ambassador;
     const referralUrl = `${FRONTEND_URL()}/register?ref=${amb.referralCode}`;
 
+    const verifiedPts = amb.totalVerifiedPoints ?? amb.totalPoints ?? 0;
+    const pendingPts = amb.totalPendingPoints ?? 0;
+
     // Level info & revenue share %
-    const currentLevel = getAmbassadorLevel(amb.totalPoints, amb.levelOverride, amb.customRevenueShare);
+    const currentLevel = getAmbassadorLevel(verifiedPts, amb.levelOverride, amb.customRevenueShare);
 
     // Aggregate structured statistics
     const [
       totalReferrals,
+      verifiedReferrals,
+      pendingReferrals,
       profileCompletions,
       portfolios,
       totalCerts,
@@ -155,17 +168,21 @@ router.get('/dashboard', authOptions, requireAmbassador, async (req, res) => {
       studentsConverted,
     ] = await Promise.all([
       ReferralEvent.countDocuments({ ambassadorId: amb._id, eventType: 'registration' }),
+      ReferralEvent.countDocuments({ ambassadorId: amb._id, eventType: 'registration', status: 'verified' }),
+      ReferralEvent.countDocuments({ ambassadorId: amb._id, eventType: 'registration', status: 'pending' }),
       ReferralEvent.countDocuments({ ambassadorId: amb._id, eventType: 'profile_completed' }),
       ReferralEvent.countDocuments({ ambassadorId: amb._id, eventType: 'portfolio_published' }),
-      ReferralEvent.countDocuments({ ambassadorId: amb._id, eventType: { $in: ['certificate', 'first_certificate', 'additional_certificate'] } }),
+      ReferralEvent.countDocuments({ ambassadorId: amb._id, eventType: { $in: ['certificate', 'first_certificate', 'additional_certificate', 'free_course_certificate', 'skill_exam_certificate', 'paid_course_certificate'] } }),
       ReferralEvent.countDocuments({ ambassadorId: amb._id, eventType: 'paid_course' }),
       ReferralEvent.countDocuments({ ambassadorId: amb._id, eventType: 'paid_hackathon' }),
       ReferralEvent.countDocuments({ ambassadorId: amb._id, eventType: 'paid_simulation' }),
-      ReferralEvent.countDocuments({ ambassadorId: amb._id, eventType: 'student_becomes_ambassador' }),
+      ReferralEvent.countDocuments({ ambassadorId: amb._id, eventType: { $in: ['student_becomes_ambassador', 'student_ambassador_verified'] } }),
     ]);
 
     const stats = {
       totalReferrals,
+      verifiedReferrals,
+      pendingReferrals,
       profileCompletions,
       portfolios,
       totalCerts,
@@ -177,7 +194,7 @@ router.get('/dashboard', authOptions, requireAmbassador, async (req, res) => {
     };
 
     // Calculate Achievement Badges
-    const badges = calculateBadges(stats, amb.totalPoints);
+    const badges = calculateBadges(stats, verifiedPts);
 
     // Point history audit log (recent 50)
     const pointHistory = await PointHistory.find({ ambassadorId: amb._id })
@@ -200,7 +217,7 @@ router.get('/dashboard', authOptions, requireAmbassador, async (req, res) => {
         status = 'claimed';
       } else if (req) {
         status = req.status; // 'requested', 'approved', 'rejected'
-      } else if (amb.totalPoints >= cfg.minPoints) {
+      } else if (verifiedPts >= cfg.minPoints) {
         status = 'eligible';
       }
 
@@ -216,9 +233,9 @@ router.get('/dashboard', authOptions, requireAmbassador, async (req, res) => {
       };
     });
 
-    // Monthly growth data for charts
+    // Monthly growth data for charts (verified points only)
     const pointsByMonthRaw = await ReferralEvent.aggregate([
-      { $match: { ambassadorId: amb._id } },
+      { $match: { ambassadorId: amb._id, status: 'verified' } },
       {
         $group: {
           _id: { $dateToString: { format: '%Y-%m', date: '$createdAt' } },
@@ -245,7 +262,9 @@ router.get('/dashboard', authOptions, requireAmbassador, async (req, res) => {
         location: amb.location,
         status: amb.status,
         totalPoints: amb.totalPoints || 0,
-        totalSVPoints: amb.totalSVPoints || amb.totalPoints || 0,
+        totalSVPoints: verifiedPts,
+        totalVerifiedPoints: verifiedPts,
+        totalPendingPoints: pendingPts,
         level: currentLevel,
         referralCode: amb.referralCode,
         referralUrl,
@@ -266,30 +285,31 @@ router.get('/dashboard', authOptions, requireAmbassador, async (req, res) => {
 
 /**
  * GET /api/ambassador/leaderboard
- * Leaderboard with Weekly, Monthly, and All-Time views, sortable by Points, Referrals, Certificates.
+ * Leaderboard with Weekly, Monthly, and All-Time views, sortable by Verified Points, Referrals, Certificates.
  */
 router.get('/leaderboard', authOptions, async (req, res) => {
   try {
     const { timeframe = 'all_time', sortBy = 'points' } = req.query;
 
-    let dateFilter = {};
+    let dateFilter = { status: 'verified' };
     if (timeframe === 'weekly') {
       const now = new Date();
       const weekStart = new Date(now.setDate(now.getDate() - 7));
-      dateFilter = { createdAt: { $gte: weekStart } };
+      dateFilter = { createdAt: { $gte: weekStart }, status: 'verified' };
     } else if (timeframe === 'monthly') {
       const now = new Date();
       const monthStart = new Date(now.setMonth(now.getMonth() - 1));
-      dateFilter = { createdAt: { $gte: monthStart } };
+      dateFilter = { createdAt: { $gte: monthStart }, status: 'verified' };
     }
 
     let ambassadors;
     if (timeframe === 'all_time') {
       ambassadors = await CampusAmbassador.find({ status: 'approved' })
         .populate('userId', 'name email')
+        .sort({ totalVerifiedPoints: -1, totalPoints: -1 })
         .lean();
     } else {
-      // Aggregate points for specific timeframe
+      // Aggregate verified points for specific timeframe
       const agg = await ReferralEvent.aggregate([
         { $match: dateFilter },
         {
@@ -300,7 +320,7 @@ router.get('/leaderboard', authOptions, async (req, res) => {
               $sum: { $cond: [{ $eq: ['$eventType', 'registration'] }, 1, 0] },
             },
             periodCerts: {
-              $sum: { $cond: [{ $in: ['$eventType', ['certificate', 'first_certificate', 'additional_certificate']] }, 1, 0] },
+              $sum: { $cond: [{ $in: ['$eventType', ['certificate', 'first_certificate', 'additional_certificate', 'free_course_certificate', 'skill_exam_certificate', 'paid_course_certificate']] }, 1, 0] },
             },
           },
         },
@@ -326,20 +346,23 @@ router.get('/leaderboard', authOptions, async (req, res) => {
     const leaderboardData = await Promise.all(
       ambassadors.map(async amb => {
         const [refCount, certCount] = await Promise.all([
-          ReferralEvent.countDocuments({ ambassadorId: amb._id, eventType: 'registration' }),
-          ReferralEvent.countDocuments({ ambassadorId: amb._id, eventType: { $in: ['certificate', 'first_certificate', 'additional_certificate'] } }),
+          ReferralEvent.countDocuments({ ambassadorId: amb._id, eventType: 'registration', status: 'verified' }),
+          ReferralEvent.countDocuments({ ambassadorId: amb._id, eventType: { $in: ['certificate', 'first_certificate', 'additional_certificate', 'free_course_certificate', 'skill_exam_certificate', 'paid_course_certificate'] }, status: 'verified' }),
         ]);
 
-        const levelInfo = getAmbassadorLevel(amb.totalPoints, amb.levelOverride, amb.customRevenueShare);
+        const verifiedPts = amb.totalVerifiedPoints ?? amb.totalPoints ?? 0;
+        const levelInfo = getAmbassadorLevel(verifiedPts, amb.levelOverride, amb.customRevenueShare);
 
         return {
           _id: amb._id,
           name: amb.userId?.name || 'Ambassador',
           college: amb.college,
-          totalSVPoints: amb.totalPoints || 0,
+          totalSVPoints: verifiedPts,
+          totalVerifiedPoints: verifiedPts,
+          totalPendingPoints: amb.totalPendingPoints || 0,
           totalReferrals: refCount,
           totalCertificates: certCount,
-          periodPoints: amb.periodPoints ?? (amb.totalPoints || 0),
+          periodPoints: amb.periodPoints ?? verifiedPts,
           periodReferrals: amb.periodReferrals ?? refCount,
           periodCertificates: amb.periodCerts ?? certCount,
           level: levelInfo,
@@ -347,7 +370,7 @@ router.get('/leaderboard', authOptions, async (req, res) => {
       })
     );
 
-    // Sort leaderboard
+    // Sort leaderboard strictly by verified metrics
     leaderboardData.sort((a, b) => {
       if (sortBy === 'referrals') {
         return b.periodReferrals - a.periodReferrals;

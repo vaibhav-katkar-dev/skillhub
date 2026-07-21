@@ -50,6 +50,7 @@ const NAV_COLUMNS = [
     icon: Building2,
     links: [
       { to: '/campus-ambassador', label: '🎓 Campus Ambassador', highlight: true },
+      { to: '/campus-ambassador/terms', label: 'Ambassador Rules & Terms' },
       { to: '/host', label: 'Host a Hackathon' },
       { to: '/dashboard?tab=profile', label: 'Create Free Portfolio' },
       { to: '/dashboard', label: 'Student Dashboard' },
@@ -70,6 +71,7 @@ const SOCIAL = [
 const LEGAL_LINKS = [
   { to: '/privacy-policy', label: 'Privacy Policy' },
   { to: '/terms', label: 'Terms of Service' },
+  { to: '/campus-ambassador/terms', label: 'Ambassador Terms' },
   { to: '/refund-policy', label: 'Refund Policy' },
   { to: '/cookie-policy', label: 'Cookie Policy' },
 ];

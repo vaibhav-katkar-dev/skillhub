@@ -38,6 +38,7 @@ const HackathonDetail  = lazy(() => import('./pages/HackathonDetail'));
 const JobSimulation    = lazy(() => import('./pages/JobSimulation'));
 const HostHackathon    = lazy(() => import('./pages/HostHackathon'));
 const CampusAmbassador = lazy(() => import('./pages/CampusAmbassador'));
+const CampusAmbassadorTerms = lazy(() => import('./pages/CampusAmbassadorTerms'));
 const AmbassadorDashboard = lazy(() => import('./pages/AmbassadorDashboard'));
 const FreeCourses      = lazy(() => import('./pages/FreeCourses'));
 const Certification    = lazy(() => import('./pages/Certification'));
@@ -203,6 +204,7 @@ function AppContent() {
               <Route path="/cookie-policy" element={<CookiePolicy />} />
               <Route path="/host" element={<HostHackathon />} />
               <Route path="/campus-ambassador" element={<CampusAmbassador />} />
+              <Route path="/campus-ambassador/terms" element={<CampusAmbassadorTerms />} />
               <Route path="/ambassador/dashboard" element={<ProtectedRoute><AmbassadorDashboard /></ProtectedRoute>} />
               <Route path="/free-courses" element={<FreeCourses />} />
               <Route path="/certification" element={<Certification />} />

@@ -7,6 +7,7 @@
 import CampusAmbassador from '../models/CampusAmbassador.js';
 import ReferralEvent from '../models/ReferralEvent.js';
 import PointHistory from '../models/PointHistory.js';
+import User from '../models/User.js';
 import {
   AMBASSADOR_LEVELS,
   POINT_RULES,
@@ -18,9 +19,10 @@ export { AMBASSADOR_LEVELS, POINT_RULES, ACHIEVEMENT_BADGES };
 
 /**
  * Determine effective level & revenue share % for an ambassador.
+ * Uses totalVerifiedPoints for level calculations.
  */
-export function getAmbassadorLevel(totalPoints = 0, levelOverride = null, customRevenueShare = null) {
-  const points = Math.max(0, totalPoints);
+export function getAmbassadorLevel(totalVerifiedPoints = 0, levelOverride = null, customRevenueShare = null) {
+  const points = Math.max(0, totalVerifiedPoints);
   let levelKey = 'explorer';
 
   if (levelOverride && AMBASSADOR_LEVELS[levelOverride]) {
@@ -49,7 +51,7 @@ export function getAmbassadorLevel(totalPoints = 0, levelOverride = null, custom
 
 /**
  * Award points to an ambassador for a referral event.
- * Ensures duplicate prevention, updates CampusAmbassador, and writes PointHistory audit.
+ * Handles pending vs verified status and prevents self-referrals.
  */
 export async function awardPoints(ambassadorId, eventType, opts = {}) {
   if (!ambassadorId) return { points: 0, skipped: true, reason: 'No ambassadorId' };
@@ -62,11 +64,20 @@ export async function awardPoints(ambassadorId, eventType, opts = {}) {
     couponDiscount = null,
     referenceId = null,
     description = '',
+    status = eventType === 'registration' ? 'pending' : 'verified',
     meta = {},
   } = opts;
 
+  // ── Self-Referral Prevention ───────────────────────────────────────────────
+  if (referredUserId) {
+    const amb = await CampusAmbassador.findById(ambassadorId).lean();
+    if (amb && String(amb.userId) === String(referredUserId)) {
+      return { points: 0, skipped: true, reason: 'Self-referral prohibited' };
+    }
+  }
+
   // ── Single-award & Rate-limiting Duplicate Checks ─────────────────────────────
-  if (['profile_completed', 'portfolio_published', 'first_certificate', 'student_becomes_ambassador'].includes(eventType)) {
+  if (['profile_completed', 'portfolio_published', 'first_certificate', 'student_becomes_ambassador', 'student_ambassador_verified'].includes(eventType)) {
     if (referredUserId || referenceId) {
       const query = { ambassadorId, eventType };
       if (referredUserId) query.referredUserId = referredUserId;
@@ -79,8 +90,18 @@ export async function awardPoints(ambassadorId, eventType, opts = {}) {
     }
   }
 
+  if (eventType === 'free_course_certificate' && referredUserId) {
+    const count = await ReferralEvent.countDocuments({
+      ambassadorId,
+      referredUserId,
+      eventType: 'free_course_certificate',
+    });
+    if (count >= 2) {
+      return { points: 0, skipped: true, reason: 'Capped at max 2 free course certificates per referred student' };
+    }
+  }
+
   if (eventType === 'login' && referredUserId) {
-    // Capped at 5 login credits per referred user
     const existingCount = await ReferralEvent.countDocuments({
       ambassadorId,
       referredUserId,
@@ -92,7 +113,6 @@ export async function awardPoints(ambassadorId, eventType, opts = {}) {
   }
 
   if (eventType === 'ambassador_login') {
-    // Max 1 credit per UTC day
     const todayStart = new Date();
     todayStart.setUTCHours(0, 0, 0, 0);
     const existing = await ReferralEvent.findOne({
@@ -123,6 +143,7 @@ export async function awardPoints(ambassadorId, eventType, opts = {}) {
       ambassadorId,
       referredUserId,
       eventType,
+      status,
       points,
       amountPaidInr: amountPaidInr || 0,
       fullPriceInr: fullPriceInr || 0,
@@ -131,12 +152,72 @@ export async function awardPoints(ambassadorId, eventType, opts = {}) {
       meta,
     });
 
+    if (status === 'verified') {
+      await PointHistory.create({
+        ambassadorId,
+        points,
+        eventType,
+        description: defaultDesc,
+        referenceId: referenceId ? String(referenceId) : null,
+        addedBy: 'system',
+      });
+    }
+
+    const incQuery = status === 'pending'
+      ? { totalPendingPoints: points }
+      : {
+          totalPoints: points,
+          totalSVPoints: points,
+          totalVerifiedPoints: points,
+        };
+
+    const updatedAmb = await CampusAmbassador.findByIdAndUpdate(
+      ambassadorId,
+      { $inc: incQuery },
+      { new: true }
+    );
+
+    // If verified event performed by a referred user, check if this completes referred user's 1st verified milestone!
+    if (status === 'verified' && referredUserId) {
+      checkAmbassadorFirstMilestone(referredUserId).catch(() => {});
+    }
+
+    return {
+      points,
+      skipped: false,
+      newVerifiedTotal: updatedAmb?.totalVerifiedPoints || 0,
+      newPendingTotal: updatedAmb?.totalPendingPoints || 0,
+    };
+  } catch (err) {
+    console.error('[AmbassadorPoints] Error awarding points:', err);
+    return { points: 0, skipped: true, error: err.message };
+  }
+}
+
+/**
+ * Transition points from pending to verified status (e.g. when user verifies email).
+ */
+export async function verifyPendingPoints(ambassadorId, eventType, referredUserId) {
+  if (!ambassadorId || !referredUserId) return null;
+
+  try {
+    const event = await ReferralEvent.findOne({
+      ambassadorId,
+      referredUserId,
+      eventType,
+      status: 'pending',
+    });
+
+    if (!event) return null;
+
+    event.status = 'verified';
+    await event.save();
+
     await PointHistory.create({
       ambassadorId,
-      points,
-      eventType,
-      description: defaultDesc,
-      referenceId: referenceId ? String(referenceId) : null,
+      points: event.points,
+      eventType: `${eventType}_verified`,
+      description: `${getEventDescription(eventType)} (Email Verified)`,
       addedBy: 'system',
     });
 
@@ -144,17 +225,132 @@ export async function awardPoints(ambassadorId, eventType, opts = {}) {
       ambassadorId,
       {
         $inc: {
-          totalPoints: points,
-          totalSVPoints: points,
+          totalPendingPoints: -event.points,
+          totalVerifiedPoints: event.points,
+          totalPoints: event.points,
+          totalSVPoints: event.points,
         },
       },
       { new: true }
     );
 
-    return { points, skipped: false, newTotal: updatedAmb?.totalPoints || 0 };
+    // Check if referred user is an ambassador who now completed 1st verified milestone
+    checkAmbassadorFirstMilestone(referredUserId).catch(() => {});
+
+    return updatedAmb;
   } catch (err) {
-    console.error('[AmbassadorPoints] Error awarding points:', err);
-    return { points: 0, skipped: true, error: err.message };
+    console.error('[AmbassadorPoints] Error verifying pending points:', err);
+    return null;
+  }
+}
+
+/**
+ * Automatic Point Clawback for payment refunds / cancellations.
+ * Automatically deducts points and re-locks milestone tiers if balance drops below threshold.
+ */
+export async function clawbackPoints(ambassadorId, referenceId, reason = 'Payment Refund Clawback') {
+  if (!ambassadorId || !referenceId) return { success: false, reason: 'Missing parameters' };
+
+  try {
+    // Find original referral event associated with payment
+    const originalEvent = await ReferralEvent.findOne({
+      ambassadorId,
+      $or: [
+        { 'meta.referenceId': String(referenceId) },
+        { 'meta.paymentId': String(referenceId) },
+        { 'meta.orderId': String(referenceId) },
+      ],
+      status: { $ne: 'clawed_back' },
+    });
+
+    if (!originalEvent) {
+      return { success: false, reason: 'Original event not found or already clawed back' };
+    }
+
+    const clawbackAmount = originalEvent.points;
+
+    // Create clawback event
+    await ReferralEvent.create({
+      ambassadorId,
+      referredUserId: originalEvent.referredUserId,
+      eventType: 'payment_refund_clawback',
+      status: 'clawed_back',
+      points: -clawbackAmount,
+      amountPaidInr: originalEvent.amountPaidInr,
+      meta: {
+        originalEventId: originalEvent._id,
+        referenceId: String(referenceId),
+        reason,
+      },
+    });
+
+    // Mark original event as clawed_back
+    originalEvent.status = 'clawed_back';
+    await originalEvent.save();
+
+    // Create audit record
+    await PointHistory.create({
+      ambassadorId,
+      points: -clawbackAmount,
+      eventType: 'payment_refund_clawback',
+      description: `Clawback: ${reason} (-${clawbackAmount} SV Points)`,
+      referenceId: String(referenceId),
+      addedBy: 'system',
+    });
+
+    // Deduct points from CampusAmbassador
+    const updatedAmb = await CampusAmbassador.findByIdAndUpdate(
+      ambassadorId,
+      {
+        $inc: {
+          totalPoints: -clawbackAmount,
+          totalSVPoints: -clawbackAmount,
+          totalVerifiedPoints: -clawbackAmount,
+        },
+      },
+      { new: true }
+    );
+
+    return {
+      success: true,
+      clawbackedPoints: clawbackAmount,
+      newVerifiedTotal: updatedAmb?.totalVerifiedPoints || 0,
+    };
+  } catch (err) {
+    console.error('[AmbassadorPoints] Error in clawbackPoints:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Checks if a user is an ambassador who has completed their 1st verified milestone activity.
+ * If yes, unlocks +100 SV points for the referrer (`student_ambassador_verified`).
+ */
+export async function checkAmbassadorFirstMilestone(userId) {
+  if (!userId) return;
+
+  try {
+    const amb = await CampusAmbassador.findOne({ userId, status: 'approved' }).lean();
+    if (!amb) return;
+
+    const user = await User.findById(userId).lean();
+    if (!user || !user.referredBy) return; // Not referred by any ambassador
+
+    // Check if ambassador has at least 1 verified activity
+    const verifiedActivityCount = await ReferralEvent.countDocuments({
+      ambassadorId: amb._id,
+      status: 'verified',
+    });
+
+    if (verifiedActivityCount > 0) {
+      // Award referrer +100 SV points for verified ambassador network growth
+      await awardPoints(user.referredBy, 'student_ambassador_verified', {
+        referredUserId: userId,
+        description: 'Referred student completed 1st verified milestone as Campus Ambassador',
+      });
+    }
+  } catch (err) {
+    console.error('[AmbassadorPoints] Error in checkAmbassadorFirstMilestone:', err);
   }
 }
 
@@ -185,6 +381,7 @@ export async function adjustPointsManually(ambassadorId, points, reason, adminUs
   await ReferralEvent.create({
     ambassadorId: amb._id,
     eventType: pointsNum > 0 ? 'admin_addition' : 'admin_deduction',
+    status: 'verified',
     points: pointsNum,
     meta: { reason: cleanReason, adminUserId },
   });
@@ -195,6 +392,7 @@ export async function adjustPointsManually(ambassadorId, points, reason, adminUs
       $inc: {
         totalPoints: pointsNum,
         totalSVPoints: pointsNum,
+        totalVerifiedPoints: pointsNum,
       },
     },
     { new: true }
@@ -206,7 +404,7 @@ export async function adjustPointsManually(ambassadorId, points, reason, adminUs
 /**
  * Calculate dynamic achievement badges for an ambassador.
  */
-export function calculateBadges(stats = {}, totalPoints = 0, eventTypesSeen = []) {
+export function calculateBadges(stats = {}, totalVerifiedPoints = 0) {
   return ACHIEVEMENT_BADGES.map(badge => {
     let unlocked = false;
 
@@ -224,7 +422,7 @@ export function calculateBadges(stats = {}, totalPoints = 0, eventTypesSeen = []
         unlocked = (stats.paidActivities || 0) >= badge.reqCount;
         break;
       case 'points':
-        unlocked = totalPoints >= badge.reqCount;
+        unlocked = totalVerifiedPoints >= badge.reqCount;
         break;
       default:
         unlocked = false;
@@ -243,13 +441,18 @@ function getEventDescription(eventType, amountPaid = 0) {
     case 'registration': return 'Referred user registration';
     case 'profile_completed': return 'Referred user profile completed';
     case 'portfolio_published': return 'Referred user portfolio published';
+    case 'free_course_certificate': return 'Referred user free course certificate earned';
+    case 'skill_exam_certificate': return 'Referred user passed skill assessment exam';
+    case 'paid_course_certificate': return 'Referred user paid course certificate earned';
     case 'first_certificate': return 'Referred user first certificate earned';
     case 'additional_certificate': return 'Referred user additional certificate earned';
     case 'linkedin_certificate_share': return 'Referred user shared certificate on LinkedIn';
     case 'student_becomes_ambassador': return 'Referred student became a Campus Ambassador';
+    case 'student_ambassador_verified': return 'Referred student completed 1st verified ambassador activity';
     case 'paid_course': return `Referred user paid course purchase (₹${amountPaid})`;
     case 'paid_hackathon': return `Referred user paid hackathon entry (₹${amountPaid})`;
     case 'paid_simulation': return `Referred user paid job simulation cert (₹${amountPaid})`;
+    case 'payment_refund_clawback': return 'Payment refund point clawback';
     default: return eventType;
   }
 }

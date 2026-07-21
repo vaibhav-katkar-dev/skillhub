@@ -269,6 +269,13 @@ export default function CampusAmbassador() {
                 <ArrowRight className="w-4 h-4" />
               </a>
             )}
+            <Link
+              to="/campus-ambassador/terms"
+              className="inline-flex items-center gap-2 px-6 py-4 rounded-2xl bg-slate-900/80 border border-slate-800 text-indigo-300 hover:text-white hover:border-indigo-500/40 font-semibold text-sm transition-all"
+            >
+              <FileText className="w-4 h-4 text-indigo-400" />
+              Read Terms & Anti-Abuse Rules
+            </Link>
           </div>
         </div>
       </section>

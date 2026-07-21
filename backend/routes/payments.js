@@ -242,7 +242,7 @@ router.post('/razorpay-verify', authOptions, async (req, res) => {
         fullPriceInr,
         couponCode: couponDoc?.code,
         couponDiscount: couponDoc?.discountValue,
-        meta: { courseId },
+        meta: { courseId, paymentId: razorpay_payment_id, orderId: razorpay_order_id },
       }).catch(console.error);
     }
 

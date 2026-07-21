@@ -28,6 +28,8 @@ const campusAmbassadorSchema = new mongoose.Schema({
 
   totalPoints:        { type: Number, default: 0, min: 0, index: true },
   totalSVPoints:      { type: Number, default: 0, min: 0, index: true },
+  totalVerifiedPoints:{ type: Number, default: 0, min: 0, index: true },
+  totalPendingPoints: { type: Number, default: 0, min: 0 },
   levelOverride:      { type: String, enum: ['explorer', 'bronze', 'silver', 'gold', 'platinum', null], default: null },
   customRevenueShare: { type: Number, default: null },
   claimedMilestones:  [{ type: String, enum: ['bronze', 'silver', 'gold', 'platinum'] }],
@@ -38,6 +40,7 @@ const campusAmbassadorSchema = new mongoose.Schema({
 
 campusAmbassadorSchema.index({ userId: 1 }, { unique: true });
 campusAmbassadorSchema.index({ referralCode: 1 }, { unique: true, sparse: true });
+campusAmbassadorSchema.index({ totalVerifiedPoints: -1 });
 campusAmbassadorSchema.index({ totalPoints: -1 });
 campusAmbassadorSchema.index({ status: 1, createdAt: -1 });
 

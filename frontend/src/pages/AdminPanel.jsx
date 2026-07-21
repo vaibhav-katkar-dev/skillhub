@@ -11,7 +11,7 @@ import {
   Trophy, Link2, ExternalLink, Filter, Crown,
   Tag, Trash2, ToggleLeft, ToggleRight, Percent, Mail, Search, Send,
   IndianRupee, Briefcase, TrendingUp, Eye as EyeIcon, EyeOff, BadgeCheck,
-  ChevronRight, Globe, Download
+  ChevronRight, Globe, Download, Clock
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 
@@ -1521,7 +1521,7 @@ const AdminPanel = () => {
                     <div className="h-full w-full rounded-3xl bg-white border border-slate-200/80 p-6 shadow-[0_8px_30px_rgb(15_23_42/0.06)]">
                       <h3 className="text-sm font-bold text-slate-700 mb-4 uppercase tracking-wide">User Growth</h3>
                       <div className="h-64 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                           <LineChart data={analytics.charts.userGrowth} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                             <Line type="monotone" dataKey="count" stroke="#4f46e5" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
                             <CartesianGrid stroke="#e2e8f0" strokeDasharray="5 5" vertical={false} />
@@ -1536,7 +1536,7 @@ const AdminPanel = () => {
                     <div className="h-full w-full rounded-3xl bg-white border border-slate-200/80 p-6 shadow-[0_8px_30px_rgb(15_23_42/0.06)]">
                       <h3 className="text-sm font-bold text-slate-700 mb-4 uppercase tracking-wide">Certificates Issued</h3>
                       <div className="h-64 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                           <BarChart data={analytics.charts.certificateGrowth} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                             <CartesianGrid stroke="#e2e8f0" strokeDasharray="5 5" vertical={false} />
                             <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} dy={10} />
@@ -1578,7 +1578,7 @@ const AdminPanel = () => {
                     </div>
                     <div className="p-6">
                       <div className="h-72 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                           <BarChart data={coloredData} margin={{ top: 4, right: 16, bottom: 8, left: 0 }} barCategoryGap="18%">
                             <CartesianGrid stroke="#f1f5f9" strokeDasharray="3 3" vertical={false} />
                             <XAxis
@@ -1642,7 +1642,7 @@ const AdminPanel = () => {
                     </div>
                     <div className="p-6">
                       <div className="h-72 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                           <BarChart data={coloredData} margin={{ top: 4, right: 16, bottom: 8, left: 0 }} barCategoryGap="18%">
                             <CartesianGrid stroke="#f1f5f9" strokeDasharray="3 3" vertical={false} />
                             <XAxis
