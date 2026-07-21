@@ -11,7 +11,7 @@ import {
   Trophy, Link2, ExternalLink, Filter, Crown,
   Tag, Trash2, ToggleLeft, ToggleRight, Percent, Mail, Search, Send,
   IndianRupee, Briefcase, TrendingUp, Eye as EyeIcon, EyeOff, BadgeCheck,
-  ChevronRight, Globe
+  ChevronRight, Globe, Download
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 
