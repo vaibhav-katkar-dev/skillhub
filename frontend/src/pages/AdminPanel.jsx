@@ -101,6 +101,11 @@ const AdminPanel = () => {
   const [warmJobLoading, setWarmJobLoading] = useState(false);
   const [warmJobError, setWarmJobError] = useState('');
 
+  // ── Individual Hackathon Analytics Manager state (managed at frontend) ─────
+  const [activeAnalyticsHack, setActiveAnalyticsHack] = useState(null);
+  const [hackAnalyticsInputs, setHackAnalyticsInputs] = useState({ totalParticipants: '', totalCertificates: '', totalSubmissions: '' });
+  const [hackAnalyticsMsg, setHackAnalyticsMsg] = useState('');
+
   // ── Coupon manager state ──────────────────────────────────────────
   const [coupons, setCoupons] = useState([]);
   const [couponsLoading, setCouponsLoading] = useState(false);
@@ -348,6 +353,77 @@ const AdminPanel = () => {
     } finally {
       setCertIssueSaving(false);
     }
+  };
+
+  // ── Hackathon Analytics Calculation & Local Management ─────────────────
+  const getHackAnalytics = useCallback((hack, regs = []) => {
+    if (!hack) return { totalParticipants: 0, totalCertificates: 0, totalSubmissions: 0, teamsCount: 0, autoWinners: 0, hasOverride: false };
+    const hackId = hack._id || hack.slug;
+    const key = `skillvalix_hack_analytics_${hackId}`;
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem(key) || '{}'); } catch {}
+
+    const teamsCount = regs.length;
+    const autoParticipants = regs.reduce((sum, r) => sum + (r.members?.length || r.teamMembers?.length || 1), 0) || (hack.participantCount || 0);
+    const autoSubmissions = regs.filter(r => r.submissionLink || r.submission?.link || r.projectUrl || r.submissionDate).length;
+    const autoCertificates = regs.filter(r => r.certificateIssued || r.hasCertificate || r.certIssued).length;
+    const autoWinners = regs.filter(r => r.isWinner || r.winnerRank).length;
+
+    const hasOverride = Boolean(
+      (saved.totalParticipants !== undefined && saved.totalParticipants !== '') ||
+      (saved.totalCertificates !== undefined && saved.totalCertificates !== '') ||
+      (saved.totalSubmissions !== undefined && saved.totalSubmissions !== '')
+    );
+
+    return {
+      teamsCount,
+      autoParticipants,
+      autoSubmissions,
+      autoCertificates,
+      autoWinners,
+      totalParticipants: saved.totalParticipants !== undefined && saved.totalParticipants !== '' ? Number(saved.totalParticipants) : (autoParticipants || teamsCount),
+      totalCertificates: saved.totalCertificates !== undefined && saved.totalCertificates !== '' ? Number(saved.totalCertificates) : autoCertificates,
+      totalSubmissions: saved.totalSubmissions !== undefined && saved.totalSubmissions !== '' ? Number(saved.totalSubmissions) : autoSubmissions,
+      hasOverride
+    };
+  }, []);
+
+  const openHackAnalyticsModal = (hack) => {
+    setActiveAnalyticsHack(hack);
+    const hackId = hack._id || hack.slug;
+    const key = `skillvalix_hack_analytics_${hackId}`;
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem(key) || '{}'); } catch {}
+
+    setHackAnalyticsInputs({
+      totalParticipants: saved.totalParticipants !== undefined ? String(saved.totalParticipants) : '',
+      totalCertificates: saved.totalCertificates !== undefined ? String(saved.totalCertificates) : '',
+      totalSubmissions: saved.totalSubmissions !== undefined ? String(saved.totalSubmissions) : '',
+    });
+    setHackAnalyticsMsg('');
+    if (!registrationsByHack[hack._id]) {
+      loadRegistrations(hack._id);
+    }
+  };
+
+  const handleSaveHackAnalyticsOverride = (hackId) => {
+    const key = `skillvalix_hack_analytics_${hackId}`;
+    const payload = {
+      totalParticipants: hackAnalyticsInputs.totalParticipants !== '' ? Number(hackAnalyticsInputs.totalParticipants) : undefined,
+      totalCertificates: hackAnalyticsInputs.totalCertificates !== '' ? Number(hackAnalyticsInputs.totalCertificates) : undefined,
+      totalSubmissions: hackAnalyticsInputs.totalSubmissions !== '' ? Number(hackAnalyticsInputs.totalSubmissions) : undefined,
+    };
+    Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
+    
+    localStorage.setItem(key, JSON.stringify(payload));
+    setHackAnalyticsMsg('✅ Frontend analytics updated & saved locally!');
+  };
+
+  const handleResetHackAnalyticsOverride = (hackId) => {
+    const key = `skillvalix_hack_analytics_${hackId}`;
+    localStorage.removeItem(key);
+    setHackAnalyticsInputs({ totalParticipants: '', totalCertificates: '', totalSubmissions: '' });
+    setHackAnalyticsMsg('🔄 Analytics reset to system auto-calculated metrics.');
   };
 
   const loadCoupons = async () => {
@@ -2209,87 +2285,152 @@ const AdminPanel = () => {
                 <p className="text-slate-400 text-sm">No hackathons created yet.</p>
               ) : (
                 <div className="space-y-4">
-                  {hacks.map(h => (
-                    <div key={h._id} className="rounded-xl border border-slate-200 p-4">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-bold text-slate-900">{h.title}</span>
-                            <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${h.status === 'live' ? 'bg-emerald-100 text-emerald-700' : h.status === 'ended' ? 'bg-slate-100 text-slate-500' : 'bg-amber-100 text-amber-700'}`}>{h.status}</span>
-                            {h.visible ? <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Visible</span> : <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-400">Hidden</span>}
-                            {h.featured && <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Featured</span>}
-                          </div>
-                          <p className="text-sm text-slate-500 mt-1 line-clamp-2">{h.description}</p>
-                          <p className="text-xs text-slate-400 mt-2">
-                            Team: {h.teamConfig?.minMembers || 1}-{h.teamConfig?.maxMembers || 4} | Payment: {h.paymentConfig?.enabled ? `INR ${h.paymentConfig?.amountInr || 0}` : 'Free'}
-                          </p>
+                  {/* Overall Aggregate Analytics Bar */}
+                  {(() => {
+                    const totalEvents = hacks.length;
+                    const totalParticipantsAll = hacks.reduce((acc, h) => acc + getHackAnalytics(h, registrationsByHack[h._id] || []).totalParticipants, 0);
+                    const totalCertificatesAll = hacks.reduce((acc, h) => acc + getHackAnalytics(h, registrationsByHack[h._id] || []).totalCertificates, 0);
+                    const totalSubmissionsAll = hacks.reduce((acc, h) => acc + getHackAnalytics(h, registrationsByHack[h._id] || []).totalSubmissions, 0);
+
+                    return (
+                      <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 text-white shadow-md mb-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div className="p-2">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-purple-300">Hackathon Events</span>
+                          <p className="text-2xl font-black text-white mt-0.5">{totalEvents}</p>
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <button
-                            onClick={() => {
-                              setEditingHackId(h._id);
-                              setHackForm({
-                                title: h.title || '',
-                                slug: h.slug || '',
-                                tagline: h.tagline || '',
-                                description: h.description || '',
-                                theme: h.theme || '',
-                                status: h.status || 'upcoming',
-                                startDate: h.startDate ? new Date(h.startDate).toISOString().slice(0, 16) : '',
-                                registrationDeadline: h.registrationDeadline ? new Date(h.registrationDeadline).toISOString().slice(0, 16) : '',
-                                submissionDeadline: h.submissionDeadline ? new Date(h.submissionDeadline).toISOString().slice(0, 16) : '',
-                                endDate: h.endDate ? new Date(h.endDate).toISOString().slice(0, 16) : '',
-                                image: h.image || '',
-                                tags: (h.tags || []).join(', '),
-                                visible: Boolean(h.visible),
-                                featured: Boolean(h.featured),
-                                teamMin: Number(h.teamConfig?.minMembers || 1),
-                                teamMax: Number(h.teamConfig?.maxMembers || 4),
-                                paymentEnabled: Boolean(h.paymentConfig?.enabled),
-                                paymentAmountInr: Number(h.paymentConfig?.amountInr || 0),
-                                paymentDescription: h.paymentConfig?.description || 'Hackathon registration fee',
-                                acceptsAnyLink:    Boolean(h.submissionConfig?.acceptsAnyLink),
-                                acceptsDriveLink:  Boolean(h.submissionConfig?.acceptsDriveLink ?? true),
-                                acceptsPdfLink:    Boolean(h.submissionConfig?.acceptsPdfLink ?? true),
-                                acceptsGitHubLink: Boolean(h.submissionConfig?.acceptsGitHubLink ?? true),
-                                acceptsNotionLink: Boolean(h.submissionConfig?.acceptsNotionLink ?? true),
-                                submissionInstructions: h.submissionConfig?.instructions || '',
-                                maxSubmissionsPerTeam: Number(h.submissionConfig?.maxSubmissionsPerTeam || 3),
-                                linkLabel:         h.submissionConfig?.linkLabel || 'Submission Link',
-                                linkPlaceholder:   h.submissionConfig?.linkPlaceholder || 'Paste your submission link here...',
-                                linkHint:          h.submissionConfig?.linkHint || '',
-                                problemStatement: h.contentConfig?.problemStatement || '',
-                                rules: (h.contentConfig?.rules || []).join('\n'),
-                                judgingCriteria: (h.contentConfig?.judgingCriteria || []).join('\n'),
-                                prizes: (h.prizes || []).map((p) => `${p.rank || 'Prize'} | ${p.amount || ''}`).join('\n'),
-                                faqs: (h.contentConfig?.faqs || []).map((f) => `${f.question || ''} | ${f.answer || ''}`).join('\n'),
-                                accentColor: h.styleConfig?.accentColor || '#4F46E5',
-                              });
-                              setHackMsg('📝 Edit mode enabled. Update fields and click "Update Hackathon".');
-                              setShowHackForm(true);
-                              window.scrollTo({ top: 0, behavior: 'smooth' });
-                            }}
-                            className="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-100 text-amber-700 hover:bg-amber-200 transition"
-                          >
-                            Edit
-                          </button>
-                          <button onClick={async () => { await api.put(`/events/hackathons/${h._id}`, { visible: !h.visible }); loadHacks(); }} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${h.visible ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}>
-                            {h.visible ? 'Hide' : 'Show'}
-                          </button>
-                          <button onClick={() => loadRegistrations(h._id)} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition">
-                            Teams
-                          </button>
-                          <button onClick={() => openCertIssuePanel(h)} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white transition">
-                            Issue Certificates
-                          </button>
-                          <button onClick={() => handleExportHackathonUsers(h._id)} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition">
-                            Export Teams CSV
-                          </button>
-                          <button onClick={async () => { if (!confirm('Delete this hackathon?')) return; await api.delete(`/events/hackathons/${h._id}`); loadHacks(); }} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-red-600 hover:bg-red-100 transition">
-                            Delete
-                          </button>
+                        <div className="p-2">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-300">Total Participants</span>
+                          <p className="text-2xl font-black text-white mt-0.5">{totalParticipantsAll}</p>
+                        </div>
+                        <div className="p-2">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-amber-300">Certifications Issued</span>
+                          <p className="text-2xl font-black text-white mt-0.5">{totalCertificatesAll}</p>
+                        </div>
+                        <div className="p-2">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300">Projects Submitted</span>
+                          <p className="text-2xl font-black text-white mt-0.5">{totalSubmissionsAll}</p>
                         </div>
                       </div>
+                    );
+                  })()}
+
+                  {hacks.map(h => {
+                    const analytics = getHackAnalytics(h, registrationsByHack[h._id] || []);
+
+                    return (
+                      <div key={h._id} className="rounded-xl border border-slate-200 p-4 hover:border-indigo-200 transition">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-bold text-slate-900">{h.title}</span>
+                              <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${h.status === 'live' ? 'bg-emerald-100 text-emerald-700' : h.status === 'ended' ? 'bg-slate-100 text-slate-500' : 'bg-amber-100 text-amber-700'}`}>{h.status}</span>
+                              {h.visible ? <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Visible</span> : <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-400">Hidden</span>}
+                              {h.featured && <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Featured</span>}
+                            </div>
+                            <p className="text-sm text-slate-500 mt-1 line-clamp-2">{h.description}</p>
+                            <p className="text-xs text-slate-400 mt-2">
+                              Team: {h.teamConfig?.minMembers || 1}-{h.teamConfig?.maxMembers || 4} | Payment: {h.paymentConfig?.enabled ? `INR ${h.paymentConfig?.amountInr || 0}` : 'Free'}
+                            </p>
+
+                            {/* Quick Individual Hackathon Analytics Summary Pill Bar */}
+                            <div className="mt-3 pt-3 border-t border-slate-100 flex flex-wrap items-center gap-2 text-xs">
+                              <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Analytics:</span>
+                              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 border border-indigo-100 font-bold text-indigo-700">
+                                <Users className="w-3.5 h-3.5 text-indigo-500" />
+                                <span>Participation: <strong>{analytics.totalParticipants}</strong> ({analytics.teamsCount} teams)</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-100 font-bold text-amber-700">
+                                <Award className="w-3.5 h-3.5 text-amber-500" />
+                                <span>Certifications: <strong>{analytics.totalCertificates}</strong></span>
+                              </div>
+                              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-100 font-bold text-emerald-700">
+                                <ClipboardList className="w-3.5 h-3.5 text-emerald-500" />
+                                <span>Submissions: <strong>{analytics.totalSubmissions}</strong></span>
+                              </div>
+                              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-50 border border-purple-100 font-bold text-purple-700">
+                                <Trophy className="w-3.5 h-3.5 text-purple-500" />
+                                <span>Winners: <strong>{analytics.autoWinners}</strong></span>
+                              </div>
+                              {analytics.hasOverride && (
+                                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-violet-100 text-violet-700 border border-violet-200">
+                                  Frontend Managed
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-2 shrink-0 max-w-[340px] justify-end">
+                            <button
+                              onClick={() => openHackAnalyticsModal(h)}
+                              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-purple-600 text-white hover:bg-purple-700 transition flex items-center gap-1 shadow-sm"
+                            >
+                              <BarChart3 className="w-3.5 h-3.5" /> Analytics
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingHackId(h._id);
+                                setHackForm({
+                                  title: h.title || '',
+                                  slug: h.slug || '',
+                                  tagline: h.tagline || '',
+                                  description: h.description || '',
+                                  theme: h.theme || '',
+                                  status: h.status || 'upcoming',
+                                  startDate: h.startDate ? new Date(h.startDate).toISOString().slice(0, 16) : '',
+                                  registrationDeadline: h.registrationDeadline ? new Date(h.registrationDeadline).toISOString().slice(0, 16) : '',
+                                  submissionDeadline: h.submissionDeadline ? new Date(h.submissionDeadline).toISOString().slice(0, 16) : '',
+                                  endDate: h.endDate ? new Date(h.endDate).toISOString().slice(0, 16) : '',
+                                  image: h.image || '',
+                                  tags: (h.tags || []).join(', '),
+                                  visible: Boolean(h.visible),
+                                  featured: Boolean(h.featured),
+                                  teamMin: Number(h.teamConfig?.minMembers || 1),
+                                  teamMax: Number(h.teamConfig?.maxMembers || 4),
+                                  paymentEnabled: Boolean(h.paymentConfig?.enabled),
+                                  paymentAmountInr: Number(h.paymentConfig?.amountInr || 0),
+                                  paymentDescription: h.paymentConfig?.description || 'Hackathon registration fee',
+                                  acceptsAnyLink:    Boolean(h.submissionConfig?.acceptsAnyLink),
+                                  acceptsDriveLink:  Boolean(h.submissionConfig?.acceptsDriveLink ?? true),
+                                  acceptsPdfLink:    Boolean(h.submissionConfig?.acceptsPdfLink ?? true),
+                                  acceptsGitHubLink: Boolean(h.submissionConfig?.acceptsGitHubLink ?? true),
+                                  acceptsNotionLink: Boolean(h.submissionConfig?.acceptsNotionLink ?? true),
+                                  submissionInstructions: h.submissionConfig?.instructions || '',
+                                  maxSubmissionsPerTeam: Number(h.submissionConfig?.maxSubmissionsPerTeam || 3),
+                                  linkLabel:         h.submissionConfig?.linkLabel || 'Submission Link',
+                                  linkPlaceholder:   h.submissionConfig?.linkPlaceholder || 'Paste your submission link here...',
+                                  linkHint:          h.submissionConfig?.linkHint || '',
+                                  problemStatement: h.contentConfig?.problemStatement || '',
+                                  rules: (h.contentConfig?.rules || []).join('\n'),
+                                  judgingCriteria: (h.contentConfig?.judgingCriteria || []).join('\n'),
+                                  prizes: (h.prizes || []).map((p) => `${p.rank || 'Prize'} | ${p.amount || ''}`).join('\n'),
+                                  faqs: (h.contentConfig?.faqs || []).map((f) => `${f.question || ''} | ${f.answer || ''}`).join('\n'),
+                                  accentColor: h.styleConfig?.accentColor || '#4F46E5',
+                                });
+                                setHackMsg('📝 Edit mode enabled. Update fields and click "Update Hackathon".');
+                                setShowHackForm(true);
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                              }}
+                              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-100 text-amber-700 hover:bg-amber-200 transition"
+                            >
+                              Edit
+                            </button>
+                            <button onClick={async () => { await api.put(`/events/hackathons/${h._id}`, { visible: !h.visible }); loadHacks(); }} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${h.visible ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}>
+                              {h.visible ? 'Hide' : 'Show'}
+                            </button>
+                            <button onClick={() => loadRegistrations(h._id)} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition">
+                              Teams
+                            </button>
+                            <button onClick={() => openCertIssuePanel(h)} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white transition">
+                              Issue Certificates
+                            </button>
+                            <button onClick={() => handleExportHackathonUsers(h._id)} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition">
+                              Export Teams CSV
+                            </button>
+                            <button onClick={async () => { if (!confirm('Delete this hackathon?')) return; await api.delete(`/events/hackathons/${h._id}`); loadHacks(); }} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-red-600 hover:bg-red-100 transition">
+                              Delete
+                            </button>
+                          </div>
+                        </div>
 
                       {activeCertIssueHackId === h._id && (
                         <div className="mt-4 p-5 rounded-xl border border-amber-200 bg-amber-50/20 space-y-4">

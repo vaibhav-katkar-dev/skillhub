@@ -7,7 +7,7 @@ import { Award, Loader2, AlertCircle, Download, CreditCard, CheckCircle, Tag, X,
 import { generatePDFFromDOM } from '../utils/pdfGenerator';
 import CertificateTemplate from '../components/CertificateTemplate';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://api.skillvalix.com/api';
+
 const INR_PER_USD = Number(import.meta.env.VITE_INR_PER_USD || 83);
 
 const formatInr = (value) => new Intl.NumberFormat('en-IN', {

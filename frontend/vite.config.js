@@ -18,6 +18,8 @@ export default defineConfig({
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
           'vendor-ui':    ['lucide-react'],
           'vendor-auth':  ['@react-oauth/google', 'zustand'],
+          'vendor-pdf':   ['jspdf', 'html2canvas', 'html-to-image'],
+          'vendor-charts':['recharts'],
           'vendor-utils': ['axios'],
         },
       },
