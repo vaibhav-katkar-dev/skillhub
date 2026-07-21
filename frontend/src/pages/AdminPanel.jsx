@@ -96,6 +96,7 @@ const AdminPanel = () => {
   });
   const [certIssueSaving, setCertIssueSaving] = useState(false);
   const [certIssueMsg, setCertIssueMsg] = useState('');
+  const [certificatesByHack, setCertificatesByHack] = useState({});
   
   const [warmJob, setWarmJob] = useState(null);
   const [warmJobLoading, setWarmJobLoading] = useState(false);
@@ -188,6 +189,15 @@ const AdminPanel = () => {
       setRegistrationsByHack((prev) => ({ ...prev, [hackId]: [] }));
     } finally {
       setLoadingRegistrationsFor('');
+    }
+  };
+
+  const loadCertificates = async (hackId) => {
+    try {
+      const r = await api.get(`/events/admin/hackathons/${hackId}/certificates`);
+      setCertificatesByHack((prev) => ({ ...prev, [hackId]: r.data || [] }));
+    } catch {
+      setCertificatesByHack((prev) => ({ ...prev, [hackId]: [] }));
     }
   };
 
@@ -349,6 +359,8 @@ const AdminPanel = () => {
       };
       const res = await api.post(`/events/admin/hackathons/${hackId}/issue-certificates`, payload);
       setCertIssueMsg(`✅ Certificates processed: Issued ${res.data.issued}, Skipped ${res.data.skipped} (already issued).`);
+      loadHacks();
+      if (hackId) loadCertificates(hackId);
     } catch (e) {
       setCertIssueMsg(`❌ Error: ${e.response?.data?.message || 'Failed to issue certificates.'}`);
     } finally {
@@ -358,7 +370,7 @@ const AdminPanel = () => {
 
   // ── Hackathon Analytics Calculation & Local Management ─────────────────
   const getHackAnalytics = useCallback((hack, regs = []) => {
-    if (!hack) return { totalParticipants: 0, totalCertificates: 0, totalSubmissions: 0, teamsCount: 0, autoWinners: 0, hasOverride: false };
+    if (!hack) return { totalParticipants: 0, totalCertificates: 0, totalSubmissions: 0, teamsCount: 0, autoWinners: 0, hasOverride: false, dbCertificatesCount: 0, dbParticipationCerts: 0, dbWinnerCerts: 0 };
     const hackId = hack._id || hack.slug;
     const key = `skillvalix_hack_analytics_${hackId}`;
     let saved = {};
@@ -367,8 +379,19 @@ const AdminPanel = () => {
     const teamsCount = regs.length;
     const autoParticipants = regs.reduce((sum, r) => sum + 1 + (r.members?.length || 0), 0) || (hack.participantCount || 0);
     const autoSubmissions = regs.filter(r => (r.submissions && r.submissions.length > 0) || r.submissionLink || r.submission?.link || r.projectUrl || r.status === 'submitted' || r.status === 'under_review' || r.status === 'approved' || r.status === 'winner').length;
-    const autoCertificates = regs.filter(r => r.certificateIssued || r.hasCertificate || r.certIssued).length;
     const autoWinners = regs.filter(r => r.isWinner || r.winnerRank || r.status === 'winner').length;
+
+    // Database certificate counts from backend EventCertificate collection
+    const certsFromDb = certificatesByHack[hack._id];
+    const dbCertificatesCount = Array.isArray(certsFromDb) ? certsFromDb.length : (Number(hack.certificatesCount) || 0);
+    const dbParticipationCerts = Array.isArray(certsFromDb)
+      ? certsFromDb.filter(c => c.certType === 'participation').length
+      : (Number(hack.participationCertificatesCount) || 0);
+    const dbWinnerCerts = Array.isArray(certsFromDb)
+      ? certsFromDb.filter(c => c.certType === 'winner').length
+      : (Number(hack.winnerCertificatesCount) || 0);
+
+    const autoCertificates = dbCertificatesCount || regs.filter(r => r.certificateIssued || r.hasCertificate || r.certIssued).length;
 
     const hasOverride = Boolean(
       (saved.totalParticipants !== undefined && saved.totalParticipants !== '') ||
@@ -382,12 +405,15 @@ const AdminPanel = () => {
       autoSubmissions,
       autoCertificates,
       autoWinners,
+      dbCertificatesCount,
+      dbParticipationCerts,
+      dbWinnerCerts,
       totalParticipants: saved.totalParticipants !== undefined && saved.totalParticipants !== '' ? Number(saved.totalParticipants) : (autoParticipants || teamsCount),
       totalCertificates: saved.totalCertificates !== undefined && saved.totalCertificates !== '' ? Number(saved.totalCertificates) : autoCertificates,
       totalSubmissions: saved.totalSubmissions !== undefined && saved.totalSubmissions !== '' ? Number(saved.totalSubmissions) : autoSubmissions,
       hasOverride
     };
-  }, [analyticsTick]);
+  }, [analyticsTick, certificatesByHack]);
 
   const openHackAnalyticsModal = (hack) => {
     setActiveAnalyticsHack(hack);
@@ -404,6 +430,9 @@ const AdminPanel = () => {
     setHackAnalyticsMsg('');
     if (!registrationsByHack[hack._id]) {
       loadRegistrations(hack._id);
+    }
+    if (!certificatesByHack[hack._id]) {
+      loadCertificates(hack._id);
     }
   };
 
@@ -2872,15 +2901,46 @@ const AdminPanel = () => {
                           </div>
                           <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-100">
                             <div className="flex items-center gap-1.5 text-xs text-amber-600 font-medium mb-1">
-                              <Award className="w-3.5 h-3.5" /> Auto Certifications
+                              <Award className="w-3.5 h-3.5" /> DB Certifications
                             </div>
-                            <p className="text-xl font-black text-amber-950">{currentAnalytics.autoCertificates}</p>
+                            <p className="text-xl font-black text-amber-950">{currentAnalytics.dbCertificatesCount}</p>
                           </div>
                           <div className="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-100">
                             <div className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium mb-1">
                               <ClipboardList className="w-3.5 h-3.5" /> Auto Submissions
                             </div>
                             <p className="text-xl font-black text-emerald-950">{currentAnalytics.autoSubmissions}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Backend MongoDB Event Certificate Breakdown */}
+                      <div className="p-4 rounded-2xl bg-slate-900 text-white space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                            <span className="text-xs font-bold uppercase tracking-wider text-slate-200">MongoDB Database Certificate Tracking</span>
+                          </div>
+                          <button
+                            onClick={() => openCertIssuePanel(activeAnalyticsHack)}
+                            className="px-2.5 py-1 rounded-lg text-[10px] font-extrabold bg-amber-500 hover:bg-amber-600 text-white transition flex items-center gap-1"
+                          >
+                            <Award className="w-3 h-3" /> Issue Certificates
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-3 pt-1">
+                          <div className="p-2.5 rounded-xl bg-white/10 border border-white/10 text-center">
+                            <span className="text-[10px] text-slate-400 font-bold uppercase block">Total Issued</span>
+                            <p className="text-lg font-black text-amber-300 mt-0.5">{currentAnalytics.dbCertificatesCount}</p>
+                          </div>
+                          <div className="p-2.5 rounded-xl bg-white/10 border border-white/10 text-center">
+                            <span className="text-[10px] text-slate-400 font-bold uppercase block">Participation</span>
+                            <p className="text-lg font-black text-indigo-300 mt-0.5">{currentAnalytics.dbParticipationCerts}</p>
+                          </div>
+                          <div className="p-2.5 rounded-xl bg-white/10 border border-white/10 text-center">
+                            <span className="text-[10px] text-slate-400 font-bold uppercase block">Winners</span>
+                            <p className="text-lg font-black text-emerald-300 mt-0.5">{currentAnalytics.dbWinnerCerts}</p>
                           </div>
                         </div>
                       </div>
