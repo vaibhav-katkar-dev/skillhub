@@ -53,9 +53,10 @@ router.post('/apply', authOptions, async (req, res) => {
       return res.status(400).json({ message: 'College, mobile, and location are required.' });
     }
 
-    const mobileClean = String(mobile).replace(/\s/g, '').replace(/^\+91/, '');
-    if (!/^\d{10}$/.test(mobileClean)) {
-      return res.status(400).json({ message: 'Please enter a valid 10-digit Indian mobile number.' });
+    const mobileClean = String(mobile).replace(/\s/g, '');
+    // Accept international numbers: optional '+' followed by 7-15 digits
+    if (!/^\+?\d{7,15}$/.test(mobileClean)) {
+      return res.status(400).json({ message: 'Please enter a valid mobile number with country code (e.g., +1234567890).' });
     }
 
     const existing = await CampusAmbassador.findOne({ userId: req.user.id }).lean();
