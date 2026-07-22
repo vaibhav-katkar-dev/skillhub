@@ -615,10 +615,11 @@ export default function Events() {
               {/* Result count & section header */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
                 <div>
-                  <h2 style={{ margin: 0, fontSize: 20, fontWeight: 900, color: '#0f172a' }}>
-                    {statusFilter === 'all' ? 'All Hackathons' :
-                      statusFilter === 'live' ? '🔴 Live Hackathons' :
-                      statusFilter === 'upcoming' ? '⏳ Upcoming Hackathons' : '✅ Past Hackathons'}
+                  <h2 style={{ margin: 0, fontSize: 20, fontWeight: 900, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {statusFilter === 'all' && 'All Hackathons'}
+                    {statusFilter === 'live' && <><CircleDot size={18} color="#10b981" /> Live Hackathons</>}
+                    {statusFilter === 'upcoming' && <><Clock3 size={18} color="#f59e0b" /> Upcoming Hackathons</>}
+                    {statusFilter === 'ended' && <><CheckCircle2 size={18} color="#64748b" /> Past Hackathons</>}
                   </h2>
                   <p style={{ margin: '3px 0 0', fontSize: 12, color: '#94a3b8', fontWeight: 600 }}>
                     {loadingHacks ? 'Loading…' : `${filtered.length} event${filtered.length !== 1 ? 's' : ''} found`}

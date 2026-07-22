@@ -31,6 +31,15 @@ import {
   Rocket,
   Target,
   Zap,
+  Crown,
+  Sparkles,
+  Layers,
+  HelpCircle,
+  FileCode,
+  Info,
+  Calendar,
+  DollarSign,
+  Medal,
 } from 'lucide-react';
 import { api, useAuthStore } from '../store/authStore';
 import { generatePDFFromDOM } from '../utils/pdfGenerator';
@@ -49,7 +58,7 @@ const REG_STATUS_STYLE = {
   under_review:    { bg: '#f5f3ff', text: '#6d28d9', label: 'Under Review' },
   approved:        { bg: '#ecfdf5', text: '#065f46', label: 'Approved' },
   rejected:        { bg: '#fef2f2', text: '#991b1b', label: 'Rejected' },
-  winner:          { bg: '#fef3c7', text: '#78350f', label: '🏆 Winner' },
+  winner:          { bg: '#fef3c7', text: '#78350f', label: 'Winner' },
 };
 
 const loadRazorpay = () =>
@@ -65,7 +74,7 @@ const loadRazorpay = () =>
 /* ── Step indicator ─────────────────────────────────────── */
 function StepBar({ step, steps }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 28 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 24 }}>
       {steps.map((label, i) => {
         const done = i < step;
         const active = i === step;
@@ -73,26 +82,26 @@ function StepBar({ step, steps }) {
           <React.Fragment key={i}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
               <div style={{
-                width: 34, height: 34, borderRadius: '50%',
+                width: 32, height: 32, borderRadius: '50%',
                 background: done ? '#10b981' : active ? 'linear-gradient(135deg,#4f46e5,#7c3aed)' : '#f1f5f9',
                 border: `2px solid ${done ? '#10b981' : active ? '#4f46e5' : '#e2e8f0'}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: done || active ? '#fff' : '#94a3b8',
-                fontSize: 13, fontWeight: 900,
+                fontSize: 12, fontWeight: 900,
                 boxShadow: active ? '0 4px 14px rgba(79,70,229,0.35)' : 'none',
                 transition: 'all 0.25s',
               }}>
-                {done ? <CheckCheck size={15} /> : i + 1}
+                {done ? <CheckCheck size={14} /> : i + 1}
               </div>
               <span style={{
-                fontSize: 10, fontWeight: 700, marginTop: 5,
+                fontSize: 10, fontWeight: 700, marginTop: 4,
                 color: done ? '#10b981' : active ? '#4f46e5' : '#94a3b8',
                 whiteSpace: 'nowrap',
               }}>{label}</span>
             </div>
             {i < steps.length - 1 && (
               <div style={{
-                height: 2, flex: 1, marginBottom: 18,
+                height: 2, flex: 1, marginBottom: 16,
                 background: done ? '#10b981' : '#e2e8f0',
                 transition: 'background 0.3s',
               }} />
@@ -104,23 +113,42 @@ function StepBar({ step, steps }) {
   );
 }
 
-/* ── Info row ───────────────────────────────────────────── */
-function InfoRow({ label, value, accent }) {
+/* ── Professional Snapshot Row ──────────────────────────── */
+function SnapshotItem({ icon: Icon, label, value, sub, color = '#6366f1' }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #f1f5f9' }}>
-      <span style={{ fontSize: 13, color: '#64748b', fontWeight: 600 }}>{label}</span>
-      <span style={{ fontSize: 13, fontWeight: 800, color: accent || '#0f172a' }}>{value}</span>
+    <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      padding: '11px 14px', borderRadius: 12, background: '#f8fafc',
+      border: '1.5px solid #f1f5f9', marginBottom: 8,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{
+          width: 32, height: 32, borderRadius: 9,
+          background: color + '15', display: 'flex',
+          alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+        }}>
+          <Icon size={15} color={color} />
+        </div>
+        <div>
+          <div style={{ fontSize: 11, color: '#64748b', fontWeight: 700 }}>{label}</div>
+          {sub && <div style={{ fontSize: 10, color: '#94a3b8' }}>{sub}</div>}
+        </div>
+      </div>
+      <div style={{ fontSize: 13, fontWeight: 900, color: '#0f172a', textAlign: 'right' }}>
+        {value}
+      </div>
     </div>
   );
 }
 
 /* ── Section card ───────────────────────────────────────── */
-function Card({ title, icon: Icon, iconColor, children, accent }) {
+function Card({ id, title, icon: Icon, iconColor, children, accent }) {
   return (
-    <div style={{
+    <div id={id} style={{
       background: '#fff', border: `1.5px solid ${accent || '#e2e8f0'}`,
       borderRadius: 18, overflow: 'hidden',
-      boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
+      boxShadow: '0 2px 12px rgba(0,0,0,0.03)',
+      scrollMarginTop: 80,
     }}>
       {title && (
         <div style={{
@@ -131,16 +159,16 @@ function Card({ title, icon: Icon, iconColor, children, accent }) {
           {Icon && (
             <div style={{
               width: 32, height: 32, borderRadius: 9,
-              background: (iconColor || '#6366f1') + '18',
+              background: (iconColor || '#6366f1') + '15',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
               <Icon size={15} color={iconColor || '#6366f1'} />
             </div>
           )}
-          <h3 style={{ margin: 0, fontSize: 15, fontWeight: 900, color: '#0f172a' }}>{title}</h3>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#0f172a' }}>{title}</h3>
         </div>
       )}
-      <div style={{ padding: '18px 22px' }}>{children}</div>
+      <div style={{ padding: '20px 22px' }}>{children}</div>
     </div>
   );
 }
@@ -164,7 +192,7 @@ export default function HackathonDetail() {
   const hackCertTemplateRef = useRef(null);
 
   // Multi-step registration
-  const [regStep, setRegStep] = useState(0); // 0=Team Info, 1=Members, 2=Review
+  const [regStep, setRegStep] = useState(0);
   const [teamName, setTeamName] = useState('');
   const [members, setMembers] = useState([{ name: '', email: '' }]);
 
@@ -348,13 +376,20 @@ export default function HackathonDetail() {
     setBusy(true); showMsg('Submitting your solution…', 'info');
     try {
       await api.post(`/events/hackathons/${hack._id}/submit`, { registrationId: registration._id, submissionLink: link, note: String(note || '').trim() });
-      await fetchMyTeam(); showMsg('Solution submitted successfully! 🎉', 'success');
+      await fetchMyTeam(); showMsg('Solution submitted successfully!', 'success');
       setSubmissionLink(''); setNote('');
     } catch (err) { showMsg(err.response?.data?.message || 'Failed to submit solution.', 'error'); }
     finally { setBusy(false); }
   };
 
-  // Loading / Error states
+  // Smooth scroll handler
+  const scrollToSection = (secId) => {
+    const el = document.getElementById(secId);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   if (loadingHack) {
     return (
       <div style={{ minHeight: '70vh', background: '#f8fafc', padding: '40px 24px' }}>
@@ -416,8 +451,19 @@ export default function HackathonDetail() {
   const canonicalPath = hack.slug ? `/hackathons/${hack.slug}` : `/hackathons/${hack._id}`;
   const canonicalUrl  = `https://www.skillvalix.com${canonicalPath}`;
 
-  // Multi-step reg steps
   const REG_STEPS = ['Team Info', 'Add Members', 'Review & Submit'];
+
+  // Available sections for section nav bar
+  const navSections = [
+    { id: 'overview', label: 'Overview', icon: Info, show: !!hack.description },
+    { id: 'problem', label: 'Problem', icon: Target, show: !!problemStatement },
+    { id: 'prizes', label: 'Prizes', icon: Trophy, show: prizes.length > 0 },
+    { id: 'timeline', label: 'Timeline', icon: Clock3, show: timeline.length > 0 },
+    { id: 'rules', label: 'Rules', icon: ShieldCheck, show: rules.length > 0 },
+    { id: 'judging', label: 'Judging', icon: Star, show: judgingCriteria.length > 0 },
+    { id: 'submission', label: 'Submission', icon: FileCode, show: !!submissionInstructions },
+    { id: 'faqs', label: 'FAQs', icon: HelpCircle, show: faqs.length > 0 },
+  ].filter(s => s.show);
 
   return (
     <>
@@ -479,38 +525,38 @@ export default function HackathonDetail() {
           </div>
         </div>
 
-        {/* ── Hero Image Banner ─────────────────────────────────────── */}
+        {/* ── Hero Banner Header (If Banner Exists) ───────────────── */}
         {hack.image ? (
-          <div style={{ position: 'relative', width: '100%', height: 'clamp(220px,35vw,420px)', overflow: 'hidden' }}>
+          <div style={{ position: 'relative', width: '100%', height: 'clamp(240px,38vw,440px)', overflow: 'hidden', background: '#0f172a' }}>
             <img src={hack.image} alt={hack.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            {/* Overlay gradient */}
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15,23,42,0.85) 0%, rgba(15,23,42,0.3) 50%, transparent 100%)' }} />
-            {/* Overlaid title */}
-            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '28px 32px', maxWidth: 1100, margin: '0 auto' }}>
+            {/* Shading Overlay */}
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15,23,42,0.92) 0%, rgba(15,23,42,0.4) 50%, rgba(15,23,42,0.15) 100%)' }} />
+            {/* Text details overlaid over banner */}
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '32px 24px 28px' }}>
               <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
                   <span style={{
                     display: 'inline-flex', alignItems: 'center', gap: 6,
                     background: statusStyle.bg, color: statusStyle.text,
                     border: `1px solid ${statusStyle.border}`,
-                    fontSize: 11, fontWeight: 800, padding: '4px 11px', borderRadius: 20,
+                    fontSize: 11, fontWeight: 800, padding: '4px 12px', borderRadius: 20,
                   }}>
                     <span style={{ width: 6, height: 6, borderRadius: '50%', background: statusStyle.dot }} />
                     {statusStyle.label}
                   </span>
                   {hack.featured && (
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#f59e0b', color: '#fff', fontSize: 11, fontWeight: 900, padding: '4px 11px', borderRadius: 20 }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#f59e0b', color: '#fff', fontSize: 11, fontWeight: 900, padding: '4px 12px', borderRadius: 20 }}>
                       <Star size={10} fill="#fff" strokeWidth={0} /> Featured
                     </span>
                   )}
                 </div>
-                <h1 style={{ margin: '0 0 6px', fontSize: 'clamp(1.5rem,4vw,2.5rem)', fontWeight: 900, color: '#fff', lineHeight: 1.15 }}>{hack.title}</h1>
-                {hack.tagline && <p style={{ margin: 0, fontSize: 15, color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>{hack.tagline}</p>}
+                <h1 style={{ margin: '0 0 8px', fontSize: 'clamp(1.7rem,4vw,2.7rem)', fontWeight: 900, color: '#fff', lineHeight: 1.15, textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>{hack.title}</h1>
+                {hack.tagline && <p style={{ margin: 0, fontSize: 15, color: '#e2e8f0', fontWeight: 600, textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{hack.tagline}</p>}
               </div>
             </div>
           </div>
         ) : (
-          /* No image → Dark gradient header */
+          /* Header without banner image */
           <div style={{
             background: 'linear-gradient(135deg,#0f0e2a 0%,#1e1b4b 50%,#0f172a 100%)',
             padding: '36px 24px 32px', position: 'relative', overflow: 'hidden',
@@ -522,13 +568,13 @@ export default function HackathonDetail() {
                   display: 'inline-flex', alignItems: 'center', gap: 6,
                   background: statusStyle.bg, color: statusStyle.text,
                   border: `1px solid ${statusStyle.border}`,
-                  fontSize: 11, fontWeight: 800, padding: '4px 11px', borderRadius: 20,
+                  fontSize: 11, fontWeight: 800, padding: '4px 12px', borderRadius: 20,
                 }}>
                   <span style={{ width: 6, height: 6, borderRadius: '50%', background: statusStyle.dot, boxShadow: hack.status === 'live' ? `0 0 0 3px ${statusStyle.dot}44` : 'none' }} />
                   {statusStyle.label}
                 </span>
                 {hack.featured && (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#f59e0b', color: '#fff', fontSize: 11, fontWeight: 900, padding: '4px 11px', borderRadius: 20 }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#f59e0b', color: '#fff', fontSize: 11, fontWeight: 900, padding: '4px 12px', borderRadius: 20 }}>
                     <Star size={10} fill="#fff" strokeWidth={0} /> Featured
                   </span>
                 )}
@@ -546,6 +592,38 @@ export default function HackathonDetail() {
           </div>
         )}
 
+        {/* ── Sticky Section Navigation Bar ────────────────────────── */}
+        {navSections.length > 0 && (
+          <div style={{
+            position: 'sticky', top: 0, zIndex: 40,
+            background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(10px)',
+            borderBottom: '1.5px solid #e2e8f0', boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+            padding: '8px 24px', overflowX: 'auto',
+          }}>
+            <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', gap: 8, alignItems: 'center' }}>
+              <span style={{ fontSize: 11, fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginRight: 6, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <Layers size={11} /> Sections:
+              </span>
+              {navSections.map(({ id, label, icon: Icon }) => (
+                <button
+                  key={id}
+                  onClick={() => scrollToSection(id)}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                    padding: '6px 14px', borderRadius: 999, border: '1px solid #e2e8f0',
+                    background: '#f8fafc', color: '#475569', fontSize: 12, fontWeight: 700,
+                    cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.15s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = '#eef2ff'; e.currentTarget.style.color = '#4f46e5'; e.currentTarget.style.borderColor = '#c7d2fe'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#475569'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
+                >
+                  <Icon size={12} /> {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* ── Winners Banner ─────────────────────────────────────────── */}
         {hack.winnerConfig?.announced && winners?.winners?.length > 0 && (
           <div style={{ background: 'linear-gradient(90deg,#f59e0b,#fcd34d,#f59e0b)', padding: '20px 24px' }}>
@@ -557,7 +635,9 @@ export default function HackathonDetail() {
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                 {winners.winners.map(w => (
                   <div key={w._id} style={{ background: '#fff', border: '2px solid #fbbf24', borderRadius: 14, padding: '14px 18px', minWidth: 160 }}>
-                    <div style={{ fontSize: 10, fontWeight: 900, color: '#f59e0b', letterSpacing: '0.1em', marginBottom: 4 }}>{w.winnerRank || 'WINNER'}</div>
+                    <div style={{ fontSize: 10, fontWeight: 900, color: '#f59e0b', letterSpacing: '0.1em', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <Trophy size={11} /> {w.winnerRank || 'WINNER'}
+                    </div>
                     <div style={{ fontSize: 15, fontWeight: 900, color: '#0f172a' }}>{w.teamName}</div>
                     {w.winnerNote && <div style={{ fontSize: 11, color: '#64748b', marginTop: 3 }}>{w.winnerNote}</div>}
                     <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>{(w.members || []).map(m => m.name || m.email).join(', ')}</div>
@@ -572,58 +652,86 @@ export default function HackathonDetail() {
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '28px 24px 60px', display: 'grid', gridTemplateColumns: '1fr 360px', gap: 24, alignItems: 'flex-start' }}>
 
           {/* ────── LEFT COLUMN ────────────────────────────────────── */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
             {/* Tags (if image exists – shown below image) */}
             {hack.image && hack.tags?.length > 0 && (
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', paddingTop: 4 }}>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', paddingTop: 2 }}>
                 {hack.tags.map(t => (
                   <span key={t} style={{ background: '#eef2ff', color: '#4338ca', border: '1px solid #c7d2fe', fontSize: 11, fontWeight: 700, padding: '4px 11px', borderRadius: 20 }}>{t}</span>
                 ))}
               </div>
             )}
 
-            {/* Description */}
+            {/* Overview */}
             {hack.description && (
-              <Card title="About this Hackathon" icon={Rocket} iconColor="#6366f1">
+              <Card id="overview" title="About this Hackathon" icon={Rocket} iconColor="#6366f1">
                 <p style={{ margin: 0, fontSize: 14, color: '#374151', lineHeight: 1.75 }}>{hack.description}</p>
               </Card>
             )}
 
             {/* Problem Statement */}
             {problemStatement && (
-              <Card title="Problem Statement" icon={Target} iconColor="#7c3aed" accent="#ede9fe">
+              <Card id="problem" title="Problem Statement" icon={Target} iconColor="#7c3aed" accent="#ede9fe">
                 <p style={{ margin: 0, fontSize: 14, color: '#374151', lineHeight: 1.75, whiteSpace: 'pre-line' }}>{problemStatement}</p>
               </Card>
             )}
 
-            {/* Prizes */}
+            {/* Prizes (ROW BY ROW LAYOUT) */}
             {prizes.length > 0 && (
-              <Card title="Prize Pool" icon={Trophy} iconColor="#f59e0b" accent="#fef3c7">
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(130px,1fr))', gap: 12 }}>
-                  {prizes.map((prize, idx) => (
-                    <div key={idx} style={{ background: 'linear-gradient(135deg,#fffbeb,#fef3c7)', border: '1.5px solid #fbbf24', borderRadius: 14, padding: '16px 14px', textAlign: 'center' }}>
-                      <div style={{ fontSize: 11, fontWeight: 900, color: '#92400e', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>{prize.rank || `Prize ${idx + 1}`}</div>
-                      <div style={{ fontSize: 20, fontWeight: 900, color: '#78350f' }}>{prize.amount || '—'}</div>
-                    </div>
-                  ))}
+              <Card id="prizes" title="Prize Pool & Rewards" icon={Trophy} iconColor="#f59e0b" accent="#fef3c7">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {prizes.map((prize, idx) => {
+                    const isFirst = idx === 0 || String(prize.rank).toLowerCase().includes('1st');
+                    const isSecond = idx === 1 || String(prize.rank).toLowerCase().includes('2nd');
+                    const isThird = idx === 2 || String(prize.rank).toLowerCase().includes('3rd');
+                    const iconColor = isFirst ? '#f59e0b' : isSecond ? '#94a3b8' : isThird ? '#d97706' : '#6366f1';
+                    const bgColor   = isFirst ? '#fffbeb' : isSecond ? '#f8fafc' : isThird ? '#fff7ed' : '#fafafa';
+                    const borderColor = isFirst ? '#fde68a' : isSecond ? '#e2e8f0' : isThird ? '#ffedd5' : '#f1f5f9';
+
+                    return (
+                      <div key={idx} style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        background: bgColor, border: `1.5px solid ${borderColor}`,
+                        borderRadius: 14, padding: '14px 18px', gap: 16,
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <div style={{
+                            width: 38, height: 38, borderRadius: 10,
+                            background: iconColor + '18', border: `1px solid ${iconColor}40`,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                          }}>
+                            {isFirst || isSecond || isThird ? <Trophy size={18} color={iconColor} /> : <Medal size={18} color={iconColor} />}
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 13, fontWeight: 900, color: '#0f172a' }}>{prize.rank || `Prize Tier ${idx + 1}`}</div>
+                            <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{prize.description || 'Certificate of Merit & Recognition'}</div>
+                          </div>
+                        </div>
+                        <div style={{ fontSize: 18, fontWeight: 900, color: iconColor === '#94a3b8' ? '#334155' : iconColor, textAlign: 'right', whiteSpace: 'nowrap' }}>
+                          {prize.amount || '—'}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </Card>
             )}
 
             {/* Timeline */}
             {timeline.length > 0 && (
-              <Card title="Timeline" icon={Clock3} iconColor="#0ea5e9">
+              <Card id="timeline" title="Timeline & Schedule" icon={Clock3} iconColor="#0ea5e9">
                 <div style={{ position: 'relative', paddingLeft: 24 }}>
                   <div style={{ position: 'absolute', left: 9, top: 0, bottom: 0, width: 2, background: 'linear-gradient(180deg,#6366f1,#e2e8f0)' }} />
                   {timeline.map((entry, idx) => (
                     <div key={idx} style={{ position: 'relative', marginBottom: idx < timeline.length - 1 ? 20 : 0 }}>
                       <div style={{ position: 'absolute', left: -20, top: 3, width: 12, height: 12, borderRadius: '50%', background: '#6366f1', border: '2px solid #fff', boxShadow: '0 0 0 2px #6366f1' }} />
                       <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>{entry.label || `Milestone ${idx + 1}`}</div>
-                      <div style={{ fontSize: 12, color: '#6366f1', fontWeight: 700, marginTop: 2 }}>
+                      <div style={{ fontSize: 12, color: '#6366f1', fontWeight: 700, marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <Calendar size={11} />
                         {entry.date ? new Date(entry.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Date TBA'}
                       </div>
-                      {entry.description && <div style={{ fontSize: 13, color: '#64748b', marginTop: 3, lineHeight: 1.6 }}>{entry.description}</div>}
+                      {entry.description && <div style={{ fontSize: 13, color: '#64748b', marginTop: 4, lineHeight: 1.6 }}>{entry.description}</div>}
                     </div>
                   ))}
                 </div>
@@ -632,10 +740,10 @@ export default function HackathonDetail() {
 
             {/* Rules */}
             {rules.length > 0 && (
-              <Card title="Rules & Guidelines" icon={ShieldCheck} iconColor="#10b981" accent="#ecfdf5">
+              <Card id="rules" title="Rules & Guidelines" icon={ShieldCheck} iconColor="#10b981" accent="#ecfdf5">
                 <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {rules.map((rule, idx) => (
-                    <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, color: '#374151' }}>
+                    <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, color: '#374151', lineHeight: 1.6 }}>
                       <div style={{ width: 20, height: 20, borderRadius: 6, background: '#ecfdf5', border: '1px solid #a7f3d0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
                         <CheckCircle2 size={11} color="#10b981" />
                       </div>
@@ -648,10 +756,10 @@ export default function HackathonDetail() {
 
             {/* Judging */}
             {judgingCriteria.length > 0 && (
-              <Card title="Judging Criteria" icon={Star} iconColor="#f59e0b" accent="#fffbeb">
+              <Card id="judging" title="Judging Criteria" icon={Star} iconColor="#f59e0b" accent="#fffbeb">
                 <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {judgingCriteria.map((item, idx) => (
-                    <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, color: '#374151' }}>
+                    <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, color: '#374151', lineHeight: 1.6 }}>
                       <div style={{ width: 20, height: 20, borderRadius: 6, background: '#fffbeb', border: '1px solid #fde68a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
                         <Star size={10} color="#f59e0b" fill="#f59e0b" />
                       </div>
@@ -662,16 +770,36 @@ export default function HackathonDetail() {
               </Card>
             )}
 
-            {/* Submission instructions */}
+            {/* Submission instructions (WITH ICONS) */}
             {submissionInstructions && (
-              <Card title="Submission Instructions" icon={FileText} iconColor="#6366f1">
-                <p style={{ margin: 0, fontSize: 14, color: '#374151', lineHeight: 1.75, whiteSpace: 'pre-line' }}>{submissionInstructions}</p>
+              <Card id="submission" title="Submission Instructions" icon={FileCode} iconColor="#6366f1">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {submissionInstructions.split('\n').filter(Boolean).map((instruction, idx) => (
+                    <div key={idx} style={{
+                      display: 'flex', alignItems: 'flex-start', gap: 12,
+                      background: '#f8fafc', border: '1.5px solid #f1f5f9',
+                      borderRadius: 12, padding: '12px 14px',
+                    }}>
+                      <div style={{
+                        width: 24, height: 24, borderRadius: 7,
+                        background: '#eef2ff', border: '1px solid #c7d2fe',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        flexShrink: 0, color: '#4f46e5', fontSize: 11, fontWeight: 900,
+                      }}>
+                        {idx + 1}
+                      </div>
+                      <div style={{ fontSize: 13, color: '#374151', lineHeight: 1.6, flex: 1 }}>
+                        {instruction}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </Card>
             )}
 
             {/* FAQs */}
             {faqs.length > 0 && (
-              <Card title="Frequently Asked Questions" icon={Zap} iconColor="#8b5cf6">
+              <Card id="faqs" title="Frequently Asked Questions" icon={HelpCircle} iconColor="#8b5cf6">
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {faqs.map((faq, idx) => (
                     <details key={idx} style={{ background: '#fafafa', border: '1.5px solid #f1f5f9', borderRadius: 12, overflow: 'hidden' }}>
@@ -688,45 +816,47 @@ export default function HackathonDetail() {
           </div>
 
           {/* ────── RIGHT COLUMN (sticky sidebar) ─────────────────── */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, position: 'sticky', top: 20 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, position: 'sticky', top: 70 }}>
 
             {/* ── Countdown ──────────────────────────────────────── */}
             {timeLeft && timeLeft !== 'Ended' && (
               <div style={{
                 background: 'linear-gradient(135deg,#1e1b4b,#312e81)',
                 borderRadius: 18, padding: '20px 22px', textAlign: 'center',
-                boxShadow: '0 8px 24px rgba(79,70,229,0.3)',
+                boxShadow: '0 8px 24px rgba(79,70,229,0.25)',
               }}>
-                <div style={{ fontSize: 10, fontWeight: 900, color: '#a5b4fc', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>
-                  <Clock3 size={10} style={{ display: 'inline', marginRight: 5 }} />
-                  {timerLabel}
+                <div style={{ fontSize: 10, fontWeight: 900, color: '#a5b4fc', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+                  <Clock3 size={11} /> {timerLabel}
                 </div>
                 <div style={{ fontSize: 26, fontWeight: 900, color: '#fff', fontVariantNumeric: 'tabular-nums', letterSpacing: '0.04em' }}>{timeLeft}</div>
               </div>
             )}
             {timeLeft === 'Ended' && (
               <div style={{ background: '#f1f5f9', border: '1.5px solid #e2e8f0', borderRadius: 18, padding: '14px 18px', textAlign: 'center' }}>
-                <div style={{ fontSize: 13, fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Hackathon Ended</div>
+                <div style={{ fontSize: 12, fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+                  <CheckCircle2 size={13} /> Hackathon Ended
+                </div>
               </div>
             )}
 
-            {/* ── Event Snapshot ─────────────────────────────────── */}
+            {/* ── Professional Event Snapshot ────────────────────── */}
             <Card title="Event Snapshot" icon={Target} iconColor="#6366f1">
               <div>
-                <InfoRow label="Team Size" value={`${teamMin}–${teamMax} members`} />
-                <InfoRow label="Entry Fee" value={paymentRequired ? `₹${hack.paymentConfig.amountInr}` : 'Free 🎉'} accent={paymentRequired ? '#b45309' : '#065f46'} />
-                <InfoRow label="Submission Limit" value={`${maxSubs} per team`} />
+                <SnapshotItem icon={Users} label="Team Size" value={`${teamMin}–${teamMax} members`} sub="Solo or team allowed" color="#6366f1" />
+                <SnapshotItem icon={DollarSign} label="Entry Fee" value={paymentRequired ? `₹${hack.paymentConfig.amountInr}` : 'Free Entry'} sub={paymentRequired ? 'Verified payment' : 'No registration fee'} color={paymentRequired ? '#b45309' : '#10b981'} />
+                <SnapshotItem icon={FileCode} label="Submissions" value={`${maxSubs} per team`} sub="Allowed project link types" color="#0ea5e9" />
                 {hack?.registrationDeadline && (
-                  <InfoRow label="Reg. Closes" value={new Date(hack.registrationDeadline).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} accent="#b45309" />
+                  <SnapshotItem icon={Calendar} label="Reg. Closes" value={new Date(hack.registrationDeadline).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} color="#f59e0b" />
                 )}
                 {(hack?.submissionDeadline || hack?.endDate) && (
-                  <InfoRow label="Sub. Closes" value={new Date(hack.submissionDeadline || hack.endDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} accent="#be123c" />
+                  <SnapshotItem icon={Clock3} label="Sub. Deadline" value={new Date(hack.submissionDeadline || hack.endDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} color="#ef4444" />
                 )}
-                <div style={{ paddingTop: 10 }}>
-                  <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700, marginBottom: 7, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Accepted Links</div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+
+                <div style={{ paddingTop: 8 }}>
+                  <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 800, marginBottom: 7, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Accepted Link Formats</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
                     {acceptedLinkBadges.map(({ icon: Icon, label, color, textColor }) => (
-                      <span key={label} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: color, color: textColor, border: `1px solid ${textColor}30`, fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20 }}>
+                      <span key={label} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: color, color: textColor, border: `1px solid ${textColor}30`, fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 20 }}>
                         <Icon size={10} /> {label}
                       </span>
                     ))}
@@ -748,7 +878,10 @@ export default function HackathonDetail() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
                     <div>
                       <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>Congratulations!</div>
-                      <div style={{ fontSize: 16, fontWeight: 900 }}>{certificate.certType === 'winner' ? '🏆 Winner Certificate' : '🎓 Participation Certificate'}</div>
+                      <div style={{ fontSize: 16, fontWeight: 900, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        {certificate.certType === 'winner' ? <Trophy size={16} color="#fcd34d" /> : <Award size={16} color="#fcd34d" />}
+                        {certificate.certType === 'winner' ? 'Winner Certificate' : 'Participation Certificate'}
+                      </div>
                     </div>
                     <Award size={28} color="#fcd34d" />
                   </div>
@@ -804,8 +937,8 @@ export default function HackathonDetail() {
                   <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: 14, padding: '14px 16px', marginBottom: 14 }}>
                     <div style={{ fontSize: 10, fontWeight: 900, color: '#94a3b8', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>Team</div>
                     <div style={{ fontSize: 16, fontWeight: 900, color: '#0f172a', marginBottom: 4 }}>{registration.teamName}</div>
-                    <div style={{ fontSize: 12, color: '#6366f1', fontWeight: 700, marginBottom: 10 }}>
-                      {isLeader ? '👑 You are the team leader' : 'You are a team member'}
+                    <div style={{ fontSize: 12, color: '#6366f1', fontWeight: 700, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <Crown size={12} /> {isLeader ? 'You are the team leader' : 'You are a team member'}
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       {(registration.members || []).map((m, idx) => (
@@ -817,7 +950,7 @@ export default function HackathonDetail() {
                             <span style={{ fontWeight: 700, color: '#0f172a' }}>{m.name}</span>
                             <span style={{ color: '#94a3b8', marginLeft: 5 }}>({m.email})</span>
                             {String(m.user?._id || m.user) === String(user?._id || user?.id) && (
-                              <span style={{ marginLeft: 5, fontSize: 10, color: '#6366f1', fontWeight: 800 }}>you</span>
+                              <span style={{ marginLeft: 5, fontSize: 10, color: '#6366f1', fontWeight: 800 }}>(you)</span>
                             )}
                           </div>
                         </div>
@@ -989,8 +1122,8 @@ export default function HackathonDetail() {
                       {/* Step 1: Add Members */}
                       {regStep === 1 && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                          <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: '10px 12px', fontSize: 12, color: '#166534' }}>
-                            <strong>You</strong> are the team leader. Add teammates below (optional for solo).
+                          <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: '10px 12px', fontSize: 12, color: '#166534', display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <Crown size={14} color="#10b981" /> <span><strong>You</strong> are the team leader. Add teammates below (optional for solo).</span>
                           </div>
 
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
@@ -1077,7 +1210,7 @@ export default function HackathonDetail() {
                               <div style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>Members</div>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                                 <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg,#6366f1,#7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                  <span style={{ fontSize: 11, color: '#fff', fontWeight: 900 }}>👑</span>
+                                  <Crown size={13} color="#fff" />
                                 </div>
                                 <div>
                                   <div style={{ fontSize: 12, fontWeight: 800, color: '#0f172a' }}>{user?.name || 'You'}</div>
@@ -1099,7 +1232,9 @@ export default function HackathonDetail() {
 
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8 }}>
                               <span style={{ fontSize: 12, color: '#64748b' }}>Entry Fee</span>
-                              <span style={{ fontSize: 13, fontWeight: 900, color: paymentRequired ? '#b45309' : '#065f46' }}>{paymentRequired ? `₹${hack.paymentConfig.amountInr}` : 'Free 🎉'}</span>
+                              <span style={{ fontSize: 13, fontWeight: 900, color: paymentRequired ? '#b45309' : '#065f46', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                {paymentRequired ? `₹${hack.paymentConfig.amountInr}` : <><Sparkles size={11} color="#065f46" /> Free</>}
+                              </span>
                             </div>
                           </div>
 
