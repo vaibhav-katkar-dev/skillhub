@@ -25,25 +25,31 @@ import {
   X,
   Award,
   Download,
+  ChevronRight,
+  ChevronLeft,
+  CheckCheck,
+  Rocket,
+  Target,
+  Zap,
 } from 'lucide-react';
 import { api, useAuthStore } from '../store/authStore';
 import { generatePDFFromDOM } from '../utils/pdfGenerator';
 import HackathonCertificateTemplate from '../components/HackathonCertificateTemplate';
 
 const STATUS_STYLE = {
-  upcoming: { bg: 'bg-amber-100', text: 'text-amber-700', label: 'Upcoming', icon: Clock3 },
-  live:     { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Live Now', icon: CircleDot },
-  ended:    { bg: 'bg-slate-100', text: 'text-slate-500', label: 'Ended', icon: CheckCircle2 },
+  upcoming: { bg: '#fef3c7', text: '#92400e', border: '#fbbf24', dot: '#f59e0b', label: 'Upcoming', icon: Clock3 },
+  live:     { bg: '#d1fae5', text: '#065f46', border: '#34d399', dot: '#10b981', label: 'Live Now', icon: CircleDot },
+  ended:    { bg: '#f1f5f9', text: '#475569', border: '#cbd5e1', dot: '#94a3b8', label: 'Ended',    icon: CheckCircle2 },
 };
 
 const REG_STATUS_STYLE = {
-  registered:      { bg: 'bg-indigo-100',  text: 'text-indigo-700',  label: 'Registered' },
-  payment_pending: { bg: 'bg-amber-100',   text: 'text-amber-700',   label: 'Payment Pending' },
-  submitted:       { bg: 'bg-sky-100',     text: 'text-sky-700',     label: 'Submitted' },
-  under_review:    { bg: 'bg-violet-100',  text: 'text-violet-700',  label: 'Under Review' },
-  approved:        { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Approved' },
-  rejected:        { bg: 'bg-red-100',     text: 'text-red-700',     label: 'Rejected' },
-  winner:          { bg: 'bg-amber-200',   text: 'text-amber-900',   label: '🏆 Winner' },
+  registered:      { bg: '#eef2ff', text: '#4338ca', label: 'Registered' },
+  payment_pending: { bg: '#fffbeb', text: '#92400e', label: 'Payment Pending' },
+  submitted:       { bg: '#f0f9ff', text: '#0369a1', label: 'Submitted' },
+  under_review:    { bg: '#f5f3ff', text: '#6d28d9', label: 'Under Review' },
+  approved:        { bg: '#ecfdf5', text: '#065f46', label: 'Approved' },
+  rejected:        { bg: '#fef2f2', text: '#991b1b', label: 'Rejected' },
+  winner:          { bg: '#fef3c7', text: '#78350f', label: '🏆 Winner' },
 };
 
 const loadRazorpay = () =>
@@ -56,6 +62,89 @@ const loadRazorpay = () =>
     document.body.appendChild(script);
   });
 
+/* ── Step indicator ─────────────────────────────────────── */
+function StepBar({ step, steps }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 28 }}>
+      {steps.map((label, i) => {
+        const done = i < step;
+        const active = i === step;
+        return (
+          <React.Fragment key={i}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
+              <div style={{
+                width: 34, height: 34, borderRadius: '50%',
+                background: done ? '#10b981' : active ? 'linear-gradient(135deg,#4f46e5,#7c3aed)' : '#f1f5f9',
+                border: `2px solid ${done ? '#10b981' : active ? '#4f46e5' : '#e2e8f0'}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: done || active ? '#fff' : '#94a3b8',
+                fontSize: 13, fontWeight: 900,
+                boxShadow: active ? '0 4px 14px rgba(79,70,229,0.35)' : 'none',
+                transition: 'all 0.25s',
+              }}>
+                {done ? <CheckCheck size={15} /> : i + 1}
+              </div>
+              <span style={{
+                fontSize: 10, fontWeight: 700, marginTop: 5,
+                color: done ? '#10b981' : active ? '#4f46e5' : '#94a3b8',
+                whiteSpace: 'nowrap',
+              }}>{label}</span>
+            </div>
+            {i < steps.length - 1 && (
+              <div style={{
+                height: 2, flex: 1, marginBottom: 18,
+                background: done ? '#10b981' : '#e2e8f0',
+                transition: 'background 0.3s',
+              }} />
+            )}
+          </React.Fragment>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ── Info row ───────────────────────────────────────────── */
+function InfoRow({ label, value, accent }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #f1f5f9' }}>
+      <span style={{ fontSize: 13, color: '#64748b', fontWeight: 600 }}>{label}</span>
+      <span style={{ fontSize: 13, fontWeight: 800, color: accent || '#0f172a' }}>{value}</span>
+    </div>
+  );
+}
+
+/* ── Section card ───────────────────────────────────────── */
+function Card({ title, icon: Icon, iconColor, children, accent }) {
+  return (
+    <div style={{
+      background: '#fff', border: `1.5px solid ${accent || '#e2e8f0'}`,
+      borderRadius: 18, overflow: 'hidden',
+      boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
+    }}>
+      {title && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          padding: '16px 22px', borderBottom: '1px solid #f1f5f9',
+          background: accent ? accent + '08' : '#fafafa',
+        }}>
+          {Icon && (
+            <div style={{
+              width: 32, height: 32, borderRadius: 9,
+              background: (iconColor || '#6366f1') + '18',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Icon size={15} color={iconColor || '#6366f1'} />
+            </div>
+          )}
+          <h3 style={{ margin: 0, fontSize: 15, fontWeight: 900, color: '#0f172a' }}>{title}</h3>
+        </div>
+      )}
+      <div style={{ padding: '18px 22px' }}>{children}</div>
+    </div>
+  );
+}
+
 export default function HackathonDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -63,22 +152,21 @@ export default function HackathonDetail() {
 
   const [hack, setHack] = useState(null);
   const [loadingHack, setLoadingHack] = useState(true);
-
   const [registration, setRegistration] = useState(null);
   const [loadingReg, setLoadingReg] = useState(false);
-
   const [winners, setWinners] = useState(null);
 
-  // Certificate state
+  // Certificate
   const [certificate, setCertificate] = useState(null);
   const [loadingCert, setLoadingCert] = useState(false);
   const [prepState, setPrepState] = useState(null);
   const [exportCert, setExportCert] = useState(null);
   const hackCertTemplateRef = useRef(null);
 
-  // Team registration
+  // Multi-step registration
+  const [regStep, setRegStep] = useState(0); // 0=Team Info, 1=Members, 2=Review
   const [teamName, setTeamName] = useState('');
-  const [members, setMembers] = useState([{ name: '', email: '' }]); // array of {name, email}
+  const [members, setMembers] = useState([{ name: '', email: '' }]);
 
   // Submission
   const [submissionLink, setSubmissionLink] = useState('');
@@ -95,57 +183,36 @@ export default function HackathonDetail() {
   const faqs = useMemo(() => hack?.contentConfig?.faqs || [], [hack]);
   const problemStatement = useMemo(() => hack?.contentConfig?.problemStatement || '', [hack]);
 
-
   const statusStyle = STATUS_STYLE[hack?.status] || STATUS_STYLE.upcoming;
   const StatusIcon = statusStyle.icon;
-
   const showMsg = (text, tone = 'info') => setMsg({ text, tone });
 
   const fetchHack = useCallback(async () => {
     setLoadingHack(true);
-    try {
-      const r = await api.get(`/events/hackathons/${id}`);
-      setHack(r.data);
-    } catch {
-      setHack(null);
-    } finally {
-      setLoadingHack(false);
-    }
+    try { const r = await api.get(`/events/hackathons/${id}`); setHack(r.data); }
+    catch { setHack(null); }
+    finally { setLoadingHack(false); }
   }, [id]);
 
   const fetchMyTeam = useCallback(async () => {
     if (!isAuthenticated || !hack?._id) { setRegistration(null); return; }
     setLoadingReg(true);
-    try {
-      const r = await api.get(`/events/hackathons/${hack._id}/my-team`);
-      setRegistration(r.data);
-    } catch {
-      setRegistration(null);
-    } finally {
-      setLoadingReg(false);
-    }
+    try { const r = await api.get(`/events/hackathons/${hack._id}/my-team`); setRegistration(r.data); }
+    catch { setRegistration(null); }
+    finally { setLoadingReg(false); }
   }, [hack?._id, isAuthenticated]);
 
   const fetchWinners = useCallback(async () => {
-    try {
-      const r = await api.get(`/events/hackathons/${id}/winners`);
-      setWinners(r.data);
-    } catch {
-      setWinners(null);
-    }
+    try { const r = await api.get(`/events/hackathons/${id}/winners`); setWinners(r.data); }
+    catch { setWinners(null); }
   }, [id]);
 
   const fetchMyCertificate = useCallback(async () => {
     if (!isAuthenticated || !hack?._id) { setCertificate(null); return; }
     setLoadingCert(true);
-    try {
-      const r = await api.get(`/events/hackathons/${hack._id}/my-certificate`);
-      setCertificate(r.data);
-    } catch {
-      setCertificate(null);
-    } finally {
-      setLoadingCert(false);
-    }
+    try { const r = await api.get(`/events/hackathons/${hack._id}/my-certificate`); setCertificate(r.data); }
+    catch { setCertificate(null); }
+    finally { setLoadingCert(false); }
   }, [hack?._id, isAuthenticated]);
 
   useEffect(() => { fetchHack(); }, [fetchHack]);
@@ -153,268 +220,162 @@ export default function HackathonDetail() {
   useEffect(() => { if (hack?.winnerConfig?.announced) fetchWinners(); }, [hack, fetchWinners]);
   useEffect(() => { fetchMyCertificate(); }, [hack?._id, fetchMyCertificate]);
 
-  // ── Dynamic member rows ──────────────────────────────────────────────────
   const teamMax = Number(hack?.teamConfig?.maxMembers || 4);
   const teamMin = Number(hack?.teamConfig?.minMembers || 1);
 
-  const addMemberRow = () => {
-    if (members.length < teamMax - 1) {
-      setMembers((prev) => [...prev, { name: '', email: '' }]);
-    }
-  };
+  const addMemberRow = () => { if (members.length < teamMax - 1) setMembers(prev => [...prev, { name: '', email: '' }]); };
+  const removeMemberRow = (idx) => setMembers(prev => prev.filter((_, i) => i !== idx));
+  const updateMember = (idx, field, val) => setMembers(prev => prev.map((m, i) => i === idx ? { ...m, [field]: val } : m));
 
-  const removeMemberRow = (idx) => {
-    setMembers((prev) => prev.filter((_, i) => i !== idx));
-  };
-
-  const updateMember = (idx, field, val) => {
-    setMembers((prev) => prev.map((m, i) => i === idx ? { ...m, [field]: val } : m));
-  };
-
-  // ── Countdown Timer ────────────────────────────────────────────────────────
+  // Countdown
   const [timeLeft, setTimeLeft] = useState('');
   const [timerLabel, setTimerLabel] = useState('');
 
   const isSubmissionOpen = useMemo(() => {
     if (hack?.status === 'ended') return false;
-    const subDeadline = hack?.submissionDeadline ? new Date(hack.submissionDeadline).getTime() : hack?.endDate ? new Date(hack.endDate).getTime() : null;
-    if (!subDeadline) return true;
-    return Date.now() < subDeadline;
+    const d = hack?.submissionDeadline ? new Date(hack.submissionDeadline).getTime() : hack?.endDate ? new Date(hack.endDate).getTime() : null;
+    return !d || Date.now() < d;
   }, [hack]);
 
   const isRegistrationOpen = useMemo(() => {
     if (hack?.status === 'ended') return false;
-    const regDeadline = hack?.registrationDeadline ? new Date(hack.registrationDeadline).getTime() : hack?.endDate ? new Date(hack.endDate).getTime() : null;
-    if (!regDeadline) return true;
-    return Date.now() < regDeadline;
+    const d = hack?.registrationDeadline ? new Date(hack.registrationDeadline).getTime() : hack?.endDate ? new Date(hack.endDate).getTime() : null;
+    return !d || Date.now() < d;
   }, [hack]);
 
   useEffect(() => {
-    if (hack?.status === 'ended') {
-      setTimeLeft('Ended');
-      setTimerLabel('Ended');
-      return;
-    }
-    const regDeadline = hack?.registrationDeadline ? new Date(hack.registrationDeadline).getTime() : hack?.endDate ? new Date(hack.endDate).getTime() : null;
-    const subDeadline = hack?.submissionDeadline ? new Date(hack.submissionDeadline).getTime() : hack?.endDate ? new Date(hack.endDate).getTime() : null;
-
-    if (!regDeadline && !subDeadline) {
-      setTimeLeft('');
-      return;
-    }
-
-    const updateTimer = () => {
+    if (hack?.status === 'ended') { setTimeLeft('Ended'); setTimerLabel('Ended'); return; }
+    const reg = hack?.registrationDeadline ? new Date(hack.registrationDeadline).getTime() : hack?.endDate ? new Date(hack.endDate).getTime() : null;
+    const sub = hack?.submissionDeadline ? new Date(hack.submissionDeadline).getTime() : hack?.endDate ? new Date(hack.endDate).getTime() : null;
+    if (!reg && !sub) { setTimeLeft(''); return; }
+    const tick = () => {
       const now = Date.now();
-      let diff = 0;
-      let label = '';
-      if (regDeadline && now < regDeadline) {
-        diff = regDeadline - now;
-        label = 'Registration Deadline';
-      } else if (subDeadline && now < subDeadline) {
-        diff = subDeadline - now;
-        label = 'Submission Deadline';
-      } else {
-        setTimeLeft('Ended');
-        setTimerLabel('Ended');
-        return;
-      }
-      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const h = Math.floor((diff / (1000 * 60 * 60)) % 24).toString().padStart(2, '0');
-      const m = Math.floor((diff / 1000 / 60) % 60).toString().padStart(2, '0');
+      let diff = 0, label = '';
+      if (reg && now < reg) { diff = reg - now; label = 'Registration closes in'; }
+      else if (sub && now < sub) { diff = sub - now; label = 'Submission closes in'; }
+      else { setTimeLeft('Ended'); setTimerLabel('Ended'); return; }
+      const d = Math.floor(diff / 86400000);
+      const h = Math.floor((diff / 3600000) % 24).toString().padStart(2, '0');
+      const m = Math.floor((diff / 60000) % 60).toString().padStart(2, '0');
       const s = Math.floor((diff / 1000) % 60).toString().padStart(2, '0');
-      setTimeLeft(d > 0 ? `${d}d ${h}h ${m}m ${s}s` : `${h}h ${m}m ${s}s`);
+      setTimeLeft(d > 0 ? `${d}d ${h}h ${m}m ${s}s` : `${h}:${m}:${s}`);
       setTimerLabel(label);
     };
-    updateTimer();
-    const timerId = setInterval(updateTimer, 1000);
-    return () => clearInterval(timerId);
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
   }, [hack]);
 
-  // ── Team registration ──────────────────────────────────────────────────────
+  // Registration handler
   const handleRegisterTeam = async () => {
     if (!isAuthenticated) { navigate('/login'); return; }
-
-    const trimmedTeam = String(teamName || '').trim();
-    if (trimmedTeam.length < 3) {
-      showMsg('Team name must be at least 3 characters.', 'error'); return;
+    const trimmed = String(teamName || '').trim();
+    if (trimmed.length < 3) { showMsg('Team name must be at least 3 characters.', 'error'); return; }
+    const filled = members.filter(m => m.email.trim());
+    for (const m of filled) {
+      if (!m.name.trim()) { showMsg('Please enter a name for every teammate you added.', 'error'); return; }
     }
-
-    // Validate members: every non-empty row must have both name and email
-    const filledMembers = members.filter((m) => m.email.trim());
-    for (const m of filledMembers) {
-      if (!m.name.trim()) {
-        showMsg('Please enter a name for every teammate you added.', 'error'); return;
-      }
-      try { new URL(`mailto:${m.email.trim()}`); } catch { /* basic check */ }
-    }
-
     setBusy(true);
     showMsg('Registering your team…', 'info');
     try {
       await api.post(`/events/hackathons/${hack._id}/register`, {
-        teamName: trimmedTeam,
-        memberEmails: filledMembers.map((m) => m.email.trim()),
+        teamName: trimmed,
+        memberEmails: filled.map(m => m.email.trim()),
       });
       await fetchMyTeam();
       showMsg('Team registered successfully! You are the team leader.', 'success');
-      setTeamName('');
-      setMembers([{ name: '', email: '' }]);
+      setTeamName(''); setMembers([{ name: '', email: '' }]); setRegStep(0);
     } catch (err) {
       const missing = err.response?.data?.missingEmails;
-      if (Array.isArray(missing) && missing.length) {
+      if (Array.isArray(missing) && missing.length)
         showMsg(`These emails are not registered SkillValix users: ${missing.join(', ')}`, 'error');
-      } else {
-        showMsg(err.response?.data?.message || 'Failed to register team.', 'error');
-      }
-    } finally {
-      setBusy(false);
-    }
+      else showMsg(err.response?.data?.message || 'Failed to register team.', 'error');
+    } finally { setBusy(false); }
   };
 
-  // ── Payment ────────────────────────────────────────────────────────────────
+  // Payment
   const handlePay = async () => {
-    if (!registration) return;
-    if (payingRef.current) return;
-    payingRef.current = true;
-    setBusy(true);
+    if (!registration || payingRef.current) return;
+    payingRef.current = true; setBusy(true);
     const loaded = await loadRazorpay();
-    if (!loaded) {
-      showMsg('Payment gateway failed to load. Please try again.', 'error');
-      payingRef.current = false;
-      setBusy(false);
-      return;
-    }
+    if (!loaded) { showMsg('Payment gateway failed to load.', 'error'); payingRef.current = false; setBusy(false); return; }
     try {
       const orderRes = await api.post(`/events/hackathons/${hack._id}/razorpay-order`, { registrationId: registration._id });
       const order = orderRes.data;
-
-      if (!import.meta.env.VITE_RAZORPAY_KEY_ID) {
-        showMsg('Payment system not configured. Please contact support.', 'error');
-        payingRef.current = false;
-        setBusy(false);
-        return;
-      }
-
+      if (!import.meta.env.VITE_RAZORPAY_KEY_ID) { showMsg('Payment system not configured.', 'error'); payingRef.current = false; setBusy(false); return; }
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-        amount: order.amount,
-        currency: order.currency,
-        order_id: order.id,
-        name: 'SkillValix',
-        description: order.description || `Hackathon Registration: ${hack?.title || ''}`,
-        theme: { color: hack?.styleConfig?.accentColor || '#4F46E5' },
-        handler: async (response) => {
+        amount: order.amount, currency: order.currency, order_id: order.id,
+        name: 'SkillValix', description: `Hackathon Registration: ${hack?.title || ''}`,
+        theme: { color: '#4F46E5' },
+        handler: async (res) => {
           try {
-            await api.post(`/events/hackathons/${hack._id}/payment/verify`, {
-              registrationId: registration._id,
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-            });
-            await fetchMyTeam();
-            showMsg('Payment successful. Submission is now unlocked!', 'success');
-          } catch (err) {
-            showMsg(err.response?.data?.message || 'Payment verification failed.', 'error');
-          } finally {
-            payingRef.current = false;
-            setBusy(false);
-          }
+            await api.post(`/events/hackathons/${hack._id}/payment/verify`, { registrationId: registration._id, ...res });
+            await fetchMyTeam(); showMsg('Payment successful. Submission is now unlocked!', 'success');
+          } catch (e) { showMsg(e.response?.data?.message || 'Payment verification failed.', 'error'); }
+          finally { payingRef.current = false; setBusy(false); }
         },
-        modal: { ondismiss: () => {
-          payingRef.current = false;
-          setBusy(false);
-        } },
+        modal: { ondismiss: () => { payingRef.current = false; setBusy(false); } },
       };
-      const razorpay = new window.Razorpay(options);
-      razorpay.on('payment.failed', (response) => {
-        showMsg(response?.error?.description || 'Payment failed.', 'error');
-        payingRef.current = false;
-        setBusy(false);
-      });
-      razorpay.open();
-    } catch (err) {
-      showMsg(err.response?.data?.message || 'Could not initiate payment.', 'error');
-      payingRef.current = false;
-      setBusy(false);
-    }
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', (r) => { showMsg(r?.error?.description || 'Payment failed.', 'error'); payingRef.current = false; setBusy(false); });
+      rzp.open();
+    } catch (err) { showMsg(err.response?.data?.message || 'Could not initiate payment.', 'error'); payingRef.current = false; setBusy(false); }
   };
 
-  // ── Link type helpers ──────────────────────────────────────────────────────
   const isDriveLink = (url) => { try { return new URL(url).hostname.includes('drive.google.com'); } catch { return false; } };
   const isPdfLink  = (url) => /\.pdf(\?|#|$)/i.test(url);
   const isGitHub   = (url) => { try { const h = new URL(url).hostname; return h === 'github.com' || h.endsWith('.github.com'); } catch { return false; } };
   const isNotion   = (url) => { try { const h = new URL(url).hostname; return h.includes('notion.site') || h.includes('notion.so'); } catch { return false; } };
 
-  // ── Submit solution ────────────────────────────────────────────────────────
   const handleSubmit = async () => {
     if (!registration) return;
     const link = String(submissionLink || '').trim();
     if (!link) { showMsg('Submission link is required.', 'error'); return; }
-    try { new URL(link); } catch {
-      showMsg('Please enter a valid URL (starting with https:// or http://).', 'error'); return;
-    }
-
-    // Client-side link type validation
+    try { new URL(link); } catch { showMsg('Please enter a valid URL.', 'error'); return; }
     const cfg = hack?.submissionConfig || {};
     if (!cfg.acceptsAnyLink) {
-      const ok =
-        (cfg.acceptsDriveLink  && isDriveLink(link)) ||
-        (cfg.acceptsPdfLink    && isPdfLink(link))   ||
-        (cfg.acceptsGitHubLink && isGitHub(link))    ||
-        (cfg.acceptsNotionLink && isNotion(link));
+      const ok = (cfg.acceptsDriveLink && isDriveLink(link)) || (cfg.acceptsPdfLink && isPdfLink(link)) || (cfg.acceptsGitHubLink && isGitHub(link)) || (cfg.acceptsNotionLink && isNotion(link));
       if (!ok) {
         const allowed = [];
-        if (cfg.acceptsGitHubLink) allowed.push('GitHub repo (github.com)');
-        if (cfg.acceptsNotionLink) allowed.push('Notion page (notion.site / notion.so)');
+        if (cfg.acceptsGitHubLink) allowed.push('GitHub');
+        if (cfg.acceptsNotionLink) allowed.push('Notion');
         if (cfg.acceptsDriveLink)  allowed.push('Google Drive');
-        if (cfg.acceptsPdfLink)    allowed.push('PDF link (.pdf)');
-        showMsg(
-          allowed.length
-            ? `This link type isn't accepted. Allowed: ${allowed.join(', ')}.`
-            : 'This link type is not accepted for this hackathon.',
-          'error'
-        );
-        return;
+        if (cfg.acceptsPdfLink)    allowed.push('PDF link');
+        showMsg(`Link type not accepted. Allowed: ${allowed.join(', ')}.`, 'error'); return;
       }
     }
-
-    setBusy(true);
-    showMsg('Submitting your solution…', 'info');
+    setBusy(true); showMsg('Submitting your solution…', 'info');
     try {
-      await api.post(`/events/hackathons/${hack._id}/submit`, {
-        registrationId: registration._id,
-        submissionLink: link,
-        note: String(note || '').trim(),
-      });
-      await fetchMyTeam();
-      showMsg('Solution submitted successfully! 🎉', 'success');
-      setSubmissionLink('');
-      setNote('');
-    } catch (err) {
-      showMsg(err.response?.data?.message || 'Failed to submit solution.', 'error');
-    } finally {
-      setBusy(false);
-    }
+      await api.post(`/events/hackathons/${hack._id}/submit`, { registrationId: registration._id, submissionLink: link, note: String(note || '').trim() });
+      await fetchMyTeam(); showMsg('Solution submitted successfully! 🎉', 'success');
+      setSubmissionLink(''); setNote('');
+    } catch (err) { showMsg(err.response?.data?.message || 'Failed to submit solution.', 'error'); }
+    finally { setBusy(false); }
   };
 
+  // Loading / Error states
   if (loadingHack) {
     return (
-      <div className="min-h-[70vh] bg-slate-50 px-6 py-12">
-        <div className="max-w-6xl mx-auto space-y-4">
-          <div className="h-8 w-40 rounded-xl bg-slate-200 animate-pulse" />
-          <div className="rounded-2xl border border-slate-200 bg-white h-72 animate-pulse" />
+      <div style={{ minHeight: '70vh', background: '#f8fafc', padding: '40px 24px' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{ height: 320, borderRadius: 20, background: '#e2e8f0', animation: 'pulse 1.4s ease-in-out infinite', marginBottom: 20 }} />
+          <div style={{ height: 200, borderRadius: 20, background: '#e2e8f0', animation: 'pulse 1.4s ease-in-out infinite' }} />
         </div>
+        <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}`}</style>
       </div>
     );
   }
 
   if (!hack) {
     return (
-      <div className="min-h-[70vh] bg-slate-50 px-6 py-12">
-        <div className="max-w-3xl mx-auto bg-white border border-slate-200 rounded-2xl p-10 text-center">
-          <p className="text-slate-900 text-xl font-bold">Hackathon not found.</p>
-          <Link to="/hackathons" className="inline-flex items-center gap-2 mt-6 px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold">
-            <ArrowLeft className="w-4 h-4" /> Back to Hackathons
+      <div style={{ minHeight: '70vh', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+        <div style={{ background: '#fff', border: '1.5px solid #e2e8f0', borderRadius: 20, padding: '48px 40px', textAlign: 'center', maxWidth: 420 }}>
+          <Rocket size={48} color="#cbd5e1" style={{ marginBottom: 16 }} />
+          <h2 style={{ margin: '0 0 10px', fontSize: 20, fontWeight: 900, color: '#0f172a' }}>Hackathon not found</h2>
+          <p style={{ margin: '0 0 24px', color: '#64748b', fontSize: 14 }}>This hackathon may have been removed or the link is incorrect.</p>
+          <Link to="/hackathons" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'linear-gradient(135deg,#4f46e5,#7c3aed)', color: '#fff', fontWeight: 800, fontSize: 14, padding: '11px 24px', borderRadius: 12, textDecoration: 'none' }}>
+            <ArrowLeft size={15} /> Back to Hackathons
           </Link>
         </div>
       </div>
@@ -424,44 +385,42 @@ export default function HackathonDetail() {
   const paymentRequired = Boolean(hack?.paymentConfig?.enabled && Number(hack?.paymentConfig?.amountInr || 0) > 0);
   const submissionInstructions = hack?.submissionConfig?.instructions || '';
   const linkLabel = hack?.submissionConfig?.linkLabel || 'Submission Link';
-  const linkHint = hack?.submissionConfig?.linkHint || '';
-
-  // Build a smart placeholder based on which link types are accepted
-  const subCfg = hack?.submissionConfig || {};
+  const linkHint  = hack?.submissionConfig?.linkHint || '';
+  const subCfg    = hack?.submissionConfig || {};
   const linkPlaceholder = (() => {
     if (subCfg.linkPlaceholder && subCfg.linkPlaceholder !== 'Paste your submission link here...') return subCfg.linkPlaceholder;
     if (subCfg.acceptsAnyLink) return 'Paste any valid URL here…';
-    const hints = [];
-    if (subCfg.acceptsGitHubLink) hints.push('https://github.com/your-org/your-repo');
-    if (subCfg.acceptsNotionLink) hints.push('https://your-workspace.notion.site/…');
-    if (subCfg.acceptsDriveLink)  hints.push('https://drive.google.com/…');
-    if (subCfg.acceptsPdfLink)    hints.push('https://…/report.pdf');
-    return hints[0] || 'Paste your submission link here…';
+    const h = [];
+    if (subCfg.acceptsGitHubLink) h.push('https://github.com/your-org/your-repo');
+    if (subCfg.acceptsNotionLink) h.push('https://your-workspace.notion.site/…');
+    if (subCfg.acceptsDriveLink)  h.push('https://drive.google.com/…');
+    if (subCfg.acceptsPdfLink)    h.push('https://…/report.pdf');
+    return h[0] || 'Paste your submission link here…';
+  })();
+  const acceptedLinkBadges = (() => {
+    if (subCfg.acceptsAnyLink) return [{ icon: Link2, label: 'Any URL', color: '#eef2ff', textColor: '#4338ca' }];
+    const b = [];
+    if (subCfg.acceptsGitHubLink) b.push({ icon: Github, label: 'GitHub', color: '#f8fafc', textColor: '#1e293b' });
+    if (subCfg.acceptsNotionLink) b.push({ icon: FileText, label: 'Notion', color: '#fafaf9', textColor: '#292524' });
+    if (subCfg.acceptsDriveLink)  b.push({ icon: HardDriveUpload, label: 'Drive', color: '#f0fdf4', textColor: '#166534' });
+    if (subCfg.acceptsPdfLink)    b.push({ icon: FileText, label: 'PDF', color: '#fff1f2', textColor: '#9f1239' });
+    return b;
   })();
 
-  // Accepted link type badges for the submission form
-  const acceptedLinkBadges = (() => {
-    if (subCfg.acceptsAnyLink) return [{ icon: Link2, label: 'Any URL', color: 'bg-indigo-50 text-indigo-700 border-indigo-200' }];
-    const badges = [];
-    if (subCfg.acceptsGitHubLink) badges.push({ icon: Github, label: 'GitHub', color: 'bg-slate-50 text-slate-700 border-slate-300' });
-    if (subCfg.acceptsNotionLink) badges.push({ icon: FileText, label: 'Notion', color: 'bg-neutral-50 text-neutral-700 border-neutral-300' });
-    if (subCfg.acceptsDriveLink)  badges.push({ icon: HardDriveUpload, label: 'Google Drive', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' });
-    if (subCfg.acceptsPdfLink)    badges.push({ icon: FileText, label: 'PDF Link', color: 'bg-rose-50 text-rose-700 border-rose-200' });
-    return badges;
-  })();
   const canSubmit = registration && (!registration.payment?.required || registration.payment?.status === 'paid') && isSubmissionOpen;
   const regStatusStyle = REG_STATUS_STYLE[registration?.status] || REG_STATUS_STYLE.registered;
   const isLeader = registration && user && String(registration.leader?._id || registration.leader) === String(user._id || user.id);
   const submissionCount = registration?.submissions?.length || 0;
   const maxSubs = Number(hack?.submissionConfig?.maxSubmissionsPerTeam || 3);
 
-  // SEO canonical URL
   const canonicalPath = hack.slug ? `/hackathons/${hack.slug}` : `/hackathons/${hack._id}`;
-  const canonicalUrl = `https://www.skillvalix.com${canonicalPath}`;
+  const canonicalUrl  = `https://www.skillvalix.com${canonicalPath}`;
+
+  // Multi-step reg steps
+  const REG_STEPS = ['Team Info', 'Add Members', 'Review & Submit'];
 
   return (
     <>
-      {/* Hidden local template for compiling PDFs visually on client thread */}
       {exportCert && (
         <HackathonCertificateTemplate
           ref={hackCertTemplateRef}
@@ -469,7 +428,7 @@ export default function HackathonDetail() {
           hackathonTitle={hack.title || 'Hackathon'}
           eventTitle={hack.title || 'Hackathon'}
           certificateId={exportCert.certificateId}
-          issueDate={new Date(exportCert.issueDate || Date.now()).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric'})}
+          issueDate={new Date(exportCert.issueDate || Date.now()).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}
           verifyUrl={`${window.location.origin}/verify/${exportCert.certificateId}`}
           certType={exportCert.certType}
           isWinner={exportCert.isWinner}
@@ -479,433 +438,388 @@ export default function HackathonDetail() {
           customBody={exportCert.customBody}
         />
       )}
+
       <Helmet>
         <title>{hack.title} | Hackathon | SkillValix</title>
         <meta name="description" content={hack.tagline || hack.description?.slice(0, 155) || 'Join this hackathon on SkillValix'} />
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href={canonicalUrl} />
-        {/* Open Graph */}
         <meta property="og:title" content={`${hack.title} | SkillValix Hackathon`} />
         <meta property="og:description" content={hack.tagline || hack.description?.slice(0, 155) || ''} />
         {hack.image && <meta property="og:image" content={hack.image} />}
         <meta property="og:url" content={canonicalUrl} />
         <meta property="og:type" content="event" />
-        {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={`${hack.title} | SkillValix Hackathon`} />
         <meta name="twitter:description" content={hack.tagline || hack.description?.slice(0, 155) || ''} />
         {hack.image && <meta name="twitter:image" content={hack.image} />}
-
-        {/* ── JSON-LD: Event ──────────────────────────────────── */}
         <script type="application/ld+json">{JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "Event",
-          "name": hack.title,
-          "description": hack.tagline || hack.description?.slice(0, 155) || "Participate in this Hackathon on SkillValix.",
-          "startDate": hack.startDate || hack.createdAt || new Date().toISOString(),
-          "endDate": hack.endDate || hack.submissionDeadline || hack.registrationDeadline || new Date(Date.now() + 86400000 * 30).toISOString(),
-          "eventAttendanceMode": "https://schema.org/OnlineEventAttendanceMode",
-          "eventStatus": "https://schema.org/EventScheduled",
-          "location": { "@type": "VirtualLocation", "url": canonicalUrl },
-          "image": hack.image ? [hack.image] : [],
-          "organizer": { "@type": "Organization", "name": "SkillValix", "url": "https://www.skillvalix.com" },
-          "performer": { "@type": "Organization", "name": "SkillValix" },
-          "offers": { 
-             "@type": "Offer", 
-             "price": hack?.paymentConfig?.amountInr ? String(hack.paymentConfig.amountInr) : "0", 
-             "priceCurrency": "INR", 
-             "availability": "https://schema.org/InStock", 
-             "url": canonicalUrl 
-          }
+          '@context': 'https://schema.org', '@type': 'Event',
+          name: hack.title,
+          description: hack.tagline || hack.description?.slice(0, 155) || 'Participate in this Hackathon on SkillValix.',
+          startDate: hack.startDate || hack.createdAt || new Date().toISOString(),
+          endDate: hack.endDate || hack.submissionDeadline || hack.registrationDeadline || new Date(Date.now() + 86400000 * 30).toISOString(),
+          eventAttendanceMode: 'https://schema.org/OnlineEventAttendanceMode',
+          eventStatus: 'https://schema.org/EventScheduled',
+          location: { '@type': 'VirtualLocation', url: canonicalUrl },
+          image: hack.image ? [hack.image] : [],
+          organizer: { '@type': 'Organization', name: 'SkillValix', url: 'https://www.skillvalix.com' },
+          offers: { '@type': 'Offer', price: hack?.paymentConfig?.amountInr ? String(hack.paymentConfig.amountInr) : '0', priceCurrency: 'INR', availability: 'https://schema.org/InStock', url: canonicalUrl },
         })}</script>
       </Helmet>
 
-      {/* ── Hero Section ── */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 py-16 px-6">
-        <div
-          className="absolute inset-0 opacity-20"
-          style={{ backgroundImage: 'radial-gradient(circle at 30% 50%, #4f46e5 0%, transparent 50%), radial-gradient(circle at 80% 20%, #7c3aed 0%, transparent 40%)' }}
-          aria-hidden="true"
-        />
+      <div style={{ background: '#f8fafc', minHeight: '100vh' }}>
 
-        <div className="relative max-w-6xl mx-auto">
-          <Link to="/hackathons" className="inline-flex items-center gap-2 text-indigo-200 hover:text-white text-sm font-semibold mb-6 transition-colors">
-            <ArrowLeft className="w-4 h-4" /> Back to Hackathons
-          </Link>
+        {/* ── Back nav ─────────────────────────────────────────────── */}
+        <div style={{ background: '#fff', borderBottom: '1px solid #f1f5f9', padding: '12px 24px' }}>
+          <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+            <Link to="/hackathons" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: '#64748b', textDecoration: 'none' }}>
+              <ArrowLeft size={15} /> Back to Hackathons
+            </Link>
+          </div>
+        </div>
 
-          <div className="grid lg:grid-cols-[1.5fr_1fr] gap-6 items-stretch">
-            {/* Title card */}
-            <div className="rounded-2xl border border-white/20 bg-white/10 backdrop-blur p-6 text-white">
-              <div className="flex items-center justify-between gap-3 mb-4">
-                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${statusStyle.bg} ${statusStyle.text}`}>
-                  <StatusIcon className="w-3.5 h-3.5" />
+        {/* ── Hero Image Banner ─────────────────────────────────────── */}
+        {hack.image ? (
+          <div style={{ position: 'relative', width: '100%', height: 'clamp(220px,35vw,420px)', overflow: 'hidden' }}>
+            <img src={hack.image} alt={hack.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            {/* Overlay gradient */}
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15,23,42,0.85) 0%, rgba(15,23,42,0.3) 50%, transparent 100%)' }} />
+            {/* Overlaid title */}
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '28px 32px', maxWidth: 1100, margin: '0 auto' }}>
+              <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, flexWrap: 'wrap' }}>
+                  <span style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    background: statusStyle.bg, color: statusStyle.text,
+                    border: `1px solid ${statusStyle.border}`,
+                    fontSize: 11, fontWeight: 800, padding: '4px 11px', borderRadius: 20,
+                  }}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: statusStyle.dot }} />
+                    {statusStyle.label}
+                  </span>
+                  {hack.featured && (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#f59e0b', color: '#fff', fontSize: 11, fontWeight: 900, padding: '4px 11px', borderRadius: 20 }}>
+                      <Star size={10} fill="#fff" strokeWidth={0} /> Featured
+                    </span>
+                  )}
+                </div>
+                <h1 style={{ margin: '0 0 6px', fontSize: 'clamp(1.5rem,4vw,2.5rem)', fontWeight: 900, color: '#fff', lineHeight: 1.15 }}>{hack.title}</h1>
+                {hack.tagline && <p style={{ margin: 0, fontSize: 15, color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>{hack.tagline}</p>}
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* No image → Dark gradient header */
+          <div style={{
+            background: 'linear-gradient(135deg,#0f0e2a 0%,#1e1b4b 50%,#0f172a 100%)',
+            padding: '36px 24px 32px', position: 'relative', overflow: 'hidden',
+          }}>
+            <div style={{ position: 'absolute', top: '-30%', left: '20%', width: 350, height: 350, borderRadius: '50%', background: 'rgba(79,70,229,0.2)', filter: 'blur(80px)', pointerEvents: 'none' }} />
+            <div style={{ maxWidth: 1100, margin: '0 auto', position: 'relative' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  background: statusStyle.bg, color: statusStyle.text,
+                  border: `1px solid ${statusStyle.border}`,
+                  fontSize: 11, fontWeight: 800, padding: '4px 11px', borderRadius: 20,
+                }}>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: statusStyle.dot, boxShadow: hack.status === 'live' ? `0 0 0 3px ${statusStyle.dot}44` : 'none' }} />
                   {statusStyle.label}
                 </span>
                 {hack.featured && (
-                  <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-amber-100 text-amber-800 font-bold">
-                    <Star className="w-3 h-3 fill-current" /> Featured
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#f59e0b', color: '#fff', fontSize: 11, fontWeight: 900, padding: '4px 11px', borderRadius: 20 }}>
+                    <Star size={10} fill="#fff" strokeWidth={0} /> Featured
                   </span>
                 )}
               </div>
-
-              <h1 className="text-3xl md:text-4xl font-black leading-tight">{hack.title}</h1>
-              {hack.tagline && <p className="text-indigo-200 mt-2 font-semibold">{hack.tagline}</p>}
-              <p className="text-slate-200 mt-4 leading-relaxed">{hack.description}</p>
-
+              <h1 style={{ margin: '0 0 8px', fontSize: 'clamp(1.6rem,4vw,2.6rem)', fontWeight: 900, color: '#fff', lineHeight: 1.15 }}>{hack.title}</h1>
+              {hack.tagline && <p style={{ margin: '0 0 12px', fontSize: 15, color: '#a5b4fc', fontWeight: 600 }}>{hack.tagline}</p>}
               {hack.tags?.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-5">
-                  {hack.tags.map((tag) => (
-                    <span key={tag} className="px-2.5 py-1 rounded-full bg-white/15 border border-white/20 text-xs font-semibold">{tag}</span>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {hack.tags.map(t => (
+                    <span key={t} style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.8)', fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20 }}>{t}</span>
                   ))}
                 </div>
               )}
             </div>
-
-            {/* Snapshot card */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-6">
-              <h2 className="text-sm uppercase tracking-widest font-black text-slate-700 mb-4">Event Snapshot</h2>
-
-              {/* Countdown Timer */}
-              {(hack?.registrationDeadline || hack?.submissionDeadline || hack?.endDate) && (
-                <>
-                  {timeLeft === 'Ended' || hack.status === 'ended' ? (
-                    <div className="mb-5 rounded-xl bg-slate-100 border border-slate-200 p-3 text-center">
-                      <p className="text-sm font-black text-slate-500 uppercase tracking-widest">Ended</p>
-                    </div>
-                  ) : (
-                    <div className="mb-5 rounded-xl bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-100 p-3 text-center">
-                      <p className="text-xs uppercase tracking-widest font-black text-indigo-500 mb-1 flex items-center justify-center gap-1.5">
-                        <Clock3 className="w-3.5 h-3.5" /> {timerLabel}
-                      </p>
-                      <p className="text-xl font-black text-indigo-600 font-mono tracking-tight tabular-nums">
-                        {timeLeft}
-                      </p>
-                    </div>
-                  )}
-                </>
-              )}
-
-              <div className="space-y-3 text-sm">
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-500">Team Size</span>
-                  <span className="font-bold text-slate-900">{teamMin} – {teamMax} members</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-500">Entry</span>
-                  <span className="font-bold text-slate-900">{paymentRequired ? `₹${hack.paymentConfig.amountInr}` : 'Free'}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-500">Submission Limit</span>
-                  <span className="font-bold text-slate-900">{maxSubs} per team</span>
-                </div>
-                {hack?.submissionConfig?.acceptsAnyLink ? (
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-500">Link Type</span>
-                    <span className="font-bold text-emerald-700">Any URL</span>
-                  </div>
-                ) : (
-                  <>
-                    {hack?.submissionConfig?.acceptsGitHubLink && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-slate-500">GitHub Repo</span>
-                        <span className="font-bold text-emerald-700">✓ Allowed</span>
-                      </div>
-                    )}
-                    {hack?.submissionConfig?.acceptsNotionLink && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-slate-500">Notion URL</span>
-                        <span className="font-bold text-emerald-700">✓ Allowed</span>
-                      </div>
-                    )}
-                    {hack?.submissionConfig?.acceptsDriveLink && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-slate-500">Google Drive</span>
-                        <span className="font-bold text-emerald-700">✓ Allowed</span>
-                      </div>
-                    )}
-                    {hack?.submissionConfig?.acceptsPdfLink && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-slate-500">PDF Link</span>
-                        <span className="font-bold text-emerald-700">✓ Allowed</span>
-                      </div>
-                    )}
-                  </>
-                )}
-                {hack?.registrationDeadline && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-500">Reg. Closes</span>
-                    <span className="font-bold text-slate-900">{new Date(hack.registrationDeadline).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                  </div>
-                )}
-                {(hack?.submissionDeadline || hack?.endDate) && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-500">Sub. Closes</span>
-                    <span className="font-bold text-slate-900">{new Date(hack.submissionDeadline || hack.endDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Join Community CTAs */}
-              <div className="mt-5 border-t border-slate-100 pt-5 space-y-3">
-                <a 
-                  href="https://chat.whatsapp.com/IejES4kDNfx1RgMWLPeA6P" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 text-white font-bold text-sm hover:opacity-90 transition shadow-lg shadow-emerald-500/25"
-                >
-                  <Users className="w-4 h-4" /> Join WhatsApp Community
-                </a>
-                <a 
-                  href="https://www.linkedin.com/company/skillvalix/" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#0A66C2] text-white font-bold text-sm hover:opacity-90 transition shadow-lg shadow-[#0A66C2]/25"
-                >
-                  <Linkedin className="w-4 h-4" /> Follow for Updates & Opportunities
-                </a>
-              </div>
-            </div>
           </div>
-        </div>
-      </section>
+        )}
 
-      {/* ── Winners Banner ── */}
-      {hack.winnerConfig?.announced && winners?.winners?.length > 0 && (
-        <section className="bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 px-6 py-8">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-5">
-              <h2 className="text-2xl font-black text-amber-900 flex items-center justify-center gap-2">
-                <Trophy className="w-7 h-7" /> Winners Announced!
+        {/* ── Winners Banner ─────────────────────────────────────────── */}
+        {hack.winnerConfig?.announced && winners?.winners?.length > 0 && (
+          <div style={{ background: 'linear-gradient(90deg,#f59e0b,#fcd34d,#f59e0b)', padding: '20px 24px' }}>
+            <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+              <h2 style={{ margin: '0 0 14px', fontSize: 20, fontWeight: 900, color: '#78350f', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Trophy size={22} /> Winners Announced!
               </h2>
-              {winners.note && <p className="text-amber-800 mt-1 font-medium">{winners.note}</p>}
-            </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {winners.winners.map((w) => (
-                <div key={w._id} className="bg-white rounded-2xl border-2 border-amber-300 p-5 text-center shadow-lg">
-                  <p className="text-xs font-black uppercase tracking-widest text-amber-500 mb-1">{w.winnerRank || 'Winner'}</p>
-                  <p className="text-lg font-black text-slate-900">{w.teamName}</p>
-                  {w.winnerNote && <p className="text-sm text-slate-500 mt-1">{w.winnerNote}</p>}
-                  <p className="text-xs text-slate-400 mt-2">
-                    {(w.members || []).map((m) => m.name || m.email).join(', ')}
-                  </p>
-                </div>
-              ))}
+              {winners.note && <p style={{ margin: '0 0 14px', fontSize: 13, color: '#92400e' }}>{winners.note}</p>}
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                {winners.winners.map(w => (
+                  <div key={w._id} style={{ background: '#fff', border: '2px solid #fbbf24', borderRadius: 14, padding: '14px 18px', minWidth: 160 }}>
+                    <div style={{ fontSize: 10, fontWeight: 900, color: '#f59e0b', letterSpacing: '0.1em', marginBottom: 4 }}>{w.winnerRank || 'WINNER'}</div>
+                    <div style={{ fontSize: 15, fontWeight: 900, color: '#0f172a' }}>{w.teamName}</div>
+                    {w.winnerNote && <div style={{ fontSize: 11, color: '#64748b', marginTop: 3 }}>{w.winnerNote}</div>}
+                    <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>{(w.members || []).map(m => m.name || m.email).join(', ')}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </section>
-      )}
+        )}
 
-      {/* ── Main Content ── */}
-      <section className="bg-slate-50 px-6 py-10">
-        <div className="max-w-6xl mx-auto grid lg:grid-cols-[1.15fr_1fr] gap-6">
-          {/* Left column - info */}
-          <div className="space-y-6">
+        {/* ── Main body ─────────────────────────────────────────────── */}
+        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '28px 24px 60px', display: 'grid', gridTemplateColumns: '1fr 360px', gap: 24, alignItems: 'flex-start' }}>
+
+          {/* ────── LEFT COLUMN ────────────────────────────────────── */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+            {/* Tags (if image exists – shown below image) */}
+            {hack.image && hack.tags?.length > 0 && (
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', paddingTop: 4 }}>
+                {hack.tags.map(t => (
+                  <span key={t} style={{ background: '#eef2ff', color: '#4338ca', border: '1px solid #c7d2fe', fontSize: 11, fontWeight: 700, padding: '4px 11px', borderRadius: 20 }}>{t}</span>
+                ))}
+              </div>
+            )}
+
+            {/* Description */}
+            {hack.description && (
+              <Card title="About this Hackathon" icon={Rocket} iconColor="#6366f1">
+                <p style={{ margin: 0, fontSize: 14, color: '#374151', lineHeight: 1.75 }}>{hack.description}</p>
+              </Card>
+            )}
+
+            {/* Problem Statement */}
             {problemStatement && (
-              <div className="bg-white border border-slate-200 rounded-2xl p-6">
-                <h3 className="text-xl font-black text-slate-900 mb-3 flex items-center gap-2">
-                  <Star className="w-5 h-5 text-indigo-600" /> Problem Statement
-                </h3>
-                <p className="text-slate-700 leading-relaxed whitespace-pre-line">{problemStatement}</p>
-              </div>
+              <Card title="Problem Statement" icon={Target} iconColor="#7c3aed" accent="#ede9fe">
+                <p style={{ margin: 0, fontSize: 14, color: '#374151', lineHeight: 1.75, whiteSpace: 'pre-line' }}>{problemStatement}</p>
+              </Card>
             )}
 
-            {/* Prizes & FAQs */}
-            {(prizes.length > 0 || faqs.length > 0) && (
-              <div className="bg-white border border-slate-200 rounded-2xl p-6">
-                <h2 className="text-xl font-black text-slate-900 mb-4 flex items-center gap-2">
-                  <Trophy className="w-5 h-5 text-amber-500" /> Prizes & FAQs
-                </h2>
-
-                {prizes.length > 0 && (
-                  <div className="mb-6">
-                    <p className="text-xs uppercase tracking-widest font-black text-slate-500 mb-3">Prize Pool</p>
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {prizes.map((prize, idx) => (
-                        <div key={`${prize.rank}-${idx}`} className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-                          <p className="text-xs font-bold uppercase tracking-wide text-amber-700">{prize.rank || `Prize ${idx + 1}`}</p>
-                          <p className="text-lg font-black text-amber-900 mt-1">{prize.amount || '-'}</p>
-                        </div>
-                      ))}
+            {/* Prizes */}
+            {prizes.length > 0 && (
+              <Card title="Prize Pool" icon={Trophy} iconColor="#f59e0b" accent="#fef3c7">
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(130px,1fr))', gap: 12 }}>
+                  {prizes.map((prize, idx) => (
+                    <div key={idx} style={{ background: 'linear-gradient(135deg,#fffbeb,#fef3c7)', border: '1.5px solid #fbbf24', borderRadius: 14, padding: '16px 14px', textAlign: 'center' }}>
+                      <div style={{ fontSize: 11, fontWeight: 900, color: '#92400e', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>{prize.rank || `Prize ${idx + 1}`}</div>
+                      <div style={{ fontSize: 20, fontWeight: 900, color: '#78350f' }}>{prize.amount || '—'}</div>
                     </div>
-                  </div>
-                )}
-
-                {faqs.length > 0 && (
-                  <div>
-                    <p className="text-xs uppercase tracking-widest font-black text-slate-500 mb-3">FAQs</p>
-                    <div className="space-y-3">
-                      {faqs.map((faq, idx) => (
-                        <details key={`${faq.question}-${idx}`} className="rounded-xl border border-slate-200 bg-slate-50 p-4 group">
-                          <summary className="text-sm font-bold text-slate-900 cursor-pointer list-none flex items-center justify-between">
-                            {faq.question}
-                            <span className="text-slate-400 group-open:rotate-45 transition-transform text-lg">+</span>
-                          </summary>
-                          <p className="text-sm text-slate-600 mt-2">{faq.answer}</p>
-                        </details>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Submission instructions */}
-            {submissionInstructions && (
-              <div className="bg-white border border-slate-200 rounded-2xl p-6">
-                <h3 className="text-xl font-black text-slate-900 mb-3 flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-indigo-600" /> Submission Instructions
-                </h3>
-                <p className="text-slate-600 leading-relaxed whitespace-pre-line">{submissionInstructions}</p>
-              </div>
-            )}
-
-            {/* Rules */}
-            {rules.length > 0 && (
-              <div className="bg-white border border-slate-200 rounded-2xl p-6">
-                <h3 className="text-xl font-black text-slate-900 mb-3">Rules</h3>
-                <ul className="space-y-2 text-slate-700 list-none">
-                  {rules.map((rule, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-sm">
-                      <CheckCircle2 className="w-4 h-4 text-indigo-500 mt-0.5 shrink-0" />
-                      {rule}
-                    </li>
                   ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Judging criteria */}
-            {judgingCriteria.length > 0 && (
-              <div className="bg-white border border-slate-200 rounded-2xl p-6">
-                <h3 className="text-xl font-black text-slate-900 mb-3">Judging Criteria</h3>
-                <ul className="space-y-2 text-slate-700 list-none">
-                  {judgingCriteria.map((item, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-sm">
-                      <Star className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+                </div>
+              </Card>
             )}
 
             {/* Timeline */}
             {timeline.length > 0 && (
-              <div className="bg-white border border-slate-200 rounded-2xl p-6">
-                <h3 className="text-xl font-black text-slate-900 mb-3 flex items-center gap-2">
-                  <Clock3 className="w-5 h-5 text-indigo-600" /> Timeline
-                </h3>
-                <div className="relative pl-4 border-l-2 border-indigo-200 space-y-4">
+              <Card title="Timeline" icon={Clock3} iconColor="#0ea5e9">
+                <div style={{ position: 'relative', paddingLeft: 24 }}>
+                  <div style={{ position: 'absolute', left: 9, top: 0, bottom: 0, width: 2, background: 'linear-gradient(180deg,#6366f1,#e2e8f0)' }} />
                   {timeline.map((entry, idx) => (
-                    <div key={`${entry.label}-${idx}`} className="relative">
-                      <div className="absolute -left-5 top-1 w-3 h-3 rounded-full bg-indigo-500 border-2 border-white" />
-                      <p className="text-sm font-bold text-slate-900">{entry.label || `Milestone ${idx + 1}`}</p>
-                      <p className="text-xs text-indigo-600 mt-0.5">
+                    <div key={idx} style={{ position: 'relative', marginBottom: idx < timeline.length - 1 ? 20 : 0 }}>
+                      <div style={{ position: 'absolute', left: -20, top: 3, width: 12, height: 12, borderRadius: '50%', background: '#6366f1', border: '2px solid #fff', boxShadow: '0 0 0 2px #6366f1' }} />
+                      <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>{entry.label || `Milestone ${idx + 1}`}</div>
+                      <div style={{ fontSize: 12, color: '#6366f1', fontWeight: 700, marginTop: 2 }}>
                         {entry.date ? new Date(entry.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Date TBA'}
-                      </p>
-                      {entry.description && <p className="text-sm text-slate-600 mt-1">{entry.description}</p>}
+                      </div>
+                      {entry.description && <div style={{ fontSize: 13, color: '#64748b', marginTop: 3, lineHeight: 1.6 }}>{entry.description}</div>}
                     </div>
                   ))}
                 </div>
-              </div>
+              </Card>
+            )}
+
+            {/* Rules */}
+            {rules.length > 0 && (
+              <Card title="Rules & Guidelines" icon={ShieldCheck} iconColor="#10b981" accent="#ecfdf5">
+                <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {rules.map((rule, idx) => (
+                    <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, color: '#374151' }}>
+                      <div style={{ width: 20, height: 20, borderRadius: 6, background: '#ecfdf5', border: '1px solid #a7f3d0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+                        <CheckCircle2 size={11} color="#10b981" />
+                      </div>
+                      {rule}
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+            )}
+
+            {/* Judging */}
+            {judgingCriteria.length > 0 && (
+              <Card title="Judging Criteria" icon={Star} iconColor="#f59e0b" accent="#fffbeb">
+                <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {judgingCriteria.map((item, idx) => (
+                    <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, color: '#374151' }}>
+                      <div style={{ width: 20, height: 20, borderRadius: 6, background: '#fffbeb', border: '1px solid #fde68a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+                        <Star size={10} color="#f59e0b" fill="#f59e0b" />
+                      </div>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+            )}
+
+            {/* Submission instructions */}
+            {submissionInstructions && (
+              <Card title="Submission Instructions" icon={FileText} iconColor="#6366f1">
+                <p style={{ margin: 0, fontSize: 14, color: '#374151', lineHeight: 1.75, whiteSpace: 'pre-line' }}>{submissionInstructions}</p>
+              </Card>
+            )}
+
+            {/* FAQs */}
+            {faqs.length > 0 && (
+              <Card title="Frequently Asked Questions" icon={Zap} iconColor="#8b5cf6">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {faqs.map((faq, idx) => (
+                    <details key={idx} style={{ background: '#fafafa', border: '1.5px solid #f1f5f9', borderRadius: 12, overflow: 'hidden' }}>
+                      <summary style={{ padding: '13px 16px', fontSize: 13, fontWeight: 700, color: '#0f172a', cursor: 'pointer', listStyle: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', userSelect: 'none' }}>
+                        {faq.question}
+                        <span style={{ color: '#94a3b8', fontSize: 18, flexShrink: 0 }}>+</span>
+                      </summary>
+                      <p style={{ margin: 0, padding: '0 16px 13px', fontSize: 13, color: '#64748b', lineHeight: 1.7 }}>{faq.answer}</p>
+                    </details>
+                  ))}
+                </div>
+              </Card>
             )}
           </div>
 
-          {/* Right column - registration sidebar */}
-          <div className="space-y-5">
-            {/* Certificate Card */}
-            {certificate && (
-              <div className="bg-gradient-to-br from-indigo-700 via-violet-700 to-purple-800 rounded-2xl p-5 text-white shadow-xl relative overflow-hidden">
-                <div className="absolute inset-0 opacity-10">
-                  <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-white" />
-                  <div className="absolute -left-4 -bottom-10 w-24 h-24 rounded-full bg-white" />
-                </div>
-                <div className="relative space-y-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-white/70 text-[10px] font-black uppercase tracking-widest">Congratulations!</p>
-                      <h3 className="text-xl font-black text-white mt-1">
-                        {certificate.certType === 'winner' ? '🏆 Winner Certificate' : '🎓 Certificate of Participation'}
-                      </h3>
-                    </div>
-                    <Award className="w-8 h-8 text-amber-300 shrink-0" />
-                  </div>
-                  
-                  <p className="text-xs text-white/90 leading-relaxed">
-                    Your official certificate for <strong>{hack.title}</strong> has been issued. Click download to get your PDF.
-                  </p>
+          {/* ────── RIGHT COLUMN (sticky sidebar) ─────────────────── */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, position: 'sticky', top: 20 }}>
 
-                  <div className="flex gap-2">
+            {/* ── Countdown ──────────────────────────────────────── */}
+            {timeLeft && timeLeft !== 'Ended' && (
+              <div style={{
+                background: 'linear-gradient(135deg,#1e1b4b,#312e81)',
+                borderRadius: 18, padding: '20px 22px', textAlign: 'center',
+                boxShadow: '0 8px 24px rgba(79,70,229,0.3)',
+              }}>
+                <div style={{ fontSize: 10, fontWeight: 900, color: '#a5b4fc', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>
+                  <Clock3 size={10} style={{ display: 'inline', marginRight: 5 }} />
+                  {timerLabel}
+                </div>
+                <div style={{ fontSize: 26, fontWeight: 900, color: '#fff', fontVariantNumeric: 'tabular-nums', letterSpacing: '0.04em' }}>{timeLeft}</div>
+              </div>
+            )}
+            {timeLeft === 'Ended' && (
+              <div style={{ background: '#f1f5f9', border: '1.5px solid #e2e8f0', borderRadius: 18, padding: '14px 18px', textAlign: 'center' }}>
+                <div style={{ fontSize: 13, fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Hackathon Ended</div>
+              </div>
+            )}
+
+            {/* ── Event Snapshot ─────────────────────────────────── */}
+            <Card title="Event Snapshot" icon={Target} iconColor="#6366f1">
+              <div>
+                <InfoRow label="Team Size" value={`${teamMin}–${teamMax} members`} />
+                <InfoRow label="Entry Fee" value={paymentRequired ? `₹${hack.paymentConfig.amountInr}` : 'Free 🎉'} accent={paymentRequired ? '#b45309' : '#065f46'} />
+                <InfoRow label="Submission Limit" value={`${maxSubs} per team`} />
+                {hack?.registrationDeadline && (
+                  <InfoRow label="Reg. Closes" value={new Date(hack.registrationDeadline).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} accent="#b45309" />
+                )}
+                {(hack?.submissionDeadline || hack?.endDate) && (
+                  <InfoRow label="Sub. Closes" value={new Date(hack.submissionDeadline || hack.endDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} accent="#be123c" />
+                )}
+                <div style={{ paddingTop: 10 }}>
+                  <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700, marginBottom: 7, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Accepted Links</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {acceptedLinkBadges.map(({ icon: Icon, label, color, textColor }) => (
+                      <span key={label} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: color, color: textColor, border: `1px solid ${textColor}30`, fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20 }}>
+                        <Icon size={10} /> {label}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* ── Certificate Card ────────────────────────────────── */}
+            {certificate && (
+              <div style={{
+                background: 'linear-gradient(135deg,#4f46e5,#7c3aed,#6d28d9)',
+                borderRadius: 18, padding: '22px', color: '#fff', position: 'relative', overflow: 'hidden',
+                boxShadow: '0 8px 32px rgba(79,70,229,0.4)',
+              }}>
+                <div style={{ position: 'absolute', top: -20, right: -20, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
+                <div style={{ position: 'absolute', bottom: -30, left: -10, width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
+                <div style={{ position: 'relative' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+                    <div>
+                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>Congratulations!</div>
+                      <div style={{ fontSize: 16, fontWeight: 900 }}>{certificate.certType === 'winner' ? '🏆 Winner Certificate' : '🎓 Participation Certificate'}</div>
+                    </div>
+                    <Award size={28} color="#fcd34d" />
+                  </div>
+                  <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', lineHeight: 1.6, margin: '0 0 14px' }}>
+                    Your official certificate for <strong>{hack.title}</strong> has been issued.
+                  </p>
+                  <div style={{ display: 'flex', gap: 8 }}>
                     <button
                       onClick={async () => {
                         setPrepState({ busy: true, message: 'Preparing PDF...' });
                         setExportCert(certificate);
                         setTimeout(async () => {
                           try {
-                            const fileName = `HackathonCertificate-${certificate.certificateId}`;
-                            await generatePDFFromDOM(hackCertTemplateRef, fileName);
-                            setExportCert(null);
-                            setPrepState(null);
-                          } catch (err) {
-                            setExportCert(null);
-                            setPrepState({ busy: false, message: err.message || 'Download failed.' });
-                          }
+                            await generatePDFFromDOM(hackCertTemplateRef, `HackathonCertificate-${certificate.certificateId}`);
+                            setExportCert(null); setPrepState(null);
+                          } catch (err) { setExportCert(null); setPrepState({ busy: false, message: err.message || 'Download failed.' }); }
                         }, 300);
                       }}
                       disabled={prepState?.busy}
-                      className="flex-1 bg-white hover:bg-slate-50 text-slate-900 font-bold text-xs py-2.5 px-4 rounded-xl flex items-center justify-center gap-1.5 transition active:scale-95 disabled:opacity-50"
+                      style={{ flex: 1, background: '#fff', color: '#1e1b4b', fontWeight: 800, fontSize: 12, padding: '9px 12px', borderRadius: 10, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                     >
-                      {prepState?.busy ? <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-800" /> : <Download className="w-3.5 h-3.5" />}
-                      Download PDF
+                      {prepState?.busy ? <Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} /> : <Download size={13} />} Download PDF
                     </button>
                     <button
-                      onClick={() => {
-                        const url = `${window.location.origin}/verify/${certificate.certificateId}`;
-                        navigator.clipboard.writeText(url);
-                        alert('Verification link copied to clipboard!');
-                      }}
-                      className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs px-4 rounded-xl flex items-center justify-center"
-                      title="Copy Verification Link"
+                      onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/verify/${certificate.certificateId}`); alert('Verification link copied!'); }}
+                      style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', fontWeight: 700, fontSize: 12, padding: '9px 14px', borderRadius: 10, cursor: 'pointer' }}
                     >
                       Share
                     </button>
                   </div>
-                  {prepState?.message && (
-                    <p className="text-[10px] text-amber-200 mt-1 font-medium">{prepState.message}</p>
-                  )}
+                  {prepState?.message && <p style={{ fontSize: 11, color: '#fcd34d', marginTop: 8 }}>{prepState.message}</p>}
                 </div>
               </div>
             )}
 
-            <div className="bg-white border border-slate-200 rounded-2xl p-6 sticky top-24">
-              {/* Already registered - status card */}
+            {/* ── Registration / My Registration Card ─────────────── */}
+            <div style={{ background: '#fff', border: '1.5px solid #e2e8f0', borderRadius: 18, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}>
               {loadingReg ? (
-                <div className="h-24 rounded-xl bg-slate-100 animate-pulse" />
+                <div style={{ padding: 24 }}>
+                  <div style={{ height: 80, borderRadius: 12, background: '#f1f5f9', animation: 'pulse 1.4s ease-in-out infinite' }} />
+                </div>
               ) : registration ? (
-                <div>
-                  <div className="flex items-center justify-between gap-2 mb-4">
-                    <h3 className="text-lg font-black text-slate-900">Your Registration</h3>
-                    <span className={`text-xs px-2.5 py-1 rounded-full font-bold ${regStatusStyle.bg} ${regStatusStyle.text}`}>
+                /* ── Already registered ── */
+                <div style={{ padding: '22px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                    <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#0f172a' }}>Your Registration</h3>
+                    <span style={{ fontSize: 11, fontWeight: 800, background: regStatusStyle.bg, color: regStatusStyle.text, padding: '4px 10px', borderRadius: 20 }}>
                       {regStatusStyle.label}
                     </span>
                   </div>
 
-                  {/* Team info */}
-                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 mb-4">
-                    <p className="text-xs uppercase tracking-wide font-bold text-slate-500 mb-2">Team</p>
-                    <p className="font-black text-slate-900 text-base">{registration.teamName}</p>
-                    <p className="text-xs text-indigo-600 mt-1 font-medium">
-                      {isLeader ? '👑 You are the team leader' : 'You are a member'}
-                    </p>
-                    <div className="mt-3 space-y-1">
+                  {/* Team info box */}
+                  <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: 14, padding: '14px 16px', marginBottom: 14 }}>
+                    <div style={{ fontSize: 10, fontWeight: 900, color: '#94a3b8', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>Team</div>
+                    <div style={{ fontSize: 16, fontWeight: 900, color: '#0f172a', marginBottom: 4 }}>{registration.teamName}</div>
+                    <div style={{ fontSize: 12, color: '#6366f1', fontWeight: 700, marginBottom: 10 }}>
+                      {isLeader ? '👑 You are the team leader' : 'You are a team member'}
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       {(registration.members || []).map((m, idx) => (
-                        <div key={idx} className="flex items-center gap-2 text-xs text-slate-600">
-                          <Users className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                          <span className="font-medium">{m.name}</span>
-                          <span className="text-slate-400">({m.email})</span>
-                          {String(m.user?._id || m.user) === String(user?._id || user?.id) && (
-                            <span className="text-indigo-600 font-bold">(you)</span>
-                          )}
+                        <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#475569' }}>
+                          <div style={{ width: 26, height: 26, borderRadius: '50%', background: '#eef2ff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <Users size={11} color="#6366f1" />
+                          </div>
+                          <div>
+                            <span style={{ fontWeight: 700, color: '#0f172a' }}>{m.name}</span>
+                            <span style={{ color: '#94a3b8', marginLeft: 5 }}>({m.email})</span>
+                            {String(m.user?._id || m.user) === String(user?._id || user?.id) && (
+                              <span style={{ marginLeft: 5, fontSize: 10, color: '#6366f1', fontWeight: 800 }}>you</span>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -913,263 +827,353 @@ export default function HackathonDetail() {
 
                   {/* Payment required */}
                   {registration.payment?.required && registration.payment?.status !== 'paid' && (
-                    <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
-                      <p className="text-xs font-bold text-amber-700 uppercase tracking-wide">Payment Required</p>
-                      <p className="text-lg font-black text-amber-900 mt-1">₹{registration.payment.amountInr}</p>
-                      <p className="text-xs text-amber-700 mt-1">Complete payment to unlock submission access.</p>
-                      {isLeader && (
-                        <button
-                          onClick={handlePay}
-                          disabled={busy}
-                          className="mt-3 w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold disabled:opacity-60 transition-colors"
-                        >
-                          <span className="inline-flex items-center gap-2">
-                            {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
-                            Pay ₹{registration.payment.amountInr}
-                          </span>
+                    <div style={{ background: '#fffbeb', border: '1.5px solid #fbbf24', borderRadius: 14, padding: '14px 16px', marginBottom: 14 }}>
+                      <div style={{ fontSize: 11, fontWeight: 900, color: '#92400e', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 4 }}>Payment Required</div>
+                      <div style={{ fontSize: 22, fontWeight: 900, color: '#78350f', marginBottom: 4 }}>₹{registration.payment.amountInr}</div>
+                      <div style={{ fontSize: 12, color: '#b45309', marginBottom: 12 }}>Complete payment to unlock submission access.</div>
+                      {isLeader ? (
+                        <button onClick={handlePay} disabled={busy} style={{ width: '100%', background: 'linear-gradient(135deg,#f59e0b,#d97706)', color: '#fff', fontWeight: 800, fontSize: 13, padding: '11px', borderRadius: 12, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
+                          {busy ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <CreditCard size={14} />}
+                          Pay ₹{registration.payment.amountInr}
                         </button>
-                      )}
-                      {!isLeader && (
-                        <p className="mt-2 text-xs text-amber-700">Your team leader needs to complete payment.</p>
+                      ) : (
+                        <p style={{ fontSize: 12, color: '#b45309', margin: 0 }}>Your team leader needs to complete payment.</p>
                       )}
                     </div>
                   )}
 
-                  {/* Previous submissions */}
+                  {/* Past submissions */}
                   {(registration.submissions || []).length > 0 && (
-                    <div className="mb-4">
-                      <p className="text-xs uppercase tracking-wide font-bold text-slate-500 mb-2">
+                    <div style={{ marginBottom: 14 }}>
+                      <div style={{ fontSize: 11, fontWeight: 900, color: '#64748b', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>
                         Submissions ({submissionCount}/{maxSubs})
-                      </p>
-                      <div className="space-y-2">
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                         {registration.submissions.map((sub, idx) => (
-                          <div key={idx} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-                            <div className="flex items-center gap-2">
-                              <Link2 className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                              <a
-                                href={sub.link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-xs text-indigo-600 underline truncate flex-1"
-                              >
-                                {sub.link}
-                              </a>
-                              <ExternalLink className="w-3 h-3 text-slate-400 shrink-0" />
+                          <div key={idx} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '10px 12px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <Link2 size={12} color="#6366f1" />
+                              <a href={sub.link} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: '#4f46e5', textDecoration: 'none', fontWeight: 700, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sub.link}</a>
+                              <ExternalLink size={11} color="#94a3b8" />
                             </div>
-                            {sub.note && <p className="text-xs text-slate-400 mt-1 pl-5">{sub.note}</p>}
-                            <p className="text-xs text-slate-300 mt-0.5 pl-5">
-                              {new Date(sub.submittedAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
-                            </p>
+                            {sub.note && <p style={{ margin: '4px 0 0 18px', fontSize: 11, color: '#94a3b8' }}>{sub.note}</p>}
+                            <p style={{ margin: '2px 0 0 18px', fontSize: 11, color: '#cbd5e1' }}>{new Date(sub.submittedAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</p>
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
 
-                  {/* Submit form — hidden once limit hit */}
+                  {/* Submit solution form */}
                   {canSubmit && submissionCount < maxSubs && (
-                    <div className="space-y-3">
-                      {/* Accepted link type badges */}
+                    <div style={{ borderTop: '1.5px solid #f1f5f9', paddingTop: 16 }}>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a', marginBottom: 12 }}>Submit Your Solution</div>
                       {acceptedLinkBadges.length > 0 && (
-                        <div>
-                          <p className="text-xs font-semibold text-slate-500 mb-1.5">Accepted link types</p>
-                          <div className="flex flex-wrap gap-1.5">
-                            {acceptedLinkBadges.map(({ icon: Icon, label, color }) => (
-                              <span
-                                key={label}
-                                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-xs font-semibold ${color}`}
-                              >
-                                <Icon className="w-3 h-3" />
-                                {label}
+                        <div style={{ marginBottom: 10 }}>
+                          <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700, marginBottom: 6 }}>Accepted link types</div>
+                          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                            {acceptedLinkBadges.map(({ icon: Icon, label, color, textColor }) => (
+                              <span key={label} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: color, color: textColor, border: `1px solid ${textColor}30`, fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 20 }}>
+                                <Icon size={10} /> {label}
                               </span>
                             ))}
                           </div>
                         </div>
                       )}
-
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-600 mb-1">{linkLabel}</label>
+                      <div style={{ marginBottom: 10 }}>
+                        <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#374151', marginBottom: 5 }}>{linkLabel} *</label>
                         <input
                           type="url"
                           value={submissionLink}
-                          onChange={(e) => setSubmissionLink(e.target.value)}
-                          className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-400 focus:border-transparent outline-none"
+                          onChange={e => setSubmissionLink(e.target.value)}
                           placeholder={linkPlaceholder}
+                          style={{ width: '100%', padding: '10px 12px', border: '1.5px solid #e2e8f0', borderRadius: 10, fontSize: 13, outline: 'none', boxSizing: 'border-box', color: '#0f172a', background: '#fff' }}
                         />
-                        {linkHint && <p className="text-xs text-slate-500 mt-1">{linkHint}</p>}
+                        {linkHint && <p style={{ margin: '4px 0 0', fontSize: 11, color: '#94a3b8' }}>{linkHint}</p>}
                       </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-600 mb-1">Note (optional)</label>
+                      <div style={{ marginBottom: 12 }}>
+                        <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#374151', marginBottom: 5 }}>Note (optional)</label>
                         <textarea
                           value={note}
-                          onChange={(e) => setNote(e.target.value)}
+                          onChange={e => setNote(e.target.value)}
                           rows={2}
-                          className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-400 outline-none resize-none"
                           placeholder="Any notes for the judges…"
+                          style={{ width: '100%', padding: '10px 12px', border: '1.5px solid #e2e8f0', borderRadius: 10, fontSize: 13, outline: 'none', resize: 'none', boxSizing: 'border-box', color: '#0f172a', background: '#fff' }}
                         />
                       </div>
                       <button
                         onClick={handleSubmit}
                         disabled={busy || !submissionLink.trim()}
-                        className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold disabled:opacity-60 transition-colors"
+                        style={{ width: '100%', background: busy || !submissionLink.trim() ? '#e2e8f0' : 'linear-gradient(135deg,#10b981,#059669)', color: busy || !submissionLink.trim() ? '#94a3b8' : '#fff', fontWeight: 800, fontSize: 13, padding: '12px', borderRadius: 12, border: 'none', cursor: busy || !submissionLink.trim() ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, transition: 'all 0.2s' }}
                       >
-                        <span className="inline-flex items-center gap-2">
-                          {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                          Submit Solution
-                          {submissionCount > 0 && ` (${submissionCount + 1}/${maxSubs})`}
-                        </span>
+                        {busy ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Send size={14} />}
+                        Submit Solution {submissionCount > 0 ? `(${submissionCount + 1}/${maxSubs})` : ''}
                       </button>
                     </div>
                   )}
 
-                  {/* Locked — max submissions reached */}
                   {canSubmit && submissionCount >= maxSubs && (
-                    <div className="rounded-xl border-2 border-slate-200 bg-slate-50 px-4 py-4 text-center">
-                      <Lock className="w-6 h-6 mx-auto mb-2 text-slate-400" />
-                      <p className="text-sm font-bold text-slate-700">Submission Locked</p>
-                      <p className="text-xs text-slate-500 mt-1">Max {maxSubs} submission{maxSubs !== 1 ? 's' : ''} reached. No further submissions allowed.</p>
+                    <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: 12, padding: '16px', textAlign: 'center' }}>
+                      <Lock size={22} color="#94a3b8" style={{ marginBottom: 8 }} />
+                      <div style={{ fontSize: 13, fontWeight: 800, color: '#475569' }}>Submission Locked</div>
+                      <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>Max {maxSubs} submission{maxSubs !== 1 ? 's' : ''} reached.</div>
                     </div>
                   )}
 
-                  {!isSubmissionOpen && (
-                    <div className="mt-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600 flex items-start gap-2">
-                      <AlertTriangle className="w-4 h-4 mt-0.5 text-slate-500" />
+                  {!isSubmissionOpen && registration && (
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '10px 12px', fontSize: 12, color: '#64748b', marginTop: 10 }}>
+                      <AlertTriangle size={14} style={{ flexShrink: 0, marginTop: 1, color: '#94a3b8' }} />
                       Submissions are now closed for this hackathon.
                     </div>
                   )}
                 </div>
               ) : (
-                /* Registration form */
-                <div>
-                  <h3 className="text-xl font-black text-slate-900 mb-1">Join this Hackathon</h3>
-                  <p className="text-sm text-slate-500 mb-5">
-                    You are the team leader. Add teammates by their SkillValix email addresses.
-                    Team size: {teamMin}–{teamMax} members (including yourself).
-                  </p>
+                /* ── Registration form (multi-step) ── */
+                <div style={{ padding: '22px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg,#4f46e5,#7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Rocket size={18} color="#fff" />
+                    </div>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: '#0f172a' }}>Join this Hackathon</h3>
+                      <p style={{ margin: 0, fontSize: 12, color: '#64748b' }}>Team size: {teamMin}–{teamMax} members</p>
+                    </div>
+                  </div>
 
                   {!isRegistrationOpen ? (
-                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-5 text-center text-slate-500 text-sm">
-                      <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-slate-400" />
-                      Registrations are closed for this hackathon.
+                    <div style={{ textAlign: 'center', padding: '24px 0' }}>
+                      <AlertTriangle size={36} color="#94a3b8" style={{ marginBottom: 12 }} />
+                      <div style={{ fontSize: 14, fontWeight: 800, color: '#475569', marginBottom: 4 }}>Registrations Closed</div>
+                      <div style={{ fontSize: 12, color: '#94a3b8' }}>This hackathon is no longer accepting registrations.</div>
                     </div>
                   ) : !isAuthenticated ? (
-                    <div className="text-center">
-                      <p className="text-sm text-slate-500 mb-4">You need to be logged in to register.</p>
-                      <Link
-                        to="/login"
-                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-sm hover:bg-indigo-700 transition-colors"
-                      >
+                    <div style={{ textAlign: 'center', padding: '16px 0' }}>
+                      <Lock size={32} color="#94a3b8" style={{ marginBottom: 12 }} />
+                      <p style={{ fontSize: 13, color: '#64748b', marginBottom: 16 }}>Login to register for this hackathon.</p>
+                      <Link to="/login" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'linear-gradient(135deg,#4f46e5,#7c3aed)', color: '#fff', fontWeight: 800, fontSize: 13, padding: '11px 24px', borderRadius: 12, textDecoration: 'none' }}>
                         Login to Register
                       </Link>
                     </div>
                   ) : (
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-600 mb-1">Team Name *</label>
-                        <input
-                          type="text"
-                          value={teamName}
-                          onChange={(e) => setTeamName(e.target.value)}
-                          className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-400 outline-none"
-                          placeholder="e.g. Team Phoenix"
-                        />
-                      </div>
+                    <>
+                      <StepBar step={regStep} steps={REG_STEPS} />
 
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <label className="text-xs font-semibold text-slate-600">Teammates</label>
-                          <span className="text-xs text-slate-400">{members.filter(m => m.email.trim()).length + 1}/{teamMax} members</span>
+                      {/* Step 0: Team Name */}
+                      {regStep === 0 && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                          <div>
+                            <label style={{ display: 'block', fontSize: 12, fontWeight: 800, color: '#374151', marginBottom: 6 }}>Team Name *</label>
+                            <input
+                              type="text"
+                              value={teamName}
+                              onChange={e => setTeamName(e.target.value)}
+                              placeholder="e.g. Team Phoenix"
+                              style={{ width: '100%', padding: '11px 14px', border: '1.5px solid #e2e8f0', borderRadius: 11, fontSize: 14, fontWeight: 600, outline: 'none', boxSizing: 'border-box', color: '#0f172a', background: '#fff', transition: 'border 0.15s' }}
+                              onFocus={e => e.target.style.borderColor = '#6366f1'}
+                              onBlur={e => e.target.style.borderColor = '#e2e8f0'}
+                            />
+                            <p style={{ margin: '5px 0 0', fontSize: 11, color: '#94a3b8' }}>Min 3 characters. This will be your team's identity in the hackathon.</p>
+                          </div>
+                          <button
+                            onClick={() => {
+                              if (String(teamName).trim().length < 3) { showMsg('Team name must be at least 3 characters.', 'error'); return; }
+                              showMsg('', ''); setRegStep(1);
+                            }}
+                            style={{ background: 'linear-gradient(135deg,#4f46e5,#7c3aed)', color: '#fff', fontWeight: 800, fontSize: 13, padding: '12px', borderRadius: 12, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, boxShadow: '0 4px 14px rgba(79,70,229,0.35)' }}
+                          >
+                            Next: Add Members <ChevronRight size={15} />
+                          </button>
                         </div>
-                        <div className="space-y-3">
-                          {members.map((member, idx) => (
-                            <div key={idx} className="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2">
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs font-semibold text-slate-500">Teammate {idx + 1}</span>
-                                {members.length > 0 && (
+                      )}
+
+                      {/* Step 1: Add Members */}
+                      {regStep === 1 && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                          <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: '10px 12px', fontSize: 12, color: '#166534' }}>
+                            <strong>You</strong> are the team leader. Add teammates below (optional for solo).
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
+                            <div style={{ fontSize: 12, fontWeight: 800, color: '#374151' }}>Teammates</div>
+                            <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700 }}>{members.filter(m => m.email.trim()).length + 1}/{teamMax} members</div>
+                          </div>
+
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                            {members.map((member, idx) => (
+                              <div key={idx} style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: 12, padding: '12px 14px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                    <div style={{ width: 22, height: 22, borderRadius: '50%', background: '#eef2ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                      <Users size={11} color="#6366f1" />
+                                    </div>
+                                    <span style={{ fontSize: 12, fontWeight: 800, color: '#374151' }}>Teammate {idx + 1}</span>
+                                  </div>
                                   <button
                                     type="button"
                                     onClick={() => removeMemberRow(idx)}
-                                    className="p-1 rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                                    style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#ef4444', borderRadius: 6, padding: '3px 6px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                                   >
-                                    <X className="w-3.5 h-3.5" />
+                                    <X size={12} />
                                   </button>
-                                )}
+                                </div>
+                                <input
+                                  type="text"
+                                  value={member.name}
+                                  onChange={e => updateMember(idx, 'name', e.target.value)}
+                                  placeholder="Full name"
+                                  style={{ width: '100%', padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 12, outline: 'none', marginBottom: 7, boxSizing: 'border-box', background: '#fff' }}
+                                />
+                                <input
+                                  type="email"
+                                  value={member.email}
+                                  onChange={e => updateMember(idx, 'email', e.target.value)}
+                                  placeholder="SkillValix email address"
+                                  style={{ width: '100%', padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 12, outline: 'none', boxSizing: 'border-box', background: '#fff' }}
+                                />
                               </div>
-                              <input
-                                type="text"
-                                value={member.name}
-                                onChange={(e) => updateMember(idx, 'name', e.target.value)}
-                                className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-indigo-400 outline-none"
-                                placeholder="Full name"
-                              />
-                              <input
-                                type="email"
-                                value={member.email}
-                                onChange={(e) => updateMember(idx, 'email', e.target.value)}
-                                className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-indigo-400 outline-none"
-                                placeholder="Email (must be registered SkillValix account)"
-                              />
-                            </div>
-                          ))}
-                        </div>
-                        {members.length < teamMax - 1 && (
-                          <button
-                            type="button"
-                            onClick={addMemberRow}
-                            className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
-                          >
-                            <Plus className="w-3.5 h-3.5" /> Add Another Teammate
-                          </button>
-                        )}
-                        <p className="text-xs text-slate-400 mt-2">
-                          Leave empty for solo. All teammates must be registered SkillValix users.
-                        </p>
-                      </div>
+                            ))}
+                          </div>
 
-                      <button
-                        onClick={handleRegisterTeam}
-                        disabled={busy || !teamName.trim()}
-                        className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-sm font-bold disabled:opacity-60 transition-all shadow-lg shadow-indigo-500/25"
-                      >
-                        <span className="inline-flex items-center gap-2">
-                          {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Users className="w-4 h-4" />}
-                          Register Team
-                        </span>
-                      </button>
-                    </div>
+                          {members.length < teamMax - 1 && (
+                            <button
+                              type="button"
+                              onClick={addMemberRow}
+                              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, color: '#6366f1', background: '#eef2ff', border: '1.5px dashed #a5b4fc', borderRadius: 10, padding: '9px 14px', cursor: 'pointer' }}
+                            >
+                              <Plus size={13} /> Add Another Teammate
+                            </button>
+                          )}
+                          <p style={{ margin: 0, fontSize: 11, color: '#94a3b8' }}>All teammates must have a registered SkillValix account.</p>
+
+                          <div style={{ display: 'flex', gap: 9 }}>
+                            <button
+                              onClick={() => { setRegStep(0); showMsg('', ''); }}
+                              style={{ flex: 1, background: '#f8fafc', border: '1.5px solid #e2e8f0', color: '#475569', fontWeight: 700, fontSize: 12, padding: '11px', borderRadius: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
+                            >
+                              <ChevronLeft size={14} /> Back
+                            </button>
+                            <button
+                              onClick={() => { showMsg('', ''); setRegStep(2); }}
+                              style={{ flex: 2, background: 'linear-gradient(135deg,#4f46e5,#7c3aed)', color: '#fff', fontWeight: 800, fontSize: 13, padding: '11px', borderRadius: 12, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                            >
+                              Review & Confirm <ChevronRight size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Step 2: Review & Submit */}
+                      {regStep === 2 && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                          <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: 14, padding: '16px' }}>
+                            <div style={{ fontSize: 10, fontWeight: 900, color: '#94a3b8', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>Review Your Registration</div>
+
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                              <span style={{ fontSize: 12, color: '#64748b' }}>Team Name</span>
+                              <span style={{ fontSize: 13, fontWeight: 900, color: '#0f172a' }}>{teamName}</span>
+                            </div>
+
+                            <div style={{ padding: '10px 0', borderBottom: '1px solid #f1f5f9' }}>
+                              <div style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>Members</div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                                <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg,#6366f1,#7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                  <span style={{ fontSize: 11, color: '#fff', fontWeight: 900 }}>👑</span>
+                                </div>
+                                <div>
+                                  <div style={{ fontSize: 12, fontWeight: 800, color: '#0f172a' }}>{user?.name || 'You'}</div>
+                                  <div style={{ fontSize: 11, color: '#94a3b8' }}>Team Leader</div>
+                                </div>
+                              </div>
+                              {members.filter(m => m.email.trim()).map((m, i) => (
+                                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
+                                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#eef2ff', border: '1.5px solid #c7d2fe', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                    <Users size={12} color="#6366f1" />
+                                  </div>
+                                  <div>
+                                    <div style={{ fontSize: 12, fontWeight: 700, color: '#0f172a' }}>{m.name || m.email}</div>
+                                    {m.name && <div style={{ fontSize: 11, color: '#94a3b8' }}>{m.email}</div>}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8 }}>
+                              <span style={{ fontSize: 12, color: '#64748b' }}>Entry Fee</span>
+                              <span style={{ fontSize: 13, fontWeight: 900, color: paymentRequired ? '#b45309' : '#065f46' }}>{paymentRequired ? `₹${hack.paymentConfig.amountInr}` : 'Free 🎉'}</span>
+                            </div>
+                          </div>
+
+                          {/* Security note */}
+                          <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12, padding: '12px 14px', display: 'flex', gap: 8 }}>
+                            <ShieldCheck size={15} color="#10b981" style={{ flexShrink: 0, marginTop: 1 }} />
+                            <p style={{ margin: 0, fontSize: 11, color: '#166534', lineHeight: 1.6 }}>
+                              All teammates must be registered SkillValix users. Duplicate registrations are blocked. Payment (if required) is verified before submission access.
+                            </p>
+                          </div>
+
+                          <div style={{ display: 'flex', gap: 9 }}>
+                            <button
+                              onClick={() => { setRegStep(1); showMsg('', ''); }}
+                              style={{ flex: 1, background: '#f8fafc', border: '1.5px solid #e2e8f0', color: '#475569', fontWeight: 700, fontSize: 12, padding: '11px', borderRadius: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
+                            >
+                              <ChevronLeft size={14} /> Back
+                            </button>
+                            <button
+                              onClick={handleRegisterTeam}
+                              disabled={busy}
+                              style={{ flex: 2, background: busy ? '#e2e8f0' : 'linear-gradient(135deg,#10b981,#059669)', color: busy ? '#94a3b8' : '#fff', fontWeight: 800, fontSize: 13, padding: '11px', borderRadius: 12, border: 'none', cursor: busy ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, boxShadow: busy ? 'none' : '0 4px 14px rgba(16,185,129,0.35)', transition: 'all 0.2s' }}
+                            >
+                              {busy ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <CheckCheck size={14} />}
+                              Confirm Registration
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               )}
 
-              {/* Feedback messages */}
+              {/* Feedback message */}
               {msg.text && (
-                <div className={`mt-4 text-xs rounded-lg border px-3 py-2.5 ${
-                  msg.tone === 'error'
-                    ? 'bg-red-50 text-red-700 border-red-200'
-                    : msg.tone === 'success'
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                    : 'bg-indigo-50 text-indigo-700 border-indigo-200'
-                }`}>
+                <div style={{
+                  margin: '0 22px 22px',
+                  padding: '10px 14px',
+                  borderRadius: 10,
+                  fontSize: 12, fontWeight: 700,
+                  background: msg.tone === 'error' ? '#fef2f2' : msg.tone === 'success' ? '#f0fdf4' : '#eef2ff',
+                  color: msg.tone === 'error' ? '#b91c1c' : msg.tone === 'success' ? '#166534' : '#4338ca',
+                  border: `1px solid ${msg.tone === 'error' ? '#fecaca' : msg.tone === 'success' ? '#bbf7d0' : '#c7d2fe'}`,
+                }}>
                   {msg.text}
                 </div>
               )}
+            </div>
 
-              {/* Safety notice */}
-              <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
-                <p className="font-semibold text-slate-800 mb-1 inline-flex items-center gap-1">
-                  <ShieldCheck className="w-4 h-4 text-indigo-500" /> Security Guarantees
-                </p>
-                <ul className="space-y-0.5 mt-1">
-                  <li>• Team members must be registered SkillValix users</li>
-                  <li>• Duplicate registration per hackathon is blocked</li>
-                  <li>• Payment verified cryptographically before unlock</li>
-                  <li>• Submission limit enforced server-side</li>
-                </ul>
-              </div>
+            {/* ── Community Links ─────────────────────────────────── */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <a href="https://chat.whatsapp.com/IejES4kDNfx1RgMWLPeA6P" target="_blank" rel="noopener noreferrer"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#25D366', color: '#fff', fontWeight: 800, fontSize: 13, padding: '12px', borderRadius: 12, textDecoration: 'none', boxShadow: '0 4px 14px rgba(37,211,102,0.35)' }}>
+                <Users size={15} /> Join WhatsApp Community
+              </a>
+              <a href="https://www.linkedin.com/company/skillvalix/" target="_blank" rel="noopener noreferrer"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#0A66C2', color: '#fff', fontWeight: 800, fontSize: 13, padding: '12px', borderRadius: 12, textDecoration: 'none', boxShadow: '0 4px 14px rgba(10,102,194,0.3)' }}>
+                <Linkedin size={15} /> Follow for Updates
+              </a>
             </div>
           </div>
         </div>
-      </section>
+      </div>
+
+      <style>{`
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+        @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+        @media(max-width:768px){
+          div[style*="grid-template-columns: 1fr 360px"]{
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
     </>
   );
 }
