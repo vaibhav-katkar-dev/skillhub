@@ -3576,6 +3576,179 @@ if (name === "Arjun") {
       description: 'Start your Python journey today — free course with a verifiable certificate.'
     }
   },
+
+  {
+    id: 'skillvalix-campus-ambassador-program-guide-2026',
+    title: 'SkillValix Campus Ambassador Program 2026: The Complete Guide for College Students in India (Open Globally)',
+    metaTitle: 'SkillValix Campus Ambassador Program 2026 — Full Guide & SV Points | SkillValix',
+    metaDescription: 'Everything about the SkillValix Campus Ambassador Program v2.0 for college students in India — how to apply, the full SV Points matrix, Explorer to Platinum levels, badges, revenue share, and how to grow your referral network. Also open to students worldwide.',
+    keywords: [
+      'SkillValix Campus Ambassador Program',
+      'how to become a campus ambassador in India',
+      'SV Points explained',
+      'campus ambassador program for college students India',
+      'SkillValix referral program',
+      'campus ambassador revenue share',
+      'student ambassador program 2026',
+      'earn money as campus ambassador India',
+      'global campus ambassador program',
+      'international student ambassador program',
+    ],
+    excerpt: 'Everything you need to know about becoming a SkillValix Campus Ambassador — how to apply, how SV Points work, how to level up from Explorer to Platinum, and how to actually grow your network on campus. Built for college students in India, and open to students worldwide.',
+    content: `
+      <h2>What Is the SkillValix Campus Ambassador Program?</h2>
+      <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80" alt="College students collaborating on campus representing the SkillValix Campus Ambassador network" />
+      <p>The SkillValix Campus Ambassador Program is an official referral and leadership initiative run by SkillValix, an ed-tech platform offering free courses, job simulations, skill exams, and hackathons. It is built primarily for college students across India — from IITs and NITs to state universities and private colleges — but the program is not restricted to India. Students at colleges and universities anywhere in the world are welcome to apply and participate on the exact same terms.</p>
+      <p>As a Campus Ambassador, you get a unique referral link and QR code that you share with students at your college. Every time someone registers, completes a course, builds a portfolio, or joins a paid program through your link, you earn SV Points (SV Contribution Points). These points determine your Ambassador Level, unlock achievement badges, and — once you reach Silver level and above — make you eligible for real revenue share on paid courses, hackathons, and job simulations. Whether you're at a college in Pune or a university on the other side of the world, the point system, levels, and rules are identical.</p>
+
+      <h2>How to Join: Step-by-Step Application Process</h2>
+      <ol>
+        <li>Go to the <a href="https://www.skillvalix.com/campus-ambassador">Campus Ambassador page</a> on the SkillValix website (also linked from the footer under "🎓 Campus Ambassador").</li>
+        <li>Read the Ambassador Rules & Terms first — this page also lists the Anti-Abuse Rules, which matter a lot.</li>
+        <li>Fill out the application form with your College/Institution Name (e.g., IIT Bombay, or your university if outside India), Mobile Number (with country code, e.g., +91 for India), City & State/Country, and optionally why you want to join.</li>
+        <li>Submit your application. Reviews typically take 24–48 hours, regardless of which country you're applying from.</li>
+        <li>Get approved and receive an instant +20 SV Points bonus, plus access to your personal Campus Ambassador Dashboard.</li>
+      </ol>
+      <p>Once approved, your unique referral code (e.g., <code>ca-d7937059</code>) and link (<code>skillvalix.com/register?ref=ca-d7937059</code>) are generated automatically and are yours to share anywhere — WhatsApp groups, Instagram, LinkedIn, Discord, your college notice board, or your own downloadable QR code card.</p>
+
+      <h2>The 5 Ambassador Levels Explained (Explorer to Platinum)</h2>
+      <p>SkillValix uses a tiered progression system. As your verified SV Points grow, you automatically move up levels, and each level unlocks a new set of rewards — the same ladder applies to every ambassador, in India or anywhere else.</p>
+
+      <h3>🌱 Explorer (0 – 499 points)</h3>
+      <p>Revenue Share: 0%. Access to the Campus Ambassador Portal and your live referral code, a custom referral link and printable QR code card, access to the SkillValix Student Community, and an Official Explorer Digital Badge.</p>
+
+      <h3>🥉 Bronze (500 – 1,499 points)</h3>
+      <p>Revenue Share: 0%. Official Bronze Ambassador Certificate, exclusive profile badge and laptop stickers, a LinkedIn feature and recommendation badge, and access to VIP Ambassador Discord/WhatsApp groups.</p>
+
+      <h3>🥈 Silver (1,500 – 2,999 points)</h3>
+      <p>Revenue Share: 3% (eligible, manually approved by admin). Verified Silver Certificate and Letter of Recommendation, Silver Ambassador profile badge, and priority access to partner hackathons and tech events.</p>
+
+      <h3>🥇 Gold (3,000 – 5,999 points)</h3>
+      <p>Revenue Share: 5% (eligible, manually approved by admin). Gold Ambassador Trophy and merch box, a feature on the SkillValix Hall of Fame, and direct internship and executive networking referrals.</p>
+
+      <h3>💎 Platinum (6,000+ points)</h3>
+      <p>Revenue Share: 7–10% (admin configurable). Campus Leader & Mentor Badge, direct founder recognition and career referral priority, and the ability to lead official SkillValix campus tech events.</p>
+
+      <p><strong>Important:</strong> Revenue share is eligible, not automatic — it's manually configured by the admin team once you cross into Silver, Gold, or Platinum. Treat the percentage as an earning ceiling you unlock access to, not a guaranteed automatic payout the moment you cross the point threshold. This manual-approval structure applies uniformly across India and international ambassadors alike.</p>
+
+      <h2>SV Points Explained: The Full Point Matrix (v2.0)</h2>
+      <p>This is the section every ambassador should bookmark. Every action a student takes through your referral link maps to a specific, backend-calculated point value — the same matrix worldwide.</p>
+
+      <h3>👑 Ambassador Network</h3>
+      <ul>
+        <li>Verified Ambassador Referral (your referred student becomes an approved ambassador and completes their first verified activity): <strong>+100 SV</strong></li>
+        <li>Campus Ambassador Approved (one-time bonus when your own application is approved): <strong>+20 SV</strong></li>
+      </ul>
+
+      <h3>🎓 Certificates</h3>
+      <ul>
+        <li>First Paid Course Certificate earned by a referred student: <strong>+50 SV</strong></li>
+        <li>Every additional paid course certificate by the same student: <strong>+20 SV</strong></li>
+      </ul>
+
+      <h3>✨ Profile & Engagement</h3>
+      <ul>
+        <li>Verified Student Registration (referral registers and verifies email): <strong>+10 SV</strong></li>
+        <li>Profile Completed (name, phone, college, bio): <strong>+10 SV</strong></li>
+        <li>Portfolio Published (first public portfolio with 1+ project): <strong>+20 SV</strong></li>
+        <li>LinkedIn Certificate Share (referred student shares a verified certificate): <strong>+15 SV</strong></li>
+      </ul>
+
+      <h3>💳 Revenue Rewards</h3>
+      <p>Paid Course / Hackathon / Job Simulation purchase: <strong>Floor(Final Amount Paid × 10%)</strong>. For Indian students, this looks like: ₹499 paid → 49 SV points, or ₹999 paid → 99 SV points. For international students paying in other currencies, the same 10% formula applies — for example, a $99 payment → 9 SV points. It's always calculated on the final amount paid, after coupons and discounts, not the listed price.</p>
+      <p>Quick reference from the dashboard widget: Registration +10 SVC, Certificate Completion +20–50 SVC, Hackathon Registration 8%–18% of amount, and Ambassador Conversion as the biggest single reward on the platform.</p>
+      <p>All points are calculated server-side only, and the system automatically rejects duplicate, fraudulent, or self-referral events. Don't try to register yourself or a fake account through your own link — it won't count, and repeated attempts risk your ambassador status.</p>
+
+      <h2>Verified vs. Pending Points: What's the Difference?</h2>
+      <p>Your dashboard shows two numbers: Verified SV Points, which have cleared the backend's fraud/duplicate checks and count toward your level and rewards, and Pending Points, which are from recent activity still being processed. Only verified points move you between levels, so don't panic if a referral's activity doesn't show up instantly — there's usually a short verification delay before it converts from pending to verified.</p>
+
+      <h2>Achievement Badges: What You Can Unlock</h2>
+      <p>Separate from levels, SkillValix has a set of 8 achievement badges you collect as you grow your referral network:</p>
+      <ul>
+        <li>🚀 First Spark — Brought your first referred student to SkillValix</li>
+        <li>📂 Portfolio Builder — A referred student published their professional portfolio</li>
+        <li>📜 Cert Champion — A referred student completed and earned a certificate</li>
+        <li>💰 Growth Engine — Generated your first paid purchase from a referred user</li>
+        <li>👥 Tribe Builder — Referred 5+ active students</li>
+        <li>👑 Campus Ambassador Lead — Referred 20+ active students</li>
+        <li>🥇 Elite Ambassador — Crossed 3,000 SV Points (Gold level)</li>
+        <li>💎 Campus Legend — Crossed 6,000 SV Points (Platinum level)</li>
+      </ul>
+      <p>These badges are a visible way to show recruiters, professors, and fellow students — in India and abroad — that you're not just registered, you're actively building a network.</p>
+
+      <h2>Milestone Reward Tracker: How Claiming Rewards Works</h2>
+      <p>Rewards move through a clear status pipeline: Locked → Eligible → Requested → Approved/Rejected → Claimed. Each tier (Bronze at 500 pts, Silver at 1,500 pts, Gold at 3,000 pts, Platinum at 6,000 pts) shows as "Locked" with a live countdown of points remaining until you unlock it. Once you cross the threshold, the reward becomes "Eligible," and you'll need to formally request it before it moves to "Approved" and finally "Claimed." Keep an eye on this tracker rather than assuming rewards are automatic — they follow a manual approval workflow.</p>
+
+      <h2>Your Point Audit History Log</h2>
+      <p>Every single point update — bonuses, referral conversions, certificate completions — is logged in a transparent audit trail with a timestamp and source (for example, "Campus Ambassador Approval Bonus (+20 SV Points) — 21 Jul, 05:04 pm • system"). If you ever have a dispute about missing points, this log is your first reference point before contacting support.</p>
+
+      <h2>How to Actually Succeed as a Campus Ambassador at Your College</h2>
+      <img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=1200&q=80" alt="Student sharing a QR code and referral link with classmates on campus" />
+      <p>Having the dashboard and referral link is only step one. Here's how top-performing ambassadors — whether at a college in India or a university anywhere else in the world — typically grow their numbers on campus:</p>
+      <ul>
+        <li><strong>Start with your close circle.</strong> Share your link with classmates, project teammates, and your hostel/dorm group first — warm referrals convert faster than cold ones.</li>
+        <li><strong>Use your college's official channels.</strong> With permission, post in your department's WhatsApp/Discord/Telegram groups, class portal, or student council pages.</li>
+        <li><strong>Host a mini info-session.</strong> A 10-minute talk in a common class period about "free certifications + hackathons" tends to get several sign-ups at once.</li>
+        <li><strong>Print your QR code.</strong> Put it on a notice board, event banner, or hand it out physically at fests or student fairs — the dashboard gives you a downloadable QR image specifically for this.</li>
+        <li><strong>Push portfolio completion, not just registration.</strong> Registrations are worth +10, but portfolios (+20) and certificates (+50 first, +20 after) are worth more — encourage referred students to actually finish something, not just sign up.</li>
+        <li><strong>Promote free skill exams to already-skilled students.</strong> If a senior already knows HTML/CSS/JS, point them to the direct Skill Exam route — it gets them a certificate fast, which earns you points too.</li>
+        <li><strong>Encourage LinkedIn certificate shares.</strong> This is an easy +15 points per referred student and also boosts your own profile visibility.</li>
+        <li><strong>Aim to convert your best referrals into ambassadors themselves.</strong> At +100 points, an "Ambassador Conversion" is the single richest point event on the platform — this works exactly the same whether that student is on your campus in India or studying abroad.</li>
+        <li><strong>Track your monthly growth.</strong> The dashboard's Monthly Point Growth Chart shows your activity over time — use it to notice which months (fests, exam-prep season, hackathon announcements) drive the most conversions, and double down there.</li>
+      </ul>
+
+      <h2>Frequently Asked Questions</h2>
+
+      <p><strong>Q1: Who can apply to become a Campus Ambassador?</strong><br/>
+      The program was built for college students across India, but it is not limited to India — any student currently enrolled at a recognised college or university, anywhere in the world, can apply through the Campus Ambassador application form on the SkillValix website.</p>
+
+      <p><strong>Q2: How are SV Points calculated for paid courses and hackathons?</strong><br/>
+      Points for paid activity are calculated as 10% of the final amount paid (after coupons/discounts), rounded down. For example, ₹999 paid results in 99 SV points, and the same 10% rule applies to payments made in other currencies by international students.</p>
+
+      <p><strong>Q3: Are financial payouts or reward shipping automated?</strong><br/>
+      No. Revenue share percentages and physical/merch rewards go through a manual admin approval workflow (Locked → Eligible → Requested → Approved/Rejected → Claimed) rather than being paid out automatically the instant a threshold is crossed. This applies to ambassadors in India and abroad equally.</p>
+
+      <p><strong>Q4: How do I track my ambassador level and reward status?</strong><br/>
+      Your dashboard shows Verified SV Points, Pending Points, your Current Rank Progress bar, the Milestone Reward Tracker, and a full Point Audit History Log — all updated in real time.</p>
+
+      <p><strong>Q5: What is the difference between Pending and Verified SV Points?</strong><br/>
+      Pending points are from recent activity still being checked by the backend; Verified points have cleared review and count toward your official level and rewards.</p>
+
+      <p><strong>Q6: Can I refer someone who is already registered on SkillValix?</strong><br/>
+      No — the point system is built to reward new, verified registrations. Duplicate accounts, self-referrals, and already-registered users are automatically filtered out by the backend to prevent abuse.</p>
+
+      <p><strong>Q7: How long does the campus ambassador application review take?</strong><br/>
+      Typically 24–48 hours from submission, whether you're applying from India or from a university anywhere else.</p>
+
+      <p><strong>Q8: What rewards do Gold and Platinum Campus Ambassadors receive?</strong><br/>
+      Gold Ambassadors (3,000–5,999 pts) get a trophy, a merch box, a Hall of Fame feature, 5% revenue share eligibility, and direct internship/networking referrals. Platinum Ambassadors (6,000+ pts) get a Campus Leader & Mentor badge, 7–10% configurable revenue share, direct founder recognition, and the ability to lead official SkillValix campus events.</p>
+
+      <p><strong>Q9: Is this program only for Indian students?</strong><br/>
+      No. SkillValix is built with Indian college students as its core audience, but the Campus Ambassador Program itself is globally accessible — students at colleges and universities outside India can apply, get approved, earn SV Points, and unlock the same levels and rewards on identical terms.</p>
+
+      <h2>Final Thoughts</h2>
+      <p>The SkillValix Campus Ambassador Program v2.0 rewards genuine, sustained effort over gaming the system — the entire point matrix is server-side, transparent, and designed to reject duplicate or self-referred activity. Whether you're leading this at a college in India or on a campus anywhere else in the world, treating it less like a "referral hack" and more like a real leadership role — organising sessions, helping classmates actually finish certificates and portfolios, and converting your best people into ambassadors themselves — is what makes the Explorer-to-Platinum climb happen naturally.</p>
+      <p>If you're a student wondering where to start: <a href="https://www.skillvalix.com/campus-ambassador">apply to the Campus Ambassador Program here</a>, get your referral link approved, then focus on your first three actions — a WhatsApp or Discord share, a QR code posted somewhere visible on campus, and one direct conversation with a classmate who's been meaning to get certified. That's usually enough to earn your First Spark badge and get the ball rolling, wherever your campus happens to be.</p>
+    `,
+    author: 'Ananya Kulkarni',
+    authorUrl: 'https://www.skillvalix.com/blog',
+    publishedDate: '2026-07-22T09:00:00+05:30',
+    modifiedDate: '2026-07-22T09:00:00+05:30',
+    date: 'July 22, 2026',
+    readTime: '13 min read',
+    wordCount: 1750,
+    category: 'Campus Ambassador',
+    tags: ['SkillValix Campus Ambassador', 'SV Points', 'Referral Program India', 'Global Referral Program', 'Campus Leadership', 'Student Ambassador Program', 'Earn While Studying', 'Revenue Share Program'],
+    imageUrl: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80',
+    imageAlt: 'College students collaborating on campus, representing the SkillValix Campus Ambassador network',
+    canonicalUrl: 'https://www.skillvalix.com/blog/skillvalix-campus-ambassador-program-guide-2026',
+    relatedCourse: {
+      title: 'Become a Campus Ambassador',
+      slug: 'campus-ambassador',
+      url: 'https://www.skillvalix.com/campus-ambassador',
+      description: 'Apply now, get your referral link approved in 24–48 hours, and start earning SV Points today — in India or anywhere else.'
+    }
+  },
   
 
 ];
