@@ -514,10 +514,10 @@ export default function HackathonDetail() {
         })}</script>
       </Helmet>
 
-      <div style={{ background: '#f8fafc', minHeight: '100vh' }}>
+      <div style={{ background: '#f8fafc', minHeight: '100vh', width: '100%', overflowX: 'hidden' }}>
 
         {/* ── Back nav ─────────────────────────────────────────────── */}
-        <div style={{ background: '#fff', borderBottom: '1px solid #f1f5f9', padding: '12px 24px' }}>
+        <div style={{ background: '#fff', borderBottom: '1px solid #f1f5f9', padding: '12px 20px' }}>
           <div style={{ maxWidth: 1100, margin: '0 auto' }}>
             <Link to="/hackathons" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: '#64748b', textDecoration: 'none' }}>
               <ArrowLeft size={15} /> Back to Hackathons
@@ -532,7 +532,7 @@ export default function HackathonDetail() {
             {/* Shading Overlay */}
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15,23,42,0.92) 0%, rgba(15,23,42,0.4) 50%, rgba(15,23,42,0.15) 100%)' }} />
             {/* Text details overlaid over banner */}
-            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '32px 24px 28px' }}>
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '32px 20px 28px', boxSizing: 'border-box' }}>
               <div style={{ maxWidth: 1100, margin: '0 auto' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
                   <span style={{
@@ -550,7 +550,7 @@ export default function HackathonDetail() {
                     </span>
                   )}
                 </div>
-                <h1 style={{ margin: '0 0 8px', fontSize: 'clamp(1.7rem,4vw,2.7rem)', fontWeight: 900, color: '#fff', lineHeight: 1.15, textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>{hack.title}</h1>
+                <h1 style={{ margin: '0 0 8px', fontSize: 'clamp(1.7rem,4vw,2.7rem)', fontWeight: 900, color: '#fff', lineHeight: 1.15, textShadow: '0 2px 10px rgba(0,0,0,0.5)', wordBreak: 'break-word' }}>{hack.title}</h1>
                 {hack.tagline && <p style={{ margin: 0, fontSize: 15, color: '#e2e8f0', fontWeight: 600, textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{hack.tagline}</p>}
               </div>
             </div>
@@ -559,7 +559,7 @@ export default function HackathonDetail() {
           /* Header without banner image */
           <div style={{
             background: 'linear-gradient(135deg,#0f0e2a 0%,#1e1b4b 50%,#0f172a 100%)',
-            padding: '36px 24px 32px', position: 'relative', overflow: 'hidden',
+            padding: '36px 20px 32px', position: 'relative', overflow: 'hidden', boxSizing: 'border-box',
           }}>
             <div style={{ position: 'absolute', top: '-30%', left: '20%', width: 350, height: 350, borderRadius: '50%', background: 'rgba(79,70,229,0.2)', filter: 'blur(80px)', pointerEvents: 'none' }} />
             <div style={{ maxWidth: 1100, margin: '0 auto', position: 'relative' }}>
@@ -579,7 +579,7 @@ export default function HackathonDetail() {
                   </span>
                 )}
               </div>
-              <h1 style={{ margin: '0 0 8px', fontSize: 'clamp(1.6rem,4vw,2.6rem)', fontWeight: 900, color: '#fff', lineHeight: 1.15 }}>{hack.title}</h1>
+              <h1 style={{ margin: '0 0 8px', fontSize: 'clamp(1.6rem,4vw,2.6rem)', fontWeight: 900, color: '#fff', lineHeight: 1.15, wordBreak: 'break-word' }}>{hack.title}</h1>
               {hack.tagline && <p style={{ margin: '0 0 12px', fontSize: 15, color: '#a5b4fc', fontWeight: 600 }}>{hack.tagline}</p>}
               {hack.tags?.length > 0 && (
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -596,12 +596,12 @@ export default function HackathonDetail() {
         {navSections.length > 0 && (
           <div style={{
             position: 'sticky', top: 0, zIndex: 40,
-            background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(10px)',
+            background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)',
             borderBottom: '1.5px solid #e2e8f0', boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
-            padding: '8px 24px', overflowX: 'auto',
+            padding: '8px 20px', overflowX: 'auto', width: '100%', boxSizing: 'border-box',
           }}>
             <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', gap: 8, alignItems: 'center' }}>
-              <span style={{ fontSize: 11, fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginRight: 6, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ fontSize: 11, fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginRight: 6, display: 'inline-flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
                 <Layers size={11} /> Sections:
               </span>
               {navSections.map(({ id, label, icon: Icon }) => (
@@ -612,7 +612,7 @@ export default function HackathonDetail() {
                     display: 'inline-flex', alignItems: 'center', gap: 5,
                     padding: '6px 14px', borderRadius: 999, border: '1px solid #e2e8f0',
                     background: '#f8fafc', color: '#475569', fontSize: 12, fontWeight: 700,
-                    cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.15s',
+                    cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.15s', flexShrink: 0,
                   }}
                   onMouseEnter={e => { e.currentTarget.style.background = '#eef2ff'; e.currentTarget.style.color = '#4f46e5'; e.currentTarget.style.borderColor = '#c7d2fe'; }}
                   onMouseLeave={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#475569'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
@@ -626,7 +626,7 @@ export default function HackathonDetail() {
 
         {/* ── Winners Banner ─────────────────────────────────────────── */}
         {hack.winnerConfig?.announced && winners?.winners?.length > 0 && (
-          <div style={{ background: 'linear-gradient(90deg,#f59e0b,#fcd34d,#f59e0b)', padding: '20px 24px' }}>
+          <div style={{ background: 'linear-gradient(90deg,#f59e0b,#fcd34d,#f59e0b)', padding: '20px 20px', boxSizing: 'border-box' }}>
             <div style={{ maxWidth: 1100, margin: '0 auto' }}>
               <h2 style={{ margin: '0 0 14px', fontSize: 20, fontWeight: 900, color: '#78350f', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Trophy size={22} /> Winners Announced!
@@ -634,7 +634,7 @@ export default function HackathonDetail() {
               {winners.note && <p style={{ margin: '0 0 14px', fontSize: 13, color: '#92400e' }}>{winners.note}</p>}
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                 {winners.winners.map(w => (
-                  <div key={w._id} style={{ background: '#fff', border: '2px solid #fbbf24', borderRadius: 14, padding: '14px 18px', minWidth: 160 }}>
+                  <div key={w._id} style={{ background: '#fff', border: '2px solid #fbbf24', borderRadius: 14, padding: '14px 18px', minWidth: 160, flex: '1 1 180px' }}>
                     <div style={{ fontSize: 10, fontWeight: 900, color: '#f59e0b', letterSpacing: '0.1em', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
                       <Trophy size={11} /> {w.winnerRank || 'WINNER'}
                     </div>
@@ -649,10 +649,10 @@ export default function HackathonDetail() {
         )}
 
         {/* ── Main body ─────────────────────────────────────────────── */}
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '28px 24px 60px', display: 'grid', gridTemplateColumns: '1fr 360px', gap: 24, alignItems: 'flex-start' }}>
+        <div className="hackathon-detail-grid" style={{ maxWidth: 1100, margin: '0 auto', padding: '28px 20px 60px', display: 'grid', gridTemplateColumns: '1fr 360px', gap: 24, alignItems: 'flex-start', boxSizing: 'border-box' }}>
 
           {/* ────── LEFT COLUMN ────────────────────────────────────── */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 24, minWidth: 0 }}>
 
             {/* Tags (if image exists – shown below image) */}
             {hack.image && hack.tags?.length > 0 && (
@@ -693,7 +693,7 @@ export default function HackathonDetail() {
                       <div key={idx} style={{
                         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                         background: bgColor, border: `1.5px solid ${borderColor}`,
-                        borderRadius: 14, padding: '14px 18px', gap: 16,
+                        borderRadius: 14, padding: '14px 18px', gap: 16, flexWrap: 'wrap',
                       }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                           <div style={{
@@ -816,7 +816,7 @@ export default function HackathonDetail() {
           </div>
 
           {/* ────── RIGHT COLUMN (sticky sidebar) ─────────────────── */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, position: 'sticky', top: 70 }}>
+          <div className="hackathon-detail-sidebar" style={{ display: 'flex', flexDirection: 'column', gap: 16, position: 'sticky', top: 70, minWidth: 0, width: '100%', boxSizing: 'border-box' }}>
 
             {/* ── Countdown ──────────────────────────────────────── */}
             {timeLeft && timeLeft !== 'Ended' && (
@@ -1303,9 +1303,15 @@ export default function HackathonDetail() {
       <style>{`
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
         @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-        @media(max-width:768px){
-          div[style*="grid-template-columns: 1fr 360px"]{
+        @media (max-width: 900px) {
+          .hackathon-detail-grid {
             grid-template-columns: 1fr !important;
+            padding-left: 14px !important;
+            padding-right: 14px !important;
+          }
+          .hackathon-detail-sidebar {
+            position: static !important;
+            width: 100% !important;
           }
         }
       `}</style>
