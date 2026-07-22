@@ -294,6 +294,7 @@ export default function HackathonDetail() {
   const prizes = useMemo(() => hack?.prizes || [], [hack]);
   const faqs = useMemo(() => hack?.contentConfig?.faqs || [], [hack]);
   const problemStatement = useMemo(() => hack?.contentConfig?.problemStatement || '', [hack]);
+  const submissionInstructions = useMemo(() => hack?.submissionConfig?.instructions || '', [hack]);
 
   const statusStyle = STATUS_STYLE[hack?.status] || STATUS_STYLE.upcoming;
   const StatusIcon = statusStyle.icon;
@@ -545,7 +546,6 @@ export default function HackathonDetail() {
   }
 
   const paymentRequired = Boolean(hack?.paymentConfig?.enabled && Number(hack?.paymentConfig?.amountInr || 0) > 0);
-  const submissionInstructions = hack?.submissionConfig?.instructions || '';
   const linkLabel = hack?.submissionConfig?.linkLabel || 'Submission Link';
   const linkHint  = hack?.submissionConfig?.linkHint || '';
   const subCfg    = hack?.submissionConfig || {};
