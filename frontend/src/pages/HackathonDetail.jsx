@@ -253,6 +253,148 @@ function FAQAccordionItem({ question, answer, isOpen, onToggle }) {
   );
 }
 
+/* ── Prize Card Item Component ─────────────────────────────── */
+function PrizeCardItem({ prize, idx }) {
+  const rankText = String(prize.rank || '').toLowerCase();
+  const isFirst = idx === 0 || rankText.includes('1st') || rankText.includes('winner');
+  const isSecond = idx === 1 || rankText.includes('2nd') || rankText.includes('runner up');
+  const isThird = idx === 2 || rankText.includes('3rd');
+
+  const theme = isFirst ? {
+    bg: 'linear-gradient(135deg,#fffbeb,#fef3c7)',
+    border: '#fde68a',
+    badgeBg: 'linear-gradient(135deg,#f59e0b,#d97706)',
+    badgeText: '#fff',
+    titleColor: '#78350f',
+    iconBg: '#fff',
+    iconColor: '#d97706',
+    icon: Crown,
+    perkIconColor: '#d97706',
+  } : isSecond ? {
+    bg: 'linear-gradient(135deg,#f8fafc,#f1f5f9)',
+    border: '#cbd5e1',
+    badgeBg: '#64748b',
+    badgeText: '#fff',
+    titleColor: '#1e293b',
+    iconBg: '#fff',
+    iconColor: '#64748b',
+    icon: Trophy,
+    perkIconColor: '#475569',
+  } : isThird ? {
+    bg: 'linear-gradient(135deg,#fff7ed,#ffedd5)',
+    border: '#fed7aa',
+    badgeBg: '#d97706',
+    badgeText: '#fff',
+    titleColor: '#7c2d12',
+    iconBg: '#fff',
+    iconColor: '#d97706',
+    icon: Medal,
+    perkIconColor: '#c2410c',
+  } : {
+    bg: '#ffffff',
+    border: '#e2e8f0',
+    badgeBg: '#6366f1',
+    badgeText: '#fff',
+    titleColor: '#0f172a',
+    iconBg: '#eef2ff',
+    iconColor: '#6366f1',
+    icon: Award,
+    perkIconColor: '#4f46e5',
+  };
+
+  const PrizeIcon = theme.icon;
+
+  const amountStr = String(prize.amount || '').trim();
+  const descStr = String(prize.description || '').trim();
+
+  let combined = amountStr;
+  if (descStr && descStr !== 'Certificate of Merit, Goodies & SkillValix Badge') {
+    if (!amountStr.includes(descStr)) {
+      combined = combined ? `${combined} + ${descStr}` : descStr;
+    }
+  }
+
+  const rawPerks = combined
+    .split(/\+|\n|;/)
+    .map(p => p.trim())
+    .filter(Boolean);
+
+  const perks = rawPerks.length > 0 ? rawPerks : [amountStr || descStr || 'Certificate of Merit & SkillValix Recognition'];
+
+  return (
+    <div style={{
+      background: theme.bg,
+      border: `2px solid ${theme.border}`,
+      borderRadius: 18,
+      padding: '20px',
+      boxShadow: isFirst ? '0 8px 24px rgba(245,158,11,0.14)' : '0 2px 10px rgba(0,0,0,0.03)',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 14,
+    }}>
+      {/* Top Header Row */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{
+            width: 44, height: 44, borderRadius: 12,
+            background: theme.iconBg, border: `1.5px solid ${theme.border}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+          }}>
+            <PrizeIcon size={22} color={theme.iconColor} />
+          </div>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 16, fontWeight: 900, color: theme.titleColor }}>
+                {prize.rank || `Prize Tier ${idx + 1}`}
+              </span>
+              {isFirst && <span style={{ background: theme.badgeBg, color: theme.badgeText, fontSize: 10, fontWeight: 900, padding: '3px 10px', borderRadius: 12, boxShadow: '0 2px 6px rgba(245,158,11,0.3)' }}>1ST PLACE</span>}
+              {isSecond && <span style={{ background: theme.badgeBg, color: theme.badgeText, fontSize: 10, fontWeight: 900, padding: '3px 10px', borderRadius: 12 }}>2ND PLACE</span>}
+              {isThird && <span style={{ background: theme.badgeBg, color: theme.badgeText, fontSize: 10, fontWeight: 900, padding: '3px 10px', borderRadius: 12 }}>3RD PLACE</span>}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Perks / Benefits Items */}
+      <div style={{
+        background: 'rgba(255,255,255,0.85)',
+        backdropFilter: 'blur(8px)',
+        border: `1px solid ${theme.border}`,
+        borderRadius: 14,
+        padding: '14px 16px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 10,
+      }}>
+        {perks.map((perk, pIdx) => {
+          const isCash = /₹|\$|cash|prize/i.test(perk);
+          return (
+            <div key={pIdx} style={{
+              display: 'flex', alignItems: 'flex-start', gap: 10,
+              fontSize: isCash ? 15 : 13,
+              fontWeight: isCash ? 900 : 700,
+              color: isCash ? theme.titleColor : '#334155',
+              lineHeight: 1.5,
+            }}>
+              <div style={{
+                width: 22, height: 22, borderRadius: 7,
+                background: isCash ? theme.badgeBg : '#eef2ff',
+                color: isCash ? '#fff' : '#4f46e5',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0, marginTop: 1, fontSize: 11, fontWeight: 900,
+              }}>
+                {isCash ? '₹' : <Sparkles size={12} color={theme.perkIconColor} />}
+              </div>
+              <span style={{ flex: 1, wordBreak: 'break-word' }}>{perk}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function HackathonDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -831,77 +973,9 @@ export default function HackathonDetail() {
               <div className="hack-section-fade-in" key="prizes">
                 <Card id="prizes" title="Prize Pool & Rewards" icon={Trophy} iconColor="#f59e0b" accent="#fef3c7">
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                    {prizes.map((prize, idx) => {
-                      const rankText = String(prize.rank || '').toLowerCase();
-                      const isFirst = idx === 0 || rankText.includes('1st') || rankText.includes('winner');
-                      const isSecond = idx === 1 || rankText.includes('2nd') || rankText.includes('runner up');
-                      const isThird = idx === 2 || rankText.includes('3rd');
-
-                      const theme = isFirst ? {
-                        bg: 'linear-gradient(135deg,#fffbeb,#fef3c7)',
-                        border: '#fde68a',
-                        text: '#b45309',
-                        badgeBg: '#f59e0b',
-                        icon: Crown,
-                        iconColor: '#f59e0b',
-                      } : isSecond ? {
-                        bg: 'linear-gradient(135deg,#f8fafc,#f1f5f9)',
-                        border: '#e2e8f0',
-                        text: '#334155',
-                        badgeBg: '#64748b',
-                        icon: Trophy,
-                        iconColor: '#94a3b8',
-                      } : isThird ? {
-                        bg: 'linear-gradient(135deg,#fff7ed,#ffedd5)',
-                        border: '#fed7aa',
-                        text: '#c2410c',
-                        badgeBg: '#d97706',
-                        icon: Medal,
-                        iconColor: '#d97706',
-                      } : {
-                        bg: '#fafafa',
-                        border: '#f1f5f9',
-                        text: '#4338ca',
-                        badgeBg: '#6366f1',
-                        icon: Award,
-                        iconColor: '#6366f1',
-                      };
-
-                      const PrizeIcon = theme.icon;
-
-                      return (
-                        <div key={idx} style={{
-                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                          background: theme.bg, border: `2px solid ${theme.border}`,
-                          borderRadius: 16, padding: '16px 20px', gap: 16, flexWrap: 'wrap',
-                          boxShadow: isFirst ? '0 4px 16px rgba(245,158,11,0.12)' : 'none',
-                        }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                            <div style={{
-                              width: 44, height: 44, borderRadius: 12,
-                              background: '#fff', border: `1.5px solid ${theme.border}`,
-                              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                              boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                            }}>
-                              <PrizeIcon size={22} color={theme.iconColor} />
-                            </div>
-                            <div>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <span style={{ fontSize: 14, fontWeight: 900, color: '#0f172a' }}>{prize.rank || `Prize Tier ${idx + 1}`}</span>
-                                {isFirst && <span style={{ background: '#f59e0b', color: '#fff', fontSize: 10, fontWeight: 900, padding: '2px 8px', borderRadius: 10 }}>1ST PLACE</span>}
-                              </div>
-                              <div style={{ fontSize: 12, color: '#64748b', marginTop: 3 }}>{prize.description || 'Certificate of Merit, Goodies & SkillValix Badge'}</div>
-                            </div>
-                          </div>
-                          <div style={{
-                            fontSize: isFirst ? 22 : 18, fontWeight: 900, color: theme.text,
-                            textAlign: 'right', overflowWrap: 'break-word', wordBreak: 'break-word', maxWidth: '40%',
-                          }}>
-                            {prize.amount || '—'}
-                          </div>
-                        </div>
-                      );
-                    })}
+                    {prizes.map((prize, idx) => (
+                      <PrizeCardItem key={idx} prize={prize} idx={idx} />
+                    ))}
                   </div>
                 </Card>
               </div>
